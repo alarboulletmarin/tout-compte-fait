@@ -533,7 +533,7 @@ lit désormais sur `emptyData()` : la liste des dix noms qu'il recopiait s'étai
 périmée en silence le jour où l'épargne en a ajouté deux.
 
 **L'exemple est construit, pas commité.** `exampleData(on)` bâtit un document de
-quinze mois à partir d'une date, en posant des récurrences puis en *ouvrant*
+**cinq ans** à partir d'une date, en posant des récurrences puis en *ouvrant*
 chaque mois par `openMonth` — jamais en écrivant une `Entry` à la main. Deux
 conséquences : le jeu est toujours à l'heure, là où un `.json` figé serait vide
 du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe pour
@@ -541,14 +541,40 @@ du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe p
 qui change le change avec elle. Les salaires y tombent en tête de mois, ce qui
 n'est pas cosmétique : chargé le 2, le jeu s'ouvrait sinon sur un solde à zéro.
 
+**Cinq ans, et non quinze mois, parce qu'une durée n'est pas une quantité.** Un
+an et demi montre des lignes ; cinq ans montrent des **bascules**, et ce sont
+elles qui font la différence entre un écran rempli et un écran qui raconte
+quelque chose. Un crédit auto va à son terme et un autre le remplace, sans qu'un
+seul mois porte les deux. Un foyer locataire achète : le loyer cesse, une
+mensualité, une taxe foncière et une assurance doublée le remplacent. Un
+alternant est embauché, son revenu triple, et le prorata des charges communes
+bascule sous les yeux. La crèche s'arrête, la cantine prend le relais. Une prime
+annuelle revient cinq fois, une assurance auto s'avance quatre fois depuis le
+livret. La fiche d'une récurrence n'affiche plus « le prix a changé une fois »
+mais cinq paliers, ce qui est la seule façon de distinguer une charge qui dérive
+d'une charge qui suit l'inflation. Coût : environ 2 500 `Entry` et 500 ko
+sérialisés, montés en une fraction de seconde.
+
 **Et ce qu'il contient est une liste d'états, pas une collection de lignes
-vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : un
-crédit soldé, une avance entièrement reconstituée, un support d'épargne archivé,
-un autre sans relevé — dont la valeur est donc *inconnue*, ce qui n'est pas zéro
-—, une règle qui s'arrêtera le mois prochain et une autre qui n'a pas encore
-commencé, un troisième membre au revenu très inférieur pour que le prorata cesse
-d'être un miroir. `persistence/example.test.ts` **est** cette liste, et le seul
-endroit où elle est vérifiée.
+vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : des
+crédits soldés — l'un par soustraction parce qu'il est sans intérêt, l'autre par
+sa date d'échéance parce qu'un taux ne retombe jamais à zéro pile —, des avances
+entièrement reconstituées et une en cours, un support d'épargne archivé à côté de
+celui qui l'a remplacé, un autre sans relevé — dont la valeur est donc
+*inconnue*, ce qui n'est pas zéro —, une règle qui s'arrêtera le mois prochain et
+une autre qui n'a pas encore commencé, un troisième membre au revenu très
+inférieur pour que le prorata cesse d'être un miroir.
+`persistence/example.test.ts` **est** cette liste, et le seul endroit où elle est
+vérifiée.
+
+**Les montants variables se lisent dans deux sortes de tables**, parce qu'il y a
+deux natures de variation. L'électricité, le carburant et les commissions d'un
+salaire dépendent du **mois calendaire** : elles se lisent dans douze valeurs
+indexées par le mois réel, plus la dérive de l'année — c'est ce qui permet au
+comparatif d'années d'opposer mars à mars, et non le quatrième mois du document
+au seizième. Les courses, elles, dépendent de la semaine écoulée et se lisent
+dans une table parcourue échéance après échéance, dont la longueur est première
+avec douze pour que deux années ne se ressemblent jamais tout à fait.
 
 Les deux modules valent une trentaine de kilo-octets pour des gestes qu'on fait
 une fois dans sa vie : ils sont chargés en `import()` dynamique, et le schéma

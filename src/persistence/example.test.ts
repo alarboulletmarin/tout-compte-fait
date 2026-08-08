@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { advanceStatus } from '@/domain/advance'
-import { type ISODate, addMonthsToYm, endOfMonth, ymOf } from '@/domain/date'
+import { type ISODate, addMonthsToYm, diffMonths, endOfMonth, ymOf } from '@/domain/date'
 import { debtStatus } from '@/domain/debt'
 import { hasDataInYear, trailingMonths } from '@/domain/history'
-import { detectPriceChange, amountOn, isCostly } from '@/domain/priceHistory'
+import { detectPriceChange, amountOn, isCostly, priceHistory } from '@/domain/priceHistory'
 import {
   savingTotal,
   latestValuation,
   savingsBySupport,
   supportMonthFlows,
+  supportsDue,
+  valuationAge,
 } from '@/domain/saving'
 import { settleMonth, settlementBalance } from '@/domain/settle'
 import { memberIncomes, memberShares, sharedEntries } from '@/domain/split'
@@ -27,7 +29,7 @@ import {
   isSpending,
   kindOfCategory,
 } from '@/domain/types'
-import { exampleBounds, exampleData } from './example'
+import { EXAMPLE_YEARS, exampleBounds, exampleData } from './example'
 import { CURRENT_SCHEMA_VERSION } from './schema'
 import { parseImport, serializeData } from './transfer'
 
@@ -149,20 +151,27 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
      l'app n'ouvre jamais un mois passé d'elle-même, et sans son `MonthState` un
      mois d'historique n'existe pas pour elle. Le mois à venir, lui, s'ouvre en y
      naviguant : le poser ici ne montrerait rien de plus. */
-  it('ouvre seize mois, jusqu’au mois courant compris', () => {
+  it('ouvre cinq années de mois, jusqu’au mois courant compris', () => {
     const { first, last } = exampleBounds(ON)
     const months = data.months.map((m) => m.ym).sort()
+    expect(months).toHaveLength(EXAMPLE_YEARS * 12)
     expect(months.at(0)).toBe(first)
     expect(months.at(-1)).toBe(last)
     expect(last).toBe(anchor)
+    // Aucun mois vide au milieu : soixante mois ouverts, soixante mois portés.
     const covered = new Set(data.entries.map((e) => ymOf(e.date)))
-    expect(covered.size).toBeGreaterThanOrEqual(12)
+    expect(covered.size).toBe(EXAMPLE_YEARS * 12)
   })
 
-  it('couvre deux années civiles, pour le comparatif d’années', () => {
+  /* Deux années suffisaient au comparatif ; cinq lui donnent une pente. C'est
+     la seule chose qu'un historique long apporte et qu'aucun réglage ne
+     remplace : « plus cher que l'an dernier » est une anecdote, « plus cher
+     chaque année depuis quatre ans » est un constat. */
+  it('couvre cinq années civiles, pour le comparatif d’années', () => {
     const year = Number(anchor.slice(0, 4))
-    expect(hasDataInYear(data.entries, year)).toBe(true)
-    expect(hasDataInYear(data.entries, year - 1)).toBe(true)
+    for (let back = 0; back < EXAMPLE_YEARS - 1; back++) {
+      expect(hasDataInYear(data.entries, year - back)).toBe(true)
+    }
   })
 
   it('remplit les douze points de la courbe, sans trou', () => {
@@ -252,9 +261,44 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     expect(isCostly(change!, 'in', 'resource')).toBe(false)
   })
 
-  it('suit quatre crédits, dont deux sans taux', () => {
-    expect(data.debts).toHaveLength(4)
-    expect(data.debts.filter((d) => d.rateBp !== undefined)).toHaveLength(2)
+  /* Un prix qui a changé une fois est une anecdote ; cinq paliers font une
+     trajectoire. C'est ce que cinq ans apportent à la fiche d'une récurrence et
+     que quinze mois ne pouvaient pas porter — et c'est aussi ce qui distingue
+     une charge qui dérive d'une charge qui suit l'inflation. */
+  it('donne à une charge et à un salaire cinq paliers de prix', () => {
+    for (const id of ['ex-r-mutuelle', 'ex-r-salaire-alix']) {
+      const steps = new Set(priceHistory(data.entries, id).map((point) => point.amount))
+      expect(steps.size).toBe(5)
+    }
+  })
+
+  /* Une charge saisonnière doit l'être **selon le calendrier**, et non selon le
+     rang du mois dans le document : sinon le comparatif d'années oppose un
+     février à un août et n'apprend rien. Le chauffage se lit donc par mois
+     calendaire, avec une dérive de tarif d'une année sur l'autre — ce qui
+     produit la seule série où mars ressemble à mars sans jamais l'égaler. */
+  it('fait varier une charge avec les saisons, et dériver son tarif d’année en année', () => {
+    const byMonth = new Map<string, Set<number>>()
+    for (const entry of data.entries) {
+      if (entry.recurrenceId !== 'ex-r-electricite') continue
+      const key = entry.date.slice(5, 7)
+      byMonth.set(key, (byMonth.get(key) ?? new Set<number>()).add(entry.amount))
+    }
+    expect(byMonth.size).toBe(12)
+
+    // Le même mois d'une année sur l'autre : proche, jamais identique.
+    for (const amounts of byMonth.values()) {
+      expect(amounts.size).toBeGreaterThan(1)
+    }
+    // Et l'hiver coûte plus cher que l'été, tous millésimes confondus.
+    const peak = Math.max(...[...byMonth.values()].flatMap((s) => [...s]))
+    const trough = Math.min(...[...byMonth.values()].flatMap((s) => [...s]))
+    expect(peak).toBeGreaterThan(trough * 2)
+  })
+
+  it('suit six crédits, dont deux sans taux', () => {
+    expect(data.debts).toHaveLength(6)
+    expect(data.debts.filter((d) => d.rateBp !== undefined)).toHaveLength(4)
     expect(data.debts.filter((d) => d.rateBp === undefined)).toHaveLength(2)
     // Tous démarrent dans l'historique : le capital ne se dérive que des
     // mensualités confirmées, et un crédit ouvert avant le document
@@ -263,12 +307,33 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     for (const debt of data.debts) expect(ymOf(debt.startedOn) >= first).toBe(true)
   })
 
-  it('suit trois avances, dont deux qui entrent dans le pot commun', () => {
-    expect(data.advances).toHaveLength(3)
+  /* Deux crédits d'affilée sur la même catégorie : le premier va à son terme,
+     le second commence le mois d'après. C'est la forme que prend un poste de
+     dépense qui dure plus longtemps qu'un crédit, et elle demande cinq ans pour
+     tenir dans un document. */
+  it('enchaîne deux crédits sur le même poste, sans les faire se chevaucher', () => {
+    const cars = data.debts.filter((d) => d.categoryId === 'car-loan')
+    expect(cars).toHaveLength(2)
+    const [earlier, later] = [...cars].sort((a, b) => a.startedOn.localeCompare(b.startedOn))
+    expect(earlier!.endsOn < later!.startedOn).toBe(true)
+    // Et aucun mois ne porte les deux mensualités à la fois.
+    const months = new Map<string, Set<string>>()
+    for (const entry of data.entries) {
+      const debt = cars.find((d) => d.recurrenceId === entry.recurrenceId)
+      if (debt === undefined) continue
+      const seen = months.get(ymOf(entry.date)) ?? new Set<string>()
+      seen.add(debt.id)
+      months.set(ymOf(entry.date), seen)
+    }
+    for (const seen of months.values()) expect(seen.size).toBe(1)
+  })
+
+  it('suit six avances, dont cinq qui entrent dans le pot commun', () => {
+    expect(data.advances).toHaveLength(6)
     const linked = data.advances.map((a) =>
       data.recurrences.find((r) => r.id === a.recurrenceId),
     )
-    expect(linked.filter((r) => r?.shared === true)).toHaveLength(2)
+    expect(linked.filter((r) => r?.shared === true)).toHaveLength(5)
     // Chaque avance a posé sa reprise sur le livret, le jour du paiement.
     for (const advance of data.advances) {
       const drawdown = data.entries.find(
@@ -320,9 +385,50 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     expect(slices.map((s) => s.categoryId)).toContain(OTHER_CATEGORY)
   })
 
-  it('étend le catalogue, et en archive une part', () => {
-    expect(data.families.some((f) => !f.id.startsWith('fam-'))).toBe(true)
+  /* Les deux gestes d'extension, et non un seul : une catégorie sous une
+     famille du catalogue, et une famille entière. Un exemple qui n'aurait que
+     le second laisserait croire qu'ajouter un poste veut dire ajouter un
+     onglet. */
+  it('étend le catalogue des deux façons, et en archive une part', () => {
+    const custom = data.families.filter((f) => !f.id.startsWith('fam-'))
+    expect(custom).toHaveLength(1)
+    // Une catégorie maison rangée sous une famille du catalogue.
+    const grafted = data.categories.filter(
+      (c) => !c.id.startsWith('fam-') && c.familyId.startsWith('fam-') && c.id.startsWith('ex-'),
+    )
+    expect(grafted.length).toBeGreaterThan(0)
+    // Et une autre sous la famille maison.
+    expect(data.categories.some((c) => c.familyId === custom[0]!.id)).toBe(true)
     expect(data.categories.some((c) => c.archived)).toBe(true)
+  })
+
+  /* Cinq ans, c'est assez pour qu'une règle en remplace une autre. Chaque
+     bascule est une paire : celle qui s'arrête, celle qui prend la suite, et
+     aucun mois où les deux tombent ensemble. Sans elles, un historique n'est
+     qu'une répétition — ce sont elles qui font un comparatif d'années autre
+     chose qu'une vérification d'arrondi. */
+  it.each([
+    ['ex-r-loyer', 'ex-r-credit-immo'],
+    ['ex-r-alternance-sacha', 'ex-r-salaire-sacha'],
+    ['ex-r-creche', 'ex-r-cantine'],
+    ['ex-r-eveil', 'ex-r-foot'],
+    ['ex-r-credit-auto', 'ex-r-credit-break'],
+    ['ex-r-pee', 'ex-r-pee-2'],
+  ])('remplace %s par %s sans les faire se croiser', (before, after) => {
+    const stopped = data.recurrences.find((r) => r.id === before)
+    const started = data.recurrences.find((r) => r.id === after)
+    expect(stopped?.endedOn).toBeDefined()
+    expect(started).toBeDefined()
+    expect(stopped!.endedOn! < started!.startedOn).toBe(true)
+
+    // Les deux ont des échéances, et jamais dans le même mois.
+    const monthsOf = (id: string) =>
+      new Set(data.entries.filter((e) => e.recurrenceId === id).map((e) => ymOf(e.date)))
+    const left = monthsOf(before)
+    const right = monthsOf(after)
+    expect(left.size).toBeGreaterThan(0)
+    expect(right.size).toBeGreaterThan(0)
+    for (const month of right) expect(left.has(month)).toBe(false)
   })
 
   it('place et reprend de l’épargne, pour qu’elle se compte en net', () => {
@@ -359,7 +465,7 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
       ...data.recurrences.map((r) => r.categoryId),
       ...data.savingSupports.map((s) => s.categoryId),
     ])
-    expect(used.size).toBeGreaterThanOrEqual(38)
+    expect(used.size).toBeGreaterThanOrEqual(44)
   })
 })
 
@@ -432,17 +538,35 @@ describe('ce que le domaine sait en tirer', () => {
     }
   })
 
-  /* Et celui qui est allé au bout. Sans lui, l'état « soldé » avait sa page et
+  /* Et ceux qui sont allés au bout. Sans eux, l'état « soldé » avait sa page et
      ses mots, mais jamais de ligne pour les occuper. Sans taux, le capital
      décroît exactement de ce qui a été versé : le reste dû tombe à zéro pile,
      et non à un arrondi qu'il faudrait excuser. */
-  it('solde le crédit arrivé à son terme', () => {
+  it('solde au centime les crédits sans intérêt arrivés à leur terme', () => {
     const settled = data.debts.filter((d) => debtStatus(d, data.entries, null, ON).settled)
-    expect(settled).toHaveLength(1)
-    const status = debtStatus(settled[0]!, data.entries, null, ON)
-    expect(status.payments).toBe(12)
+    expect(settled).toHaveLength(3)
+
+    const free = settled.filter((d) => d.rateBp === undefined)
+    expect(free).toHaveLength(2)
+    for (const debt of free) {
+      const status = debtStatus(debt, data.entries, null, ON)
+      expect(status.remaining).toBe(0)
+      expect(status.paid).toBe(debt.principal)
+    }
+  })
+
+  /* Le troisième soldé ne l'est pas pour la même raison, et c'est tout
+     l'intérêt de l'avoir : un crédit à taux coûte plus que ce qu'il prête, si
+     bien que la somme versée dépasse le capital sans qu'aucune soustraction ne
+     puisse le dire. Deux manières d'arriver à zéro, une seule page pour les
+     montrer. */
+  it('fait payer au crédit à taux arrivé à terme plus que ce qu’il a prêté', () => {
+    const car = data.debts.find((d) => d.id === 'ex-d-auto')
+    const status = debtStatus(car!, data.entries, null, ON)
+    expect(status.settled).toBe(true)
+    expect(ON > car!.endsOn).toBe(true)
+    expect(status.paid).toBeGreaterThan(car!.principal)
     expect(status.remaining).toBe(0)
-    expect(status.paid).toBe(settled[0]!.principal)
   })
 
   /* Un crédit à taux ne s'amortit pas de ce qu'on a versé : sur l'immobilier de
@@ -465,12 +589,31 @@ describe('ce que le domaine sait en tirer', () => {
     }
   })
 
-  it('montre une avance entièrement reconstituée', () => {
+  it('montre des avances entièrement reconstituées', () => {
     const settled = data.advances.filter((a) => advanceStatus(a, data.entries, ON).settled)
-    expect(settled).toHaveLength(1)
-    const status = advanceStatus(settled[0]!, data.entries, ON)
-    expect(status.restored).toBe(settled[0]!.amount)
-    expect(status.remaining).toBe(0)
+    expect(settled).toHaveLength(4)
+    for (const advance of settled) {
+      const status = advanceStatus(advance, data.entries, ON)
+      expect(status.restored).toBe(advance.amount)
+      expect(status.remaining).toBe(0)
+    }
+  })
+
+  /* La même charge, avancée quatre années de suite : c'est le seul endroit du
+     jeu où l'on voit qu'une avance n'est pas un accident mais une **façon de
+     payer**. Trois soldées, une en cours — et la mensualité de chacune divise
+     son montant exactement, pour que le reste dû tombe à zéro plutôt qu'à un
+     centime qu'il faudrait excuser. */
+  it('répète la même avance d’une année sur l’autre, à quatre montants', () => {
+    const yearly = data.advances.filter((a) => a.categoryId === 'car-insurance')
+    expect(yearly).toHaveLength(4)
+    expect(new Set(yearly.map((a) => a.amount)).size).toBe(4)
+    for (const advance of yearly) {
+      expect(advance.amount % 12).toBe(0)
+      expect(diffMonths(advance.from, advance.to)).toBe(11)
+    }
+    // Une par an, jamais deux la même année : elles ne se chevauchent pas.
+    expect(new Set(yearly.map((a) => a.paidOn.slice(0, 4))).size).toBe(4)
   })
 
   it('laisse au foyer de quoi épargner, et de quoi le ventiler', () => {
@@ -485,10 +628,67 @@ describe('ce que le domaine sait en tirer', () => {
   /* Ce que la v1 ne pouvait pas montrer : le stock, à côté du flux. Le jeu
      d'exemple doit le démontrer, pas seulement le rendre possible. */
   it('possède une épargne relevée, avec son historique', () => {
-    expect(data.savingSupports.length).toBeGreaterThan(2)
+    expect(data.savingSupports).toHaveLength(8)
     const total = savingTotal(data.savingSupports, data.savingValuations, data.entries, ON)
     expect(total.known).toBeGreaterThan(0)
     expect(total.valued).toBeGreaterThan(0)
+  })
+
+  /* Une courbe d'épargne qui ne ferait que monter n'apprendrait rien. Celle du
+     livret d'Alix plonge une fois — l'apport et les frais de l'achat — et c'est
+     le seul décrochement de cinq ans de relevés. Il est vérifié ici parce que
+     c'est exactement le genre de cohérence qu'une retouche de montant casse
+     sans bruit : les relevés sont des observations écrites à la main, rien dans
+     le code ne les tient d'accord avec les mouvements. */
+  it('fait plonger une courbe d’épargne, une fois, là où l’argent est sorti', () => {
+    const history = data.savingValuations
+      .filter((v) => v.supportId === 'ex-s-livret-alix')
+      .sort((a, b) => a.date.localeCompare(b.date))
+    expect(history.length).toBeGreaterThanOrEqual(EXAMPLE_YEARS)
+
+    const drops = history.filter((v, i) => i > 0 && v.amount < history[i - 1]!.amount)
+    expect(drops).toHaveLength(1)
+
+    // Et la plus grosse reprise de tout le document tombe entre les deux
+    // relevés, pour un montant qui excède la chute — les versements de l'année
+    // en ont déjà rattrapé une part.
+    const before = history[history.indexOf(drops[0]!) - 1]!
+    const biggest = data.entries
+      .filter((e) => e.savingSupportId === 'ex-s-livret-alix' && e.direction === 'in')
+      .sort((a, b) => b.amount - a.amount)[0]!
+    expect(biggest.date > before.date).toBe(true)
+    expect(biggest.date < drops[0]!.date).toBe(true)
+    expect(biggest.amount).toBeGreaterThan(before.amount - drops[0]!.amount)
+  })
+
+  /* L'écran d'épargne doit pouvoir **se taire**, et donc aussi parler. Deux
+     supports le réclament pour deux raisons différentes — l'un n'a jamais été
+     relevé, l'autre l'a été il y a exactement une cadence — et les six autres
+     se taisent. Un jeu où tout serait à jour ne montrerait jamais l'invitation ;
+     un jeu où tout serait périmé ne montrerait jamais le silence. */
+  it('réclame un relevé là où il en manque un, et se tait ailleurs', () => {
+    const due = supportsDue(data.savingSupports, data.savingValuations, ON)
+    expect(due).toHaveLength(2)
+    const never = due.filter((s) => latestValuation(data.savingValuations, s.id, ON) === null)
+    expect(never).toHaveLength(1)
+    const aged = due.filter((s) => latestValuation(data.savingValuations, s.id, ON) !== null)
+    expect(aged).toHaveLength(1)
+    expect(valuationAge(latestValuation(data.savingValuations, aged[0]!.id, ON)!.date, 'yearly', ON))
+      .toMatchObject({ level: 'stale' })
+  })
+
+  /* Deux supports, même personne, même catégorie, l'un fermé et l'autre ouvert.
+     Sur un historique court, l'archivage se lit comme une fin ; ici il se lit
+     comme un passage — et c'est la seule disposition qui le montre, puisqu'elle
+     demande que les deux comptes existent en même temps dans le document. */
+  it('fait se succéder deux supports de même catégorie chez la même personne', () => {
+    const plans = data.savingSupports.filter((s) => s.categoryId === 'company-savings')
+    expect(plans).toHaveLength(2)
+    expect(new Set(plans.map((s) => s.memberId)).size).toBe(1)
+    expect(plans.filter((s) => s.archived)).toHaveLength(1)
+    for (const support of plans) {
+      expect(latestValuation(data.savingValuations, support.id, ON)).not.toBeNull()
+    }
   })
 
   /* Un support sans le moindre relevé, et un seul : « inconnu » n'est pas

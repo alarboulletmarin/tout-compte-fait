@@ -678,7 +678,7 @@ export const fr = {
 
     example: 'Jeu d’exemple',
     exampleHint:
-      'Un exemple complet — trois personnes, quatre crédits, trois avances, sept supports d’épargne, plus d’un an d’historique — pour voir l’app pleine sans rien saisir.',
+      'Un exemple complet — trois personnes, six crédits, six avances, huit supports d’épargne, cinq ans d’historique — pour voir l’app pleine sans rien saisir.',
     exampleLoad: 'Charger l’exemple',
     /* Un exemple remplace tout, exactement comme un import : deux questions, ni
        une de moins ni les trois de l'effacement, puisqu'il reste quelque chose

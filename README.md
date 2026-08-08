@@ -83,8 +83,11 @@ npm run dev
 Rien à configurer : aucune variable d'environnement, aucune clé d'API. Pour voir
 l'app pleine plutôt que vide, **Plus → Exporter / importer → Jeu d'exemple →
 Charger l'exemple**
-monte quinze mois de données à partir d'aujourd'hui — c'est ce qu'on voit sur
-les captures ci-dessus.
+monte **cinq ans** de données à partir d'aujourd'hui — c'est ce qu'on voit sur
+les captures ci-dessus. Cinq ans, parce qu'une durée n'est pas une quantité :
+c'est ce qu'il faut pour qu'un crédit aille à son terme et qu'un autre le
+remplace, pour qu'un foyer locataire achète, pour qu'un alternant devienne
+salarié et fasse basculer le partage des charges communes.
 
 ### Installation sur le téléphone
 

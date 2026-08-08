@@ -86,6 +86,74 @@ partage avec l'historique vivent dans un morceau à elles. Mesuré sans ce
 découpage, le premier chargement prenait quatre kibioctets de plus, pour un bloc
 qui vit sous le pli.
 
+### Modifié — le jeu d'exemple passe de quinze mois à cinq ans, et cesse d'être une capture
+
+Quinze mois montraient des lignes. Ils suffisaient à remplir les écrans, et
+c'était là toute leur ambition : une courbe qui ne soit pas plate, une
+répartition qui ne soit pas un miroir, un capital restant dû qui ne soit pas le
+capital emprunté. Mais un foyer ne se lit pas en quinze mois — il s'y répète.
+Tout ce que cette app peut apprendre sur une vie financière, elle l'apprend des
+**bascules**, et une bascule demande qu'il y ait un avant et un après.
+
+Le document couvre désormais **cinq années pleines**, mois courant compris, et
+son contenu a changé de nature avec sa durée.
+
+- **Un crédit auto va à son terme, un autre le remplace** le mois suivant, sans
+  qu'un seul mois porte les deux mensualités. C'est la forme qu'un poste de
+  dépense prend quand il dure plus longtemps qu'un crédit, et elle ne tenait pas
+  dans un an et demi.
+- **Le foyer est locataire, puis propriétaire.** Au dix-huitième mois, le loyer
+  cesse ; une mensualité, une taxe foncière, une redevance d'ordures et une
+  assurance habitation qui double le remplacent. Une reprise de vingt-quatre
+  mille euros sur le livret paie les frais de notaire, le déménagement et
+  l'installation, au centime — c'est le seul décrochement de cinq ans de courbe
+  d'épargne, et il est expliqué par les trois lignes qui le suivent.
+- **Un alternant est embauché** au vingt-quatrième mois : sa prime d'activité
+  s'éteint, son revenu triple, et le prorata des charges communes bascule sous
+  les yeux — de 9 % à 23 % de ce que le foyer partage.
+- **Un studio est mis en location** au trentième : un second crédit immobilier,
+  un loyer perçu qui n'est pas un salaire, une seconde taxe foncière, une
+  assurance qui n'est pas celle du logement habité, et des charges de
+  copropriété trimestrielles. C'est le premier emploi honnête de la catégorie
+  « Revenus fonciers », et l'occasion de montrer qu'un revenu locatif a quatre
+  lignes en face de lui qu'aucune vue ne rapproche.
+- **La crèche cède la place à l'école**, l'éveil musical au club de football, un
+  PEE fermé à celui de l'entreprise suivante. L'archivage cesse de se lire comme
+  une fin : les deux comptes coexistent dans le document, même personne, même
+  catégorie, un seul qui reçoit encore.
+- **Les prix ont cinq paliers, et non un changement isolé.** Le salaire connaît
+  quatre augmentations, la mutuelle quatre hausses, la pension alimentaire
+  quatre indexations, l'impôt quatre révisions. « Le prix a changé une fois » est
+  une anecdote ; cinq paliers disent si une charge dérive ou suit l'inflation, et
+  c'est la seule chose que la fiche d'une récurrence est seule à savoir.
+- **La même avance revient quatre années de suite** — la prime d'assurance auto,
+  réglée en une fois depuis le livret et remise mois par mois —, dont trois
+  entièrement reconstituées et une en cours. Une avance isolée ressemble à une
+  dépense compliquée ; quatre d'affilée montrent que c'est une **façon de
+  payer**. La récurrence mensualisée qui les précédait est restée dans le
+  document, arrêtée : les deux montages se lisent côte à côte, même catégorie et
+  même voiture.
+- **Trois crédits soldés, pour deux raisons différentes.** Les deux sans intérêt
+  retombent à zéro par soustraction — ce qu'on a versé est exactement ce qu'on
+  devait. Celui à taux a coûté treize mille euros pour douze mille prêtés, et
+  aucune soustraction ne pouvait le dire.
+
+Deux détails techniques valent d'être signalés parce qu'ils touchent ce que les
+écrans montrent. Les **montants variables se lisent désormais par mois
+calendaire** — douze valeurs saisonnières plus la dérive de l'année — là où ils
+suivaient le rang du mois dans le document : le comparatif d'années oppose enfin
+mars à mars, et non le quatrième mois au seizième. Et les tables des dépenses
+ponctuelles ont des longueurs premières entre elles, jamais douze, sans quoi cinq
+années auraient été rigoureusement identiques.
+
+Le catalogue par défaut est employé à quarante-quatre catégories sur quarante-six
+— restent l'aide au logement, que ces revenus interdisent, la taxe d'habitation,
+qui ne s'applique ni à la résidence principale ni à un bien loué, les pensions
+alimentaires reçues, qui raconteraient une histoire familiale qu'un exemple n'a
+pas à trancher, et la location longue durée, qui est justement celle qu'on
+archive. Le document pèse environ 2 500 échéances et 500 kio sérialisés, monté en
+une fraction de seconde à chaque chargement.
+
 ### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
 
 Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
