@@ -43,14 +43,19 @@ import {
   type SupportFlows,
   type SupportUsage,
   type SupportValue,
+  type SavingCoverage,
+  type SavingYearPoint,
   activeSupports,
   isSupportEmpty,
+  savingCoverage,
   savingTotal,
+  savingYearSeries,
   savingsBySupport,
   supportEntries,
   supportMonthFlows,
   supportUsage,
   supportValue,
+  supportsDue,
   valuationsOf,
 } from '@/domain/saving'
 import {
@@ -836,6 +841,57 @@ export function useSavingTotal(): SavingTotal {
     () => savingTotal(supports, valuations, entries),
     [supports, valuations, entries],
   )
+}
+
+/**
+ * Combien de mois de charges le capital de la lecture courante couvre.
+ *
+ * Le capital vient de `useSavingTotal` — donc du même calcul que la tuile
+ * Capital, au centime — et les charges de la portée du mois, celle qui
+ * proratise le commun : sans elle, quelqu'un se lirait sans loyer et tiendrait
+ * trois fois plus longtemps qu'il ne tient.
+ *
+ * `estimated` et non `known` : c'est la meilleure réponse que l'app ait à
+ * « combien j'ai aujourd'hui », et diviser un chiffre volontairement périmé
+ * sous-estimerait de tous les versements faits depuis. Les deux se confondent
+ * dès qu'aucun mouvement n'est tombé, c'est-à-dire le plus souvent.
+ *
+ * Ancré sur **aujourd'hui** et non sur le mois affiché, comme le capital : le
+ * patrimoine ne change pas parce qu'on est allé regarder mars.
+ */
+export function useSavingCoverage(): SavingCoverage {
+  const total = useSavingTotal()
+  const { entries } = useMonthScope()
+  const kindOf = useKindOf()
+  return useMemo(
+    () => savingCoverage(total.estimated, entries, kindOf),
+    [total.estimated, entries, kindOf],
+  )
+}
+
+/**
+ * Ce qui est mis de côté au fil d'une année, et son cumul depuis janvier.
+ *
+ * Les mêmes `Entry` que la capacité et la ventilation, à la même portée : c'est
+ * du flux, et aucun relevé n'y entre.
+ */
+export function useSavingYearSeries(year: number): SavingYearPoint[] {
+  const { entries } = useMonthScope()
+  const kindOf = useKindOf()
+  return useMemo(() => savingYearSeries(entries, year, kindOf), [entries, year, kindOf])
+}
+
+/**
+ * Les supports de la lecture courante dont un relevé est attendu.
+ *
+ * C'est ce qui permet à l'écran de se taire : hors de ces supports-là, il n'a
+ * rien à réclamer, et un raccourci qui insiste quand même ne produit que de la
+ * culpabilité.
+ */
+export function useSupportsDue(): SavingSupport[] {
+  const supports = useScopedSavingSupports()
+  const valuations = useSavingValuations()
+  return useMemo(() => supportsDue(supports, valuations), [supports, valuations])
 }
 
 /**

@@ -12,71 +12,187 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
-### Modifié — « À verser sur le commun » montre son addition, plus son anneau
+### Modifié — un anneau sans son tout n'est plus qu'un pourcentage
 
-La tuile portait un anneau à 45,3 %. C'est la part du pot commun que le prorata
-des revenus met sur la personne filtrée — mais un anneau annonce *une fraction
-d'un tout*, et ce tout, le total des charges communes du foyer, n'est pas sur la
-tuile : c'est un chiffre qu'on ne doit pas, et il en avait été retiré à dessein.
-Restait une jauge sans son tout, c'est-à-dire un pourcentage sans son « de
-quoi ». Sur l'écran de tout le monde la question ne se pose pas — la tuile
-Répartition découpe le pot entre les personnes, le tout est sous les yeux ; sous
-un filtre par membre, elle se posait et rien à l'écran n'y répondait.
+« À verser sur le commun » dessinait 45,3 % dans un anneau : la part du pot
+commun que le prorata des revenus met sur la personne filtrée. Or un anneau
+annonce *une fraction d'un tout*, et ce tout — le total des charges communes du
+foyer — n'est pas sur la tuile, délibérément : c'est un chiffre qu'on ne doit
+pas. Restait une jauge sans son tout, c'est-à-dire un pourcentage sans son « de
+quoi ». Sur l'écran de tout le monde la question ne se pose pas, la tuile
+Répartition découpe le pot entre les personnes et le tout est sous les yeux ;
+sous un filtre par membre, elle se posait et rien à l'écran n'y répondait.
 
-- **L'anneau est retiré, et le pourcentage avec lui.** Il ne s'explique pas d'un
-  mot posé à côté : il sort du revenu de chacun rapporté à la somme des revenus,
-  et c'est cette division-là qu'il faut voir pour l'admettre. L'écran
-  Répartition la montre, à un doigt d'ici, le prorata contre le revenu dont il
-  vient. Un pourcentage qu'on ne peut pas vérifier sur l'écran où il s'affiche
-  n'explique rien, quel que soit le mot qu'on lui accroche.
-- **Le chiffre de tête devient vérifiable.** Il vaut la part du mois plus le
-  report du mois précédent, et la tuile montrait jusqu'ici trois montants dont
-  aucun des deux termes : « 1 788,96 € » se lisait au-dessus de « 37,97 € » et
-  « 1 697,80 € », qui ne le redonnent pas. Les deux lignes sont désormais
-  « Sa part du mois » et « Régularisation de juillet », dans l'ordre où
-  l'addition se fait.
-- **La tuile « Régularisation » disparaît**, sa ligne étant rentrée ici. Elle
-  vivait à part parce que la ligne qu'elle demandait passait à la ligne dans une
-  colonne de 222px — les 80px d'anneau plus la gouttière mangeaient la moitié de
-  la tuile. L'anneau parti, la colonne fait la largeur entière et l'objection
-  tombe avec ce qui la causait.
-- **« Charges perso » et « Total à payer » s'en vont** — elles répondaient à une
-  autre question que celle de la tuile, ce que le mois coûte quand la tuile sert
-  un virement, et « Total à payer » posé juste sous « à verser » se confondait
-  avec lui. Elles ne disparaissent pas pour autant : voir la tuile ci-dessous.
-- **Sans report, la tuile ne dit que le montant** et passe en `4x1` : la part
-  vaut alors le virement au centime, une ligne « sa part du mois » y recopierait
-  le chiffre de tête un cran plus bas, et deux fois le même nombre à trois
-  lignes d'écart se lit comme une erreur avant de se lire comme une égalité. Le
-  format suit le contenu (DS §5) : deux rangées quand il y a une addition à
-  montrer, une quand il n'y a qu'un chiffre.
+- **L'anneau est retiré, et le pourcentage avec lui** — pas remplacé par une
+  version « expliquée » posée à côté. Il sort du revenu de chacun rapporté à la
+  somme des revenus, et c'est cette division-là qu'il faut voir pour l'admettre.
+  L'écran Répartition la montre ligne à ligne, à un doigt d'ici, le prorata
+  contre le revenu dont il vient. Un pourcentage qu'on ne peut pas vérifier sur
+  l'écran où il s'affiche n'explique rien, quel que soit le mot qu'on lui
+  accroche.
+- **La règle vise cet anneau-ci, pas les anneaux.** « Perso et commun » en porte
+  un juste à côté sans rien enfreindre : le sien découpe un total qui est au
+  centre du cercle, et ses deux parts se lisent contre lui. Un anneau dont le
+  tout est à l'écran explique ; un anneau dont le tout est ailleurs décore.
+- **Le calcul prend la place qu'il libère.** Les deux lignes — sa part du mois,
+  la régularisation — disposaient d'une colonne de 152px à côté de l'anneau, où
+  chaque montant passait sous son libellé ; elles ont maintenant la largeur de
+  la tuile et tiennent chacune sur sa ligne, jusqu'à 320px.
+- **Sans régularisation, la tuile passe en `4x1`** : elle ne porte plus que son
+  chiffre, et deux rangées y laisseraient exactement les quarante pixels de vide
+  que le DS §5 reproche à une tuile sans visualisation. Le format suit le
+  contenu — deux rangées quand il y a une addition à montrer, une quand il n'y a
+  qu'un montant.
+- Le nom du membre vivait dans la lecture parlée de l'anneau : il passe dans le
+  nom de la région, que rien d'autre ne portait.
 
-### Ajouté — « Ce que le mois lui coûte », la tuile Charges décomposée
+### Ajouté — l'épargne répond à ce que la banque ne sait pas, et cesse de réclamer ce qu'elle sait déjà
 
-Sous un filtre par membre, la tuile Charges annonce un total qui comprend déjà
-sa part du pot commun — sans quoi chacun se lirait comme s'il vivait sans loyer.
-Mais fondue dans ce total, la part ne se voit plus : le solde du mois valait bien
-ses revenus moins ses charges moins sa part du foyer, et le troisième terme
-n'était à l'écran nulle part. Les deux lignes qui le disaient vivaient sur la
-tuile du virement, où elles répondaient à une autre question que la sienne.
+**Migration de schéma : v8 → v9.** Un champ `SavingSupport.pace` s'ajoute —
+`"yearly"` ou `"quarterly"` —, et il est le seul du modèle dont l'absence n'est
+**pas** remplacée par une valeur par défaut à l'import : un document d'avant le
+champ n'a jamais répondu à la question, et écrire « annuel » sur sept supports
+ferait passer un silence pour sept choix. L'app lit « annuel » sans l'écrire, et
+le formulaire recueille la vraie réponse quand on la lui donne. Rien d'autre ne
+bouge.
 
-- **Un chiffre, puis ses deux moitiés** : ce qu'elle paie pour elle, et sa part
-  du commun. Le total vaut celui de la tuile Charges au centime, délibérément —
-  c'est ce qui autorise à lire les deux lignes comme ses deux moitiés plutôt que
-  comme un troisième calcul.
-- **Elle porte la forme de sa voisine**, un chiffre et les deux termes qui le
-  donnent, et c'est ce qui les distingue le mieux : l'une additionne un virement,
-  l'autre un coût. Le report n'est donc pas ici — ce qu'une dépense a coûté à
-  quelqu'un est arrêté au mois où elle a eu lieu ; ce qui se rattrape est un
-  virement, pas un coût.
-- **« Sa part du commun » porte le même libellé sur les deux tuiles**, parce que
-  c'est le même montant : deux noms pour un même nombre, sur un même écran, se
-  lisent comme deux nombres qui tomberaient juste par hasard.
-- **Aucun repère d'action, parce qu'aucun clic** : ses deux lignes mènent à deux
-  endroits — les lignes du mois pour le perso, l'écran Répartition pour la part.
-  Un chevron promet un écran, et il n'y en a pas un (DS §6).
-- Elle s'efface dès qu'un des deux termes est nul : une somme dont un terme vaut
-  zéro n'est pas une somme, et la tuile Charges dit alors déjà tout.
+L'écran de l'épargne répondait à « combien j'ai ». C'est la question où il ne
+peut pas gagner : l'appli de la banque y répond mieux, plus vite, sans qu'on
+saisisse quoi que ce soit, et sans se tromper. Chaque relevé demandé était donc
+une **transcription** — recopier un nombre lu trente secondes plus tôt ailleurs.
+Ce que cette app est seule à savoir, c'est ce qui *nourrit* le capital : elle
+tient le stock et les flux, quand la banque voit un solde sans savoir lesquelles
+des sorties sont des charges et lesquelles sont des virements vers soi-même.
+
+- **« Tu tiens 4,2 mois sans revenus »**, sous le capital. C'est le fonds
+  d'urgence — capital estimé ÷ charges d'un mois moyen —, la première chose que
+  regarde n'importe quel conseiller, et il est *arithmétiquement impossible* sans
+  les charges de l'app. Trois décisions font sa justesse, et aucun autre écran ne
+  les dit : les **mensualités de crédit comptent** au dénominateur — elles ne
+  s'arrêtent pas quand le revenu s'arrête —, les **versements d'épargne non** —
+  c'est la première chose qu'on coupe —, et le **mois en cours ne compte pas**,
+  faute d'avoir tout dépensé. Les trois sortaient pourtant du même compte : lus
+  en trésorerie ils se confondent, et qui met 500 € de côté chaque mois se serait
+  vu tenir un tiers de temps de moins qu'il ne tient. D'où une série mensuelle
+  **consciente des natures**, à côté de celle qui ne connaît que les entrées et
+  les sorties.
+- **La moyenne porte sur les douze derniers mois vécus**, jamais sur douze cases :
+  diviser par douze un foyer qui saisit depuis trois mois inventerait neuf mois
+  sans charges, et doublerait le chiffre annoncé. Faute d'un mois complet ou
+  d'une charge, l'écran **nomme ce qui manque** plutôt que d'écrire « 0 mois » —
+  un quotient sans dénominateur ne vaut pas zéro, il ne veut rien dire.
+- **Le cumul des versements, mois après mois, année contre année d'avant.**
+  L'app est une machine à mois : tout y est borné par le mois affiché, et
+  l'épargne est la seule notion qu'on y ait greffée qui n'ait aucun sens à
+  l'intérieur d'un mois. On voyait douze états mensuels, jamais une trajectoire —
+  alors que la donnée était intégralement là depuis le premier jour, et que la
+  machine à cumuler existait déjà, testée, pour le solde de l'historique. Elle
+  n'était pas branchée. **Aucun relevé n'y entre**, aucune saisie nouvelle : la
+  question ne se posait simplement nulle part.
+- **Un relevé est un arrêté, pas une corvée mensuelle.** Chaque support porte
+  désormais son rythme. Un livret réglementé ne bouge que des versements — que
+  l'app connaît — et d'intérêts capitalisés une fois au 31 décembre : sa valeur
+  est déterministe entre deux relevés, et un relevé **par an** suffit. Un PEA, un
+  compte-titres, une assurance-vie en unités de compte se relèvent au
+  **trimestre**. Le seuil unique de six mois se trompait dans les deux sens à la
+  fois : il déclarait « à actualiser » un Livret A dont l'app connaît le capital
+  à l'euro près, et laissait passer pour frais un PEA que le marché avait refait.
+- **Et l'écran se tait le reste du temps.** « Mettre à jour les relevés » laissait
+  entendre un rituel mensuel, qui n'est la bonne cadence d'aucun support. Le
+  geste reste atteignable en permanence, mais son **poids dit s'il y a quelque
+  chose à faire** — appuyé quand un support a dépassé sa cadence ou n'a jamais
+  été relevé, discret sinon —, avec un décompte, « 2 relevés à faire », qui ne
+  s'écrit que lorsqu'il a quelque chose à écrire. Ni couleur ni panneau : un
+  capital qu'on n'a pas revu n'est pas une erreur, et un écran qui réclame une
+  donnée dont il n'a pas besoin ne produit que de la culpabilité.
+- **Aucun taux, aucune projection, aucun intérêt calculé.** La cadence dit quand
+  un relevé sera *redemandé*, jamais ce que le support rapportera d'ici là. Elle
+  se demande plutôt qu'elle ne se déduit du classement, parce que le catalogue de
+  catégories est libre : rien ne garantit qu'un « Livret A » soit rangé ailleurs
+  que sous « Divers », et une cadence lue sur le classement se tromperait en
+  silence — le défaut même qu'elle existe pour corriger.
+
+Le budget de taille passe de 217 à 221 Kio, et c'est la **marge** qu'il relève,
+pas le poids : l'app en pèse 216,5, et le rangement de « Plus » l'avait laissée à
+un dixième de kibioctet — un plafond, pas une marge. Le graphique de l'année n'y
+entre pour rien : sa section part à la demande, et les lignes cumulées qu'elle
+partage avec l'historique vivent dans un morceau à elles. Mesuré sans ce
+découpage, le premier chargement prenait quatre kibioctets de plus, pour un bloc
+qui vit sous le pli.
+
+### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
+
+Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
+la grandeur qu'ils mesurent. On lisait « 2026 · 9 994 € », « 2025 · 1 489 € »,
+« Écart · +8 505 € » sous le mot « mai » : de quelle année vient chaque nombre,
+c'était clair ; ce qu'il compte, jamais. Un chiffre juste qu'on ne sait pas lire
+se lit comme un chiffre faux.
+
+- **Le cumul annuel porte son nom à l'œil.** « Cumul du solde depuis janvier »
+  s'écrit au-dessus de la lecture, là où l'information manquait. Le graphique
+  avait pourtant déjà ce nom — dans l'`aria-label` du tracé, c'est-à-dire pour
+  les seuls lecteurs d'écran : la lecture accessible existait, la lecture
+  visible n'existait pas. Sans elle, rien ne tranchait entre « le solde de mai »
+  et « tout ce qui s'est accumulé de janvier à mai », deux nombres différents
+  pour la même position du curseur. La chaîne est la même des deux côtés, et
+  elle a changé de sujet au passage : « mois après mois » décrivait la forme de
+  la courbe, pas ce qu'elle empile.
+- **L'écart entre deux mois dit son périmètre et son sens.** « Écart des
+  sorties, du mois de référence au mois comparé » : la liste ne compare que les
+  sorties — les entrées n'y sont jamais entrées — et un « +150 € » ne dit pas de
+  lui-même dans quel sens il se lit. Deux règles qui n'étaient écrites nulle
+  part, et qu'un signe ne suffit pas à porter. La phrase ne suit pas les rangées
+  repliées : celles-ci montrent un montant et non un écart, et leur propre
+  phrase le dit déjà.
+
+### Modifié : ce qu'un mois coûte et ce qu'il fait verser cessent d'être le même chiffre
+
+La carte « À verser sur le commun » portait trois montants assis sur deux bases
+différentes. Le chiffre de tête — 2 015,42 € — est un **virement** : la part du
+pot commun, plus la régularisation du mois précédent. Les deux lignes en
+dessous — « Charges perso » 72,87 € et « Total à payer » 1 805,73 € — sont un
+**coût**, dont le report est exclu par construction : ce qu'une dépense a coûté
+à quelqu'un est arrêté au mois où elle a eu lieu, seul le virement se rattrape.
+D'où l'anomalie qu'on lisait tous les mois — un « Total à payer » **plus petit**
+que le « À verser » posé juste au-dessus, dans une carte dont le seul métier est
+le virement.
+
+- **La carte du virement ne parle plus que du virement**, et elle pose son
+  calcul au lieu de le taire : sa part du mois, plus la régularisation, égale ce
+  qu'elle verse — les mots et l'ordre de l'écran Répartition, où le même calcul
+  se lit déjà. Deux écrans qui montrent le même chiffre doivent le montrer de la
+  même façon, sinon c'est deux chiffres.
+- **La régularisation se lisait deux fois.** Elle était déjà comprise —
+  silencieusement — dans le chiffre de tête, et s'affichait une seconde fois en
+  carte autonome juste en dessous. Rien ne disait que les deux montants voisins
+  ne s'ajoutaient pas, et deux montants voisins dont rien ne le dit s'ajoutent.
+  Elle redevient un terme du calcul, sur la tuile dont elle change le montant,
+  et ne se lit qu'aux mois où elle existe.
+- **Une tuile « Perso et commun » répond à la question que l'autre répondait
+  mal** : ce que le mois coûte à quelqu'un, éclaté en ses lignes à elle et sa
+  part du pot. C'est la seule chose que ses chiffres ne disaient jamais — le
+  découpage du prorata fond les deux dans chaque total, sans quoi chacun se
+  lirait comme s'il vivait sans loyer, et une fois fondus plus rien ne sépare ce
+  qu'on décide seul·e de ce qui se décide à deux. Son total est celui de la
+  tuile Charges au centime : elle ne le contredit pas, elle l'éclate — et c'est
+  ce qui interdit d'y arrondir.
+- **La cascade de la capacité d'épargne nomme son troisième terme.** Elle disait
+  « Charges » d'un bloc là où le montant mêlait les deux, sur l'écran qui sert
+  précisément à décider quoi changer. Elle dit maintenant « Charges perso »,
+  « Crédits perso » et « Part du commun » — crédits communs compris, la légende
+  le précise. Les termes redonnent la capacité au centime : ce sont les mêmes
+  totaux, seulement séparés. Sans prorata calculable, il n'y a aucune part à
+  distinguer et la cascade reprend ses termes d'origine.
+- **Le mois où le report est le seul virement garde sa lecture.** Sans charge
+  commune, l'ancienne tuile s'effaçait et c'est la carte de régularisation qui
+  tenait seule ce cas ; elle n'existe plus, donc la carte du virement reste
+  debout. Son montant garde alors son signe : qui a trop avancé le mois d'avant
+  **reçoit** au lieu de verser, et l'annoncer comme une sortie disait « 282,56 €
+  à verser » à qui on devait 282,56 €. Même correction sur l'écran Répartition,
+  qui avait la même.
+
+Aucune migration de schéma : rien de ce qui est enregistré ne change, seulement
+la façon dont les mêmes montants se lisent.
 
 ### Modifié — « Réglages » disparaît, et « Plus » range par intention
 

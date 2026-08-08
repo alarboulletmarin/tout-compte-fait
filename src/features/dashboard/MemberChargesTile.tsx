@@ -1,0 +1,141 @@
+import { type Money, ZERO, add } from '@/domain/money'
+import { fr } from '@/i18n/fr'
+import { formatMoney, tpl } from '@/i18n/format'
+import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
+import { Amount } from '@/ui/Amount'
+import { Dot } from '@/ui/Dot'
+import { Eyebrow } from '@/ui/Eyebrow'
+import { ChargesIcon } from '@/ui/Icons'
+import { Ring, type RingSegment } from '@/ui/Ring'
+import { Tile } from '@/ui/Tile'
+import { useCurrency } from '@/ui/currency'
+import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
+
+/** La couleur du pot : aucune personne ne le porte, aucune couleur de membre
+ *  ne peut donc le dire. C'est celle que la grille réserve à ce qui n'a pas
+ *  d'identité propre, et l'anneau n'a que deux parts à distinguer. */
+const COMMON_COLOR = 'var(--cat-rest)'
+
+/**
+ * Ce que le mois coûte à la personne filtrée, et **d'où ça vient** : ses lignes
+ * à elle d'un côté, sa part du pot commun de l'autre.
+ *
+ * C'est la seule chose que ses chiffres ne disent jamais. `scopeToMember` fond
+ * les deux dans chaque total — sans quoi elle se lirait comme si elle vivait
+ * sans loyer ni électricité (cahier §4.6) —, mais une fois fondue, la part du
+ * commun ne se voit plus : la tuile Charges, « Où part l'argent » et la capacité
+ * d'épargne annoncent toutes un montant dont on ne sait plus quelle fraction on
+ * a choisie, et le seul terme sur lequel on peut agir seul·e — ses dépenses à
+ * elle — est indiscernable de celui qui se décide à deux.
+ *
+ * **Elle ne dit pas un mot du virement, et c'est tout son propos.** Ces deux
+ * montants vivaient jusqu'ici sur « À verser sur le commun », qui est une carte
+ * de virement : le report entrait dans son chiffre de tête et pas dans eux — un
+ * coût est arrêté au mois où la dépense a eu lieu, un virement se rattrape
+ * (§4.7 ter) —, si bien qu'un « Total à payer » s'y affichait plus petit que le
+ * « À verser » juste au-dessus. Deux questions, deux tuiles.
+ *
+ * Le total est celui de la tuile Charges de la même page, au centime : elle ne
+ * le contredit pas, elle l'éclate. C'est ce qui interdit d'arrondir ici — deux
+ * moitiés arrondies ne redonnent plus le tout annoncé trois cases plus haut.
+ *
+ * `2×2` et l'anneau de `BreakdownTile`, dont elle est l'autre découpe du même
+ * montant : par famille chez l'une, par ce qui se décide seul·e ou à deux chez
+ * l'autre. Elle s'efface sans filtre, sans prorata calculable — l'en-tête du
+ * mois nomme alors ce qui manque — et quand le mois n'a coûté à cette personne
+ * ni en propre ni en commun : une répartition de rien n'est pas une répartition.
+ */
+export function MemberChargesTile() {
+  const charges = useMemberCharges()
+  const filter = useMemberFilter()
+  const members = useMemberMap()
+  const currency = useCurrency()
+
+  if (filter === undefined || charges === null) return null
+
+  const total = add(charges.own, charges.common)
+  if (total <= ZERO) return null
+
+  const member = members.get(filter)
+  const color = member?.color ?? 'var(--cat-rest)'
+  /* Les parts de l'anneau se prennent sur le total affiché, et non sur le
+     prorata des revenus : celui-ci dit quelle fraction du pot lui revient — il
+     a sa jauge sur la tuile voisine —, quand la question posée ici est quelle
+     fraction de *son* mois se décide à deux. */
+  const shareOf = (value: Money): number => (total > 0 ? value / total : 0)
+
+  const segments: RingSegment[] = [
+    {
+      id: 'own',
+      value: shareOf(charges.own),
+      color,
+      label: fr.dashboard.memberChargesOwn,
+    },
+    {
+      id: 'common',
+      value: shareOf(charges.common),
+      color: COMMON_COLOR,
+      label: fr.dashboard.memberChargesCommon,
+    },
+  ]
+
+  const spoken = tpl(
+    fr.dashboard.srMemberCharges,
+    formatMoney(total, currency),
+    member?.name ?? '',
+    formatMoney(charges.own, currency),
+    formatMoney(charges.common, currency),
+  )
+
+  return (
+    /* Sans lien, seule de la grille à porter deux montants sans destination :
+       ses deux moitiés viennent de deux endroits — ses lignes du mois pour
+       l'une, l'écran Répartition pour l'autre —, et un chevron unique
+       promettrait un écran qui les montrerait ensemble. Il n'y en a pas, et
+       en désigner un mentirait sur ce qu'on y trouve. */
+    <Tile span="2x2" className="gap-3">
+      <Eyebrow icon={ChargesIcon}>{fr.dashboard.memberCharges}</Eyebrow>
+      <div className="flex min-h-0 flex-1 items-center gap-4">
+        <Ring
+          size={DONUT_SIZE}
+          thickness={DONUT_THICKNESS}
+          segments={segments}
+          label={fr.dashboard.memberCharges}
+          srText={spoken}
+          className="shrink-0"
+        >
+          {/* Sans centimes au centre de l'anneau, comme `BreakdownTile` : les
+              deux lignes à côté les portent, et c'est là qu'on vérifie que le
+              compte tombe. */}
+          <Amount value={total} size="label" direction="out" withCents={false} />
+        </Ring>
+        {/* Le montant passe sous son libellé plutôt que de le tronquer : à
+            320px la colonne posée à côté de l'anneau fait 152px, où « Charges
+            perso » et son montant ne tiennent pas sur une ligne. Deux lignes
+            par poste, quatre en tout, c'est ce que les 83px laissés à
+            l'anneau permettent (voir `donut.ts`) — à condition qu'aucune
+            lecture ne vienne se poser sous eux, et il n'y en a pas.
+
+            Avec leurs centimes : les deux moitiés doivent redonner le total de
+            la tuile Charges de la même page, et arrondies elles ne le
+            redonnent plus (cahier §4.6). */}
+        <ul className="flex min-w-0 flex-1 flex-col gap-2">
+          <li className="flex flex-wrap items-baseline gap-x-2">
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <Dot color={color} />
+              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesOwn}</span>
+            </span>
+            <Amount value={charges.own} size="label" direction="out" />
+          </li>
+          <li className="flex flex-wrap items-baseline gap-x-2">
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <Dot color={COMMON_COLOR} />
+              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesCommon}</span>
+            </span>
+            <Amount value={charges.common} size="label" direction="out" />
+          </li>
+        </ul>
+      </div>
+    </Tile>
+  )
+}

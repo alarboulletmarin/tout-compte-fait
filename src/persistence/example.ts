@@ -864,6 +864,13 @@ function withCatalogue(data: Data): Data {
  * d'additionner à zéro —, et le PEE est archivé sans cesser d'être lisible,
  * parce qu'il porte une valeur.
  *
+ * **Les deux cadences sont servies, et elles ne sont pas décoratives** : les
+ * trois livrets et le PEL ne bougent que de ce qu'on y verse, donc un relevé par
+ * an suffit — c'est ce qui fait qu'aucun d'eux ne réclame quoi que ce soit six
+ * mois après le dernier. L'assurance-vie en unités de compte, le PER et le PEE
+ * bougent avec les marchés, donc au trimestre : le relevé du PEE remonte à six
+ * mois, et c'est lui qui montre le palier « à actualiser ».
+ *
  * Aucun capital n'est écrit ici : il vit dans les valorisations, et nulle part
  * ailleurs.
  */
@@ -875,6 +882,7 @@ function withSupports(data: Data): Data {
       memberId: ALIX,
       categoryId: 'passbook',
       archived: false,
+      pace: 'yearly',
     },
     {
       id: LIVRET_CAMILLE,
@@ -882,6 +890,7 @@ function withSupports(data: Data): Data {
       memberId: CAMILLE,
       categoryId: 'passbook',
       archived: false,
+      pace: 'yearly',
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
     {
@@ -890,14 +899,23 @@ function withSupports(data: Data): Data {
       memberId: SACHA,
       categoryId: 'passbook',
       archived: false,
+      pace: 'yearly',
     },
-    { id: PEL_ALIX, label: 'PEL', memberId: ALIX, categoryId: 'plans', archived: false },
+    {
+      id: PEL_ALIX,
+      label: 'PEL',
+      memberId: ALIX,
+      categoryId: 'plans',
+      archived: false,
+      pace: 'yearly',
+    },
     {
       id: ASSURANCE_VIE,
       label: 'Assurance-vie',
       memberId: CAMILLE,
       categoryId: 'life-insurance',
       archived: false,
+      pace: 'quarterly',
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
     {
@@ -906,6 +924,7 @@ function withSupports(data: Data): Data {
       memberId: ALIX,
       categoryId: 'retirement',
       archived: false,
+      pace: 'quarterly',
       note: 'Ouvert ce trimestre. Aucun relevé reçu : sa valeur est inconnue, pas nulle.',
     },
     {
@@ -914,6 +933,7 @@ function withSupports(data: Data): Data {
       memberId: CAMILLE,
       categoryId: 'company-savings',
       archived: false,
+      pace: 'quarterly',
       note: 'Entreprise quittée : le plan est fermé, l’épargne reste.',
     },
   ]

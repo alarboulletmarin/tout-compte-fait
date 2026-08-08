@@ -85,6 +85,26 @@ export function formatPercent(value: number, digits = 0): string {
   return `${(value * 100).toFixed(digits).replace('.', ',')}${NBSP_NARROW}%`
 }
 
+const decimalFormatter = new Intl.NumberFormat('fr-FR', {
+  useGrouping: true,
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
+
+/**
+ * Un nombre qui n'est pas un montant : « 4,2 », « 1 240,0 ».
+ *
+ * Une décimale, toujours — y compris sur un entier. « 4 mois » se lirait comme
+ * un compte exact quand c'est un quotient, et l'écart entre « 4 » et « 4,9 »
+ * est justement ce qu'on vient chercher. C'est aussi ce qui empêche le chiffre
+ * de changer de longueur d'un mois à l'autre, donc de sauter à l'œil.
+ *
+ * Il ne porte **aucune unité** : le mot vit dans `fr.ts`, comme partout.
+ */
+export function formatDecimal(value: number): string {
+  return decimalFormatter.format(value)
+}
+
 /**
  * Ce qui s'écrit là où il n'y a pas de chiffre à écrire.
  *

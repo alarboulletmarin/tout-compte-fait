@@ -155,9 +155,24 @@ export function CumulativeLines({
       {/* La lecture au-dessus du tracé, qui a repris la légende — voir
           `MonthlyBars` pour le raisonnement, qui vaut mot pour mot ici. */}
       <div aria-hidden="true" className="flex flex-col gap-2">
-        {/* Même rang que le mois lu des barres, et pour la même raison — voir
-            `MonthlyBars`, dont le raisonnement vaut mot pour mot ici. */}
-        <span className="t-section">{monthName(shown + 1)}</span>
+        <div className="flex flex-col gap-0.5">
+          {/* Ce que les chiffres mesurent, écrit au-dessus d'eux. Le graphique
+              portait son nom dans le seul `aria-label` du SVG : à l'œil, trois
+              montants sous « 2026 », « 2025 » et « Écart » disaient de quelle
+              année ils viennent, mais jamais de quelle grandeur — le solde du
+              mois lu, ou son cumul depuis janvier. Deux lectures qui ne donnent
+              pas le même nombre, et rien pour trancher. Le nom accessible n'est
+              pas dupliqué pour autant : le SVG le porte pour l'oreille, ce bloc
+              l'écrit pour l'œil, et il est `aria-hidden` comme tout ce qui
+              double le curseur ici.
+              En `t-label` sous l'eyebrow de la tuile : c'est le sujet de la
+              lecture, pas une seconde étiquette de section — le mois garde le
+              rang, il est ce qui change quand on déplace le curseur. */}
+          <span className="t-label">{label}</span>
+          {/* Même rang que le mois lu des barres, et pour la même raison — voir
+              `MonthlyBars`, dont le raisonnement vaut mot pour mot ici. */}
+          <span className="t-section">{monthName(shown + 1)}</span>
+        </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {series.map((serie) => (
             <div key={serie.id} className="flex min-w-0 flex-col gap-0.5">

@@ -8,7 +8,7 @@
 
 import { type YearMonth, addMonthsToYm, monthRange, ym, ymOf } from './date'
 import { type Money, ZERO, add, sub, sum } from './money'
-import { type MemberFilter, entriesOfMonth } from './stats'
+import { type KindOf, type KindTotals, type MemberFilter, entriesOfMonth, totalsByKind } from './stats'
 import type { Direction, Entry } from './types'
 
 export type MonthPoint = {
@@ -49,6 +49,52 @@ export function trailingMonths(
   memberId?: MemberFilter,
 ): MonthPoint[] {
   return monthSeries(entries, addMonthsToYm(endYm, -(count - 1)), endYm, memberId)
+}
+
+/* --- Série par nature -----------------------------------------------------*/
+
+/**
+ * Un mois lu **par nature**, et non par sens de trésorerie.
+ *
+ * `MonthPoint` ne connaît que des entrées et des sorties : un versement
+ * d'épargne y pèse dans `out`, à côté du loyer et de la mensualité du crédit.
+ * Cela suffit à dessiner douze barres, jamais à répondre « combien me coûte un
+ * mois » — la réponse serait gonflée de tout ce qu'on a mis de côté,
+ * c'est-à-dire précisément de ce qu'on cesserait de faire le mois où le revenu
+ * s'arrête.
+ *
+ * D'où une seconde série, aux mêmes bornes et au même `hasData` : ce sont les
+ * mêmes mois, lus avec une autre question. `totalsByKind` fait la lecture, comme
+ * pour le mois affiché — il n'y a qu'une façon de compter une nature.
+ */
+export type KindPoint = {
+  ym: YearMonth
+  totals: KindTotals
+  /** Faux dès qu'aucune entrée ne tombe dans le mois. */
+  hasData: boolean
+}
+
+/**
+ * Série mensuelle par nature sur [from, to], bornes incluses, sans trou.
+ *
+ * `forecast` a ici le sens qu'il a partout : échéances prévues comprises ou
+ * non. Un mois passé porte souvent des `planned` que personne n'a confirmées —
+ * elles ont pourtant été payées — et les exclure ferait passer un mois entier
+ * pour un mois sans loyer.
+ */
+export function kindSeries(
+  entries: readonly Entry[],
+  from: YearMonth,
+  to: YearMonth,
+  kindOf: KindOf,
+  memberId?: MemberFilter,
+  forecast = false,
+): KindPoint[] {
+  return monthRange(from, to).map((month) => ({
+    ym: month,
+    totals: totalsByKind(entries, month, kindOf, memberId, forecast),
+    hasData: entriesOfMonth(entries, month, memberId).length > 0,
+  }))
 }
 
 /* --- Comparaison de deux mois --------------------------------------------*/
@@ -180,9 +226,30 @@ export function yearSeries(
  *
  * `-1` sur une année entièrement vide : il n'y a alors aucun mois où s'arrêter,
  * et rendre zéro aurait désigné janvier.
+ *
+ * Il ne demande que `hasData` : le solde et l'épargne se cumulent tous deux au
+ * fil de l'année, et l'horizon d'une année est le même quelle que soit la
+ * question qu'on lui pose.
  */
-export function yearHorizon(points: readonly YearPoint[]): number {
+export function yearHorizon(points: readonly { hasData: boolean }[]): number {
   return points.reduce((last, point, index) => (point.hasData ? index : last), -1)
+}
+
+/**
+ * Le cumul d'une année en une ligne de graphique, borné aux mois qui portent
+ * des données.
+ *
+ * Un mois vide n'est pas un cumul plat : il n'est pas tracé du tout (cahier
+ * §4.7). Sans cette coupe, une année en cours plongerait sur sa dernière valeur
+ * jusqu'en décembre, et l'œil lirait « ça s'arrête » là où il n'y a rien encore.
+ */
+export function cumulativeLine(
+  points: readonly { cumulative: Money; hasData: boolean }[],
+): (Money | null)[] {
+  const first = points.findIndex((point) => point.hasData)
+  if (first === -1) return points.map(() => null)
+  const last = yearHorizon(points)
+  return points.map((point, index) => (index >= first && index <= last ? point.cumulative : null))
 }
 
 /** Les années couvertes par les données, de la plus ancienne à la plus récente. */

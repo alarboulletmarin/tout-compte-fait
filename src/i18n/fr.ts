@@ -849,61 +849,61 @@ export const fr = {
        contexte : ce nom-ci doit donc tenir tout seul, là où le chevron affiché
        se suffit du voisinage de l'eyebrow. */
     showSplit: 'Voir le détail de la répartition',
-    showMemberShare: 'Voir le détail du calcul de la part',
+    showMemberShare: 'Voir le détail de ce qu’il y a à verser',
 
     /* La contrepartie de la tuile Répartition, sous un filtre par membre :
        celle-ci montre les parts de tout le monde, celle-là ce que la personne
        filtrée porte du pot commun — et le coefficient qui le produit, qui
        n'apparaissait nulle part sur son mois.
 
-       Le montant à virer est le chiffre de tête, et les lignes en dessous sont
-       les termes qui le donnent. C'est le geste que la tuile sert : un virement
-       sur le compte joint, dont la somme se recopie telle quelle. Le total des
-       charges communes n'y est pas — c'est un chiffre qu'on ne doit pas, et il
-       se lit sur l'écran Répartition, qui est fait pour ça. */
+       Le montant à virer est le chiffre de tête, et non une ligne parmi trois.
+       C'est le geste que la tuile sert : un virement sur le compte joint, dont
+       la somme se recopie telle quelle. Le total des charges communes en est
+       parti — c'est un chiffre qu'on ne doit pas, et il se lit encore sur
+       l'écran Répartition, qui est fait pour ça.
+
+       **Et elle ne parle plus que du virement.** Elle portait sous ce même
+       titre « Charges perso » et « Total à payer », c'est-à-dire deux montants
+       qui ne sont pas un virement mais un coût : le report entre dans l'un et
+       pas dans les autres, si bien qu'un « Total à payer » s'affichait plus
+       petit que le « À verser » posé juste au-dessus. Le coût du mois a
+       maintenant sa tuile — voir `memberCharges` —, et celle-ci pose le calcul
+       de son propre chiffre, dans les mots de l'écran Répartition : sa part du
+       mois, plus la régularisation, égale ce qu'elle verse. */
     /* L'eyebrow nomme le chiffre plutôt que la tuile : un nom de tuile puis
        « À verser sur le commun » juste en dessous disaient deux fois la même
        chose, et cette redite valait les trente pixels qui débordaient. */
     memberShare: 'À verser sur le commun',
-    /* Le nom du membre ne s'affiche pas — il vient du filtre, que la tuile ne
-       redit pas —, mais il nomme la région : un lecteur d'écran sait lister les
-       régions d'une page hors de leur voisinage, et « À verser sur le commun »
-       seul n'y dit pas de qui. */
+    /* Le nom de la région, et le nom du membre avec lui. Il ne s'affiche pas —
+       il vient du filtre, que la tuile ne redit pas — et il vivait jusqu'ici
+       dans la lecture parlée de l'anneau, partie avec l'anneau : une jauge à
+       45,3 % annonçait une fraction du total des charges communes du foyer,
+       lequel n'est pas sur cette tuile et n'a pas à y être. Un pourcentage sans
+       son « de quoi » ne s'explique pas d'un mot posé à côté ; il se vérifie sur
+       l'écran Répartition, contre le revenu dont il sort. */
     memberShareOf: 'À verser sur le commun · %s',
-    /* Les deux termes du virement, et rien d'autre : sa part du mois, plus ou
-       moins ce que le mois précédent reporte. Ils s'additionnent pour redonner
-       le chiffre de tête, ce qu'aucune des lignes d'avant ne faisait —
-       « Charges perso » et « Total à payer » répondaient à une autre question
-       que celle de la tuile, et trois montants dont aucun ne redonne le
-       quatrième se lisent comme une erreur de calcul.
 
-       Le pourcentage n'y est plus, ni en anneau ni en toutes lettres : il sort
-       du revenu de chacun rapporté à la somme des revenus, et cette division-là
-       ne tient pas sur une ligne de tuile. C'est l'écran Répartition qui la
-       montre, où le prorata se lit contre le revenu dont il vient. */
-    /* Un seul libellé pour un seul montant, et il sert sur les deux tuiles :
-       « à verser » l'additionne au report, « ce que le mois lui coûte »
-       l'additionne au perso. Deux noms pour un même nombre, sur un même écran,
-       se lisent comme deux nombres qui tomberaient juste par hasard. */
-    memberShareCommon: 'Sa part du commun',
-    /* Le report, et le mois d'où il vient. Le « de » vit dans le mois, pas dans
-       le gabarit : « d'août » et « de juillet » ne s'écrivent pas pareil —
-       c'est la tuile qui l'élide, comme `SplitPage`. */
-    settlementOf: 'Régularisation %s',
+    /* Ce que le mois coûte à la personne filtrée, et la seule chose que ses
+       chiffres ne disent jamais : ce qui est à elle, et ce qui est le foyer.
+       `scopeToMember` fond les deux dans chaque total — sans quoi elle se
+       lirait comme si elle vivait sans loyer —, et une fois fondus plus rien ne
+       les sépare : la tuile Charges, « Où part l'argent » et la capacité
+       d'épargne annoncent toutes un montant dont on ne sait plus quelle part on
+       a choisie.
 
-    /* Ce que le mois coûte à la personne filtrée : la tuile Charges décomposée,
-       et rien d'autre. Son chiffre vaut celui de Charges au centime — c'est
-       voulu, un total qu'on retrouve à l'identique est ce qui autorise à lire
-       les deux lignes dessous comme ses deux moitiés. Charges les mêle sans les
-       séparer, et cette séparation ne se fait nulle part ailleurs sur l'écran
-       du mois.
-
-       « Ce que le mois lui coûte » et non « Total à payer », qui vivait sur la
-       tuile du virement et s'y confondait avec le chiffre de tête posé juste
-       au-dessus : celui-ci est un coût, il ne se vire nulle part. */
-    memberCost: 'Ce que le mois lui coûte',
-    memberCostOf: 'Ce que le mois lui coûte · %s',
-    memberCostOwn: 'Charges perso',
+       Elle ne dit pas un mot du virement, et c'est tout son propos : un coût
+       est arrêté au mois où la dépense a eu lieu, un virement se rattrape
+       (§4.7 ter). Les mêler dans une carte était l'erreur qu'elle répare. */
+    /* « Perso et commun » et non « Charges du mois » : la tuile de flux de la
+       même page s'appelle déjà « Charges », et deux étiquettes à un mot près
+       pour deux découpes du même montant se lisent comme deux chiffres
+       différents. L'eyebrow nomme donc la découpe, et les deux lignes en
+       dessous reprennent ses deux mots. Le plafond de 13 caractères ne vaut que
+       pour la `2×1`, seule à rester en demi-colonne sur mobile (DS §5). */
+    memberCharges: 'Perso et commun',
+    memberChargesOwn: 'Charges perso',
+    memberChargesCommon: 'Part du commun',
+    srMemberCharges: '%s de charges pour %s : %s en propre, %s de part du commun.',
 
     /* Quatre soldes qui se ressemblent à l'œil sans dire la même chose. Chacun
        dit son calcul, puis ce qui le sépare de son voisin — c'est la question
@@ -1600,6 +1600,16 @@ export const fr = {
        champ, c'est de savoir à quoi il sert, pas ce qu'il ne fait pas. */
     supportKindHint: 'Sert à classer le support.',
     supportKindRequired: 'Choisis un type.',
+    /* La cadence des relevés — le seul champ du formulaire qui parle du temps,
+       et il ne projette rien : il dit quand l'app réclamera un relevé, et
+       surtout quand elle se taira. Deux réponses, parce qu'il n'en existe que
+       deux : une valeur qui ne bouge que de tes virements, ou une valeur que le
+       marché refait. La question se tranche sans rien consulter. */
+    supportPace: 'Rythme des relevés',
+    supportPaceHint:
+      'Un livret ne bouge que de tes versements : un relevé par an suffit, et l’app calcule le reste. Un PEA, un compte-titres ou une assurance-vie en unités de compte bougent tout seuls.',
+    paceYearly: 'Une fois par an',
+    paceQuarterly: 'Chaque trimestre',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
     /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin
@@ -1634,7 +1644,10 @@ export const fr = {
        Une date seule ne dit pas son âge : personne ne compte les mois de tête
        devant un « 8 février » posé sous un chiffre. Et un relevé ancien n'est
        pas une erreur — il attend une confirmation, d'où « à actualiser » et non
-       une alerte. */
+       une alerte.
+       Le dernier palier arrive à la cadence du support, et non au sixième mois
+       pour tout le monde : un Livret A relevé en février se disait « à
+       actualiser » en août quand l'app connaissait son capital à l'euro près. */
     valueAgeOne: 'relevé il y a 1 mois',
     valueAge: 'relevé il y a %s mois',
     valueStale: 'à actualiser · relevé il y a %s mois',
@@ -1670,6 +1683,14 @@ export const fr = {
        vocabulaire au pluriel pour ne pas le confondre avec la fiche d'un
        support — où l'on ne parle que de lui. */
     valuesUpdate: 'Mettre à jour les relevés',
+    /* Ce que l'écran dit quand il a quelque chose à demander — et il ne le dit
+       que là. Un raccourci posé en permanence laissait entendre un rituel
+       mensuel, qui n'est la bonne cadence d'aucun support : réclamer une donnée
+       qui ne produit rien ne produit que de la culpabilité. Le reste du temps le
+       geste reste atteignable, en `ghost` : c'est le poids du bouton qui dit la
+       fréquence, comme pour « Ajouter un support » juste en dessous. */
+    valuesDueOne: '1 relevé à faire',
+    valuesDue: '%s relevés à faire',
     valuesHint:
       'Saisis seulement les valeurs que tu as vérifiées. Un champ laissé vide ne change rien.',
     valuesDateHint: 'Elle vaut pour tous les relevés saisis ci-dessous.',
@@ -1689,6 +1710,65 @@ export const fr = {
     /* Le même chiffre, mais au pluriel des supports : sur un total, « depuis »
        ne désigne pas un relevé mais autant qu'il y a de comptes. */
     movedSinceTotal: 'Versé depuis les derniers relevés',
+
+    /* --- Combien de temps le capital tient ---------------------------------
+       Le seul chiffre de cet écran qu'une banque ne calculera jamais : elle
+       voit le solde, elle ne sait pas ce qu'est une charge chez quelqu'un.
+       « 10 450 € » est une anecdote — l'appli de la banque le dit mieux, plus
+       vite et sans rien demander ; « tu tiens 4,2 mois » est une décision, et
+       c'est ce qui rend un relevé utile. */
+    coverage: 'Combien de temps je tiens',
+    /* Le nombre porte son unité et rien d'autre : la condition se lit sous lui,
+       où elle ne coupe pas le chiffre en deux. */
+    coverageValue: '%s mois',
+    coverageHint: 'sans revenus, aux charges d’un mois moyen',
+    /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien dire.
+       L'écran dit alors ce qui manque, plutôt qu'un chiffre qu'il faudrait
+       corriger de tête. */
+    coverageNoMonth: 'Il faudra un mois entier pour le dire : celui-ci n’est pas fini.',
+    coverageNoCharge: 'Aucune charge sur la période : il n’y a rien à diviser.',
+    /* La vérification, repliée comme celle de la capacité : c'est ce qu'on
+       ouvre une fois pour comprendre d'où sort le chiffre, pas ce qu'on relit
+       chaque mois.
+       Un autre libellé que « Comprendre le calcul », qui vit une tuile plus
+       bas : deux sommaires du même nom sur le même écran ouvrent sur deux
+       contenus différents, et rien ne dit lequel on déplie. Celui-ci nomme
+       d'ailleurs ce qu'on vient y chercher — quelles sorties entrent dans le
+       dénominateur, question à laquelle aucun autre écran ne répond. */
+    coverageMethod: 'Ce que ce chiffre compte',
+    coverageCapital: 'Capital estimé',
+    coverageMonthly: 'Charges d’un mois moyen',
+    coverageOverOne: 'moyenne sur 1 mois',
+    coverageOver: 'moyenne sur %s mois',
+    /* Les trois décisions qui font la justesse du chiffre, et qu'aucun autre
+       écran ne dit. */
+    coverageMethodDenominator:
+      'Les charges et les mensualités de crédit comptent : elles ne s’arrêtent pas quand le revenu s’arrête. Les versements d’épargne, non — c’est la première chose qu’on coupe.',
+    coverageMethodMonths:
+      'Le mois en cours ne compte pas : il n’a pas encore tout dépensé, et il ferait paraître les charges plus légères qu’elles ne sont.',
+    coverageMethodUnvalued:
+      'Un support sans relevé n’entre pas dans le capital : l’app ne sait pas ce qu’il vaut, et le compter à zéro serait aussi faux que l’inventer.',
+
+    /* --- L'accumulation, année après année ---------------------------------
+       « Combien j'ai versé cette année » est du flux pur : aucune donnée
+       nouvelle, aucun relevé, et ça répond à la question que l'app ne posait
+       nulle part — elle est une machine à mois, et l'épargne est la seule notion
+       qui n'ait aucun sens à l'intérieur d'un mois. */
+    years: 'Ce que tu mets de côté',
+    year: 'Année',
+    yearsVersus: '%s contre %s',
+    yearsDelta: 'Écart',
+    /* Ce que les chiffres mesurent, et non la forme du tracé : « mois après
+       mois » décrivait la courbe, quand ce qu'on ne sait pas est ce que vaut le
+       nombre lu à un mois donné — ce qui a été versé ce mois-là, ou tout ce qui
+       s'est accumulé depuis janvier. C'est le second. Même correction que sur le
+       cumul du solde de l'historique, et pour la même raison. */
+    yearsCumulative: 'Cumul des versements depuis janvier',
+    yearsEmpty: 'Pas encore d’année à lire.',
+    yearsPartial: '%s s’arrête à %s : les deux années se lisent à ce mois-là.',
+    yearsNoPrevious: 'Rien de versé en %s : rien à comparer.',
+    srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
+    srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
 
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',
@@ -1745,6 +1825,16 @@ export const fr = {
     flowIncome: 'Revenus',
     flowCharges: 'Charges',
     flowDebts: 'Crédits',
+    /* Les mêmes termes, quand le prorata se calcule : la cascade disait
+       « Charges » d'un bloc là où le montant mêlait ses lignes à elle et sa
+       part du pot commun, et c'est justement ce qu'on vient vérifier ici — un
+       loyer partagé pèse autant qu'un crédit, et ne se voyait nulle part. La
+       part du commun se retranche des deux natures à la fois, elle vient donc
+       après elles et non entre les deux. La somme des termes vaut toujours la
+       capacité au centime : ce sont les mêmes totaux, seulement séparés. */
+    flowOwnCharges: 'Charges perso',
+    flowOwnDebts: 'Crédits perso',
+    flowCommon: 'Part du commun',
     capacity: 'Capacité d’épargne',
     capacityHint: 'échéances prévues comprises',
     capacityNegative: 'Les charges dépassent les revenus : il n’y a rien à placer ce mois-ci.',
@@ -1786,7 +1876,7 @@ export const fr = {
     methodExcluded:
       'Un versement n’est pas une charge : il sort du compte, mais il reste à qui le fait. Il ne pèse donc ni dans les charges du mois, ni dans le partage.',
     methodShared:
-      'Sous un filtre, la capacité tient compte de la part des charges communes que la personne porte — au prorata des revenus, comme partout ailleurs.',
+      'La part des charges communes que la personne porte est comptée dans la capacité — au prorata des revenus, comme partout ailleurs. La cascade la pose sur sa propre ligne, crédits communs compris : ce qui reste au-dessus est à elle seule.',
     methodBalance:
       'Le solde du mois, lui, compte le versement comme une sortie : c’est exact en trésorerie, et c’est pour ça que les deux chiffres diffèrent.',
   },

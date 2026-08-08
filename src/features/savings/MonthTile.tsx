@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { type Money, ZERO, abs } from '@/domain/money'
+import { type Money, ZERO, abs, add, sub } from '@/domain/money'
 import { fr } from '@/i18n/fr'
 import { formatPercent, tpl } from '@/i18n/format'
-import { useKindTotals } from '@/store/selectors'
+import { useKindTotals, useMemberCharges } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Disclosure } from '@/ui/Disclosure'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -77,8 +77,23 @@ export function MonthTile({
   rate: number | null
 }) {
   const totals = useKindTotals(true)
+  const charges = useMemberCharges()
   const [open, setOpen] = useState(false)
   const over = left < ZERO
+
+  /* La part du commun se **retranche** des deux natures plutôt qu'elle ne se
+     lit à part : `totals` compte déjà les charges communes découpées en parts
+     (`scopeToMember`), et poser la part à côté d'elles la compterait deux fois.
+     Ce qui reste est ce que la personne porte seule, nature par nature — et la
+     cascade tombe alors juste au centime par construction, quoi qu'il arrive
+     aux arrondis du prorata.
+
+     `null` quand le prorata ne se calcule pas : les chiffres du mois sont alors
+     ceux de ses seules lignes, il n'y a aucune part à distinguer, et la cascade
+     reprend ses deux termes d'origine. */
+  const shared = charges === null ? null : add(charges.commonCharge, charges.commonDebt)
+  const ownCharges = charges === null ? totals.charge : sub(totals.charge, charges.commonCharge)
+  const ownDebts = charges === null ? totals.debt : sub(totals.debt, charges.commonDebt)
 
   return (
     <Tile className="gap-2">
@@ -132,12 +147,32 @@ export function MonthTile({
             <p className="t-body">{fr.savings.methodFormula}</p>
             <ul className="flex flex-col gap-1.5">
               <Term label={fr.savings.flowIncome} value={totals.resource} direction="in" />
-              <Term label={fr.savings.flowCharges} value={totals.charge} direction="out" />
+              {/* « Charges » d'un bloc mêlait ses lignes à elle et sa part du
+                  pot commun, sans que rien ne le dise — c'est-à-dire que le
+                  seul terme sur lequel on peut agir seul·e était indiscernable
+                  de celui qui se décide à deux, sur l'écran qui sert justement à
+                  décider quoi changer. Nommés, ils gardent leurs deux natures :
+                  un crédit qui mange la moitié de la capacité continue de se
+                  voir ici, et nulle part ailleurs. */}
+              <Term
+                label={shared === null ? fr.savings.flowCharges : fr.savings.flowOwnCharges}
+                value={ownCharges}
+                direction="out"
+              />
               {/* Le crédit n'apparaît que s'il y en a : une ligne à zéro
                   laisserait croire à une nature qu'on aurait oublié de
-                  renseigner. */}
-              {totals.debt > ZERO && (
-                <Term label={fr.savings.flowDebts} value={totals.debt} direction="out" />
+                  renseigner. La part du commun suit la même règle — sans charge
+                  commune ce mois-ci, la nommer ne dirait rien de plus que son
+                  absence. */}
+              {ownDebts > ZERO && (
+                <Term
+                  label={shared === null ? fr.savings.flowDebts : fr.savings.flowOwnDebts}
+                  value={ownDebts}
+                  direction="out"
+                />
+              )}
+              {shared !== null && shared > ZERO && (
+                <Term label={fr.savings.flowCommon} value={shared} direction="out" />
               )}
               <li className="flex items-baseline gap-3 border-t border-border pt-2">
                 <span className="t-body min-w-0 flex-1 truncate">{fr.savings.capacity}</span>

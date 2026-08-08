@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
 import { SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
@@ -14,20 +15,48 @@ import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { PageTitle } from '@/ui/PageTitle'
 import { CapitalTile } from './CapitalTile'
+import { CoverageTile } from './CoverageTile'
 import { MonthTile } from './MonthTile'
 import { PlacedSection } from './PlacedSection'
 import { SupportsSection } from './SupportsSection'
 import { useIndividualScope } from './individualScope'
 
 /**
+ * Le cumul de l'année arrive à la demande — et c'est le seul bloc de cet écran
+ * dans ce cas.
+ *
+ * Il emporte les lignes cumulées, l'axe et le curseur de `src/charts`, que seul
+ * l'historique servait jusqu'ici et qui vivent pour cette raison dans son
+ * morceau (`Routes.tsx`). Cet écran-ci, lui, est sur le chemin quotidien : il se
+ * charge avec le mois, donc tout ce qu'il importe statiquement pèse sur le
+ * premier chargement de tout le monde — mesuré, quatre kibioctets compressés, de
+ * quoi passer le budget de `npm run size`.
+ *
+ * Le repli est **vide** plutôt qu'une ligne d'attente : la section est la
+ * dernière de la page, donc sous le pli sur un téléphone, et un « chargement… »
+ * qui clignote sous le pli n'est vu de personne — sauf de qui descend pile à ce
+ * moment-là, à qui il ne dit rien de plus que le graphique qui le remplace.
+ */
+const YearSection = lazy(async () => ({
+  default: (await import('./YearSection')).YearSection,
+}))
+
+/**
  * L'écran de l'épargne — celui qu'ouvre la tuile Capacité du mois.
  *
- * **Une question, une zone, un chiffre, une action.** Cinq blocs, dans l'ordre
- * où les questions se posent : ce que je possède, où c'est placé, ce que le mois
- * me permet d'y mettre, et où c'est parti. Tout était déjà là — le même calcul,
- * les mêmes `Entry`, les mêmes relevés — mais en sept cadres de même poids, dont
- * une grille de tuiles pleine largeur : sur un téléphone, six écrans de
- * défilement, et rien pour dire dans quel ordre les lire.
+ * **Une question, une zone, un chiffre, une action.** Les blocs se suivent dans
+ * l'ordre où les questions se posent : ce que je possède, **combien de temps ça
+ * tient**, où c'est placé, ce que le mois me permet d'y mettre, où c'est parti,
+ * et ce que l'année a accumulé. Tout était déjà là — le même calcul, les mêmes
+ * `Entry`, les mêmes relevés — mais en sept cadres de même poids, dont une
+ * grille de tuiles pleine largeur : sur un téléphone, six écrans de défilement,
+ * et rien pour dire dans quel ordre les lire.
+ *
+ * **L'écran ne concourt pas sur « combien j'ai ».** La banque y répond mieux,
+ * plus vite et sans qu'on recopie quoi que ce soit ; ce que l'app est seule à
+ * savoir, c'est ce que ce capital tient face aux charges qu'elle connaît, et ce
+ * qu'on a réussi à mettre de côté depuis janvier. Ce sont les deux lectures que
+ * personne d'autre ne produit, et ce sont elles qui rendent un relevé utile.
  *
  * Les deux lectures ne s'additionnent jamais. Une valorisation n'est pas une
  * opération — elle n'entre ni dans le solde du mois, ni dans la capacité, ni
@@ -90,6 +119,11 @@ export function SavingsPage() {
             net={totals.saving}
             owner={owner === null ? null : (memberMap.get(owner)?.name ?? null)}
           />
+          {/* Puis ce que ce stock permet — la seule question de cet écran à
+              laquelle une banque ne sait pas répondre. Elle vient juste après
+              le capital parce qu'elle en est la lecture : « combien j'ai » n'a
+              d'intérêt que par « est-ce que ça tient ». */}
+          <CoverageTile />
           <SupportsSection />
 
           {/* Puis le mois : ce qu'il dégage, ce qu'on y a mis, ce qu'il reste. */}
@@ -118,6 +152,13 @@ export function SavingsPage() {
           </div>
 
           <PlacedSection saved={totals.saving} />
+
+          {/* En dernier, et c'est sa place : le mois se décide en tête d'écran,
+              l'année se contemple. C'est aussi la seule lecture d'ici qui ne
+              demande rien — ni relevé, ni saisie de plus. */}
+          <Suspense fallback={null}>
+            <YearSection />
+          </Suspense>
         </div>
       )}
     </>

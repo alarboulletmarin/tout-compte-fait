@@ -14,7 +14,8 @@
 import { useMemo, useState } from 'react'
 import { type ISODate, type YearMonth, startOfMonth, today } from '@/domain/date'
 import { type Money, parseAmount, toAmountInput } from '@/domain/money'
-import type { Recurrence, SavingSupport, SavingValuation } from '@/domain/types'
+import { DEFAULT_PACE, paceOf } from '@/domain/saving'
+import type { Recurrence, SavingPace, SavingSupport, SavingValuation } from '@/domain/types'
 import type { SavingSupportInput } from '@/domain/updates'
 import { fr } from '@/i18n/fr'
 import { tpl } from '@/i18n/format'
@@ -23,6 +24,14 @@ export type SupportDraft = {
   label: string
   memberId: string
   categoryId: string
+  /**
+   * À quel rythme le relever. Toujours renseignée — le formulaire propose deux
+   * réponses et en présélectionne une —, parce que c'est une question à laquelle
+   * on peut répondre sans rien consulter : « est-ce que ce compte bouge tout
+   * seul ? ». Ce qu'on ne sait pas, en revanche, c'est ce qu'il vaut aujourd'hui,
+   * et c'est ce champ-là qui reste facultatif.
+   */
+  pace: SavingPace
   note: string
   /** Facultatif : vide veut dire « je ne connais pas », jamais « zéro ». */
   amountText: string
@@ -41,6 +50,7 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
     label: '',
     memberId: defaults.memberId ?? '',
     categoryId: defaults.categoryId ?? '',
+    pace: DEFAULT_PACE,
     note: '',
     amountText: '',
     valueDate: today(),
@@ -59,6 +69,9 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     label: support.label,
     memberId: support.memberId,
     categoryId: support.categoryId,
+    /* Un support d'avant le champ n'en porte aucune : c'est la lecture du
+       domaine qui décide, et jamais une seconde valeur par défaut posée ici. */
+    pace: paceOf(support),
     note: support.note ?? '',
     amountText: '',
     valueDate: today(),
@@ -107,6 +120,7 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         label: draft.label.trim(),
         memberId: draft.memberId,
         categoryId: draft.categoryId,
+        pace: draft.pace,
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null
           ? { value: { amount, date: draft.valueDate } }

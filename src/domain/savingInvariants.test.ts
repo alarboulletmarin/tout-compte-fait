@@ -91,6 +91,7 @@ function withSupport(
       label,
       memberId,
       categoryId,
+      pace: 'yearly',
       ...(value === undefined ? {} : { value: { amount: eur(value), date: on } }),
     },
     sequentialIds(`${label}-`),

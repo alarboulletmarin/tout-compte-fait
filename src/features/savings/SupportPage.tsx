@@ -102,7 +102,7 @@ function SupportView({ support }: { support: SavingSupport }) {
         ) : (
           <>
             <Amount value={known} size="tile" />
-            <span className="t-label">{freshness(value.knownOn)}</span>
+            <span className="t-label">{freshness(value.knownOn, support.pace)}</span>
             {value.movedSince !== ZERO && value.estimated !== null && (
               <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
                 <div className="flex items-baseline justify-between gap-3">

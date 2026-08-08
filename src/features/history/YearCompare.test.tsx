@@ -107,6 +107,16 @@ describe('la comparaison de deux années', () => {
     expect(screen.getByText(`+${euros(20000)}`, EXACT)).toBeInTheDocument()
   })
 
+  /* Trois montants sous « 2026 », « 2025 » et « Écart » disaient de quelle
+     année ils viennent, jamais de quelle grandeur : le solde du mois lu, ou son
+     cumul depuis janvier ? Le nom du graphique le dit désormais à l'œil, et pas
+     seulement dans l'`aria-label` du tracé. */
+  it('nomme la grandeur que les trois chiffres portent', () => {
+    setup([income('2026-01-05', 100000), income('2025-01-05', 80000)])
+    expect(screen.getByText(history.cumulative)).toBeVisible()
+    expect(screen.getByRole('img')).toHaveAccessibleName(history.cumulative)
+  })
+
   it('n’a rien à comparer sans année précédente, et le dit', () => {
     setup([income('2026-01-05', 100000)])
     expect(screen.getByText(tpl(history.yearsNoPrevious, 2025))).toBeInTheDocument()
