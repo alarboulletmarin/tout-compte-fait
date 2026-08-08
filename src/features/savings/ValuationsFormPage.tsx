@@ -11,7 +11,7 @@ import { addSavingValuations, undoable } from '@/store/actions'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { EmptyState } from '@/ui/EmptyState'
-import { AmountInput, Field, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
@@ -127,9 +127,8 @@ function ValuationsForm({
               support, où l'on ne parle que de lui. */}
           <Field label={fr.savings.valueDate} required hint={fr.savings.valuesDateHint}>
             {(id) => (
-              <TextInput
+              <DateInput
                 id={id}
-                type="date"
                 value={draft.date}
                 onChange={(event) => {
                   if (event.target.value !== '') {

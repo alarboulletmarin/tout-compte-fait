@@ -1,6 +1,6 @@
 import { fr } from '@/i18n/fr'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
-import { AmountInput, Field, Select, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import type { SupportDraft, SupportErrors } from './supportDraft'
 
 /**
@@ -143,9 +143,8 @@ export function SupportFields({
           {draft.amountText.trim() !== '' && (
             <Field label={fr.savings.valueDate} required>
               {(id) => (
-                <TextInput
+                <DateInput
                   id={id}
-                  type="date"
                   value={draft.valueDate}
                   onChange={(event) => {
                     if (event.target.value !== '') patch({ valueDate: event.target.value })

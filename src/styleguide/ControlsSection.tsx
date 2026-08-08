@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { fr } from '@/i18n/fr'
 import { Button, IconButton } from '@/ui/Button'
 import { Disclosure } from '@/ui/Disclosure'
-import { AmountInput, Checkbox, Field, Select, TextInput } from '@/ui/Field'
+import { AmountInput, Checkbox, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import { Plus } from '@/ui/Icons'
 import { Segmented } from '@/ui/Segmented'
 import { Section, SubTitle } from './Section'
@@ -48,6 +48,12 @@ function Controls() {
             <AmountInput id={id} aria-describedby={describedBy} defaultValue="950,00" />
           )}
         </Field>
+        {/* Le contrôle d'une date porte le même plafond que celui d'un montant,
+            et il se montre à côté de lui : c'est là qu'on vérifie que les deux
+            s'arrêtent bien au même endroit. */}
+        <Field label="Date" required>
+          {(id) => <DateInput id={id} defaultValue="2026-08-08" />}
+        </Field>
         <Field label="Catégorie" optional>
           {(id) => (
             <Select id={id} defaultValue="logement">
@@ -58,7 +64,13 @@ function Controls() {
         </Field>
         <Field label="Jour" error="Le mois ne compte que 30 jours.">
           {(id, describedBy) => (
-            <TextInput id={id} aria-describedby={describedBy} defaultValue="31" invalid />
+            <TextInput
+              id={id}
+              aria-describedby={describedBy}
+              className="max-w-24"
+              defaultValue="31"
+              invalid
+            />
           )}
         </Field>
       </div>

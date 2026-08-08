@@ -10,7 +10,7 @@ import { Button } from '@/ui/Button'
 import { CategorySelect } from '@/ui/CategorySelect'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { type EntryNature, kindsOfNature } from '@/ui/categoryKinds'
-import { AmountInput, Field, Select, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Segmented } from '@/ui/Segmented'
 import { Tile } from '@/ui/Tile'
@@ -294,11 +294,10 @@ export function OperationForm({
               : {})}
           >
             {(id, describedBy) => (
-              <TextInput
+              <DateInput
                 id={id}
                 aria-describedby={describedBy}
-                type="date"
-                value={draft.startedOn}
+                                value={draft.startedOn}
                 onChange={(e) => {
                   if (e.target.value !== '') patch({ startedOn: e.target.value })
                 }}

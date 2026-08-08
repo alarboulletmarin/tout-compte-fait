@@ -15,7 +15,7 @@ import { useSavingSupport, useSupportValuations } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
-import { AmountInput, Field, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { toast } from '@/ui/toast'
@@ -141,9 +141,8 @@ function ValuationForm({
 
           <Field label={fr.savings.valueDate} required>
             {(fieldId) => (
-              <TextInput
+              <DateInput
                 id={fieldId}
-                type="date"
                 value={draft.date}
                 onChange={(event) => {
                   if (event.target.value !== '') {
