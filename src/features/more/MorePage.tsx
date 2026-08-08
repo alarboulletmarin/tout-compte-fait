@@ -13,7 +13,7 @@ import {
   SPLIT_PATH,
   STORAGE_PATH,
 } from '@/app/routes'
-import type { PaletteSetting, ThemeSetting } from '@/domain/types'
+import type { Locale, PaletteSetting, ThemeSetting } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { currencySymbol, tpl } from '@/i18n/format'
 import { useCategories, useFamilies, useHouseholdName, useMembers } from '@/store/selectors'
@@ -24,12 +24,14 @@ import {
   CurrencyIcon,
   DeviceIcon,
   InfoIcon,
+  LanguageIcon,
   PeopleIcon,
   ThemeIcon,
   TransferIcon,
 } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row, RowGroup } from '@/ui/RowGroup'
+import { Segmented } from '@/ui/Segmented'
 
 /**
  * Tout ce que la barre d'onglets ne peut pas porter, rangé par intention.
@@ -142,6 +144,51 @@ function AppearanceRow() {
       icon={ThemeIcon}
       description={tpl(t.settings.appearanceSummary, themeName()[theme], paletteName()[palette])}
       to={APPEARANCE_PATH}
+    />
+  )
+}
+
+/* Les deux langues, dans l'ordre où le réglage les propose. Chacune se nomme
+   dans la sienne — voir `t.language`, qui dit pourquoi. */
+const languages = (): { value: Locale; label: string }[] => [
+  { value: 'fr', label: t.language.fr },
+  { value: 'en', label: t.language.en },
+]
+
+/**
+ * La langue, sur une rangée, à côté de la devise.
+ *
+ * **Ici et non sur l'écran d'apparence**, alors que c'en est un voisin évident :
+ * l'apparence se choisit sur aperçu — six vignettes qu'il faut voir —, la langue
+ * se choisit sur un mot qu'on reconnaît. Elle a en commun avec la devise d'être
+ * un réglage à réponse fermée qui ne montre rien : les deux se règlent donc sur
+ * place, dans le groupe qui les porte déjà.
+ *
+ * **Un `Segmented` et non un `Select`**, contrairement à la devise juste en
+ * dessous, et la raison n'est pas la longueur de la liste : on vient ici
+ * *précisément parce qu'on ne lit pas* ce qui est affiché. Les deux positions
+ * sont visibles sans ouvrir quoi que ce soit, et « English » se reconnaît sans
+ * comprendre un mot de ce qui l'entoure — ce qu'un sélecteur replié, qui
+ * n'affiche que la langue courante, ne permet pas.
+ */
+function LanguageRow() {
+  const locale = useStore((s) => s.data.settings.locale)
+  const setLocale = useStore((s) => s.setLocale)
+
+  return (
+    <Row
+      label={t.language.label}
+      icon={LanguageIcon}
+      description={t.language.hint}
+      trailing={
+        <Segmented
+          options={languages()}
+          value={locale}
+          onChange={setLocale}
+          label={t.language.label}
+          className="w-fit"
+        />
+      }
     />
   )
 }
@@ -283,6 +330,7 @@ export function MorePage() {
           une cinquième, et la colonne, elle, a son propre lien en pied. */}
       <RowGroup title={t.nav.application}>
         <AppearanceRow />
+        <LanguageRow />
         <CurrencyRow />
         <Row
           label={t.nav.about}

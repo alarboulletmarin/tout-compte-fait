@@ -12,7 +12,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 9
+export const CURRENT_SCHEMA_VERSION = 10
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -303,6 +303,25 @@ function toVersion9(doc: RawDocument): RawDocument {
   return { ...doc, schemaVersion: 9 }
 }
 
+/**
+ * La langue de l'interface, à côté du thème et de la palette.
+ *
+ * Rien à convertir, et le champ est posé par la normalisation : un document
+ * d'avant la v10 repart en **français**, et surtout pas dans la langue du
+ * navigateur qui l'ouvre. C'est le même choix que la palette de la v7, à une
+ * nuance près qu'il faut dire — ici, deviner aurait été *possible*, et c'est
+ * justement ce qu'on refuse : un fichier exporté puis rouvert sur un appareil
+ * anglophone se lirait dans une autre langue que celle où il a été écrit, sans
+ * que personne n'ait rien demandé. La détection n'a lieu qu'à la création d'un
+ * document, là où il n'y a rien à lire (`i18n/locale.ts`).
+ *
+ * La marche existe pour la raison qui a fait exister la v7 et la v9 : le
+ * pipeline veut une étape par incrément.
+ */
+function toVersion10(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 10 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -313,6 +332,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 7, migrate: toVersion7 },
   { to: 8, migrate: toVersion8 },
   { to: 9, migrate: toVersion9 },
+  { to: 10, migrate: toVersion10 },
 ]
 
 export class ImportError extends Error {

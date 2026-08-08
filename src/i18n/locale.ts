@@ -74,13 +74,17 @@ export function storeLocale(locale: Locale): void {
 /**
  * Écrit la langue sur <html>.
  *
+ * Nommée `applyDocumentLocale` et non `applyLocale` : c'est `i18n/strings.ts`
+ * qui porte ce second nom, et lui seul décide de la langue *affichée* — celle
+ * dont le catalogue est chargé. Ici on ne touche qu'à l'attribut.
+ *
  * Ce n'est pas décoratif : `lang` décide de la voix d'un lecteur d'écran — un
  * texte anglais lu par une synthèse française est à peu près inintelligible —,
  * de la coupure des mots et des guillemets que le navigateur dessine. C'est la
  * seule des trois préférences d'apparence dont l'attribut soit *lu* par autre
  * chose que nos propres feuilles de style.
  */
-export function applyLocale(locale: Locale): Locale {
+export function applyDocumentLocale(locale: Locale): Locale {
   document.documentElement.lang = locale
   return locale
 }

@@ -90,17 +90,27 @@ export async function loadCatalog(locale: Locale): Promise<Strings> {
 }
 
 /**
- * Pose la langue : le catalogue, l'attribut `lang`, puis les abonnés.
+ * Pose la langue : le catalogue d'abord, les abonnés ensuite.
  *
- * Le catalogue est chargé avant d'être posé, et une langue dont le morceau
- * n'arrive pas ne remplace rien : mieux vaut rester en français que d'afficher
+ * Le catalogue est chargé avant d'être posé, et **une langue dont le morceau
+ * n'arrive pas ne remplace rien** : mieux vaut rester en français que d'afficher
  * une app à moitié traduite parce qu'un réseau a lâché entre deux écrans.
+ *
+ * D'où la promesse qui ne rejette jamais, et qui rend la langue *réellement*
+ * affichée. C'est ce qui permet aux deux appelants de ne pas s'en occuper — le
+ * démarrage rend l'app quoi qu'il arrive, le hook n'a pas de rejet à rattraper —
+ * et ce qui évite qu'un morceau manquant se signale par une erreur en console
+ * plutôt que par ce qu'il est : une app restée dans sa langue par défaut.
  */
 export async function applyLocale(locale: Locale): Promise<Locale> {
   if (locale === active) return active
-  const catalog = await loadCatalog(locale)
-  t = catalog
-  active = locale
+  try {
+    const catalog = await loadCatalog(locale)
+    t = catalog
+    active = locale
+  } catch {
+    return active
+  }
   for (const listener of listeners) listener()
   return active
 }

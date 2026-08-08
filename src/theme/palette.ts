@@ -12,7 +12,14 @@
  * rien à faire d'un module qui touche au DOM.
  * ==========================================================================*/
 
-import { DEFAULT_PALETTE, type PaletteSetting, type ThemeSetting, isPaletteSetting } from '@/domain/types'
+import {
+  DEFAULT_PALETTE,
+  type Locale,
+  type PaletteSetting,
+  type ThemeSetting,
+  isPaletteSetting,
+} from '@/domain/types'
+import { storeLocale } from '@/i18n/locale'
 import { storePreference } from './theme'
 
 export const PALETTE_STORAGE_KEY = 'tout-compte-fait.palette'
@@ -42,17 +49,25 @@ export function applyPalette(palette: PaletteSetting): PaletteSetting {
 }
 
 /**
- * Mire les deux réglages d'apparence, ensemble.
+ * Mire les trois réglages d'apparence, ensemble.
  *
  * Les cinq endroits qui remplacent le document en bloc doivent remirer, sinon le
  * prochain démarrage à froid peint l'ancienne apparence avant que React ne
- * corrige. Un seul appel plutôt que deux : cinq occasions d'oublier le second
- * en font une seule d'oublier les deux, et celle-là se voit.
+ * corrige. Un seul appel plutôt que trois : cinq occasions d'oublier le
+ * troisième en font une seule d'oublier les trois, et celle-là se voit.
+ *
+ * La langue en fait partie depuis qu'il y en a deux, et elle est celle des
+ * trois dont l'oubli coûterait le plus cher : le thème se rattrape en une
+ * frame, quand un catalogue mal choisi au démarrage doit être *téléchargé*
+ * avant de pouvoir être corrigé — l'app s'ouvrirait donc en français, puis
+ * repasserait en anglais après un aller-retour de réseau.
  */
 export function mirrorAppearance(settings: {
   theme: ThemeSetting
   palette: PaletteSetting
+  locale: Locale
 }): void {
   storePreference(settings.theme)
   storePalette(settings.palette)
+  storeLocale(settings.locale)
 }

@@ -581,7 +581,7 @@ Elle se déclare avec ce qui a été payé, la date du paiement, la nature de la
 
 **Raccourcis clavier** — ils doublent les gestes les plus fréquents, ils n'en ouvrent aucun qui n'existe ailleurs : `←` et `→` changent de mois aux bornes des chevrons, `n` ouvre une dépense, `Échap` referme le panneau du jour au calendrier. Ils se taisent pendant qu'on tape, sous un modificateur — ces combinaisons appartiennent au navigateur —, et tant qu'une feuille est ouverte. `n` se tait en plus sur un écran de saisie, où il contournerait la garde de brouillon. Chacun se dit en infobulle sur le geste qu'il double : un raccourci que personne ne découvre ne sert personne.
 
-**Langue** — français uniquement en v1, mais aucune chaîne en dur dans les composants.
+**Langue** — français et anglais, le français faisant référence : c'est lui qui décrit la forme d'un catalogue, et une clé qui manque à la traduction ne compile pas. Aucune chaîne en dur dans les composants, et rien qui lise le catalogue à l'évaluation d'un module — un tableau de libellés construit au chargement figerait la langue du démarrage. Une langue, pas une région : ce qu'une région changerait est une mise en forme, et celle-ci est décidée par `i18n/format.ts`, qui porte les règles qu'aucun catalogue ne peut porter — séparateur décimal, place du symbole monétaire, espace fine devant le pourcent, ordinal d'un jour. Le choix est écrit dans le document, comme le thème : la langue du navigateur n'est lue qu'à la création, sans quoi un fichier exporté changerait de langue selon l'appareil qui l'ouvre.
 
 ---
 

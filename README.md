@@ -148,8 +148,13 @@ lus et bienvenus, les propositions de fonctionnalité passent par une issue avan
 tout code. Tout est dit dans [CONTRIBUTING.md](CONTRIBUTING.md), et la marche à
 suivre pour signaler une faille dans [SECURITY.md](SECURITY.md).
 
-Le code, les commits, les issues et l'interface sont **en français**. C'est un
-choix, pas un oubli.
+Le code, les commits et les issues sont **en français**. C'est un choix, pas un
+oubli — et il vaut aussi pour les commentaires du catalogue anglais.
+
+L'interface, elle, se dit **en français et en anglais**, et se règle dans
+« Plus ». Le français reste la langue de référence : c'est
+[`src/i18n/fr.ts`](src/i18n/fr.ts) qui décrit la forme d'un catalogue et qui
+porte, clé par clé, pourquoi telle formule a été choisie plutôt qu'une autre.
 
 ## Licence
 

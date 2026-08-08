@@ -11,7 +11,7 @@ import { type YearMonth, currentYm, today } from '@/domain/date'
 import { makeId } from '@/domain/ids'
 import { monthHorizon } from '@/domain/month'
 import { openMonth } from '@/domain/updates'
-import type { Data, PaletteSetting, ThemeSetting } from '@/domain/types'
+import type { Data, Locale, PaletteSetting, ThemeSetting } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { backupDaily, clearBackups } from '@/persistence/backups'
 import { clearDocument, loadDocument, saveDocument, setDbEventHandler } from '@/persistence/db'
@@ -20,6 +20,7 @@ import { askDurability, noteWrite, noteWriteFailure, probeDurability } from '@/p
 import { type TabChannel, type TabMessage, openTabChannel } from '@/persistence/tabs'
 import { forgetExportMarks } from '@/persistence/transfer'
 import { WRITE_DELAY_MS, createWriter } from '@/persistence/writer'
+import { storeLocale } from '@/i18n/locale'
 import { mirrorAppearance, readStoredPalette, storePalette } from '@/theme/palette'
 import { readStoredPreference, storePreference } from '@/theme/theme'
 import { toast, useToasts } from '@/ui/toast'
@@ -95,6 +96,15 @@ export type StoreActions = {
    * membre sont des noms de tokens, donc elles suivent.
    */
   setPalette: (palette: PaletteSetting) => void
+  /**
+   * La langue de l'interface.
+   *
+   * Écrite dans le document, comme le thème et la palette, et pour la même
+   * raison : c'est un choix, et il doit survivre au navigateur qui l'a
+   * recueilli. Elle ne touche à aucune donnée saisie — les noms de catégories
+   * d'un foyer restent ceux qu'il a écrits (voir `Locale`).
+   */
+  setLocale: (locale: Locale) => void
   /**
    * La devise dans laquelle les montants s'affichent.
    *
@@ -325,6 +335,15 @@ export const useStore = create<Store>()((set, get) => ({
   setPalette(palette) {
     storePalette(palette)
     get().mutate((data) => ({ ...data, settings: { ...data.settings, palette } }))
+  },
+
+  /* Miroir aussi, et c'est celui des trois qui compte le plus : le thème se
+     rattrape en une frame, quand un catalogue mal choisi doit être *téléchargé*
+     avant de pouvoir l'être. Sans lui, une app réglée en anglais s'ouvrirait en
+     français à chaque lancement à froid, le temps d'un aller-retour. */
+  setLocale(locale) {
+    storeLocale(locale)
+    get().mutate((data) => ({ ...data, settings: { ...data.settings, locale } }))
   },
 
   /* Pas de miroir en `localStorage`, contrairement à l'apparence : celle-ci

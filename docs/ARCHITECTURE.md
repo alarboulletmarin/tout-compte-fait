@@ -32,15 +32,30 @@ doit faire, et le [design system](DESIGN-SYSTEM.md) de quoi elle a l'air.
 - `src/app/noticeLevel.ts` — la priorité des messages de sécurité des données,
   en une fonction pure. Le rendu est dans `src/app/DataNotice.tsx`, qui est le
   seul bandeau de la coquille.
-- `src/i18n/fr.ts` — toutes les chaînes. Aucun texte en dur dans un composant.
-  Trois exceptions, et la même raison : `src/i18n/legal.ts`,
-  `src/i18n/landing.ts` et `src/i18n/history.ts`. Ce fichier-ci est importé par
-  presque tous les composants, donc il pèse dans le graphe initial que
-  `scripts/size.mjs` plafonne ; ces trois-là sont rendues par des écrans chargés
-  à la demande. Elles voyagent avec eux. L'historique emportait déjà ses trois
-  graphiques, dont aucun autre écran ne se sert : sa prose n'avait pas plus de
-  raison qu'eux de peser sur l'écran du mois. Le nom de l'écran, lui, reste dans
-  `fr.nav` — la barre d'onglets le dit sans charger la page.
+- `src/i18n/strings.ts` — le catalogue actif, `t`. **C'est là que tout composant
+  lit ses mots**, et aucun n'importe plus `fr` ni `en` directement. Aucun texte
+  en dur nulle part.
+- `src/i18n/fr.ts` et `src/i18n/en.ts` — les deux catalogues. Le français est la
+  langue par défaut et le seul importé statiquement : c'est lui qui décrit la
+  forme d'un catalogue — `Strings` en est dérivé, donc une clé oubliée dans une
+  traduction ne compile pas — et c'est lui qui sert de repli. L'anglais est un
+  `import()` que `main.tsx` attend avant le premier rendu, pour que ses seize
+  kibioctets ne pèsent pas dans le graphe initial de qui n'en lira jamais un mot.
+  Trois catalogues échappent aux deux fichiers, et pour la même raison de poids :
+  `src/i18n/legal.ts`, `src/i18n/landing.ts` et `src/i18n/history.ts`, rendus par
+  des écrans chargés à la demande, avec chacun leur `.en.ts` **dans le même
+  morceau** — un second aller-retour de réseau pour quelques kibioctets de prose
+  coûterait plus cher que de les emporter ensemble. Les noms de ces écrans, eux,
+  restent dans le catalogue principal : la barre d'onglets les dit sans charger
+  la page.
+- `src/i18n/format.ts` — les règles de langue qui ne sont pas des mots : le
+  séparateur décimal, la place du symbole monétaire, l'espace fine devant le
+  pourcent, l'octet contre le byte, l'ordinal d'un jour, l'élision de « de ».
+  Une app dont on n'aurait traduit que les chaînes écrirait « 1 284,50 € » sous
+  une interface anglaise.
+- `src/i18n/locale.ts` — la langue du navigateur, le miroir localStorage et
+  l'attribut `lang`. La préférence, elle, vit dans le document (`settings.locale`),
+  comme le thème et la palette.
 - `src/persistence/schemaDoc.ts` — le modèle de données à donner à un assistant,
   et `src/persistence/example.ts` — le document d'exemple. Tous deux dérivés du
   code, tous deux chargés à la demande.
@@ -352,6 +367,49 @@ Catégories », et « Plus → Réglages → Données → Exporter/importer » d
 échange sur un téléphone — quatre groupes qu'on comprend en les balayant valent
 mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce qu'il
 contient.
+
+**Deux langues, un catalogue actif, et une liaison vivante.** Les composants
+lisent `t` (`src/i18n/strings.ts`), un `export let` réaffecté quand la langue
+change : les liaisons d'export ES étant vivantes, un module qui a écrit
+`import { t }` voit la nouvelle valeur sans rien faire. L'alternative — un
+`useStrings()` dans chaque composant — aurait demandé un hook dans cent
+vingt-quatre fichiers, et surtout elle n'aurait rien donné aux modules qui ne
+sont pas des composants et qui ont pourtant des mots à lire : la table des
+routes, le catalogue par défaut, la description d'une période. Ceux-là auraient
+dû recevoir leurs chaînes en paramètre, ce qui déplace le problème d'un cran
+sans le résoudre.
+
+Le prix est réel, et il tient en deux règles. **Rien ne lit `t` à l'évaluation
+d'un module** : un tableau de libellés construit au chargement fige la langue du
+démarrage, et les cent soixante et onze endroits qui le faisaient sont devenus
+des fonctions appelées au rendu (`navRoutes()`, `periodOptions()`, `hints()`…).
+Et **changer de langue remonte l'arbre**, par une `key` dans `App` : une liaison
+vivante ne prévient pas React, donc un composant qui ne se rend pas garderait ses
+mots d'avant. Le remontage coûte l'état local des écrans ; il se paie une fois,
+depuis un écran de réglage, sur un geste qu'on ne fait pas au milieu d'une
+saisie. La `key` porte la langue **affichée** et non celle qui est demandée — le
+catalogue anglais arrive par le réseau, et remonter avant qu'il soit là ferait
+deux remontages au lieu d'un.
+
+**La traduction ne s'arrête pas aux mots.** Le français écrit « 1 284,50 € »,
+pose une espace fine devant le symbole et le pourcent, compte en octets et dit
+« le 5 » ; l'anglais écrit « €1,284.50 », n'en met aucune, compte en bytes et dit
+« the 5th ». Aucune de ces différences ne tient dans un catalogue de chaînes : ce
+sont des règles, et elles vivent dans `format.ts` à côté de l'élision de « de »,
+qui y vivait déjà. `en-GB` et non `en-US` — l'app écrit ses dates dans l'ordre
+jour-mois partout ailleurs, et c'est la seule des deux conventions qui puisse se
+lire de travers sans se voir.
+
+**La langue est un réglage du document, pas de l'appareil.** `settings.locale`,
+à côté du thème et de la palette, avec le même miroir en localStorage — celui-ci
+est le plus important des trois : le thème se rattrape en une frame, quand un
+catalogue mal choisi doit être *téléchargé* avant de pouvoir l'être. La langue du
+navigateur n'est lue qu'une fois, à la création d'un document ; ensuite c'est le
+document qui fait foi, sans quoi un fichier exporté changerait de langue selon
+l'appareil qui l'ouvre. Corollaire : le catalogue de catégories d'un document
+neuf suit la langue du moment, et **ne bouge plus après** — ce sont des données
+du foyer, comme un prénom de membre, et on ne renomme pas ce que quelqu'un a pu
+modifier depuis.
 
 **Le thème est descendu dans une vue, et c'est un revirement.** Il restait
 réglable sur place, et l'argument tenait : trois positions, un geste, l'enfouir

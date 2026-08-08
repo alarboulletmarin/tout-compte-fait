@@ -605,6 +605,39 @@ describe('palette propre aux membres (v6)', () => {
   })
 })
 
+describe('langue de l’interface (v10)', () => {
+  const v9 = (settings?: unknown) =>
+    JSON.stringify({
+      schemaVersion: 9,
+      household: { name: 'Maison', members: [] },
+      categories: [],
+      advances: [],
+      ...(settings === undefined ? {} : { settings }),
+    })
+
+  /* Le français, et **surtout pas** la langue du navigateur : un fichier écrit
+     en français puis rouvert sur un appareil anglophone changerait de langue
+     tout seul, ce qu'un réglage porté par le document sert à empêcher. La
+     détection n'a lieu qu'à la création (`i18n/locale.ts`). */
+  it('donne le français à un document qui ne dit pas sa langue', () => {
+    expect(parseImport(v9()).data.settings.locale).toBe('fr')
+    expect(parseImport(v9()).data.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+  })
+
+  it('garde la langue d’un document qui en porte une', () => {
+    expect(parseImport(v9({ locale: 'en' })).data.settings.locale).toBe('en')
+  })
+
+  /* Comme la palette : un réglage d'apparence venu d'une version qui en
+     proposerait une troisième retombe sans que la ligne soit écartée. */
+  it('ramène une langue inconnue au français, sans un mot', () => {
+    const result = parseImport(v9({ theme: 'dark', locale: 'kl', currency: 'EUR' }))
+    expect(result.data.settings.locale).toBe('fr')
+    expect(result.data.settings.theme).toBe('dark')
+    expect(result.notices).toEqual([])
+  })
+})
+
 describe('palette d’apparence (v7)', () => {
   const v6 = (settings?: unknown) =>
     JSON.stringify({

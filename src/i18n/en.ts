@@ -138,6 +138,16 @@ export const en: Strings = {
     paletteLabel: 'Palette',
   },
 
+  /* Les deux noms de langue sont les mêmes que dans `fr.ts`, et ce n'est pas un
+     oubli de traduction : une langue se nomme dans la sienne. Voir `fr.ts`, qui
+     dit pourquoi. */
+  language: {
+    label: 'Language',
+    fr: 'Français',
+    en: 'English',
+    hint: 'Only the interface changes, not your entries.',
+  },
+
   /* Les noms de palette **ne se traduisent pas** : ce sont des noms propres —
      la valeur stockée dans le document est `"classique"`, les vignettes sont
      les mêmes, et un foyer qui parle des deux langues doit reconnaître sa

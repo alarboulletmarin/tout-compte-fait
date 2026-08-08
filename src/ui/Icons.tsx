@@ -48,6 +48,7 @@ import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { SquaresFour } from '@phosphor-icons/react/dist/csr/SquaresFour'
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
+import { Translate } from '@phosphor-icons/react/dist/csr/Translate'
 import { TrendUp } from '@phosphor-icons/react/dist/csr/TrendUp'
 import { Users } from '@phosphor-icons/react/dist/csr/Users'
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
@@ -169,6 +170,13 @@ export const TransferIcon = adapt(ArrowsDownUp)
    aucun symbole monétaire — sur le réglage qui choisit lequel afficher, un « $»
    gravé dans l'icône aurait dit le contraire de ce que fait le sélecteur. */
 export const CurrencyIcon = adapt(Money)
+
+/* Le glyphe de traduction — deux systèmes d'écriture côte à côte —, et non un
+   globe : un globe dit un pays ou une région, quand ce réglage-ci ne change que
+   la langue des mots. Le drapeau était exclu d'avance, et pas seulement par le
+   DS : une langue n'appartient à aucun pays, et « anglais = Royaume-Uni » est
+   faux pour la plupart de ceux qui la parlent. */
+export const LanguageIcon = adapt(Translate)
 export const CompareIcon = adapt(ChartBar)
 /* La courbe nue, et non celle du prévisionnel : les deux montaient dans le même
    cadre à axes, et le glyphe partagé disait qu'il s'agissait du même chiffre —

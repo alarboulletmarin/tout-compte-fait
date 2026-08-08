@@ -160,6 +160,32 @@ export const fr = {
     paletteLabel: 'Palette',
   },
 
+  /**
+   * La langue, et les deux qu'on parle.
+   *
+   * **Chaque langue se nomme dans la sienne**, dans les deux catalogues :
+   « Français » et « English », jamais « Anglais » ni « French ». C'est la règle
+   * de tous les sélecteurs de langue, et elle a une raison précise — on vient
+   * ici *parce qu'on ne lit pas* ce qui est affiché, et un mot traduit dans la
+   * langue qu'on ne comprend pas est exactement celui qu'on ne saurait pas
+   * reconnaître.
+   *
+   * Pas d'option « Système », contrairement au thème. La langue du navigateur
+   * est lue une fois, au tout premier lancement, et devient une valeur écrite
+   * dans le document (`i18n/locale.ts`) : la suivre en permanence ferait changer
+   * de langue un même fichier selon l'appareil qui l'ouvre, ce qu'un réglage
+   * porté par le document sert précisément à empêcher.
+   */
+  language: {
+    label: 'Langue',
+    fr: 'Français',
+    en: 'English',
+    /* Ce que le réglage ne fait pas, comme la devise juste en dessous : il
+       traduit l'interface, pas ce qu'on a saisi. Un foyer qui a nommé ses
+       catégories en français les garde en français. */
+    hint: 'Seule l’interface change, pas tes saisies.',
+  },
+
   palettes: {
     classique: 'Classique',
     classiqueHint: 'Les couleurs d’origine — sapin, vert pomme, violet.',

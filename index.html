@@ -70,12 +70,17 @@
     </script>
     <script>
       // Applique l'apparence avant le premier rendu — le thème et la palette,
-      // qui décident ensemble des couleurs. Le document de données vit en
-      // IndexedDB (asynchrone) : sans ces deux miroirs localStorage, l'app
-      // s'afficherait une frame dans les couleurs de quelqu'un d'autre.
+      // qui décident ensemble des couleurs, et la langue, que `lang` porte.
+      // Le document de données vit en IndexedDB (asynchrone) : sans ces trois
+      // miroirs localStorage, l'app s'afficherait une frame dans les couleurs
+      // de quelqu'un d'autre.
       // La liste des palettes est recopiée ici, et c'est le seul endroit où :
       // ce script tourne avant tout module, il ne peut rien importer. Une valeur
       // inconnue retombe sur « classique », comme à la lecture du document.
+      // La langue, elle, n'est pas devinée sur le navigateur : le document fait
+      // foi, et `main.tsx` corrigera si le miroir est absent. Ce qui se joue ici
+      // est l'attribut que lisent la synthèse vocale et la coupure des mots,
+      // pas le catalogue — celui-là, seul un module peut le charger.
       ;(function () {
         var root = document.documentElement
         try {
@@ -87,6 +92,8 @@
           var palette = localStorage.getItem('tout-compte-fait.palette')
           var known = ['classique', 'monochrome', 'douce', 'vive', 'neutre', 'contrastee']
           root.dataset.palette = known.indexOf(palette) === -1 ? 'classique' : palette
+          var locale = localStorage.getItem('tout-compte-fait.locale')
+          if (locale === 'fr' || locale === 'en') root.lang = locale
         } catch (e) {
           root.dataset.theme = 'light'
           root.dataset.palette = 'classique'
