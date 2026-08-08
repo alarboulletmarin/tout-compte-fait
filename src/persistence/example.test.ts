@@ -23,6 +23,7 @@ import {
   type CategoryKind,
   type Recurrence,
   findCategory,
+  isRunningIn,
   isSpending,
   kindOfCategory,
 } from '@/domain/types'
@@ -118,12 +119,30 @@ describe('le jeu d’exemple', () => {
    un état vide. C'est la liste de ce que l'exemple doit contenir pour que l'app
    se montre entière, et le seul endroit où elle est vérifiée. */
 describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
-  it('pose deux personnes, chacune avec un revenu lisible', () => {
-    expect(data.household.members).toHaveLength(2)
+  /* Chacune avec un revenu, et ce n'est pas une coquetterie : `prorataWeights`
+     rend `null` dès qu'**un seul** membre n'en a pas, et toute la répartition
+     — parts, régularisation, tuile du commun — tombe alors en état vide. Un
+     membre sans ressource ferait donc disparaître l'écran qu'il était censé
+     enrichir, et c'est ce que cette boucle empêche d'ajouter par mégarde. */
+  it('pose trois personnes, chacune avec un revenu lisible', () => {
+    expect(data.household.members).toHaveLength(3)
     for (const income of incomes()) {
       expect(income.gap).toBeNull()
       expect(income.income).not.toBeNull()
     }
+  })
+
+  /* Le revenu d'une personne est la somme de ses récurrences de ressource, pas
+     l'une d'elles : sans un membre qui en porte deux, le jeu ne distinguait pas
+     les deux lectures. */
+  it('donne à quelqu’un deux ressources, qui s’additionnent', () => {
+    const perMember = new Map<string, number>()
+    for (const recurrence of data.recurrences) {
+      if (recurrence.memberId === undefined) continue
+      if (kindOf(recurrence.categoryId) !== 'resource') continue
+      perMember.set(recurrence.memberId, (perMember.get(recurrence.memberId) ?? 0) + 1)
+    }
+    expect([...perMember.values()].some((count) => count > 1)).toBe(true)
   })
 
   /* Les mois passés doivent être *ouverts*, pas seulement porter des entrées :
@@ -192,6 +211,30 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     expect(data.recurrences.some((r) => r.endedOn !== undefined && r.endedOn < ON)).toBe(true)
   })
 
+  /* L'autre moitié de `endedOn` : une règle résiliée dont l'engagement court
+     encore. Elle est arrêtée et elle tombe quand même — deux choses que le jeu
+     ne disait jamais ensemble, faute d'une seule ligne pour les porter. */
+  it('a une récurrence qui s’arrêtera, et qui tombe encore', () => {
+    const ending = data.recurrences.filter((r) => r.endedOn !== undefined && r.endedOn > ON)
+    expect(ending.length).toBeGreaterThan(0)
+    const stillFalling = ending.some((r) =>
+      data.entries.some((e) => e.recurrenceId === r.id && ymOf(e.date) === anchor),
+    )
+    expect(stillFalling).toBe(true)
+  })
+
+  /* Et son miroir : déclarée, pas encore commencée. Elle ne pose aucune
+     échéance et pèse pourtant dans le total des récurrences — c'est ce que dit
+     `RUNNING_HORIZON_MONTHS`, et rien ne le montrait. */
+  it('a une récurrence déclarée qui n’a pas encore commencé', () => {
+    const ahead = data.recurrences.filter((r) => r.startedOn > ON)
+    expect(ahead.length).toBeGreaterThan(0)
+    for (const recurrence of ahead) {
+      expect(data.entries.some((e) => e.recurrenceId === recurrence.id)).toBe(false)
+      expect(isRunningIn(recurrence, anchor)).toBe(true)
+    }
+  })
+
   it('a des charges qu’une personne règle et que le foyer partage', () => {
     const shared = data.recurrences.filter((r) => r.shared === true && r.memberId !== undefined)
     expect(shared.length).toBeGreaterThanOrEqual(2)
@@ -209,10 +252,10 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     expect(isCostly(change!, 'in', 'resource')).toBe(false)
   })
 
-  it('suit trois crédits, dont un sans taux', () => {
-    expect(data.debts).toHaveLength(3)
+  it('suit quatre crédits, dont deux sans taux', () => {
+    expect(data.debts).toHaveLength(4)
     expect(data.debts.filter((d) => d.rateBp !== undefined)).toHaveLength(2)
-    expect(data.debts.filter((d) => d.rateBp === undefined)).toHaveLength(1)
+    expect(data.debts.filter((d) => d.rateBp === undefined)).toHaveLength(2)
     // Tous démarrent dans l'historique : le capital ne se dérive que des
     // mensualités confirmées, et un crédit ouvert avant le document
     // annoncerait un capital qu'aucune échéance n'a amorti.
@@ -220,18 +263,38 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     for (const debt of data.debts) expect(ymOf(debt.startedOn) >= first).toBe(true)
   })
 
-  it('suit deux avances, dont une qui entre dans le pot commun', () => {
-    expect(data.advances).toHaveLength(2)
+  it('suit trois avances, dont deux qui entrent dans le pot commun', () => {
+    expect(data.advances).toHaveLength(3)
     const linked = data.advances.map((a) =>
       data.recurrences.find((r) => r.id === a.recurrenceId),
     )
-    expect(linked.filter((r) => r?.shared === true)).toHaveLength(1)
+    expect(linked.filter((r) => r?.shared === true)).toHaveLength(2)
     // Chaque avance a posé sa reprise sur le livret, le jour du paiement.
     for (const advance of data.advances) {
       const drawdown = data.entries.find(
         (e) => e.date === advance.paidOn && e.direction === 'in' && e.amount === advance.amount,
       )
       expect(drawdown).toBeDefined()
+    }
+  })
+
+  /* Et chaque avance porte aussi la **charge** qu'elle finance, que
+     `createAdvance` ne pose pas — « l'app ne l'invente pas à la place de qui
+     l'a faite ». Sans elle, le mois du paiement affiche une rentrée d'argent
+     sans contrepartie : l'épargne reprise, et rien en face. Les deux doivent se
+     compenser exactement, sans quoi l'avance ne montre pas ce qu'elle fait. */
+  it('porte la charge que chaque avance a financée, à son montant exact', () => {
+    for (const advance of data.advances) {
+      const charge = data.entries.find(
+        (e) =>
+          e.date === advance.paidOn &&
+          e.direction === 'out' &&
+          e.categoryId === advance.categoryId &&
+          e.amount === advance.amount,
+      )
+      expect(charge).toBeDefined()
+      expect(charge?.memberId).toBe(advance.memberId)
+      expect(charge?.savingSupportId).toBeUndefined()
     }
   })
 
@@ -283,6 +346,20 @@ describe('ce que l’exemple doit contenir pour que rien ne reste vide', () => {
     expect(data.entries.some((e) => e.note !== undefined)).toBe(true)
     expect(data.debts.some((d) => d.note !== undefined)).toBe(true)
     expect(data.advances.some((a) => a.note !== undefined)).toBe(true)
+    expect(data.savingSupports.some((s) => s.note !== undefined)).toBe(true)
+  })
+
+  /* Un seuil, pas une liste : la liste se périmerait au premier ajout au
+     catalogue, alors que le seuil dit ce qu'on veut vraiment — un foyer qui
+     emploie l'essentiel du jeu par défaut, et non six postes qui tournent. Ce
+     qui reste dehors le reste pour une raison, et `example.ts` la donne. */
+  it('emploie l’essentiel du catalogue par défaut', () => {
+    const used = new Set([
+      ...data.entries.map((e) => e.categoryId),
+      ...data.recurrences.map((r) => r.categoryId),
+      ...data.savingSupports.map((s) => s.categoryId),
+    ])
+    expect(used.size).toBeGreaterThanOrEqual(38)
   })
 })
 
@@ -318,12 +395,15 @@ describe('quel que soit le jour où on le charge', () => {
 /* La vraie preuve que les écrans seront pleins : les calculs qu'ils appellent
    rendent des chiffres, et non des `null` ou des zéros. */
 describe('ce que le domaine sait en tirer', () => {
-  it('calcule la répartition, à des parts inégales', () => {
+  /* À trois parts toutes distinctes, la somme qui redonne le total au centime
+     cesse d'être une évidence : `largestRemainder` a un reste à placer, et
+     c'est lui que ce test surveille. */
+  it('calcule la répartition, à trois parts inégales', () => {
     const amounts = sharedEntries(data.entries, anchor, kindOf).map((e) => e.amount)
     const shares = memberShares(incomes(), amounts)
     expect(shares).not.toBeNull()
-    expect(shares).toHaveLength(2)
-    expect(shares![0]!.shareBp).not.toBe(shares![1]!.shareBp)
+    expect(shares).toHaveLength(3)
+    expect(new Set(shares!.map((s) => s.shareBp)).size).toBe(3)
     // La somme des parts vaut exactement le total, au centime.
     const total = amounts.reduce<number>((sum, amount) => sum + amount, 0)
     expect(shares!.reduce<number>((sum, share) => sum + share.due, 0)).toBe(total)
@@ -333,18 +413,36 @@ describe('ce que le domaine sait en tirer', () => {
     const settlements = settleMonth(data.entries, previous, kindOf, incomes())
     expect(settlements).not.toBeNull()
     expect(settlements!.some((s) => s.adjustment !== 0)).toBe(true)
-    // Ce qu'une personne verse en trop, l'autre le verse en moins.
+    // Ce qu'une personne verse en trop, les autres le versent en moins.
     expect(settlementBalance(settlements!)).toBe(0)
+    // Trois personnes avancent chacune une charge commune : la régularisation
+    // n'est plus un aller-retour entre deux comptes, et c'est là qu'elle cesse
+    // de pouvoir se lire de travers sans qu'on s'en aperçoive.
+    expect(settlements!.filter((s) => s.advanced > 0)).toHaveLength(3)
   })
 
-  it('amortit chaque crédit, sans le solder', () => {
-    for (const debt of data.debts) {
+  it('amortit les crédits en cours, sans les solder', () => {
+    const running = data.debts.filter((d) => !debtStatus(d, data.entries, null, ON).settled)
+    expect(running).toHaveLength(3)
+    for (const debt of running) {
       const status = debtStatus(debt, data.entries, null, ON)
       expect(status.payments).toBeGreaterThan(0)
       expect(status.remaining).toBeLessThan(debt.principal)
       expect(status.remaining).toBeGreaterThan(0)
-      expect(status.settled).toBe(false)
     }
+  })
+
+  /* Et celui qui est allé au bout. Sans lui, l'état « soldé » avait sa page et
+     ses mots, mais jamais de ligne pour les occuper. Sans taux, le capital
+     décroît exactement de ce qui a été versé : le reste dû tombe à zéro pile,
+     et non à un arrondi qu'il faudrait excuser. */
+  it('solde le crédit arrivé à son terme', () => {
+    const settled = data.debts.filter((d) => debtStatus(d, data.entries, null, ON).settled)
+    expect(settled).toHaveLength(1)
+    const status = debtStatus(settled[0]!, data.entries, null, ON)
+    expect(status.payments).toBe(12)
+    expect(status.remaining).toBe(0)
+    expect(status.paid).toBe(settled[0]!.principal)
   })
 
   /* Un crédit à taux ne s'amortit pas de ce qu'on a versé : sur l'immobilier de
@@ -357,13 +455,22 @@ describe('ce que le domaine sait en tirer', () => {
     expect(withRate!.principal - status.remaining).toBeLessThan(status.paid)
   })
 
-  it('rembourse chaque avance en partie, jamais en entier', () => {
-    for (const advance of data.advances) {
+  it('rembourse en partie les avances en cours', () => {
+    const running = data.advances.filter((a) => !advanceStatus(a, data.entries, ON).settled)
+    expect(running).toHaveLength(2)
+    for (const advance of running) {
       const status = advanceStatus(advance, data.entries, ON)
       expect(status.restored).toBeGreaterThan(0)
       expect(status.remaining).toBeGreaterThan(0)
-      expect(status.settled).toBe(false)
     }
+  })
+
+  it('montre une avance entièrement reconstituée', () => {
+    const settled = data.advances.filter((a) => advanceStatus(a, data.entries, ON).settled)
+    expect(settled).toHaveLength(1)
+    const status = advanceStatus(settled[0]!, data.entries, ON)
+    expect(status.restored).toBe(settled[0]!.amount)
+    expect(status.remaining).toBe(0)
   })
 
   it('laisse au foyer de quoi épargner, et de quoi le ventiler', () => {
@@ -381,18 +488,54 @@ describe('ce que le domaine sait en tirer', () => {
     expect(data.savingSupports.length).toBeGreaterThan(2)
     const total = savingTotal(data.savingSupports, data.savingValuations, data.entries, ON)
     expect(total.known).toBeGreaterThan(0)
-    expect(total.unvalued).toBe(0)
-    for (const support of data.savingSupports) {
-      expect(latestValuation(data.savingValuations, support.id, ON)).not.toBeNull()
+    expect(total.valued).toBeGreaterThan(0)
+  })
+
+  /* Un support sans le moindre relevé, et un seul : « inconnu » n'est pas
+     « zéro », et c'est la distinction que l'app compte à part plutôt que de
+     l'additionner. Le support est **nommé** et non compté — un futur support
+     laissé sans relevé par inadvertance passerait sinon inaperçu. */
+  it('porte un support dont la valeur est inconnue, et le compte à part', () => {
+    const unvalued = data.savingSupports.filter(
+      (s) => latestValuation(data.savingValuations, s.id, ON) === null,
+    )
+    expect(unvalued.map((s) => s.categoryId)).toEqual(['retirement'])
+
+    const total = savingTotal(data.savingSupports, data.savingValuations, data.entries, ON)
+    expect(total.unvalued).toBe(1)
+    expect(total.valued).toBe(data.savingSupports.length - 1)
+
+    // Il a bien des mouvements : le flux est connu au centime, le stock pas du
+    // tout. Sans versement, il ne dirait rien de cette dissociation.
+    expect(supportMonthFlows(data.entries, unvalued[0]!.id, anchor).net).toBeGreaterThan(0)
+  })
+
+  /* Archivé : il sort des formulaires, jamais des lectures. Il reste visible
+     tant qu'il porte une valeur ou un mouvement du mois — et rien ne l'alimente
+     plus, sans quoi un compte devenu invisible grossirait tout seul. */
+  it('archive un support sans l’effacer ni le rendre illisible', () => {
+    const archived = data.savingSupports.filter((s) => s.archived)
+    expect(archived).toHaveLength(1)
+    expect(latestValuation(data.savingValuations, archived[0]!.id, ON)).not.toBeNull()
+
+    const feeding = data.recurrences.filter((r) => r.savingSupportId === archived[0]!.id)
+    expect(feeding.length).toBeGreaterThan(0)
+    expect(feeding.every((r) => r.endedOn !== undefined && r.endedOn < ON)).toBe(true)
+  })
+
+  it('emploie les cinq catégories d’épargne du catalogue', () => {
+    const used = new Set(data.savingSupports.map((s) => s.categoryId))
+    for (const id of ['passbook', 'plans', 'life-insurance', 'retirement', 'company-savings']) {
+      expect(used.has(id)).toBe(true)
     }
   })
 
-  /* Deux personnes, chacune son livret : c'est exactement ce qu'une catégorie
+  /* Trois personnes, chacune son livret : c'est exactement ce qu'une catégorie
      seule ne pouvait pas représenter. */
-  it('donne à deux personnes deux supports de même catégorie', () => {
+  it('donne à trois personnes trois supports de même catégorie', () => {
     const passbooks = data.savingSupports.filter((s) => s.categoryId === 'passbook')
-    expect(passbooks).toHaveLength(2)
-    expect(new Set(passbooks.map((s) => s.memberId)).size).toBe(2)
+    expect(passbooks).toHaveLength(3)
+    expect(new Set(passbooks.map((s) => s.memberId)).size).toBe(3)
   })
 
   it('relie chaque mouvement d’épargne à un support existant', () => {
@@ -417,11 +560,13 @@ describe('ce que le domaine sait en tirer', () => {
      s'explique que par le marché. C'est ce qui interdit de dériver le capital
      des versements. */
   it('porte un support qui vaut quelque chose sans recevoir de versement', () => {
-    const untouched = data.savingSupports.filter(
-      (support) => supportMonthFlows(data.entries, support.id, anchor).net === 0,
-    )
-    expect(untouched.length).toBeGreaterThan(0)
-    const history = data.savingValuations.filter((v) => v.supportId === untouched[0]?.id)
+    /* Nommé, et non pris au premier rang : le PEE archivé ne reçoit plus rien
+       lui non plus, et l'ordre des supports déciderait alors de ce que ce test
+       vérifie. */
+    const untouched = data.savingSupports.find((s) => s.categoryId === 'life-insurance')
+    expect(untouched).toBeDefined()
+    expect(supportMonthFlows(data.entries, untouched!.id, anchor).net).toBe(0)
+    const history = data.savingValuations.filter((v) => v.supportId === untouched!.id)
     expect(history.length).toBeGreaterThan(1)
     expect(new Set(history.map((v) => v.amount)).size).toBeGreaterThan(1)
   })
