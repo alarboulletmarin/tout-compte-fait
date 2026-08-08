@@ -40,17 +40,43 @@ un filtre par membre, elle se posait et rien à l'écran n'y répondait.
   colonne de 222px — les 80px d'anneau plus la gouttière mangeaient la moitié de
   la tuile. L'anneau parti, la colonne fait la largeur entière et l'objection
   tombe avec ce qui la causait.
-- **« Charges perso » et « Total à payer » s'en vont.** Elles répondaient à une
-  autre question que celle de la tuile — ce que le mois coûte, quand la tuile
-  sert un virement —, et « Total à payer » posé juste sous « à verser » se
-  confondait avec lui. Ce que le mois coûte se lit sur la tuile Charges, et son
-  détail sur l'écran Répartition.
+- **« Charges perso » et « Total à payer » s'en vont** — elles répondaient à une
+  autre question que celle de la tuile, ce que le mois coûte quand la tuile sert
+  un virement, et « Total à payer » posé juste sous « à verser » se confondait
+  avec lui. Elles ne disparaissent pas pour autant : voir la tuile ci-dessous.
 - **Sans report, la tuile ne dit que le montant** et passe en `4x1` : la part
   vaut alors le virement au centime, une ligne « sa part du mois » y recopierait
   le chiffre de tête un cran plus bas, et deux fois le même nombre à trois
   lignes d'écart se lit comme une erreur avant de se lire comme une égalité. Le
   format suit le contenu (DS §5) : deux rangées quand il y a une addition à
   montrer, une quand il n'y a qu'un chiffre.
+
+### Ajouté — « Ce que le mois lui coûte », la tuile Charges décomposée
+
+Sous un filtre par membre, la tuile Charges annonce un total qui comprend déjà
+sa part du pot commun — sans quoi chacun se lirait comme s'il vivait sans loyer.
+Mais fondue dans ce total, la part ne se voit plus : le solde du mois valait bien
+ses revenus moins ses charges moins sa part du foyer, et le troisième terme
+n'était à l'écran nulle part. Les deux lignes qui le disaient vivaient sur la
+tuile du virement, où elles répondaient à une autre question que la sienne.
+
+- **Un chiffre, puis ses deux moitiés** : ce qu'elle paie pour elle, et sa part
+  du commun. Le total vaut celui de la tuile Charges au centime, délibérément —
+  c'est ce qui autorise à lire les deux lignes comme ses deux moitiés plutôt que
+  comme un troisième calcul.
+- **Elle porte la forme de sa voisine**, un chiffre et les deux termes qui le
+  donnent, et c'est ce qui les distingue le mieux : l'une additionne un virement,
+  l'autre un coût. Le report n'est donc pas ici — ce qu'une dépense a coûté à
+  quelqu'un est arrêté au mois où elle a eu lieu ; ce qui se rattrape est un
+  virement, pas un coût.
+- **« Sa part du commun » porte le même libellé sur les deux tuiles**, parce que
+  c'est le même montant : deux noms pour un même nombre, sur un même écran, se
+  lisent comme deux nombres qui tomberaient juste par hasard.
+- **Aucun repère d'action, parce qu'aucun clic** : ses deux lignes mènent à deux
+  endroits — les lignes du mois pour le perso, l'écran Répartition pour la part.
+  Un chevron promet un écran, et il n'y en a pas un (DS §6).
+- Elle s'efface dès qu'un des deux termes est nul : une somme dont un terme vaut
+  zéro n'est pas une somme, et la tuile Charges dit alors déjà tout.
 
 ### Modifié — « Réglages » disparaît, et « Plus » range par intention
 

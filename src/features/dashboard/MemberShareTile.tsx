@@ -133,7 +133,7 @@ export function MemberShareTile() {
               chiffre qu'ils redonnent. C'est tout ce que la tuile a à dire de
               plus que son montant. */}
           <ul className="flex flex-col gap-1 border-t border-border pt-2">
-            <Line label={fr.dashboard.memberSharePart} value={charges.common} />
+            <Line label={fr.dashboard.memberShareCommon} value={charges.common} />
             <Line
               label={tpl(fr.dashboard.settlementOf, previous)}
               value={charges.adjustment}

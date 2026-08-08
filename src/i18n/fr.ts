@@ -881,11 +881,29 @@ export const fr = {
        du revenu de chacun rapporté à la somme des revenus, et cette division-là
        ne tient pas sur une ligne de tuile. C'est l'écran Répartition qui la
        montre, où le prorata se lit contre le revenu dont il vient. */
-    memberSharePart: 'Sa part du mois',
+    /* Un seul libellé pour un seul montant, et il sert sur les deux tuiles :
+       « à verser » l'additionne au report, « ce que le mois lui coûte »
+       l'additionne au perso. Deux noms pour un même nombre, sur un même écran,
+       se lisent comme deux nombres qui tomberaient juste par hasard. */
+    memberShareCommon: 'Sa part du commun',
     /* Le report, et le mois d'où il vient. Le « de » vit dans le mois, pas dans
        le gabarit : « d'août » et « de juillet » ne s'écrivent pas pareil —
        c'est la tuile qui l'élide, comme `SplitPage`. */
     settlementOf: 'Régularisation %s',
+
+    /* Ce que le mois coûte à la personne filtrée : la tuile Charges décomposée,
+       et rien d'autre. Son chiffre vaut celui de Charges au centime — c'est
+       voulu, un total qu'on retrouve à l'identique est ce qui autorise à lire
+       les deux lignes dessous comme ses deux moitiés. Charges les mêle sans les
+       séparer, et cette séparation ne se fait nulle part ailleurs sur l'écran
+       du mois.
+
+       « Ce que le mois lui coûte » et non « Total à payer », qui vivait sur la
+       tuile du virement et s'y confondait avec le chiffre de tête posé juste
+       au-dessus : celui-ci est un coût, il ne se vire nulle part. */
+    memberCost: 'Ce que le mois lui coûte',
+    memberCostOf: 'Ce que le mois lui coûte · %s',
+    memberCostOwn: 'Charges perso',
 
     /* Quatre soldes qui se ressemblent à l'œil sans dire la même chose. Chacun
        dit son calcul, puis ce qui le sépare de son voisin — c'est la question
