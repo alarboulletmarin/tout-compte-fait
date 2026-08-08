@@ -1,13 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { scrollToTop } from '@/lib/reveal'
 import {
   ABOUT_PATH,
   MORE_PATH,
-  NAV_ROUTES,
-  SIDEBAR_GROUPS,
-  STYLEGUIDE_ROUTE,
+  navRoutes,
+  sidebarGroups,
+  styleguideRoute,
   isInMoreSection,
   isUnderMore,
 } from './routes'
@@ -35,7 +35,7 @@ const ITEM = cn(
  * Ce qu'on ouvre pour regarder, puis ce qu'on tient, puis « Plus », qui range
  * le reste. Le premier groupe n'a pas de titre : la colonne doit s'ouvrir sur
  * les destinations quotidiennes, pas sur un mot à lire avant elles. Voir
- * `SIDEBAR_GROUPS`, qui porte l'ordre et le rationale — dont celui du dernier
+ * `sidebarGroups()`, qui porte l'ordre et le rationale — dont celui du dernier
  * groupe, qui dépliait la section des réglages et nomme désormais l'écran qui
  * l'a remplacée.
  *
@@ -48,7 +48,7 @@ export function Sidebar({ householdName }: { householdName: string }) {
 
   return (
     <nav
-      aria-label={fr.nav.label}
+      aria-label={t.nav.label}
       className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-1 overflow-y-auto p-5 lg:flex"
     >
       {/* Le nom est facultatif — il ne se demande plus au premier lancement.
@@ -56,13 +56,13 @@ export function Sidebar({ householdName }: { householdName: string }) {
           blanche : le nom de l'app est au-dessus, et il suffit à dire où l'on
           est. Aucun repli à inventer. */}
       <div className="mb-6 flex flex-col gap-0.5 px-3">
-        <span className="t-eyebrow text-muted">{fr.app.name}</span>
+        <span className="t-eyebrow text-muted">{t.app.name}</span>
         {householdName.trim() !== '' && (
           <span className="t-section truncate">{householdName}</span>
         )}
       </div>
 
-      {SIDEBAR_GROUPS.map((group, index) => (
+      {sidebarGroups().map((group, index) => (
         /* La clé est le titre quand il y en a un, et le rang sinon : le premier
            groupe n'en a pas, et c'est le seul dans ce cas. */
         <div key={group.title ?? index} className="flex flex-col gap-1">
@@ -114,8 +114,8 @@ export function Sidebar({ householdName }: { householdName: string }) {
           bas de course. */}
       <div className="mt-auto flex flex-col gap-1 pt-6">
         {[
-          { path: ABOUT_PATH, label: fr.nav.about },
-          STYLEGUIDE_ROUTE,
+          { path: ABOUT_PATH, label: t.nav.about },
+          styleguideRoute(),
         ].map((route) => (
           <NavLink
             key={route.path}
@@ -141,7 +141,7 @@ export function Sidebar({ householdName }: { householdName: string }) {
  *
  * **Quatre onglets et non cinq** : les trois lectures qu'on ouvre pour regarder,
  * puis « Plus », qui range le reste. Le rationale du découpage est dans
- * `NAV_ROUTES` ; ce qui change ici est mécanique — quatre `flex-1` rendent 25 %
+ * `navRoutes()` ; ce qui change ici est mécanique — quatre `flex-1` rendent 25 %
  * de largeur chacun au lieu de 20, ce qui détend les libellés à 320px, où
  * « Récurrences » se tronquait.
  */
@@ -150,14 +150,14 @@ export function TabBar() {
 
   return (
     <nav
-      aria-label={fr.nav.label}
+      aria-label={t.nav.label}
       className={cn(
         'fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface lg:hidden',
         'pb-[env(safe-area-inset-bottom)]',
       )}
     >
       <ul className="flex">
-        {NAV_ROUTES.map((route) => {
+        {navRoutes().map((route) => {
           const Icon = route.icon
           /* « Plus » reste allumé dans tout ce qu'il range — les récurrences,
              l'épargne, la répartition, les crédits, les avances, les réglages,

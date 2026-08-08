@@ -15,8 +15,8 @@
 
 import { type ISODate, dayOfWeek, parseISO } from '@/domain/date'
 import type { Period } from '@/domain/types'
-import { fr } from '@/i18n/fr'
-import { formatDayMonthShort, tpl } from '@/i18n/format'
+import { t } from '@/i18n/strings'
+import { formatDayMonthShort, formatMonthDay, tpl } from '@/i18n/format'
 
 export type PeriodKind =
   | 'weekly'
@@ -102,14 +102,14 @@ export function periodOf(draft: PeriodDraft): Period {
 /* L'ordre est celui de la durée croissante, et les « tous les n » suivent
    l'option fixe qu'ils généralisent : on cherche « toutes les deux semaines »
    à côté de « hebdomadaire », pas en fin de liste. */
-export const PERIOD_OPTIONS: { value: PeriodKind; label: string }[] = [
-  { value: 'weekly', label: fr.recurrences.periods.weekly },
-  { value: 'everyNWeeks', label: fr.recurrences.periods.everyNWeeks },
-  { value: 'monthly', label: fr.recurrences.periods.monthly },
-  { value: 'quarterly', label: fr.recurrences.periods.quarterly },
-  { value: 'everyNMonths', label: fr.recurrences.periods.everyNMonths },
-  { value: 'yearly', label: fr.recurrences.periods.yearly },
-  { value: 'everyNYears', label: fr.recurrences.periods.everyNYears },
+export const periodOptions = (): { value: PeriodKind; label: string }[] => [
+  { value: 'weekly', label: t.recurrences.periods.weekly },
+  { value: 'everyNWeeks', label: t.recurrences.periods.everyNWeeks },
+  { value: 'monthly', label: t.recurrences.periods.monthly },
+  { value: 'quarterly', label: t.recurrences.periods.quarterly },
+  { value: 'everyNMonths', label: t.recurrences.periods.everyNMonths },
+  { value: 'yearly', label: t.recurrences.periods.yearly },
+  { value: 'everyNYears', label: t.recurrences.periods.everyNYears },
 ]
 
 /**
@@ -134,23 +134,25 @@ export function defaultsFrom(startedOn: ISODate): { monthDay: number; weekday: n
 
 /** Résumé lisible : « le 5 de chaque mois », « chaque année le 15 mars ». */
 export function describePeriod(period: Period, startedOn: ISODate): string {
-  const weekday = (): string => fr.calendarNames.weekdays[period.anchorDay - 1] ?? ''
+  const weekday = (): string => t.calendarNames.weekdays[period.anchorDay - 1] ?? ''
   /* Le jour du mois, ou son nom quand il en a un. Voir `LAST_DAY`. */
   const monthDay = (): string =>
-    period.anchorDay >= LAST_DAY ? fr.recurrences.summary.lastDay : String(period.anchorDay)
+    period.anchorDay >= LAST_DAY
+      ? t.recurrences.summary.lastDay
+      : formatMonthDay(period.anchorDay)
 
   switch (period.unit) {
     case 'week':
       return period.every > 1
-        ? tpl(fr.recurrences.summary.everyNWeeks, weekday(), period.every)
-        : tpl(fr.recurrences.summary.weekly, weekday())
+        ? tpl(t.recurrences.summary.everyNWeeks, weekday(), period.every)
+        : tpl(t.recurrences.summary.weekly, weekday())
     case 'year':
       return period.every > 1
-        ? tpl(fr.recurrences.summary.everyNYears, period.every, formatDayMonthShort(startedOn))
-        : tpl(fr.recurrences.summary.yearly, formatDayMonthShort(startedOn))
+        ? tpl(t.recurrences.summary.everyNYears, period.every, formatDayMonthShort(startedOn))
+        : tpl(t.recurrences.summary.yearly, formatDayMonthShort(startedOn))
     case 'month':
       return period.every === 1
-        ? tpl(fr.recurrences.summary.monthly, monthDay())
-        : tpl(fr.recurrences.summary.everyN, monthDay(), period.every)
+        ? tpl(t.recurrences.summary.monthly, monthDay())
+        : tpl(t.recurrences.summary.everyN, monthDay(), period.every)
   }
 }

@@ -3,6 +3,8 @@
  * Français, casse normale, pas de majuscule décorative (DS §7).
  * ==========================================================================*/
 
+import type { Widen } from './widen'
+
 export const fr = {
   app: {
     name: 'Tout compte fait',
@@ -2289,4 +2291,5 @@ export const fr = {
   },
 } as const
 
-export type Strings = typeof fr
+/** La forme d'un catalogue : celle du français, feuilles élargies (`Widen`). */
+export type Strings = Widen<typeof fr>

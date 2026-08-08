@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { upcomingRows } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate, formatRelativeDays } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { useCategoryMap, useRecurrences, useUpcoming } from '@/store/selectors'
@@ -51,7 +51,7 @@ export function UpcomingSection() {
   return (
     <Tile className="gap-1">
       <div className="flex items-center justify-between gap-2">
-        <Eyebrow icon={UpcomingIcon}>{fr.dashboard.upcoming}</Eyebrow>
+        <Eyebrow icon={UpcomingIcon}>{t.dashboard.upcoming}</Eyebrow>
         {/* Un vrai lien, et la seule tuile du tableau de bord qui en garde un :
             son contenu est une liste qu'on lit ligne à ligne, avec sa date
             dite au lecteur d'écran sur chacune. L'envelopper dans un bouton
@@ -66,7 +66,7 @@ export function UpcomingSection() {
           to="/calendrier"
           className="t-axis -my-2 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-input underline underline-offset-2"
         >
-          {fr.nav.calendar}
+          {t.nav.calendar}
           {/* À 320px, « PROCHAINES ÉCHÉANCES » et « Calendrier » se partagent la
               largeur au pixel près : le chevron passait par-dessus le bord. Il
               s'efface, et le soulignement continue de dire que c'est un lien —
@@ -77,7 +77,7 @@ export function UpcomingSection() {
 
       {rows.length === 0 ? (
         <p className="t-label">
-          {hasRecurrence ? fr.dashboard.noUpcoming : fr.dashboard.noUpcomingStart}
+          {hasRecurrence ? t.dashboard.noUpcoming : t.dashboard.noUpcomingStart}
         </p>
       ) : (
         /* `content-start` : la liste s'ancre en haut, comme du temps où sa

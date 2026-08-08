@@ -15,7 +15,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Sidebar, TabBar } from './Nav'
 import {
   ABOUT_PATH,
@@ -24,13 +24,13 @@ import {
   CATEGORIES_PATH,
   CREDITS_PATH,
   DATA_PATH,
-  MANAGE_ROUTES,
+  manageRoutes,
   MORE_PATH,
-  NAV_ROUTES,
+  navRoutes,
   PEOPLE_PATH,
   RECURRENCES_PATH,
   SAVINGS_PATH,
-  SIDEBAR_GROUPS,
+  sidebarGroups,
   SPLIT_PATH,
   STORAGE_PATH,
   isInMoreSection,
@@ -58,13 +58,13 @@ describe('Barre d’onglets — quatre destinations, et une porte pour le reste'
     tabs()
 
     expect(screen.getAllByRole('link')).toHaveLength(4)
-    expect(NAV_ROUTES).toHaveLength(4)
+    expect(navRoutes()).toHaveLength(4)
   })
 
   it('garde les trois lectures qu’on ouvre pour regarder', () => {
     tabs()
 
-    for (const label of [fr.nav.month, fr.nav.calendar, fr.nav.history, fr.nav.more]) {
+    for (const label of [t.nav.month, t.nav.calendar, t.nav.history, t.nav.more]) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
     }
   })
@@ -108,10 +108,10 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
   it('déplie « Gérer » et nomme « Plus » pour le reste', () => {
     sidebar()
 
-    for (const route of MANAGE_ROUTES) {
+    for (const route of manageRoutes()) {
       expect(screen.getByRole('link', { name: route.label })).toBeInTheDocument()
     }
-    expect(screen.getByRole('link', { name: fr.nav.more })).toHaveAttribute('href', MORE_PATH)
+    expect(screen.getByRole('link', { name: t.nav.more })).toHaveAttribute('href', MORE_PATH)
   })
 
   /* Un seul titre : le premier groupe s'ouvre sur les destinations
@@ -120,8 +120,8 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
   it('ne nomme que le groupe qui fait descendre d’un cran', () => {
     sidebar()
 
-    expect(screen.getByText(fr.nav.manage)).toBeInTheDocument()
-    expect(SIDEBAR_GROUPS.filter((group) => group.title !== undefined)).toHaveLength(1)
+    expect(screen.getByText(t.nav.manage)).toBeInTheDocument()
+    expect(sidebarGroups().filter((group) => group.title !== undefined)).toHaveLength(1)
   })
 
   /* L'invariant qui compte : le regroupement ne doit retirer aucune porte. Les
@@ -132,7 +132,7 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
     const nav = within(container).getByRole('navigation')
     const paths = [...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'))
 
-    for (const group of SIDEBAR_GROUPS) {
+    for (const group of sidebarGroups()) {
       for (const route of group.routes) expect(paths).toContain(route.path)
     }
     expect(paths).toContain(ABOUT_PATH)
@@ -165,6 +165,6 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
   it('allume son lien « Plus » dans les vues qu’il ouvre', () => {
     sidebar(PEOPLE_PATH)
 
-    expect(screen.getByRole('link', { name: fr.nav.more })).toHaveClass('bg-accent')
+    expect(screen.getByRole('link', { name: t.nav.more })).toHaveClass('bg-accent')
   })
 })

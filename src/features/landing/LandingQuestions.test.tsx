@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { DOCS_URL, REPO_URL } from '@/app/meta'
 import { LEGAL_NOTICE_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { landing } from '@/i18n/landing'
 import { LandingQuestions } from './LandingQuestions'
 
@@ -41,11 +41,11 @@ describe('Les questions de la présentation', () => {
   it('mène au code et à la documentation du projet', () => {
     show()
 
-    expect(screen.getByRole('link', { name: new RegExp(fr.about.repo) })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: new RegExp(t.about.repo) })).toHaveAttribute(
       'href',
       REPO_URL,
     )
-    expect(screen.getByRole('link', { name: new RegExp(fr.about.docs) })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: new RegExp(t.about.docs) })).toHaveAttribute(
       'href',
       DOCS_URL,
     )
@@ -57,7 +57,7 @@ describe('Les questions de la présentation', () => {
   it('mène aux mentions légales depuis la question qui les invoque', () => {
     show()
 
-    expect(screen.getByRole('link', { name: fr.legal.notice })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: t.legal.notice })).toHaveAttribute(
       'href',
       LEGAL_NOTICE_PATH,
     )

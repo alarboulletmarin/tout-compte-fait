@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { makeData } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import * as downloadModule from '@/lib/download'
 import { useStore } from '@/store/store'
 import { StorageAlert } from './StorageAlert'
@@ -23,19 +23,19 @@ describe('StorageAlert', () => {
      réouverture tombe alors que la coquille est montée, et l'écran d'arrivée ne
      viendra pas. Ce cas-là ne disait plus rien du tout. */
   it('dit aussi la base devenue illisible une fois l’app ouverte', () => {
-    useStore.getState().setError({ kind: 'read', message: fr.storage.blocked })
+    useStore.getState().setError({ kind: 'read', message: t.storage.blocked })
     render(<StorageAlert />)
-    expect(screen.getByRole('alert')).toHaveTextContent(fr.storage.blocked)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.storage.blocked)
   })
 
   it('annonce l’échec d’écriture et propose l’export', async () => {
     const download = vi.spyOn(downloadModule, 'download').mockImplementation(() => {})
-    useStore.getState().setError({ kind: 'write', message: fr.storage.writeFailed })
+    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
 
     render(<StorageAlert />)
-    expect(screen.getByRole('alert')).toHaveTextContent(fr.storage.writeFailed)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.storage.writeFailed)
 
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.exportNow }))
+    await userEvent.click(screen.getByRole('button', { name: t.storage.exportNow }))
     expect(download).toHaveBeenCalledTimes(1)
   })
 
@@ -46,11 +46,11 @@ describe('StorageAlert', () => {
     const download = vi.spyOn(downloadModule, 'download').mockImplementation(() => {})
     useStore.setState({
       data: makeData({ household: { name: 'Encore là', members: [] } }),
-      error: { kind: 'write', message: fr.storage.writeFailed },
+      error: { kind: 'write', message: t.storage.writeFailed },
     })
 
     render(<StorageAlert />)
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.exportNow }))
+    await userEvent.click(screen.getByRole('button', { name: t.storage.exportNow }))
 
     const blob = download.mock.calls[0]?.[0]
     expect(blob).toBeInstanceOf(Blob)

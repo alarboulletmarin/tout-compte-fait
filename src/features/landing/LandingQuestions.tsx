@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ExternalLink, LINK } from '@/app/AppFooter'
 import { DOCS_URL, REPO_URL } from '@/app/meta'
 import { LEGAL_NOTICE_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { landing } from '@/i18n/landing'
 
 /**
@@ -49,7 +49,7 @@ export function LandingQuestions() {
               parole — ce que cette section-ci existe précisément pour éviter.
               Le pied de page la porte aussi, trois sections plus bas. */}
           <Link to={LEGAL_NOTICE_PATH} className={LINK}>
-            {fr.legal.notice}
+            {t.legal.notice}
           </Link>
         </Answer>
       </div>
@@ -58,8 +58,8 @@ export function LandingQuestions() {
         <h3 className="t-body font-semibold">{landing.verifyTitle}</h3>
         <p className="t-label">{landing.verifyBody}</p>
         <div className="flex flex-wrap items-center gap-x-5">
-          <ExternalLink href={REPO_URL}>{fr.about.repo}</ExternalLink>
-          <ExternalLink href={DOCS_URL}>{fr.about.docs}</ExternalLink>
+          <ExternalLink href={REPO_URL}>{t.about.repo}</ExternalLink>
+          <ExternalLink href={DOCS_URL}>{t.about.docs}</ExternalLink>
         </div>
       </div>
     </section>

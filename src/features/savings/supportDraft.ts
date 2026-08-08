@@ -17,7 +17,7 @@ import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import { DEFAULT_PACE, paceOf } from '@/domain/saving'
 import type { Recurrence, SavingPace, SavingSupport, SavingValuation } from '@/domain/types'
 import type { SavingSupportInput } from '@/domain/updates'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 
 export type SupportDraft = {
@@ -96,14 +96,14 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
 
   const errors: SupportErrors = useMemo(() => {
     const found: SupportErrors = {}
-    if (draft.label.trim() === '') found.label = fr.savings.supportLabelRequired
-    if (draft.memberId === '') found.member = fr.savings.supportOwnerRequired
-    if (draft.categoryId === '') found.category = fr.savings.supportKindRequired
+    if (draft.label.trim() === '') found.label = t.savings.supportLabelRequired
+    if (draft.memberId === '') found.member = t.savings.supportOwnerRequired
+    if (draft.categoryId === '') found.category = t.savings.supportKindRequired
     /* Facultatif, mais pas au point d'être avalé en silence : un montant saisi
        puis ignoré à l'enregistrement se découvre des semaines plus tard, quand
        le total d'épargne ne compte toujours pas le support. Zéro passe — un
        livret vidé est une information réelle ; un négatif, non. */
-    if (typedAmount && (amount === null || amount < 0)) found.amount = fr.savings.valueRequired
+    if (typedAmount && (amount === null || amount < 0)) found.amount = t.savings.valueRequired
     return found
   }, [draft.label, draft.memberId, draft.categoryId, typedAmount, amount])
 
@@ -185,7 +185,7 @@ export function supportContribution(
   const amount = parseAmount(amountText)
   if (amount === null || amount <= 0) return null
   return {
-    label: tpl(fr.savings.contributionLabel, support.label),
+    label: tpl(t.savings.contributionLabel, support.label),
     categoryId: support.categoryId,
     memberId: support.memberId,
     savingSupportId: support.id,
@@ -216,7 +216,7 @@ export function valuationDraftFrom(valuation: SavingValuation | null): Valuation
 export function valuationError(draft: ValuationDraft): string | undefined {
   const amount = parseAmount(draft.amountText)
   if (draft.amountText.trim() === '' || amount === null || amount < 0) {
-    return fr.savings.valueRequired
+    return t.savings.valueRequired
   }
   return undefined
 }

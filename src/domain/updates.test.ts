@@ -564,6 +564,7 @@ describe('réglages', () => {
     expect(after.settings).toEqual({
       theme: 'dark',
       palette: 'classique',
+      locale: 'fr',
       currency: 'EUR',
       monthStartsOn: 1,
     })

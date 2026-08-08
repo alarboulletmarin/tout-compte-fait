@@ -1,5 +1,5 @@
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { BalanceIcon } from '@/ui/Icons'
@@ -30,7 +30,7 @@ function TileVariants() {
 
 export function TileSection() {
   return (
-    <Section title={fr.styleguide.sections.components}>
+    <Section title={t.styleguide.sections.components}>
       <SubTitle>Tile · Eyebrow</SubTitle>
       <DualTheme>
         <TileVariants />
@@ -42,7 +42,7 @@ export function TileSection() {
 /** Reproduit la grille de la section 5 du design system, à l'identique. */
 export function BentoSection() {
   return (
-    <Section title={fr.styleguide.sections.bento} note={fr.styleguide.bentoNote}>
+    <Section title={t.styleguide.sections.bento} note={t.styleguide.bentoNote}>
       <DualTheme stacked>
         <BentoGrid>
           {/* L'ordre reproduit le schéma du DS §5 : solde 2×2, colonne €/%

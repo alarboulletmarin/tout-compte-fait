@@ -12,7 +12,7 @@ import {
   makeMember,
   makeRecurrence,
 } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { RecurrencesPage } from './RecurrencesPage'
@@ -150,21 +150,21 @@ describe('RecurrencesPage', () => {
         ],
       })
 
-      expect(screen.getByText(fr.recurrences.totalOut)).toBeInTheDocument()
-      expect(screen.getByText(fr.recurrences.scopeOut)).toBeInTheDocument()
+      expect(screen.getByText(t.recurrences.totalOut)).toBeInTheDocument()
+      expect(screen.getByText(t.recurrences.scopeOut)).toBeInTheDocument()
       expect(
-        screen.getByText(tpl(fr.recurrences.variableExcludedOne, 1)),
+        screen.getByText(tpl(t.recurrences.variableExcludedOne, 1)),
       ).toBeInTheDocument()
     })
 
     it('suit la pilule active — étiquette, périmètre et chiffre', async () => {
       renderPage()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.showIn }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.showIn }))
 
-      const label = screen.getByText(fr.recurrences.totalIn)
-      expect(screen.queryByText(fr.recurrences.totalOut)).not.toBeInTheDocument()
-      expect(screen.getByText(fr.recurrences.scopeIn)).toBeInTheDocument()
+      const label = screen.getByText(t.recurrences.totalIn)
+      expect(screen.queryByText(t.recurrences.totalOut)).not.toBeInTheDocument()
+      expect(screen.getByText(t.recurrences.scopeIn)).toBeInTheDocument()
 
       /* Dans la tuile et non dans la page : le même chiffre s'écrit aussi sur le
          groupe et sur la ligne, puisqu'il n'y a qu'un revenu.
@@ -183,11 +183,11 @@ describe('RecurrencesPage', () => {
 
       expect(screen.queryByRole('button', { name: 'Loyer' })).not.toBeInTheDocument()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.expandAll }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
       expect(screen.getByRole('button', { name: /Loyer/ })).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: fr.recurrences.collapseAll }),
+        screen.getByRole('button', { name: t.recurrences.collapseAll }),
       ).toBeInTheDocument()
     })
 
@@ -197,7 +197,7 @@ describe('RecurrencesPage', () => {
       renderPage()
 
       expect(screen.getByText(LONG)).toBeInTheDocument()
-      expect(screen.getAllByText(tpl(fr.recurrences.groupCountOne, 1)).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(tpl(t.recurrences.groupCountOne, 1)).length).toBeGreaterThan(0)
     })
 
     it('signalent une variable qui manque à leur total', () => {
@@ -216,7 +216,7 @@ describe('RecurrencesPage', () => {
 
       expect(
         screen.getByText(
-          `${tpl(fr.recurrences.groupCount, 2)} · ${tpl(fr.recurrences.groupVariable, 1)}`,
+          `${tpl(t.recurrences.groupCount, 2)} · ${tpl(t.recurrences.groupVariable, 1)}`,
         ),
       ).toBeInTheDocument()
     })
@@ -224,7 +224,7 @@ describe('RecurrencesPage', () => {
     it('se rangent par personne quand on change de vue', async () => {
       renderPage()
 
-      await userEvent.click(screen.getByRole('radio', { name: fr.recurrences.byMember }))
+      await userEvent.click(screen.getByRole('radio', { name: t.recurrences.byMember }))
 
       expect(groupOrder().join(' ')).toContain('Alix')
       expect(groupOrder().join(' ')).toContain('Camille')
@@ -237,7 +237,7 @@ describe('RecurrencesPage', () => {
     it('range aussi les groupes entre eux', async () => {
       renderPage()
 
-      const select = screen.getByLabelText(fr.recurrences.sortBy)
+      const select = screen.getByLabelText(t.recurrences.sortBy)
       const byDue = groupOrder()
 
       await userEvent.selectOptions(select, 'amount')
@@ -255,7 +255,7 @@ describe('RecurrencesPage', () => {
     it('retirent ce qu’on ne regarde pas', async () => {
       renderPage()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.showSaving }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.showSaving }))
 
       expect(groupOrder().join(' ')).toContain('Livrets')
       expect(groupOrder().join(' ')).not.toContain('Immobilier')
@@ -264,11 +264,11 @@ describe('RecurrencesPage', () => {
     it('offrent une sortie quand ils ne laissent rien', async () => {
       renderPage({ recurrences: [RECURRENCES[0]!] })
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.showIn }))
-      expect(screen.getByText(fr.recurrences.showEmptyIn)).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.showIn }))
+      expect(screen.getByText(t.recurrences.showEmptyIn)).toBeInTheDocument()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.showAllBack }))
-      expect(screen.queryByText(fr.recurrences.showEmptyIn)).not.toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.showAllBack }))
+      expect(screen.queryByText(t.recurrences.showEmptyIn)).not.toBeInTheDocument()
       expect(groupOrder().join(' ')).toContain('Immobilier')
     })
   })
@@ -279,8 +279,8 @@ describe('RecurrencesPage', () => {
         advances: [makeAdvance({ id: 'a1', memberId: 'm1', categoryId: 'logement' })],
       })
 
-      const row = screen.getByRole('link', { name: new RegExp(fr.advances.section) })
-      expect(row).toHaveTextContent(tpl(fr.advances.countOne, 1))
+      const row = screen.getByRole('link', { name: new RegExp(t.advances.section) })
+      expect(row).toHaveTextContent(tpl(t.advances.countOne, 1))
 
       await userEvent.click(row)
       expect(screen.getByTestId('url')).toHaveTextContent(ADVANCES_PATH)
@@ -290,14 +290,14 @@ describe('RecurrencesPage', () => {
       renderPage()
 
       expect(
-        screen.getByRole('link', { name: new RegExp(fr.advances.section) }),
-      ).toHaveTextContent(fr.advances.empty)
+        screen.getByRole('link', { name: new RegExp(t.advances.section) }),
+      ).toHaveTextContent(t.advances.empty)
     })
 
     it('mènent aux crédits', async () => {
       renderPage()
 
-      await userEvent.click(screen.getByRole('link', { name: new RegExp(fr.credits.title) }))
+      await userEvent.click(screen.getByRole('link', { name: new RegExp(t.credits.title) }))
       expect(screen.getByTestId('url')).toHaveTextContent(CREDITS_PATH)
     })
   })
@@ -306,12 +306,12 @@ describe('RecurrencesPage', () => {
     it('invite à poser la première, et garde les deux suivis', async () => {
       renderPage({ recurrences: [] })
 
-      expect(screen.getByText(fr.recurrences.empty)).toBeInTheDocument()
+      expect(screen.getByText(t.recurrences.empty)).toBeInTheDocument()
       expect(
-        screen.getByRole('link', { name: new RegExp(fr.credits.title) }),
+        screen.getByRole('link', { name: new RegExp(t.credits.title) }),
       ).toBeInTheDocument()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.add }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.add }))
       expect(screen.getByTestId('url')).toHaveTextContent(RECURRENCE_NEW_PATH)
     })
 
@@ -321,8 +321,8 @@ describe('RecurrencesPage', () => {
       renderPage()
 
       const header = screen.getByRole('heading', { level: 1 })
-      expect(header).toHaveTextContent(fr.recurrences.title)
-      expect(screen.getAllByRole('button', { name: fr.recurrences.add })).toHaveLength(1)
+      expect(header).toHaveTextContent(t.recurrences.title)
+      expect(screen.getAllByRole('button', { name: t.recurrences.add })).toHaveLength(1)
     })
   })
 
@@ -330,7 +330,7 @@ describe('RecurrencesPage', () => {
     it('dit à qui elle est quand la liste est rangée par poste', async () => {
       renderPage()
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.expandAll }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
       const row = screen.getByRole('button', { name: /Électricité/ })
       expect(within(row).getByText(/Alix/)).toBeInTheDocument()
@@ -353,7 +353,7 @@ describe('RecurrencesPage', () => {
         ],
       })
 
-      await userEvent.click(screen.getByRole('button', { name: fr.recurrences.expandAll }))
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
       const monthly = screen.getByRole('button', { name: /Loyer/ })
       expect(within(monthly).queryByText(/par an/)).not.toBeInTheDocument()

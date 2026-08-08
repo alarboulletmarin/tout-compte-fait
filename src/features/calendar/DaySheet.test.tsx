@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { ISODate } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { DaySheet } from './DaySheet'
 
 const DAY = '2026-08-08' as ISODate
@@ -10,9 +10,9 @@ const DAY = '2026-08-08' as ISODate
 /* Les trois portes, dans l'ordre de l'écran du mois : ce qu'on lit, ce qu'un
    lecteur d'écran entend, et la nature que le clic emporte. */
 const DOORS = [
-  [fr.entry.newOut, fr.entry.addOut, 'out'],
-  [fr.entry.newIn, fr.entry.addIn, 'in'],
-  [fr.entry.newSaving, fr.entry.addSavingAction, 'saving'],
+  [t.entry.newOut, t.entry.addOut, 'out'],
+  [t.entry.newIn, t.entry.addIn, 'in'],
+  [t.entry.newSaving, t.entry.addSavingAction, 'saving'],
 ] as const
 
 function open() {
@@ -29,7 +29,7 @@ describe('DaySheet — les trois portes de saisie', () => {
      manque à l'œil, et cette ligne-là est ce qui le rend. */
   it('annonce le geste au-dessus de la rangée', () => {
     open()
-    expect(screen.getByText(fr.calendar.addLead)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.addLead)).toBeInTheDocument()
   })
 
   it.each(DOORS)('« %s » ouvre la saisie de la bonne nature', async (_visible, name, nature) => {

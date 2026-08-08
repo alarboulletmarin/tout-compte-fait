@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { IconButton } from './Button'
 import { Close } from './Icons'
@@ -206,7 +206,7 @@ export function Sheet({
           <header className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
             <h2 className="t-section min-w-0 truncate">{title}</h2>
             {dismissible && (
-              <IconButton label={fr.common.close} onClick={onClose}>
+              <IconButton label={t.common.close} onClick={onClose}>
                 <Close />
               </IconButton>
             )}

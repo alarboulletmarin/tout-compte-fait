@@ -366,9 +366,49 @@ export function isPaletteSetting(value: unknown): value is PaletteSetting {
   return PALETTES.includes(value as PaletteSetting)
 }
 
+/**
+ * La langue dans laquelle l'app se dit — et rien de plus.
+ *
+ * Une langue, pas une région : `fr` et `en`, sans `fr-CA` ni `en-US`. Ce que
+ * l'app aurait à faire d'une région, c'est une mise en forme — et celle-là est
+ * déjà décidée ailleurs, par `i18n/format.ts`, qui n'a besoin que de savoir
+ * laquelle des deux prose il accompagne. Multiplier les variantes coûterait un
+ * catalogue par variante pour un écart qui, entre `fr-FR` et `fr-CA`, tient
+ * dans le séparateur décimal.
+ *
+ * **Purement cosmétique, comme le thème et la palette.** Aucune valeur de ce
+ * champ ne change un calcul : ni un montant, ni une échéance, ni un prorata.
+ * Ce qui est *saisi* ne bouge pas non plus — le nom d'une catégorie créée en
+ * français reste écrit en français quand l'app passe à l'anglais, parce que
+ * c'est une donnée du foyer et non une chaîne de l'app. Seul le catalogue par
+ * défaut d'un document *neuf* suit la langue du moment (`persistence/defaults.ts`).
+ */
+export type Locale = 'fr' | 'en'
+
+/** L'ordre fait foi : c'est celui du réglage de langue. */
+export const LOCALES: readonly Locale[] = ['fr', 'en']
+
+/**
+ * Le français, et non la langue du navigateur.
+ *
+ * La détection a lieu une fois, au tout premier lancement, et elle est le
+ * travail de `i18n/locale.ts` : ici on nomme ce sur quoi retombe un document
+ * qui ne dit rien — un fichier importé d'avant le champ, par exemple. Répondre
+ * « la langue du navigateur » à cet endroit-là ferait changer de langue un
+ * document existant selon l'appareil qui l'ouvre, ce qui est exactement ce
+ * qu'un réglage écrit dans le document sert à empêcher.
+ */
+export const DEFAULT_LOCALE: Locale = 'fr'
+
+export function isLocale(value: unknown): value is Locale {
+  return LOCALES.includes(value as Locale)
+}
+
 export type Settings = {
   theme: ThemeSetting
   palette: PaletteSetting
+  /** La langue de l'interface. Voir `Locale` : elle ne change aucun calcul. */
+  locale: Locale
   /** Le symbole sous lequel les montants se lisent. Aucune conversion : ce
    *  n'est pas la multi-devise, que le cahier §2 laisse hors v1. */
   currency: string

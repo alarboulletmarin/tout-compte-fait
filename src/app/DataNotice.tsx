@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { today } from '@/domain/date'
 import { ExportReminder } from '@/features/settings/ExportReminder'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   dismissDurabilityNotice,
   readDurabilityDismissed,
@@ -40,14 +40,14 @@ import { StorageAlert } from './StorageAlert'
  */
 function DurabilityNotice({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <SwipeAway onDismiss={onDismiss} label={fr.storage.durabilityLabel} className="mb-4 block">
+    <SwipeAway onDismiss={onDismiss} label={t.storage.durabilityLabel} className="mb-4 block">
       {/* La mise en page du rappel d'export, aux mêmes tokens : ce sont deux
           messages du même domaine, qui ne s'affichent jamais ensemble, et deux
           gabarits pour un même objet auraient fini par diverger. */}
       <div className="tile flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 flex-col">
-          <p className="t-body">{fr.storage.durabilityTitle}</p>
-          <p className="t-label">{fr.storage.durabilityBody}</p>
+          <p className="t-body">{t.storage.durabilityTitle}</p>
+          <p className="t-label">{t.storage.durabilityBody}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
           {/* Vers la vue des données, qui porte l'export **et** l'état du
@@ -57,9 +57,9 @@ function DurabilityNotice({ onDismiss }: { onDismiss: () => void }) {
             to={DATA_PATH}
             className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
           >
-            {fr.settings.export}
+            {t.settings.export}
           </Link>
-          <IconButton label={fr.storage.durabilityDismiss} onClick={onDismiss}>
+          <IconButton label={t.storage.durabilityDismiss} onClick={onDismiss}>
             <Close size={18} />
           </IconButton>
         </div>

@@ -4,7 +4,7 @@ import { ADVANCES_PATH } from '@/app/routes'
 import { monthlyInstalment, monthsCovered } from '@/domain/advance'
 import { type ISODate, type YearMonth, currentYm, today, ymOf } from '@/domain/date'
 import { parseAmount } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { addAdvance } from '@/store/actions'
 import { SupportSelect } from '@/features/savings/SupportSelect'
@@ -73,11 +73,11 @@ export function AdvanceFormPage() {
 
   const amount = parseAmount(draft.amountText)
   const errors = {
-    label: draft.label.trim() === '' ? fr.advances.labelRequired : undefined,
-    amount: amount === null || amount <= 0 ? fr.advances.amountRequired : undefined,
-    category: draft.categoryId === '' ? fr.advances.categoryRequired : undefined,
-    saving: draft.savingSupportId === '' ? fr.advances.savingSupportRequired : undefined,
-    period: draft.to < draft.from ? fr.advances.periodInvalid : undefined,
+    label: draft.label.trim() === '' ? t.advances.labelRequired : undefined,
+    amount: amount === null || amount <= 0 ? t.advances.amountRequired : undefined,
+    category: draft.categoryId === '' ? t.advances.categoryRequired : undefined,
+    saving: draft.savingSupportId === '' ? t.advances.savingSupportRequired : undefined,
+    period: draft.to < draft.from ? t.advances.periodInvalid : undefined,
   }
   // Le type doit rester celui de `errors` : `{}` littéral perdrait les clés, et
   // chaque champ irait chercher une propriété que TypeScript ne connaît plus.
@@ -121,21 +121,21 @@ export function AdvanceFormPage() {
       to: draft.to,
       ...(draft.shared ? { shared: true } : {}),
     })
-    toast(fr.advances.added)
+    toast(t.advances.added)
     void navigate(ADVANCES_PATH)
   }
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
-      <PageTitle title={fr.advances.add} onBack={guard.request} />
+      <PageTitle title={t.advances.add} onBack={guard.request} />
 
       {/* Sans support, rien à enregistrer : une avance se prend sur une épargne
           qui existe, et qui est à quelqu'un. L'écran le dit plutôt que de
           proposer un champ vide — et il dit *laquelle* des deux choses manque. */}
       {members.length === 0 ? (
-        <p className="t-label">{fr.advances.memberNone}</p>
+        <p className="t-label">{t.advances.memberNone}</p>
       ) : supports.length === 0 ? (
-        <p className="t-label">{fr.advances.savingSupportNone}</p>
+        <p className="t-label">{t.advances.savingSupportNone}</p>
       ) : (
         <form
           onSubmit={(event) => {
@@ -145,7 +145,7 @@ export function AdvanceFormPage() {
         >
           <Tile className="gap-4">
             <Field
-              label={fr.advances.label}
+              label={t.advances.label}
               required
               {...(shown.label === undefined ? {} : { error: shown.label })}
             >
@@ -155,7 +155,7 @@ export function AdvanceFormPage() {
                   aria-describedby={describedBy}
                   value={draft.label}
                   invalid={shown.label !== undefined}
-                  placeholder={fr.advances.labelPlaceholder}
+                  placeholder={t.advances.labelPlaceholder}
                   maxLength={60}
                   autoFocus
                   onChange={(e) => {
@@ -166,9 +166,9 @@ export function AdvanceFormPage() {
             </Field>
 
             <Field
-              label={fr.advances.amount}
+              label={t.advances.amount}
               required
-              hint={fr.advances.amountHint}
+              hint={t.advances.amountHint}
               {...(shown.amount === undefined ? {} : { error: shown.amount })}
             >
               {(id, describedBy) => (
@@ -185,7 +185,7 @@ export function AdvanceFormPage() {
               )}
             </Field>
 
-            <Field label={fr.advances.paidOn} required>
+            <Field label={t.advances.paidOn} required>
               {(id) => (
                 <DateInput
                   id={id}
@@ -206,7 +206,7 @@ export function AdvanceFormPage() {
             </Field>
 
             <Field
-              label={fr.advances.category}
+              label={t.advances.category}
               required
               {...(shown.category === undefined ? {} : { error: shown.category })}
             >
@@ -225,9 +225,9 @@ export function AdvanceFormPage() {
             </Field>
 
             <Field
-              label={fr.advances.savingSupport}
+              label={t.advances.savingSupport}
               required
-              hint={fr.advances.savingSupportHint}
+              hint={t.advances.savingSupportHint}
               {...(shown.saving === undefined ? {} : { error: shown.saving })}
             >
               {(id, describedBy) => (
@@ -244,7 +244,7 @@ export function AdvanceFormPage() {
             </Field>
 
             <div className="flex flex-wrap gap-4">
-              <Field label={fr.advances.from} className="min-w-40 flex-1">
+              <Field label={t.advances.from} className="min-w-40 flex-1">
                 {(id) => (
                   <TextInput
                     id={id}
@@ -257,7 +257,7 @@ export function AdvanceFormPage() {
                 )}
               </Field>
               <Field
-                label={fr.advances.to}
+                label={t.advances.to}
                 className="min-w-40 flex-1"
                 {...(shown.period === undefined ? {} : { error: shown.period })}
               >
@@ -281,8 +281,8 @@ export function AdvanceFormPage() {
             {members.length > 1 && (
               <Checkbox
                 checked={draft.shared}
-                label={fr.entry.shared}
-                hint={fr.advances.methodShared}
+                label={t.entry.shared}
+                hint={t.advances.methodShared}
                 onChange={(next) => {
                   patch({ shared: next })
                 }}
@@ -295,25 +295,25 @@ export function AdvanceFormPage() {
               saisie est la bonne. */}
           {monthly !== null && errors.period === undefined && (
             <Tile variant="accent" className="mt-4 gap-1">
-              <span className="t-label">{fr.advances.monthly}</span>
+              <span className="t-label">{t.advances.monthly}</span>
               <Amount value={monthly} size="tile" direction="out" />
               <span className="t-axis">
-                {tpl(fr.advances.monthlyOf, formatMoney(monthly, currency, false), months)}
+                {tpl(t.advances.monthlyOf, formatMoney(monthly, currency, false), months)}
               </span>
             </Tile>
           )}
 
           <Button type="submit" full className="mt-4">
-            {fr.common.save}
+            {t.common.save}
           </Button>
         </form>
       )}
 
       <Tile className="gap-2">
-        <span className="t-label font-medium">{fr.advances.method}</span>
-        <p className="t-label">{fr.advances.methodDrawdown}</p>
-        <p className="t-label">{fr.advances.methodInstalments}</p>
-        <p className="t-label">{fr.advances.methodExpense}</p>
+        <span className="t-label font-medium">{t.advances.method}</span>
+        <p className="t-label">{t.advances.methodDrawdown}</p>
+        <p className="t-label">{t.advances.methodInstalments}</p>
+        <p className="t-label">{t.advances.methodExpense}</p>
       </Tile>
 
       <ConfirmDialog {...guard.dialog} />

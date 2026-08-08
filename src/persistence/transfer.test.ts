@@ -81,7 +81,7 @@ function richData(): Data {
       { ym: '2026-07', openedAt: '2026-07-01', closed: false },
       { ym: '2026-06', openedAt: '2026-06-01', closed: true },
     ],
-    settings: { theme: 'dark', palette: 'vive', currency: 'CHF', monthStartsOn: 1 },
+    settings: { theme: 'dark', palette: 'vive', locale: 'en', currency: 'CHF', monthStartsOn: 1 },
   })
 }
 
@@ -164,6 +164,10 @@ describe('import — fichiers hostiles', () => {
     expect(data.settings).toEqual({
       theme: 'system',
       palette: 'classique',
+      /* Un document tronqué n'a jamais dit sa langue : il repart en français,
+         et surtout pas dans celle du navigateur qui l'ouvre — voir `settings`
+         dans `validate.ts`. */
+      locale: 'fr',
       currency: 'EUR',
       monthStartsOn: 1,
     })

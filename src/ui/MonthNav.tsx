@@ -1,7 +1,7 @@
 import { type PointerEvent as ReactPointerEvent, useRef } from 'react'
 import { type YearMonth, addMonthsToYm, parseYm } from '@/domain/date'
 import { monthName } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { IconButton } from './Button'
 import { ChevronLeft, ChevronRight } from './Icons'
@@ -70,8 +70,8 @@ export function MonthNav({ value, onChange, min, max, className }: MonthNavProps
       }}
     >
       <IconButton
-        label={fr.a11y.previousMonth}
-        title={fr.a11y.previousMonthKey}
+        label={t.a11y.previousMonth}
+        title={t.a11y.previousMonthKey}
         disabled={!canGoBack}
         onClick={() => {
           onChange(previous)
@@ -86,8 +86,8 @@ export function MonthNav({ value, onChange, min, max, className }: MonthNavProps
       </div>
 
       <IconButton
-        label={fr.a11y.nextMonth}
-        title={fr.a11y.nextMonthKey}
+        label={t.a11y.nextMonth}
+        title={t.a11y.nextMonthKey}
         disabled={!canGoForward}
         onClick={() => {
           onChange(next)

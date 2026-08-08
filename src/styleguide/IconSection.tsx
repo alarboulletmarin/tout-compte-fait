@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import * as Icons from '@/ui/Icons'
 import type { IconComponent } from '@/ui/Icons'
 import { Section, SubTitle } from './Section'
@@ -73,15 +73,15 @@ function Grid({ items }: { items: [string, IconComponent][] }) {
 
 export function IconSection() {
   return (
-    <Section title={fr.styleguide.sections.icons} note={fr.styleguide.iconsNote}>
+    <Section title={t.styleguide.sections.icons} note={t.styleguide.iconsNote}>
       <DualTheme stacked>
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <SubTitle>{fr.styleguide.iconAction}</SubTitle>
+            <SubTitle>{t.styleguide.iconAction}</SubTitle>
             <Grid items={ACTION} />
           </div>
           <div className="flex flex-col gap-2">
-            <SubTitle>{fr.styleguide.iconMarker}</SubTitle>
+            <SubTitle>{t.styleguide.iconMarker}</SubTitle>
             <Grid items={MARKER} />
           </div>
         </div>

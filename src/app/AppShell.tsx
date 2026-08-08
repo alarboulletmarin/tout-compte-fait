@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { useHouseholdName } from '@/store/selectors'
 import { ScreenEntryProvider } from '@/ui/ScreenEntryProvider'
@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         href="#contenu"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-input focus:bg-surface focus:px-4 focus:py-2"
       >
-        {fr.a11y.skipToContent}
+        {t.a11y.skipToContent}
       </a>
 
       <div className="mx-auto flex w-full max-w-7xl">

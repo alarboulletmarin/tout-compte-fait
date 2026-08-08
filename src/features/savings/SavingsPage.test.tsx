@@ -21,7 +21,7 @@ import {
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { ScreenTitleProvider } from '@/ui/ScreenTitleProvider'
@@ -102,8 +102,8 @@ describe('l’épargne se lit au nom d’une personne', () => {
     seed()
     open()
 
-    expect(screen.queryByRole('button', { name: fr.shell.all })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: fr.shell.common })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.shell.all })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.shell.common })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Andrea' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Marie' })).toBeInTheDocument()
   })
@@ -116,7 +116,7 @@ describe('l’épargne se lit au nom d’une personne', () => {
     open()
 
     expect(useStore.getState().filter).toEqual({ kind: 'member', memberId: 'm-1' })
-    expect(screen.getByText(tpl(fr.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
     // Deux fois : le capital, et la rangée du seul support qu'elle porte.
     expect(screen.getAllByText(spoken(1_200_000))).toHaveLength(2)
     // Jamais la somme des deux personnes.
@@ -128,7 +128,7 @@ describe('l’épargne se lit au nom d’une personne', () => {
     useStore.getState().setFilter({ kind: 'member', memberId: 'm-2' })
     open()
 
-    expect(screen.getByText(tpl(fr.savings.totalHintOf, de('Marie')))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.totalHintOf, de('Marie')))).toBeInTheDocument()
     expect(screen.getAllByText(spoken(800_000))).toHaveLength(2)
   })
 
@@ -139,7 +139,7 @@ describe('l’épargne se lit au nom d’une personne', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Marie' }))
 
-    expect(screen.getByText(tpl(fr.savings.totalHintOf, de('Marie')))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.totalHintOf, de('Marie')))).toBeInTheDocument()
     expect(screen.getAllByText(spoken(800_000))).toHaveLength(2)
     expect(screen.queryByText(spoken(1_200_000))).not.toBeInTheDocument()
   })
@@ -151,7 +151,7 @@ describe('l’épargne se lit au nom d’une personne', () => {
     open()
 
     expect(useStore.getState().filter).toEqual({ kind: 'member', memberId: 'm-1' })
-    expect(screen.getByText(tpl(fr.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
   })
 
   /* Sans personne au foyer, il n'y a rien à filtrer et rien à posséder :
@@ -166,7 +166,7 @@ describe('l’épargne se lit au nom d’une personne', () => {
     open()
 
     expect(useStore.getState().filter).toEqual(ALL_FILTER)
-    expect(screen.getByText(fr.savings.supportsNoMember)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.supportsNoMember)).toBeInTheDocument()
   })
 })
 
@@ -198,12 +198,12 @@ describe('l’écran range chaque question dans sa zone', () => {
     seed()
     open()
 
-    const section = screen.getByText(fr.savings.supports).closest('section')
+    const section = screen.getByText(t.savings.supports).closest('section')
     expect(section).toContainElement(screen.getByRole('link', { name: /Livret A/ }))
     expect(section).toContainElement(
-      screen.getByRole('button', { name: fr.savings.valuesUpdate }),
+      screen.getByRole('button', { name: t.savings.valuesUpdate }),
     )
-    expect(section).toContainElement(screen.getByRole('button', { name: fr.savings.supportAdd }))
+    expect(section).toContainElement(screen.getByRole('button', { name: t.savings.supportAdd }))
   })
 
   /* Les trois chiffres qui s'additionnent — capacité, versé, reste — dans un
@@ -216,9 +216,9 @@ describe('l’écran range chaque question dans sa zone', () => {
     /* Repéré par « Versé ce mois », qui n'existe qu'ici : « Capacité d'épargne »
        se dit deux fois dans cette tuile — en étiquette, puis en résultat de la
        cascade repliée. */
-    const tile = screen.getByText(fr.savings.placedTotal).closest('section')
-    expect(tile).toContainElement(screen.getByText(fr.savings.left))
-    expect(tile).toContainElement(screen.getByText(fr.savings.method))
+    const tile = screen.getByText(t.savings.placedTotal).closest('section')
+    expect(tile).toContainElement(screen.getByText(t.savings.left))
+    expect(tile).toContainElement(screen.getByText(t.savings.method))
   })
 
   /* La cascade et les quatre paragraphes restent disponibles, mais repliés :
@@ -227,13 +227,13 @@ describe('l’écran range chaque question dans sa zone', () => {
     seed()
     open()
 
-    const details = screen.getByText(fr.savings.method).closest('details')
+    const details = screen.getByText(t.savings.method).closest('details')
     expect(details).not.toBeNull()
     expect(details).not.toHaveAttribute('open')
-    expect(details).toContainElement(screen.getByText(fr.savings.flowIncome))
-    expect(details).toContainElement(screen.getByText(fr.savings.methodBalance))
+    expect(details).toContainElement(screen.getByText(t.savings.flowIncome))
+    expect(details).toContainElement(screen.getByText(t.savings.methodBalance))
     // La règle qui fait exister l'écran y est aussi, et une seule fois.
-    expect(details).toContainElement(screen.getByText(fr.savings.valueMethod))
+    expect(details).toContainElement(screen.getByText(t.savings.valueMethod))
   })
 
   /* La liste des supports ne montre que les comptes de la personne lue, donc
@@ -266,13 +266,13 @@ describe('l’écran range chaque question dans sa zone', () => {
     open()
 
     // Deux lignes au même nom dans la ventilation, départagées par leur nom.
-    const ventilation = within(assertElement(screen.getByText(fr.savings.placed).closest('section')))
+    const ventilation = within(assertElement(screen.getByText(t.savings.placed).closest('section')))
     expect(ventilation.getAllByText('Livret A')).toHaveLength(2)
     expect(ventilation.getByText(/Andrea/)).toBeInTheDocument()
     expect(ventilation.getByText(/Marie/)).toBeInTheDocument()
 
     // La liste des supports, elle, n'a qu'une personne et ne la répète pas.
-    const supports = within(assertElement(screen.getByText(fr.savings.supports).closest('section')))
+    const supports = within(assertElement(screen.getByText(t.savings.supports).closest('section')))
     expect(supports.queryByText(/Andrea/)).not.toBeInTheDocument()
     expect(supports.queryByText(/Marie/)).not.toBeInTheDocument()
   })
@@ -291,8 +291,8 @@ describe('l’écran range chaque question dans sa zone', () => {
     })
     open()
 
-    expect(screen.getByText(fr.savings.supportsEmpty)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: fr.savings.supportAdd })).toBeInTheDocument()
+    expect(screen.getByText(t.savings.supportsEmpty)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.savings.supportAdd })).toBeInTheDocument()
   })
 })
 
@@ -352,18 +352,18 @@ describe('la cascade sépare ce qui est à soi de la part du commun', () => {
     seedShared()
     open()
 
-    const details = assertElement(screen.getByText(fr.savings.method).closest('details'))
+    const details = assertElement(screen.getByText(t.savings.method).closest('details'))
     const cascade = within(details)
 
-    expect(cascade.getByText(fr.savings.flowOwnCharges)).toBeInTheDocument()
-    expect(cascade.getByText(fr.savings.flowCommon)).toBeInTheDocument()
-    expect(cascade.queryByText(fr.savings.flowCharges)).not.toBeInTheDocument()
+    expect(cascade.getByText(t.savings.flowOwnCharges)).toBeInTheDocument()
+    expect(cascade.getByText(t.savings.flowCommon)).toBeInTheDocument()
+    expect(cascade.queryByText(t.savings.flowCharges)).not.toBeInTheDocument()
 
     /* Les termes portent leur sens — `Amount` le donne à lire hors de l'œil, un
        « + » pour une entrée et le mot pour une sortie —, le résultat non :
        c'est un solde. 2 500 − 50 − 600 = 1 850. */
     const paid = (cents: number): string =>
-      said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(cents), 'EUR')}`)
+      said(`${t.direction.out.toLowerCase()} ${formatMoney(eur(cents), 'EUR')}`)
 
     expect(cascade.getByText(said(`+${formatMoney(eur(250_000), 'EUR')}`))).toBeInTheDocument()
     expect(cascade.getByText(paid(5_000))).toBeInTheDocument()
@@ -379,9 +379,9 @@ describe('la cascade sépare ce qui est à soi de la part du commun', () => {
     seedShared()
     open()
 
-    const cascade = within(assertElement(screen.getByText(fr.savings.method).closest('details')))
-    expect(cascade.queryByText(fr.savings.flowOwnDebts)).not.toBeInTheDocument()
-    expect(cascade.queryByText(fr.savings.flowDebts)).not.toBeInTheDocument()
+    const cascade = within(assertElement(screen.getByText(t.savings.method).closest('details')))
+    expect(cascade.queryByText(t.savings.flowOwnDebts)).not.toBeInTheDocument()
+    expect(cascade.queryByText(t.savings.flowDebts)).not.toBeInTheDocument()
   })
 
   /* Sans prorata calculable, les chiffres du mois sont ceux de ses seules
@@ -395,8 +395,8 @@ describe('la cascade sépare ce qui est à soi de la part du commun', () => {
     })
     open()
 
-    const cascade = within(assertElement(screen.getByText(fr.savings.method).closest('details')))
-    expect(cascade.getByText(fr.savings.flowCharges)).toBeInTheDocument()
-    expect(cascade.queryByText(fr.savings.flowCommon)).not.toBeInTheDocument()
+    const cascade = within(assertElement(screen.getByText(t.savings.method).closest('details')))
+    expect(cascade.getByText(t.savings.flowCharges)).toBeInTheDocument()
+    expect(cascade.queryByText(t.savings.flowCommon)).not.toBeInTheDocument()
   })
 })

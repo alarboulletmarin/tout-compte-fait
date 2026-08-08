@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCategory, makeData, makeEntry, makeFamily } from '@/domain/fixtures'
 import { money } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { SituationSection } from './SituationSection'
 
@@ -69,8 +69,8 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
     const amounts = screen.getAllByText('1 100,00 €')
     expect(amounts.length).toBeGreaterThanOrEqual(2)
 
-    expect(screen.getByText(fr.dashboard.forecastHint)).toBeInTheDocument()
-    expect(screen.getByText(fr.dashboard.remainingNoIncome)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.forecastHint)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.remainingNoIncome)).toBeInTheDocument()
   })
 
   /* Avec une rentrée d'argent encore à venir, les horizons divergent — et la
@@ -89,8 +89,8 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
     ])
     renderSection()
 
-    expect(screen.getByText(fr.dashboard.remainingHint)).toBeInTheDocument()
-    expect(screen.queryByText(fr.dashboard.remainingNoIncome)).not.toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.remainingHint)).toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.remainingNoIncome)).not.toBeInTheDocument()
   })
 
   /* Chaque rangée ouvre sa feuille : c'est là que se lit ce qui les sépare
@@ -102,7 +102,7 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Prévisionnel/ }))
     expect(onExplain).toHaveBeenCalledWith(
-      expect.objectContaining({ key: 'forecast', hint: fr.dashboard.forecastHint }),
+      expect.objectContaining({ key: 'forecast', hint: t.dashboard.forecastHint }),
     )
   })
 
@@ -112,8 +112,8 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
     setUp(PAID, '2026-06')
     renderSection()
 
-    expect(screen.getByText(fr.dashboard.forecast)).toBeInTheDocument()
-    expect(screen.queryByText(fr.dashboard.remaining)).not.toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.forecast)).toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.remaining)).not.toBeInTheDocument()
   })
 
   /* Le pot commun n'a aucun revenu : les deux lectures y vaudraient les

@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import * as downloadModule from '@/lib/download'
 import { clearDocument, closeDb, saveDocument } from '@/persistence/db'
 import { useStore } from '@/store/store'
@@ -30,7 +30,7 @@ describe('ErrorBoundary', () => {
         <Broken />
       </ErrorBoundary>,
     )
-    expect(screen.getByRole('alert')).toHaveTextContent(fr.storage.crashTitle)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.storage.crashTitle)
   })
 
   it('laisse passer ce qui se rend normalement', () => {
@@ -55,7 +55,7 @@ describe('ErrorBoundary', () => {
         <Broken />
       </ErrorBoundary>,
     )
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.crashExport }))
+    await userEvent.click(screen.getByRole('button', { name: t.storage.crashExport }))
 
     expect(download).toHaveBeenCalledTimes(1)
     const blob = download.mock.calls[0]?.[0]
@@ -69,7 +69,7 @@ describe('ErrorBoundary', () => {
         <Broken />
       </ErrorBoundary>,
     )
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.crashExport }))
-    expect(await screen.findByText(fr.storage.crashExportEmpty)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.storage.crashExport }))
+    expect(await screen.findByText(t.storage.crashExportEmpty)).toBeInTheDocument()
   })
 })

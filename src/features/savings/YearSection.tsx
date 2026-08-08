@@ -3,7 +3,7 @@ import { CumulativeLines, type ExtraRead, type Serie } from '@/charts/Cumulative
 import { coveredYears, cumulativeLine, yearHorizon } from '@/domain/history'
 import type { Money } from '@/domain/money'
 import type { SavingYearPoint } from '@/domain/saving'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { NO_VALUE, formatMoney, monthName, tpl } from '@/i18n/format'
 import { useEntries, useSavingYearSeries } from '@/store/selectors'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -55,8 +55,8 @@ export function YearSection() {
   if (year === undefined) {
     return (
       <section className="flex flex-col gap-3">
-        <Eyebrow>{fr.savings.years}</Eyebrow>
-        <p className="t-label">{fr.savings.yearsEmpty}</p>
+        <Eyebrow>{t.savings.years}</Eyebrow>
+        <p className="t-label">{t.savings.yearsEmpty}</p>
       </section>
     )
   }
@@ -98,7 +98,7 @@ export function YearSection() {
   const beforeLine = series[1]?.values ?? []
   const extra: ExtraRead | undefined = hasPrevious
     ? {
-        label: fr.savings.yearsDelta,
+        label: t.savings.yearsDelta,
         values: currentLine.map((value, index) => {
           const other = beforeLine[index]
           return value === null || other === null || other === undefined ? null : value - other
@@ -108,14 +108,14 @@ export function YearSection() {
 
   return (
     <section className="flex flex-col gap-3">
-      <Eyebrow>{fr.savings.years}</Eyebrow>
+      <Eyebrow>{t.savings.years}</Eyebrow>
 
       <div className="flex flex-col gap-4">
         {/* La comparaison n'a qu'un sélecteur et se fait toujours contre
             l'année d'avant : on le dit à côté plutôt que de le laisser deviner
             au tracé. */}
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <Field label={fr.savings.year} className="max-w-40">
+          <Field label={t.savings.year} className="max-w-40">
             {(id) => (
               <Select
                 id={id}
@@ -132,18 +132,18 @@ export function YearSection() {
               </Select>
             )}
           </Field>
-          <span className="t-axis tnum pb-4">{tpl(fr.savings.yearsVersus, year, previous)}</span>
+          <span className="t-axis tnum pb-4">{tpl(t.savings.yearsVersus, year, previous)}</span>
         </div>
 
         <CumulativeLines
           series={series}
           {...(extra === undefined ? {} : { extra })}
-          label={fr.savings.yearsCumulative}
+          label={t.savings.yearsCumulative}
           srText={
             horizon === -1
-              ? tpl(fr.savings.srYearsEmpty, year)
+              ? tpl(t.savings.srYearsEmpty, year)
               : tpl(
-                  fr.savings.srYears,
+                  t.savings.srYears,
                   year,
                   previous,
                   monthName(horizon + 1),
@@ -153,9 +153,9 @@ export function YearSection() {
         />
 
         {partial && (
-          <p className="t-label">{tpl(fr.savings.yearsPartial, year, monthName(horizon + 1))}</p>
+          <p className="t-label">{tpl(t.savings.yearsPartial, year, monthName(horizon + 1))}</p>
         )}
-        {!hasPrevious && <p className="t-label">{tpl(fr.savings.yearsNoPrevious, previous)}</p>}
+        {!hasPrevious && <p className="t-label">{tpl(t.savings.yearsNoPrevious, previous)}</p>}
       </div>
     </section>
   )

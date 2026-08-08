@@ -1,5 +1,5 @@
 import { DONUT_SIZE, DONUT_THICKNESS } from '@/features/dashboard/donut'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 import { landing } from '@/i18n/landing'
 import { Amount } from '@/ui/Amount'
@@ -86,15 +86,15 @@ export function LandingTiles() {
       {/* Le donut de `SplitTile`, au gabarit partagé : deux anneaux de la même
           app qui ne feraient pas la même taille se verraient. Il remplit aussi
           la 2×2, que deux lignes de membres laissaient à moitié vide. */}
-      <Tile span="2x2" className="gap-3" label={fr.dashboard.split}>
-        <Eyebrow icon={SplitIcon}>{fr.dashboard.split}</Eyebrow>
+      <Tile span="2x2" className="gap-3" label={t.dashboard.split}>
+        <Eyebrow icon={SplitIcon}>{t.dashboard.split}</Eyebrow>
         <div className="flex min-h-0 flex-1 items-center gap-4">
           <Ring
             size={DONUT_SIZE}
             thickness={DONUT_THICKNESS}
             segments={segments}
-            label={fr.dashboard.split}
-            srText={tpl(fr.split.srShares, spoken)}
+            label={t.dashboard.split}
+            srText={tpl(t.split.srShares, spoken)}
             className="shrink-0"
           >
             <Amount value={SAMPLE.shared} size="label" direction="out" withCents={false} />
@@ -111,31 +111,31 @@ export function LandingTiles() {
             ))}
           </ul>
         </div>
-        <p className="t-label">{fr.dashboard.splitHint}</p>
+        <p className="t-label">{t.dashboard.splitHint}</p>
       </Tile>
 
       {/* 4×1 et non 2×1, pour la raison que `SavingTile` a déjà écrite : dix-huit
           caractères d'eyebrow ne tiennent pas dans une demi-colonne mobile. */}
-      <Tile span="4x1" className="justify-between" label={fr.dashboard.capacity}>
-        <Eyebrow icon={SavingsIcon}>{fr.dashboard.capacity}</Eyebrow>
+      <Tile span="4x1" className="justify-between" label={t.dashboard.capacity}>
+        <Eyebrow icon={SavingsIcon}>{t.dashboard.capacity}</Eyebrow>
         <div className="flex flex-wrap items-baseline gap-x-2">
           <Amount value={SAMPLE.savingCapacity} size="tile-fit" withCents={false} />
           {/* Une tuile d'une rangée fait 88px : la seconde lecture ne s'affiche
               qu'au-delà de 1024px, comme sur le vrai tableau de bord. */}
-          <span className="t-label max-lg:sr-only">{fr.dashboard.capacityHint}</span>
+          <span className="t-label max-lg:sr-only">{t.dashboard.capacityHint}</span>
         </div>
       </Tile>
 
-      <Tile span="2x1" className="justify-between" label={fr.dashboard.credits}>
-        <Eyebrow icon={CreditsIcon}>{fr.dashboard.credits}</Eyebrow>
+      <Tile span="2x1" className="justify-between" label={t.dashboard.credits}>
+        <Eyebrow icon={CreditsIcon}>{t.dashboard.credits}</Eyebrow>
         <div className="flex flex-wrap items-baseline gap-x-2">
           <Amount value={SAMPLE.debtRemaining} size="tile-fit" withCents={false} />
-          <span className="t-label max-lg:sr-only">{fr.dashboard.creditsRemaining}</span>
+          <span className="t-label max-lg:sr-only">{t.dashboard.creditsRemaining}</span>
         </div>
       </Tile>
 
-      <Tile span="2x1" className="justify-between" label={fr.dashboard.income}>
-        <Eyebrow icon={IncomeIcon}>{fr.dashboard.income}</Eyebrow>
+      <Tile span="2x1" className="justify-between" label={t.dashboard.income}>
+        <Eyebrow icon={IncomeIcon}>{t.dashboard.income}</Eyebrow>
         <div className="flex flex-wrap items-baseline gap-x-2">
           <Amount value={SAMPLE.income} size="tile-fit" direction="in" withCents={false} />
           <span className="t-label max-lg:sr-only">{landing.incomeHint}</span>

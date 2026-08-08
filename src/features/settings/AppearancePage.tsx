@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { MORE_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { prefersDark } from '@/theme/theme'
 import { PageTitle } from '@/ui/PageTitle'
@@ -9,10 +9,10 @@ import { Tile } from '@/ui/Tile'
 import { PaletteChoice } from './PaletteChoice'
 import { Row, RowGroup } from '@/ui/RowGroup'
 
-const THEME_OPTIONS = [
-  { value: 'light' as const, label: fr.theme.light },
-  { value: 'dark' as const, label: fr.theme.dark },
-  { value: 'system' as const, label: fr.theme.system },
+const themeOptions = () => [
+  { value: 'light' as const, label: t.theme.light },
+  { value: 'dark' as const, label: t.theme.dark },
+  { value: 'system' as const, label: t.theme.system },
 ]
 
 /**
@@ -42,21 +42,21 @@ export function AppearancePage() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <PageTitle
-        title={fr.appearance.title}
+        title={t.appearance.title}
         onBack={() => {
           void navigate(MORE_PATH)
         }}
       />
 
-      <RowGroup title={fr.theme.label}>
+      <RowGroup title={t.theme.label}>
         <Row
-          label={fr.theme.label}
+          label={t.theme.label}
           control={
             <Segmented
-              options={THEME_OPTIONS}
+              options={themeOptions()}
               value={theme}
               onChange={setTheme}
-              label={fr.theme.label}
+              label={t.theme.label}
               className="w-fit"
             />
           }
@@ -67,7 +67,7 @@ export function AppearancePage() {
           les deux réglages se combinent, ce qui ne se pose comme question qu'une
           fois devant eux. */}
       <Tile className="gap-3">
-        <p className="t-label">{fr.appearance.intro}</p>
+        <p className="t-label">{t.appearance.intro}</p>
         <PaletteChoice value={palette} onChange={setPalette} theme={resolved} />
       </Tile>
     </div>

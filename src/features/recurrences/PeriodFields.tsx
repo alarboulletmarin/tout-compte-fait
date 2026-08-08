@@ -1,6 +1,6 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Field, Select, TextInput } from '@/ui/Field'
-import { LAST_DAY, PERIOD_OPTIONS, type PeriodDraft, type PeriodKind } from './period'
+import { LAST_DAY, periodOptions, type PeriodDraft, type PeriodKind } from './period'
 
 /* Quelles questions une périodicité pose encore : un jour de la semaine, ou un
    jour du mois. Une annuelle ne pose ni l'un ni l'autre — sa date entière est
@@ -29,7 +29,7 @@ export type PeriodFieldsProps = {
 export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
   return (
     <>
-      <Field label={fr.recurrences.form.period} required>
+      <Field label={t.recurrences.form.period} required>
         {(id) => (
           <Select
             id={id}
@@ -38,7 +38,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
               patch({ kind: e.target.value as PeriodDraft['kind'] })
             }}
           >
-            {PERIOD_OPTIONS.map((option) => (
+            {periodOptions().map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -48,7 +48,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
       </Field>
 
       {WEEKLY_KINDS.includes(draft.kind) && (
-        <Field label={fr.recurrences.form.weekday} required>
+        <Field label={t.recurrences.form.weekday} required>
           {(id) => (
             <Select
               id={id}
@@ -57,7 +57,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
                 patch({ weekday: Number(e.target.value) })
               }}
             >
-              {fr.calendarNames.weekdays.map((day, index) => (
+              {t.calendarNames.weekdays.map((day, index) => (
                 <option key={day} value={index + 1}>
                   {day}
                 </option>
@@ -72,7 +72,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
           d'une borne ou d'un arrondi. */}
       {draft.kind === 'everyNWeeks' && (
         <IntervalField
-          label={fr.recurrences.form.everyWeeks}
+          label={t.recurrences.form.everyWeeks}
           max={52}
           value={draft.everyWeeks}
           onChange={(everyWeeks) => {
@@ -83,7 +83,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
 
       {draft.kind === 'everyNMonths' && (
         <IntervalField
-          label={fr.recurrences.form.everyMonths}
+          label={t.recurrences.form.everyMonths}
           max={24}
           value={draft.everyMonths}
           onChange={(everyMonths) => {
@@ -94,7 +94,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
 
       {draft.kind === 'everyNYears' && (
         <IntervalField
-          label={fr.recurrences.form.everyYears}
+          label={t.recurrences.form.everyYears}
           max={10}
           value={draft.everyYears}
           onChange={(everyYears) => {
@@ -107,7 +107,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
           (`ui/Field`) est encore quinze fois trop large pour lui, et c'est avec
           l'intervalle le seul endroit de l'app où il l'est. */}
       {MONTH_DAY_KINDS.includes(draft.kind) && (
-        <Field label={fr.recurrences.form.monthDay} required hint={fr.recurrences.form.monthDayHint}>
+        <Field label={t.recurrences.form.monthDay} required hint={t.recurrences.form.monthDayHint}>
           {(id, describedBy) => (
             <TextInput
               id={id}

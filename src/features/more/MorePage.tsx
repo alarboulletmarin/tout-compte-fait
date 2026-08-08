@@ -6,7 +6,7 @@ import {
   CATEGORIES_PATH,
   CREDITS_PATH,
   DATA_PATH,
-  MANAGE_ROUTES,
+  manageRoutes,
   PEOPLE_PATH,
   RECURRENCES_PATH,
   SAVINGS_PATH,
@@ -14,7 +14,7 @@ import {
   STORAGE_PATH,
 } from '@/app/routes'
 import type { PaletteSetting, ThemeSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { currencySymbol, tpl } from '@/i18n/format'
 import { useCategories, useFamilies, useHouseholdName, useMembers } from '@/store/selectors'
 import { useStore } from '@/store/store'
@@ -89,27 +89,27 @@ import { Row, RowGroup } from '@/ui/RowGroup'
    adresses à la main resterait vert le jour où l'app change les siennes, et
    cette table-ci deviendrait muette sans que rien ne le dise. Une destination
    absente ne porte pas de phrase, elle ne casse rien. */
-const HINTS: Record<string, string> = {
-  [RECURRENCES_PATH]: fr.nav.subscriptionsHint,
-  [SAVINGS_PATH]: fr.nav.savingsHint,
-  [SPLIT_PATH]: fr.nav.splitHint,
-  [CREDITS_PATH]: fr.nav.creditsHint,
-}
+const hints = (): Record<string, string> => ({
+  [RECURRENCES_PATH]: t.nav.subscriptionsHint,
+  [SAVINGS_PATH]: t.nav.savingsHint,
+  [SPLIT_PATH]: t.nav.splitHint,
+  [CREDITS_PATH]: t.nav.creditsHint,
+})
 
-const THEME_NAME: Record<ThemeSetting, string> = {
-  light: fr.theme.light,
-  dark: fr.theme.dark,
-  system: fr.theme.system,
-}
+const themeName = (): Record<ThemeSetting, string> => ({
+  light: t.theme.light,
+  dark: t.theme.dark,
+  system: t.theme.system,
+})
 
-const PALETTE_NAME: Record<PaletteSetting, string> = {
-  classique: fr.palettes.classique,
-  monochrome: fr.palettes.monochrome,
-  douce: fr.palettes.douce,
-  vive: fr.palettes.vive,
-  neutre: fr.palettes.neutre,
-  contrastee: fr.palettes.contrastee,
-}
+const paletteName = (): Record<PaletteSetting, string> => ({
+  classique: t.palettes.classique,
+  monochrome: t.palettes.monochrome,
+  douce: t.palettes.douce,
+  vive: t.palettes.vive,
+  neutre: t.palettes.neutre,
+  contrastee: t.palettes.contrastee,
+})
 
 /* Les devises des pays où l'on tient ses comptes en français, plus les deux
    qu'un foyer francophone croise le plus souvent. Une liste et non un champ
@@ -138,9 +138,9 @@ function AppearanceRow() {
 
   return (
     <Row
-      label={fr.appearance.title}
+      label={t.appearance.title}
       icon={ThemeIcon}
-      description={tpl(fr.settings.appearanceSummary, THEME_NAME[theme], PALETTE_NAME[palette])}
+      description={tpl(t.settings.appearanceSummary, themeName()[theme], paletteName()[palette])}
       to={APPEARANCE_PATH}
     />
   )
@@ -166,10 +166,10 @@ function CurrencyRow() {
 
   return (
     <Row
-      label={fr.settings.currency}
+      label={t.settings.currency}
       labelFor={id}
       icon={CurrencyIcon}
-      description={fr.settings.currencyHint}
+      description={t.settings.currencyHint}
       trailing={
         <Select
           id={id}
@@ -201,35 +201,35 @@ export function MorePage() {
      n'en veut pas. */
   const people =
     members.length === 0
-      ? fr.settings.membersNone
+      ? t.settings.membersNone
       : tpl(
-          members.length > 1 ? fr.settings.membersCount : fr.settings.membersCountOne,
+          members.length > 1 ? t.settings.membersCount : t.settings.membersCountOne,
           members.length,
         )
   const household = name.trim() === '' ? people : `${name.trim()} · ${people}`
 
   const catalogue = [
     tpl(
-      categories.length > 1 ? fr.settings.familyCount : fr.settings.familyCountOne,
+      categories.length > 1 ? t.settings.familyCount : t.settings.familyCountOne,
       categories.length,
     ),
     tpl(
-      families.length > 1 ? fr.settings.familiesCount : fr.settings.familiesCountOne,
+      families.length > 1 ? t.settings.familiesCount : t.settings.familiesCountOne,
       families.length,
     ),
   ].join(' · ')
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
-      <PageTitle title={fr.nav.more} />
+      <PageTitle title={t.nav.more} />
 
       {/* Ce qu'on tient, par opposition aux trois lectures que la barre porte.
-          Les quatre destinations viennent de `MANAGE_ROUTES`, que la colonne
+          Les quatre destinations viennent de `manageRoutes()`, que la colonne
           latérale déplie par la même table : deux navigations qui liraient deux
           listes finiraient par diverger sans que rien ne l'annonce. */}
-      <RowGroup title={fr.nav.manage}>
-        {MANAGE_ROUTES.map((route) => {
-          const hint = HINTS[route.path]
+      <RowGroup title={t.nav.manage}>
+        {manageRoutes().map((route) => {
+          const hint = hints()[route.path]
           return (
             <Row
               key={route.path}
@@ -245,15 +245,15 @@ export function MorePage() {
       {/* La structure du budget, et non des réglages : on n'ouvre pas ces deux
           vues pour changer l'app, on les ouvre parce que quelqu'un est arrivé
           dans le foyer ou parce qu'une dépense n'a pas d'étiquette où aller. */}
-      <RowGroup title={fr.nav.organise}>
+      <RowGroup title={t.nav.organise}>
         <Row
-          label={fr.settings.household}
+          label={t.settings.household}
           icon={PeopleIcon}
           description={household}
           to={PEOPLE_PATH}
         />
         <Row
-          label={fr.settings.categories}
+          label={t.settings.categories}
           icon={CategoriesIcon}
           description={catalogue}
           to={CATEGORIES_PATH}
@@ -262,17 +262,17 @@ export function MorePage() {
 
       {/* « Sur cet appareil » avant « Exporter / importer » : la première dit
           où les données vivent, la seconde comment les en faire sortir. */}
-      <RowGroup title={fr.nav.data}>
+      <RowGroup title={t.nav.data}>
         <Row
-          label={fr.storage.title}
+          label={t.storage.title}
           icon={DeviceIcon}
-          description={fr.settings.storageSummary}
+          description={t.settings.storageSummary}
           to={STORAGE_PATH}
         />
         <Row
-          label={fr.settings.transfer}
+          label={t.settings.transfer}
           icon={TransferIcon}
-          description={fr.settings.transferSummary}
+          description={t.settings.transferSummary}
           to={DATA_PATH}
         />
       </RowGroup>
@@ -281,13 +281,13 @@ export function MorePage() {
           page qui dit ce qu'est cette app. « À propos » est ici parce que sous
           1024px c'est sa seule porte : la barre d'onglets ne peut pas en porter
           une cinquième, et la colonne, elle, a son propre lien en pied. */}
-      <RowGroup title={fr.nav.application}>
+      <RowGroup title={t.nav.application}>
         <AppearanceRow />
         <CurrencyRow />
         <Row
-          label={fr.nav.about}
+          label={t.nav.about}
           icon={InfoIcon}
-          description={tpl(fr.settings.aboutSummary, VERSION)}
+          description={tpl(t.settings.aboutSummary, VERSION)}
           to={ABOUT_PATH}
         />
       </RowGroup>

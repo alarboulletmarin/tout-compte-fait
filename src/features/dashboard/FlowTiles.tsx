@@ -1,5 +1,5 @@
 import type { Flow } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { useMonthFlows } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -85,10 +85,10 @@ function FlowTile({
             onClick: () => {
               onShow(nature)
             },
-            label: tpl(fr.dashboard.showLines, label),
+            label: tpl(t.dashboard.showLines, label),
             // Une flèche vers le bas, pas un chevron : la liste est plus bas
             // sur cette page, elle n'est pas sur un autre écran.
-            affordance: { kind: 'scroll' as const, destination: fr.month.entries },
+            affordance: { kind: 'scroll' as const, destination: t.month.entries },
           })}
     >
       <Eyebrow icon={icon}>{label}</Eyebrow>
@@ -111,14 +111,14 @@ export function IncomeTile({ onShow }: { onShow?: ShowNature }) {
 
   const hint =
     income.total === 0
-      ? fr.dashboard.incomeNone
+      ? t.dashboard.incomeNone
       : income.left > 0
-        ? tpl(fr.dashboard.incomeLeft, formatMoney(income.left, currency, false))
-        : fr.dashboard.incomeAllIn
+        ? tpl(t.dashboard.incomeLeft, formatMoney(income.left, currency, false))
+        : t.dashboard.incomeAllIn
 
   return (
     <FlowTile
-      label={fr.dashboard.income}
+      label={t.dashboard.income}
       icon={IncomeIcon}
       flow={income}
       direction="in"
@@ -135,14 +135,14 @@ export function ChargesTile({ onShow }: { onShow?: ShowNature }) {
 
   const hint =
     spending.total === 0
-      ? fr.dashboard.chargesNone
+      ? t.dashboard.chargesNone
       : spending.left > 0
-        ? tpl(fr.dashboard.chargesLeft, formatMoney(spending.left, currency, false))
-        : fr.dashboard.chargesAllPaid
+        ? tpl(t.dashboard.chargesLeft, formatMoney(spending.left, currency, false))
+        : t.dashboard.chargesAllPaid
 
   return (
     <FlowTile
-      label={fr.dashboard.charges}
+      label={t.dashboard.charges}
       icon={ChargesIcon}
       flow={spending}
       direction="out"

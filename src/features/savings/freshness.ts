@@ -24,12 +24,12 @@
 import type { ISODate } from '@/domain/date'
 import { valuationAge } from '@/domain/saving'
 import type { SavingPace } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDayMonthShort, tpl } from '@/i18n/format'
 
 /** `null` quand le support n'a jamais été relevé — jamais « le 0 ». */
 export function freshness(date: ISODate | null, pace?: SavingPace): string {
-  if (date === null) return fr.savings.valueNever
+  if (date === null) return t.savings.valueNever
 
   const age = valuationAge(date, pace)
   /* Sans l'année : la date ne s'affiche que sous le mois, où elle est
@@ -37,7 +37,7 @@ export function freshness(date: ISODate | null, pace?: SavingPace): string {
      rangée de 320px. Passé un mois, il n'y a plus de date du tout — c'est
      l'écart qui se lit. L'historique, lui, garde les dates entières : là, deux
      relevés peuvent être à des années l'un de l'autre. */
-  if (age.level === 'fresh') return tpl(fr.savings.valueOn, formatDayMonthShort(date))
-  if (age.level === 'stale') return tpl(fr.savings.valueStale, age.months)
-  return age.months === 1 ? fr.savings.valueAgeOne : tpl(fr.savings.valueAge, age.months)
+  if (age.level === 'fresh') return tpl(t.savings.valueOn, formatDayMonthShort(date))
+  if (age.level === 'stale') return tpl(t.savings.valueStale, age.months)
+  return age.months === 1 ? t.savings.valueAgeOne : tpl(t.savings.valueAge, age.months)
 }

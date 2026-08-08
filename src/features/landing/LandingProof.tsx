@@ -1,5 +1,5 @@
 import { type Money, add, sum } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, formatSignedMoney, tpl } from '@/i18n/format'
 import { landing } from '@/i18n/landing'
 import { Amount } from '@/ui/Amount'
@@ -89,10 +89,10 @@ function SplitProof() {
   return (
     <Tile className="gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <Eyebrow icon={SplitIcon}>{fr.split.title}</Eyebrow>
+        <Eyebrow icon={SplitIcon}>{t.split.title}</Eyebrow>
         <Amount value={SAMPLE.shared} size="body" direction="out" />
       </div>
-      <p className="t-label">{fr.split.subtitle}</p>
+      <p className="t-label">{t.split.subtitle}</p>
       {/* Avant les lignes, et non après : sans elle, les deux reports qui
           s'annulent passent pour une correction inexpliquée, et on ne comprend
           ce qu'on vient de lire qu'une fois arrivé en bas. */}
@@ -123,13 +123,13 @@ function SplitProof() {
                 d'être raboté pour le format. Ici le format est une tuile de
                 prose, qui prend la hauteur qu'on lui demande. */}
             <div className="flex items-baseline justify-between gap-3">
-              <span className="t-axis min-w-0">{fr.split.income}</span>
+              <span className="t-axis min-w-0">{t.split.income}</span>
               <span className="t-axis tnum shrink-0">
                 {formatMoney(share.income, currency, false)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-3">
-              <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
+              <span className="t-axis min-w-0">{t.split.settlementShare}</span>
               <span className="t-axis tnum shrink-0">{formatMoney(share.due, currency)}</span>
             </div>
             <div className="flex items-baseline justify-between gap-3">
@@ -143,7 +143,7 @@ function SplitProof() {
             </div>
 
             <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
-              <span className="t-label">{fr.split.due}</span>
+              <span className="t-label">{t.split.due}</span>
               <Amount value={toPay(share)} size="body" direction="out" />
             </div>
           </li>
@@ -151,13 +151,13 @@ function SplitProof() {
       </ul>
 
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
-        <span className="t-body">{fr.split.checkTotal}</span>
+        <span className="t-body">{t.split.checkTotal}</span>
         {/* Le total des versements, report compris — et non la somme des parts
             avant report, qui vaudrait le même chiffre pour une raison plus
             faible. C'est la ligne entière qui est l'argument. */}
         <Amount value={sum(SAMPLE.shares.map(toPay))} size="body" direction="out" />
       </div>
-      <p className="t-label">{fr.split.checkHint}</p>
+      <p className="t-label">{t.split.checkHint}</p>
     </Tile>
   )
 }
@@ -179,17 +179,17 @@ function SplitProof() {
 function CapacityProof() {
   return (
     <Tile className="gap-3">
-      <Eyebrow icon={SavingsIcon}>{fr.savings.capacity}</Eyebrow>
+      <Eyebrow icon={SavingsIcon}>{t.savings.capacity}</Eyebrow>
       <Amount value={SAMPLE.savingCapacity} size="tile" />
       {/* La formule plutôt que l'horizon : c'est la lecture secondaire de la
           vraie tuile du mois, et celle des deux qui annonce la cascade posée
           juste dessous. */}
-      <span className="t-label">{fr.dashboard.capacityHint}</span>
+      <span className="t-label">{t.dashboard.capacityHint}</span>
 
       <ul className="mt-1 flex flex-col gap-1.5 border-t border-border pt-3">
-        <Term label={fr.savings.flowIncome} value={SAMPLE.income} direction="in" />
-        <Term label={fr.savings.flowCharges} value={SAMPLE.charges} direction="out" />
-        <Term label={fr.savings.flowDebts} value={SAMPLE.debtMonthly} direction="out" />
+        <Term label={t.savings.flowIncome} value={SAMPLE.income} direction="in" />
+        <Term label={t.savings.flowCharges} value={SAMPLE.charges} direction="out" />
+        <Term label={t.savings.flowDebts} value={SAMPLE.debtMonthly} direction="out" />
       </ul>
 
       <p className="t-label">{landing.capacityBody}</p>

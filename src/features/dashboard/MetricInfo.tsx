@@ -1,5 +1,5 @@
 import type { Money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { Sheet } from '@/ui/Sheet'
@@ -27,11 +27,11 @@ type Explanation = {
   apart: string
 }
 
-const CONTENT: Record<MetricKey, Explanation> = {
-  balance: { title: fr.dashboard.balance, ...fr.dashboard.info.balance },
-  forecast: { title: fr.dashboard.forecast, ...fr.dashboard.info.forecast },
-  remaining: { title: fr.dashboard.remaining, ...fr.dashboard.info.remaining },
-}
+const explanations = (): Record<MetricKey, Explanation> => ({
+  balance: { title: t.dashboard.balance, ...t.dashboard.info.balance },
+  forecast: { title: t.dashboard.forecast, ...t.dashboard.info.forecast },
+  remaining: { title: t.dashboard.remaining, ...t.dashboard.info.remaining },
+})
 
 /**
  * Ce que dit un chiffre du tableau de bord, et ce qui le distingue de ses
@@ -66,7 +66,7 @@ export function MetricInfo({
   metric: Metric | null
   onClose: () => void
 }) {
-  const content = metric === null ? null : CONTENT[metric.key]
+  const content = metric === null ? null : explanations()[metric.key]
 
   return (
     <Sheet open={content !== null} onClose={onClose} title={content?.title ?? ''} pullToClose>
@@ -80,12 +80,12 @@ export function MetricInfo({
           <p className="t-body">{content.lead}</p>
 
           <section className="flex flex-col gap-2 border-t border-border pt-4">
-            <Eyebrow>{fr.dashboard.info.calculationLabel}</Eyebrow>
+            <Eyebrow>{t.dashboard.info.calculationLabel}</Eyebrow>
             <p className="t-body">{content.calculation}</p>
           </section>
 
           <section className="flex flex-col gap-2 border-t border-border pt-4">
-            <Eyebrow>{fr.dashboard.info.apartLabel}</Eyebrow>
+            <Eyebrow>{t.dashboard.info.apartLabel}</Eyebrow>
             <p className="t-body">{content.apart}</p>
           </section>
         </div>

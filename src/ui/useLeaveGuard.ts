@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import type { ConfirmDialogProps } from './ConfirmDialog'
 
 /**
@@ -55,9 +55,9 @@ export function useLeaveGuard<T extends object>(draft: T, leave: () => void): Le
     },
     dialog: {
       open: asking,
-      title: fr.unsaved.title,
-      steps: [{ question: fr.unsaved.question, action: fr.unsaved.leave }],
-      cancelLabel: fr.unsaved.stay,
+      title: t.unsaved.title,
+      steps: [{ question: t.unsaved.question, action: t.unsaved.leave }],
+      cancelLabel: t.unsaved.stay,
       onCancel: () => {
         setAsking(false)
       },

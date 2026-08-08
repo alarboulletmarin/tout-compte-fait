@@ -1,7 +1,7 @@
 import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef } from 'react'
 import { type ISODate, type YearMonth, parseISO } from '@/domain/date'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatWeekdayDate, formatYearMonth, de, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { useCategoryMap } from '@/store/selectors'
@@ -10,15 +10,15 @@ import { type GridCell, density, keyboardMove, weekdays } from './grid'
 import { type CalendarWindow, entriesOn } from './useCalendarWindow'
 
 function countLabel(count: number): string {
-  if (count === 0) return fr.calendar.noEntry
-  if (count === 1) return fr.calendar.oneEntry
-  return tpl(fr.calendar.someEntries, count)
+  if (count === 0) return t.calendar.noEntry
+  if (count === 1) return t.calendar.oneEntry
+  return tpl(t.calendar.someEntries, count)
 }
 
 function plannedLabel(count: number): string {
   if (count === 0) return ''
-  if (count === 1) return fr.calendar.onePlanned
-  return tpl(fr.calendar.somePlanned, count)
+  if (count === 1) return t.calendar.onePlanned
+  return tpl(t.calendar.somePlanned, count)
 }
 
 /**
@@ -36,13 +36,13 @@ function plannedLabel(count: number): string {
 function cellLabel(cell: GridCell, entries: readonly Entry[], isToday: boolean): string {
   const planned = entries.filter((entry) => entry.status === 'planned').length
   return [
-    tpl(fr.calendar.dayLabel, formatWeekdayDate(cell.date), countLabel(entries.length)),
+    tpl(t.calendar.dayLabel, formatWeekdayDate(cell.date), countLabel(entries.length)),
     plannedLabel(planned),
-    isToday ? fr.calendar.dayToday : '',
-    cell.inMonth ? '' : fr.calendar.dayOutside,
+    isToday ? t.calendar.dayToday : '',
+    cell.inMonth ? '' : t.calendar.dayOutside,
   ]
     .filter((part) => part !== '')
-    .join(fr.calendar.labelJoin)
+    .join(t.calendar.labelJoin)
 }
 
 /* La pilule du quantième, partagée par la case et par la légende : celle-ci
@@ -69,7 +69,7 @@ function Dots({ entries, colorOf }: { entries: readonly Entry[]; colorOf: (id: s
           une cinquième échéance grandit et pousse toute sa rangée — et le carré
           demande que les quarante-deux cases portent exactement la même pile. */}
       <span aria-hidden="true" className="t-axis min-h-3 leading-none">
-        {rest > 0 ? tpl(fr.calendar.more, rest) : ''}
+        {rest > 0 ? tpl(t.calendar.more, rest) : ''}
       </span>
     </>
   )
@@ -206,9 +206,9 @@ function Legend({ today, more }: { today: number | null; more: boolean }) {
   return (
     <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
       <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        <Mark sample={<Dot color="var(--text-muted)" size={6} />}>{fr.calendar.legendDone}</Mark>
+        <Mark sample={<Dot color="var(--text-muted)" size={6} />}>{t.calendar.legendDone}</Mark>
         <Mark sample={<Dot color="var(--text-muted)" size={6} outlined />}>
-          {fr.calendar.legendPlanned}
+          {t.calendar.legendPlanned}
         </Mark>
         {today !== null && (
           <Mark
@@ -222,12 +222,12 @@ function Legend({ today, more }: { today: number | null; more: boolean }) {
               </span>
             }
           >
-            {fr.calendar.legendToday}
+            {t.calendar.legendToday}
           </Mark>
         )}
       </ul>
       <p className="t-label">
-        {[fr.calendar.legendDots, more ? fr.calendar.legendMore : ''].filter((s) => s !== '').join(' ')}
+        {[t.calendar.legendDots, more ? t.calendar.legendMore : ''].filter((s) => s !== '').join(' ')}
       </p>
     </div>
   )
@@ -353,7 +353,7 @@ export function CalendarGrid({
           même pile, la rangée reste régulière sans l'étirement. */}
       <div
         role="group"
-        aria-label={tpl(fr.calendar.gridLabel, de(formatYearMonth(month)))}
+        aria-label={tpl(t.calendar.gridLabel, de(formatYearMonth(month)))}
         aria-describedby={hintId}
         onKeyDown={onKeyDown}
         className="grid grid-cols-7 items-start gap-1 max-[479px]:gap-x-0"
@@ -389,7 +389,7 @@ export function CalendarGrid({
       </div>
 
       <p id={hintId} className="sr-only-text">
-        {fr.a11y.calendarGridHint}
+        {t.a11y.calendarGridHint}
       </p>
 
       {/* Hors du `role="group"` : la légende explique la grille, elle n'en est

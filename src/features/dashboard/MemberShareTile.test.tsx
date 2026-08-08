@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { type Money, money } from '@/domain/money'
 import type { Entry, Recurrence } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, formatMonthName, formatMoney, formatSignedMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MemberShareTile } from './MemberShareTile'
@@ -18,7 +18,7 @@ const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 const eurs = (value: Money): string => said(formatMoney(value, 'EUR'))
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
 const out = (value: Money): string =>
-  said(`${fr.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
+  said(`${t.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
 
 const FAMILIES = [
   makeFamily({ id: 'fam-charges', label: 'Logement', kind: 'charge' }),
@@ -100,7 +100,7 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
      virement à demander, et c'est la tuile Répartition qui prend la place. */
   it('s’efface hors d’un filtre par membre', () => {
     mount()
-    expect(screen.queryByText(fr.dashboard.memberShare)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.memberShare)).not.toBeInTheDocument()
   })
 
   /* L'objet même du changement : le montant du virement, et le calcul qui le
@@ -109,9 +109,9 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
     mount({ filterOn: 'm-1' })
 
     expect(screen.getByText(out(eur(50_000)))).toBeInTheDocument()
-    expect(screen.getByText(fr.split.settlementShare)).toBeInTheDocument()
+    expect(screen.getByText(t.split.settlementShare)).toBeInTheDocument()
     expect(screen.getByText(eurs(eur(60_000)))).toBeInTheDocument()
-    expect(screen.getByText(tpl(fr.split.settlement, july))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.split.settlement, july))).toBeInTheDocument()
     expect(screen.getByText(said(formatSignedMoney(eur(-10_000), 'EUR')))).toBeInTheDocument()
   })
 
@@ -134,7 +134,7 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
       ],
     })
 
-    expect(screen.queryByText(fr.dashboard.memberChargesOwn)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.memberChargesOwn)).not.toBeInTheDocument()
     // Ses 50 € de courses, et le coût de son mois : ni l'un ni l'autre ici.
     expect(screen.queryByText(out(eur(5_000)))).not.toBeInTheDocument()
     expect(screen.queryByText(out(eur(65_000)))).not.toBeInTheDocument()
@@ -147,7 +147,7 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
     mount({ filterOn: 'm-1', entries: [RENT] })
 
     expect(screen.getByText(out(eur(60_000)))).toBeInTheDocument()
-    expect(screen.queryByText(fr.split.settlementShare)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
   })
 
   /* Le cas que la tuile Régularisation couvrait seule, et qui serait tombé avec
@@ -158,7 +158,7 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
   it('reste debout le mois où le report est le seul virement', () => {
     mount({ filterOn: 'm-1', entries: [ADVANCED] })
 
-    expect(screen.getByText(fr.dashboard.memberShare)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.memberShare)).toBeInTheDocument()
     /* Deux fois : en tête, et sur la ligne du report — le virement *est* le
        report ce mois-ci, et les deux lectures doivent donc coïncider. */
     expect(screen.getAllByText(eurs(money(-10_000)))).toHaveLength(2)

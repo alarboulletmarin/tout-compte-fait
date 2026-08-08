@@ -1,5 +1,5 @@
 import type { SavingPace } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
 import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import type { SupportDraft, SupportErrors } from './supportDraft'
@@ -38,7 +38,7 @@ export function SupportFields({
   return (
     <>
       <Field
-        label={fr.savings.supportLabel}
+        label={t.savings.supportLabel}
         required
         {...(errors.label === undefined ? {} : { error: errors.label })}
       >
@@ -48,7 +48,7 @@ export function SupportFields({
             aria-describedby={describedBy}
             value={draft.label}
             invalid={errors.label !== undefined}
-            placeholder={fr.savings.supportLabelPlaceholder}
+            placeholder={t.savings.supportLabelPlaceholder}
             maxLength={40}
             autoFocus={autoFocus}
             onChange={(event) => {
@@ -59,7 +59,7 @@ export function SupportFields({
       </Field>
 
       <Field
-        label={fr.savings.supportOwner}
+        label={t.savings.supportOwner}
         required
         {...(errors.member === undefined ? {} : { error: errors.member })}
       >
@@ -73,7 +73,7 @@ export function SupportFields({
               patch({ memberId: event.target.value })
             }}
           >
-            <option value="">{fr.savings.supportOwnerPlaceholder}</option>
+            <option value="">{t.savings.supportOwnerPlaceholder}</option>
             {members.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name}
@@ -84,9 +84,9 @@ export function SupportFields({
       </Field>
 
       <Field
-        label={fr.savings.supportKind}
+        label={t.savings.supportKind}
         required
-        hint={fr.savings.supportKindHint}
+        hint={t.savings.supportKindHint}
         {...(errors.category === undefined ? {} : { error: errors.category })}
       >
         {(id, describedBy) => (
@@ -99,7 +99,7 @@ export function SupportFields({
               patch({ categoryId: event.target.value })
             }}
           >
-            <option value="">{fr.entry.categoryPlaceholder}</option>
+            <option value="">{t.entry.categoryPlaceholder}</option>
             {groups.map((group) => (
               <optgroup key={group.family.id} label={group.family.label}>
                 {group.categories.map((category) => (
@@ -119,7 +119,7 @@ export function SupportFields({
           rien consulter — « est-ce que ce compte bouge tout seul ? » — d'où
           deux réponses et pas un champ libre, et une présélection plutôt qu'une
           case vide : elle n'exige rien de plus qu'un regard. */}
-      <Field label={fr.savings.supportPace} hint={fr.savings.supportPaceHint}>
+      <Field label={t.savings.supportPace} hint={t.savings.supportPaceHint}>
         {(id, describedBy) => (
           <Select
             id={id}
@@ -129,8 +129,8 @@ export function SupportFields({
               patch({ pace: event.target.value as SavingPace })
             }}
           >
-            <option value="yearly">{fr.savings.paceYearly}</option>
-            <option value="quarterly">{fr.savings.paceQuarterly}</option>
+            <option value="yearly">{t.savings.paceYearly}</option>
+            <option value="quarterly">{t.savings.paceQuarterly}</option>
           </Select>
         )}
       </Field>
@@ -144,9 +144,9 @@ export function SupportFields({
       {withValue && (
         <>
           <Field
-            label={fr.savings.valueInitial}
+            label={t.savings.valueInitial}
             optional
-            hint={fr.savings.valueHint}
+            hint={t.savings.valueHint}
             {...(errors.amount === undefined ? {} : { error: errors.amount })}
           >
             {(id, describedBy) => (
@@ -166,7 +166,7 @@ export function SupportFields({
               chiffre d'un relevé qui date de la semaine dernière, et le dater
               d'aujourd'hui décalerait toute la courbe. */}
           {draft.amountText.trim() !== '' && (
-            <Field label={fr.savings.valueDate} required>
+            <Field label={t.savings.valueDate} required>
               {(id) => (
                 <DateInput
                   id={id}
@@ -181,12 +181,12 @@ export function SupportFields({
         </>
       )}
 
-      <Field label={fr.savings.supportNote} optional>
+      <Field label={t.savings.supportNote} optional>
         {(id) => (
           <TextInput
             id={id}
             value={draft.note}
-            placeholder={fr.savings.supportNotePlaceholder}
+            placeholder={t.savings.supportNotePlaceholder}
             maxLength={140}
             onChange={(event) => {
               patch({ note: event.target.value })

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { money } from '@/domain/money'
 import { makeCategory, makeData, makeEntry, makeFamily } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { BreakdownTile } from './BreakdownTile'
@@ -44,7 +44,7 @@ describe('« Où part l’argent »', () => {
     render(<BreakdownTile onShowFamily={onShowFamily} />)
 
     await userEvent.click(
-      screen.getByRole('button', { name: tpl(fr.dashboard.showFamily, 'Poste 0') }),
+      screen.getByRole('button', { name: tpl(t.dashboard.showFamily, 'Poste 0') }),
     )
     expect(onShowFamily).toHaveBeenCalledWith('fam-0')
   })
@@ -53,9 +53,9 @@ describe('« Où part l’argent »', () => {
      promettrait un filtre qui n'existe pas. */
   it('n’ouvre pas le reliquat', () => {
     render(<BreakdownTile onShowFamily={vi.fn()} />)
-    expect(screen.getByText(fr.common.other)).toBeInTheDocument()
+    expect(screen.getByText(t.common.other)).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: tpl(fr.dashboard.showFamily, fr.common.other) }),
+      screen.queryByRole('button', { name: tpl(t.dashboard.showFamily, t.common.other) }),
     ).not.toBeInTheDocument()
   })
 

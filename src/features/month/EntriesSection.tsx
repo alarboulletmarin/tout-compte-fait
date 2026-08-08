@@ -3,7 +3,7 @@ import { today } from '@/domain/date'
 import { type GroupBy, NO_MEMBER, groupEntries } from '@/domain/grouping'
 import { money, sum } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDayFull, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { reveal } from '@/lib/reveal'
@@ -33,10 +33,10 @@ import { Tile } from '@/ui/Tile'
 /** La nature que la liste montre, ou `null` pour tout. */
 export type NatureFilter = EntryNature | null
 
-const AXES = [
-  { value: 'day' as const, label: fr.month.byDay },
-  { value: 'category' as const, label: fr.month.byCategory },
-  { value: 'member' as const, label: fr.month.byMember },
+const allAxes = () => [
+  { value: 'day' as const, label: t.month.byDay },
+  { value: 'category' as const, label: t.month.byCategory },
+  { value: 'member' as const, label: t.month.byMember },
 ]
 
 /* L'axe range, le filtre retire — deux gestes différents, deux commandes
@@ -49,11 +49,11 @@ const AXES = [
    revenu. Filtrer par sens rangeait l'un sous « Charges » et l'autre sous
    « Revenus » — deux mots empruntés aux tuiles, qui comptent par nature et
    excluent l'épargne. Les mots sont ceux de la saisie, positions comprises. */
-const NATURES: { value: NatureFilter; label: string }[] = [
-  { value: null, label: fr.month.showAll },
-  { value: 'expense', label: fr.month.showOut },
-  { value: 'income', label: fr.month.showIn },
-  { value: 'saving', label: fr.month.showSaving },
+const natures = (): { value: NatureFilter; label: string }[] => [
+  { value: null, label: t.month.showAll },
+  { value: 'expense', label: t.month.showOut },
+  { value: 'income', label: t.month.showIn },
+  { value: 'saving', label: t.month.showSaving },
 ]
 
 /**
@@ -149,7 +149,7 @@ export function EntriesSection({
      c'est une position de plus dans la barre pour une réponse déjà connue. */
   const byMemberSplits = memberList.length > 0 && memberFilter === undefined
   const axes = useMemo(
-    () => (byMemberSplits ? AXES : AXES.filter((axis) => axis.value !== 'member')),
+    () => (byMemberSplits ? allAxes() : allAxes().filter((axis) => axis.value !== 'member')),
     [byMemberSplits],
   )
 
@@ -192,8 +192,8 @@ export function EntriesSection({
 
   const titleOf = (key: string): string => {
     if (by === 'day') return formatDayFull(key)
-    if (by === 'category') return categories.get(key)?.label ?? fr.common.other
-    return key === NO_MEMBER ? fr.shell.everyone : (members.get(key)?.name ?? fr.common.other)
+    if (by === 'category') return categories.get(key)?.label ?? t.common.other
+    return key === NO_MEMBER ? t.shell.everyone : (members.get(key)?.name ?? t.common.other)
   }
 
   /* Sous une pilule, les totaux parlent sa langue plutôt que celle du solde :
@@ -212,9 +212,9 @@ export function EntriesSection({
     <div ref={root} className="reveal-target">
       <Tile className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Eyebrow icon={EntriesIcon}>{fr.month.entries}</Eyebrow>
+          <Eyebrow icon={EntriesIcon}>{t.month.entries}</Eyebrow>
           <Button size="sm" variant="ghost" onClick={disclosure.toggleAll}>
-            {disclosure.anyOpen ? fr.month.collapseAll : fr.month.expandAll}
+            {disclosure.anyOpen ? t.month.collapseAll : t.month.expandAll}
           </Button>
         </div>
 
@@ -231,7 +231,7 @@ export function EntriesSection({
             anneau de focus — c'est l'objection que `Segmented` écrit déjà. */}
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="t-axis">{fr.month.groupBy}</span>
+            <span className="t-axis">{t.month.groupBy}</span>
             <Segmented
               options={axes}
               value={by}
@@ -239,13 +239,13 @@ export function EntriesSection({
                 setBy(next)
                 disclosure.reset()
               }}
-              label={fr.month.groupBy}
+              label={t.month.groupBy}
             />
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="t-axis">{fr.month.show}</span>
-            <div role="group" aria-label={fr.month.show} className="flex flex-wrap gap-2">
-              {NATURES.map((option) => (
+            <span className="t-axis">{t.month.show}</span>
+            <div role="group" aria-label={t.month.show} className="flex flex-wrap gap-2">
+              {natures().map((option) => (
                 <Chip
                   key={option.label}
                   active={option.value === nature}
@@ -268,7 +268,7 @@ export function EntriesSection({
             est une condition en cours. */}
         {family !== null && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="t-axis">{fr.month.familyFilter}</span>
+            <span className="t-axis">{t.month.familyFilter}</span>
             <Chip
               active
               color={familyColor(family)}
@@ -276,12 +276,12 @@ export function EntriesSection({
                 onFamily(null)
               }}
             >
-              {families.get(family)?.label ?? fr.common.other}
+              {families.get(family)?.label ?? t.common.other}
               {/* Une croix sur un contrôle qui retire : c'est la famille ACTION
                   du DS §9, la seule que la pilule admette. Le nom accessible
                   dit le geste, que la croix seule ne dit pas. */}
               <Close size={14} />
-              <span className="sr-only-text">{fr.month.familyFilterClear}</span>
+              <span className="sr-only-text">{t.month.familyFilterClear}</span>
             </Chip>
           </div>
         )}
@@ -294,7 +294,7 @@ export function EntriesSection({
           <div className="flex items-baseline gap-2">
             <span className="t-axis">
               {tpl(
-                entries.length > 1 ? fr.month.groupCount : fr.month.groupCountOne,
+                entries.length > 1 ? t.month.groupCount : t.month.groupCountOne,
                 entries.length,
               )}
             </span>
@@ -307,10 +307,10 @@ export function EntriesSection({
         {entries.length === 0 && (
           <p className="t-label">
             {nature === 'income'
-              ? fr.month.showEmptyIn
+              ? t.month.showEmptyIn
               : nature === 'saving'
-                ? fr.month.showEmptySaving
-                : fr.month.showEmptyOut}
+                ? t.month.showEmptySaving
+                : t.month.showEmptyOut}
           </p>
         )}
 
@@ -350,11 +350,11 @@ export function EntriesSection({
                     {titleOf(group.key)}
                   </span>
                   {by === 'day' && group.key === now && (
-                    <span className="t-axis shrink-0">{fr.month.today}</span>
+                    <span className="t-axis shrink-0">{t.month.today}</span>
                   )}
                   <span className="t-axis shrink-0">
                     {tpl(
-                      group.entries.length > 1 ? fr.month.groupCount : fr.month.groupCountOne,
+                      group.entries.length > 1 ? t.month.groupCount : t.month.groupCountOne,
                       group.entries.length,
                     )}
                   </span>

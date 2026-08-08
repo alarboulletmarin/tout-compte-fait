@@ -1,5 +1,5 @@
 import { PALETTES } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { Segmented } from '@/ui/Segmented'
 import {
@@ -17,21 +17,21 @@ import { RingSection } from './RingSection'
 import { BentoSection, TileSection } from './TileSection'
 import { ShapesSection, TypographySection } from './TypeSection'
 
-const THEME_OPTIONS = [
-  { value: 'light' as const, label: fr.theme.light },
-  { value: 'dark' as const, label: fr.theme.dark },
-  { value: 'system' as const, label: fr.theme.system },
+const themeOptions = () => [
+  { value: 'light' as const, label: t.theme.light },
+  { value: 'dark' as const, label: t.theme.dark },
+  { value: 'system' as const, label: t.theme.system },
 ]
 
-const PALETTE_OPTIONS = PALETTES.map((value) => ({
+const paletteOptions = () => PALETTES.map((value) => ({
   value,
   label: {
-    classique: fr.palettes.classique,
-    monochrome: fr.palettes.monochrome,
-    douce: fr.palettes.douce,
-    vive: fr.palettes.vive,
-    neutre: fr.palettes.neutre,
-    contrastee: fr.palettes.contrastee,
+    classique: t.palettes.classique,
+    monochrome: t.palettes.monochrome,
+    douce: t.palettes.douce,
+    vive: t.palettes.vive,
+    neutre: t.palettes.neutre,
+    contrastee: t.palettes.contrastee,
   }[value],
 }))
 
@@ -50,24 +50,24 @@ export function StyleguidePage() {
     <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-8 md:px-8 md:py-12">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <p className="t-eyebrow text-muted">{fr.app.name}</p>
-          <h1 className="t-hero">{fr.styleguide.title}</h1>
-          <p className="t-label max-w-prose">{fr.styleguide.subtitle}</p>
+          <p className="t-eyebrow text-muted">{t.app.name}</p>
+          <h1 className="t-hero">{t.styleguide.title}</h1>
+          <p className="t-label max-w-prose">{t.styleguide.subtitle}</p>
         </div>
         {/* Les deux réglages d'apparence, comme sur `/apparence` : le
             nuancier montre l'app, donc il se règle comme elle. */}
         <div className="flex flex-col items-end gap-2">
           <Segmented
-            options={THEME_OPTIONS}
+            options={themeOptions()}
             value={preference}
             onChange={setPreference}
-            label={fr.theme.label}
+            label={t.theme.label}
           />
           <Segmented
-            options={PALETTE_OPTIONS}
+            options={paletteOptions()}
             value={palette}
             onChange={setPalette}
-            label={fr.appearance.paletteLabel}
+            label={t.appearance.paletteLabel}
           />
         </div>
       </header>

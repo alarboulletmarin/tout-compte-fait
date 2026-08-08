@@ -1,6 +1,6 @@
 import { today } from '@/domain/date'
 import { nextIncomeDate } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   useIsCommonFilter,
   useIsCurrentMonth,
@@ -60,27 +60,27 @@ export function SituationSection({ onExplain }: { onExplain: (metric: Metric) =>
      ni dans l'un ni dans l'autre — d'où la rangée absente plutôt que fausse. */
   const remainingHint =
     nextIncomeDate(entries, today()) === null
-      ? fr.dashboard.remainingNoIncome
-      : fr.dashboard.remainingHint
+      ? t.dashboard.remainingNoIncome
+      : t.dashboard.remainingHint
 
   return (
-    <RowGroup title={fr.dashboard.situation} icon={ForecastIcon}>
+    <RowGroup title={t.dashboard.situation} icon={ForecastIcon}>
       <Row
-        label={fr.dashboard.forecast}
-        description={fr.dashboard.forecastHint}
+        label={t.dashboard.forecast}
+        description={t.dashboard.forecastHint}
         affordance="explain"
         trailing={<Amount value={totals.forecastBalance} />}
         onClick={() => {
           onExplain({
             key: 'forecast',
             value: totals.forecastBalance,
-            hint: fr.dashboard.forecastHint,
+            hint: t.dashboard.forecastHint,
           })
         }}
       />
       {thisMonth && (
         <Row
-          label={fr.dashboard.remaining}
+          label={t.dashboard.remaining}
           description={remainingHint}
           affordance="explain"
           trailing={<Amount value={remaining} tone={remaining < 0 ? 'danger' : 'default'} />}

@@ -12,7 +12,7 @@ import { makeId } from '@/domain/ids'
 import { monthHorizon } from '@/domain/month'
 import { openMonth } from '@/domain/updates'
 import type { Data, PaletteSetting, ThemeSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { backupDaily, clearBackups } from '@/persistence/backups'
 import { clearDocument, loadDocument, saveDocument, setDbEventHandler } from '@/persistence/db'
 import { emptyData } from '@/persistence/defaults'
@@ -187,7 +187,7 @@ const writer = createWriter(persist, WRITE_DELAY_MS, {
     if (error?.kind === 'write') setError(null)
   },
   onFailed() {
-    useStore.getState().setError({ kind: 'write', message: fr.storage.writeFailed })
+    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
   },
 })
 
@@ -201,8 +201,8 @@ const writer = createWriter(persist, WRITE_DELAY_MS, {
 setDbEventHandler((event) => {
   useStore.getState().setError(
     event === 'blocked'
-      ? { kind: 'read', message: fr.storage.blocked }
-      : { kind: 'write', message: event === 'blocking' ? fr.storage.blocking : fr.storage.terminated },
+      ? { kind: 'read', message: t.storage.blocked }
+      : { kind: 'write', message: event === 'blocking' ? t.storage.blocking : t.storage.terminated },
   )
 })
 
@@ -263,7 +263,7 @@ export const useStore = create<Store>()((set, get) => ({
     try {
       const stored = await Promise.race([loadDocument(), expired])
       if (stored === 'timeout') {
-        set({ status: 'onboarding', error: { kind: 'read', message: fr.storage.readTimeout } })
+        set({ status: 'onboarding', error: { kind: 'read', message: t.storage.readTimeout } })
         return
       }
       if (stored === null) {
@@ -276,7 +276,7 @@ export const useStore = create<Store>()((set, get) => ({
       // Cahier §4.3 : l'ouverture est déclenchée au premier lancement du mois.
       get().ensureMonthOpen()
     } catch {
-      set({ status: 'onboarding', error: { kind: 'read', message: fr.storage.readFailed } })
+      set({ status: 'onboarding', error: { kind: 'read', message: t.storage.readFailed } })
     } finally {
       if (timer !== null) clearTimeout(timer)
     }
@@ -395,7 +395,7 @@ export const useStore = create<Store>()((set, get) => ({
     try {
       await persist(get().data)
     } catch {
-      set({ error: { kind: 'write', message: fr.storage.writeFailed } })
+      set({ error: { kind: 'write', message: t.storage.writeFailed } })
     }
   },
 
@@ -455,7 +455,7 @@ export const useStore = create<Store>()((set, get) => ({
         ym: currentYm(),
         filter: ALL_FILTER,
       })
-      toast(fr.storage.otherTabCleared)
+      toast(t.storage.otherTabCleared)
       return
     }
 
@@ -477,6 +477,6 @@ export const useStore = create<Store>()((set, get) => ({
     set({ data: loaded.data, rev: loaded.rev, status: 'ready', error: null })
     // Un toast, pas une modale : arrêter quelqu'un pour lui dire qu'il n'a rien
     // perdu serait pire que le lui dire en passant.
-    toast(fr.storage.otherTab)
+    toast(t.storage.otherTab)
   },
 }))

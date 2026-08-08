@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { Chip } from '@/ui/Chip'
 import { CategoriesIcon } from '@/ui/Icons'
@@ -34,7 +34,7 @@ function Chips() {
           {chip.label}
         </Chip>
       ))}
-      <Chip>{fr.common.all}</Chip>
+      <Chip>{t.common.all}</Chip>
     </div>
   )
 }

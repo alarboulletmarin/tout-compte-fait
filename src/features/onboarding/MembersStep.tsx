@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Member } from '@/domain/types'
 import { tpl } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Button, IconButton } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { Dot } from '@/ui/Dot'
@@ -36,8 +36,8 @@ export function MembersStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="t-section">{fr.onboarding.membersTitle}</h1>
-        <p className="t-label">{fr.onboarding.membersHint}</p>
+        <h1 className="t-section">{t.onboarding.membersTitle}</h1>
+        <p className="t-label">{t.onboarding.membersHint}</p>
       </div>
 
       <form
@@ -47,12 +47,12 @@ export function MembersStep({
           submit()
         }}
       >
-        <Field label={fr.onboarding.membersLabel} className="flex-1">
+        <Field label={t.onboarding.membersLabel} className="flex-1">
           {(id) => (
             <TextInput
               id={id}
               value={name}
-              placeholder={fr.onboarding.membersPlaceholder}
+              placeholder={t.onboarding.membersPlaceholder}
               maxLength={24}
               autoFocus
               onChange={(event) => {
@@ -62,12 +62,12 @@ export function MembersStep({
           )}
         </Field>
         <Button type="submit" variant="secondary" disabled={trimmed.length === 0}>
-          {fr.onboarding.membersAdd}
+          {t.onboarding.membersAdd}
         </Button>
       </form>
 
       {members.length === 0 ? (
-        <p className="t-label">{fr.onboarding.membersEmpty}</p>
+        <p className="t-label">{t.onboarding.membersEmpty}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {members.map((member) => (
@@ -77,14 +77,14 @@ export function MembersStep({
             >
               <Dot color={member.color} />
               <MemberNameInput
-                label={tpl(fr.onboarding.membersRename, member.name)}
+                label={tpl(t.onboarding.membersRename, member.name)}
                 name={member.name}
                 onRename={(next) => {
                   onRename(member.id, next)
                 }}
               />
               <IconButton
-                label={tpl(fr.onboarding.membersRemove, member.name)}
+                label={tpl(t.onboarding.membersRemove, member.name)}
                 className="ml-auto"
                 onClick={() => {
                   setRemoving(member)
@@ -102,16 +102,16 @@ export function MembersStep({
           n'ouvre plus l'app pour autant — il mène à l'étape où se posent les
           revenus, qui existent aussi en solo. */}
       <Button onClick={onNext} full>
-        {members.length === 0 ? fr.onboarding.solo : fr.common.next}
+        {members.length === 0 ? t.onboarding.solo : t.common.next}
       </Button>
 
       <ConfirmDialog
         open={removing !== null}
-        title={tpl(fr.onboarding.membersRemove, removing?.name ?? '')}
+        title={tpl(t.onboarding.membersRemove, removing?.name ?? '')}
         steps={[
           {
-            question: tpl(fr.onboarding.membersRemoveConfirm, removing?.name ?? ''),
-            action: fr.common.delete,
+            question: tpl(t.onboarding.membersRemoveConfirm, removing?.name ?? ''),
+            action: t.common.delete,
           },
         ]}
         onCancel={() => {

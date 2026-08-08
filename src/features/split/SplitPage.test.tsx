@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { type Money, money } from '@/domain/money'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import type { Entry, Period, Recurrence } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, formatMoney, formatYearMonth, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { SplitPage } from './SplitPage'
@@ -18,7 +18,7 @@ const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
 const out = (value: Money): string =>
-  said(`${fr.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
+  said(`${t.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
 
 const MONTHLY: Period = { unit: 'month', every: 1, anchorDay: 1 }
 
@@ -106,9 +106,9 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     household()
 
     const text = said(rowOf('Alix')?.textContent ?? '')
-    expect(text.indexOf(fr.split.income)).toBeGreaterThan(text.indexOf('Alix'))
-    expect(text.indexOf(fr.split.settlementShare)).toBeGreaterThan(text.indexOf(fr.split.income))
-    expect(text.indexOf(fr.split.due)).toBeGreaterThan(text.indexOf(fr.split.settlementShare))
+    expect(text.indexOf(t.split.income)).toBeGreaterThan(text.indexOf('Alix'))
+    expect(text.indexOf(t.split.settlementShare)).toBeGreaterThan(text.indexOf(t.split.income))
+    expect(text.indexOf(t.split.due)).toBeGreaterThan(text.indexOf(t.split.settlementShare))
   })
 
   /* La vérification attendait après deux sections repliables, à deux écrans des
@@ -118,7 +118,7 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
   it('ferme la même tuile que les parts', () => {
     household()
 
-    expect(screen.getByText(fr.split.checkTotal).closest('section')).toBe(
+    expect(screen.getByText(t.split.checkTotal).closest('section')).toBe(
       screen.getByText('Alix').closest('section'),
     )
   })
@@ -137,7 +137,7 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
        façons, et c'est bien ce qu'on veut — la carte le redonne pour qu'on
        n'ait pas à remonter le chercher. */
     expect(screen.getAllByText(out(eur(90_000)))).toHaveLength(3)
-    expect(screen.getByText(fr.split.checkHint)).toBeInTheDocument()
+    expect(screen.getByText(t.split.checkHint)).toBeInTheDocument()
   })
 
   /* Sans report, « Sa part du mois » recopierait à l'identique le « À verser »
@@ -150,12 +150,12 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
       ],
     })
 
-    expect(screen.queryByText(fr.split.settlementShare)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
     expect(
-      screen.queryByText(tpl(fr.split.settlement, de(formatYearMonth('2026-07')))),
+      screen.queryByText(tpl(t.split.settlement, de(formatYearMonth('2026-07')))),
     ).not.toBeInTheDocument()
-    expect(screen.getAllByText(fr.split.income)).toHaveLength(2)
-    expect(screen.getAllByText(fr.split.due)).toHaveLength(2)
+    expect(screen.getAllByText(t.split.income)).toHaveLength(2)
+    expect(screen.getAllByText(t.split.due)).toHaveLength(2)
   })
 
   /* Le membre seul porte 100 % sans qu'aucun revenu soit exigé : le sien vaut
@@ -185,9 +185,9 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText(fr.split.subtitleSolo)).toBeInTheDocument()
+    expect(screen.getByText(t.split.subtitleSolo)).toBeInTheDocument()
     expect(screen.getByText(said('100,0 %'))).toBeInTheDocument()
-    expect(screen.queryByText(fr.split.income)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.income)).not.toBeInTheDocument()
   })
 
   /* Le sous-titre vit dans la carte, et il n'y a pas de carte sur un mois sans
@@ -196,9 +196,9 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
   it('garde son sous-titre sur un mois sans charge commune', () => {
     household({ entries: [] })
 
-    expect(screen.getByText(fr.split.subtitle)).toBeInTheDocument()
-    expect(screen.getByText(fr.split.nothing)).toBeInTheDocument()
-    expect(screen.queryByText(fr.split.checkTotal)).not.toBeInTheDocument()
-    expect(screen.getByText(fr.split.method)).toBeInTheDocument()
+    expect(screen.getByText(t.split.subtitle)).toBeInTheDocument()
+    expect(screen.getByText(t.split.nothing)).toBeInTheDocument()
+    expect(screen.queryByText(t.split.checkTotal)).not.toBeInTheDocument()
+    expect(screen.getByText(t.split.method)).toBeInTheDocument()
   })
 })

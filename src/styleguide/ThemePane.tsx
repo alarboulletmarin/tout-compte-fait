@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { PaletteSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { useStore } from '@/store/store'
 
@@ -35,7 +35,7 @@ export function ThemePane({
       className={cn('rounded-tile border border-border bg-bg p-5 text-text', className)}
     >
       <p className="t-eyebrow mb-4 text-muted">
-        {theme === 'light' ? fr.theme.light : fr.theme.dark}
+        {theme === 'light' ? t.theme.light : t.theme.dark}
       </p>
       {children}
     </div>

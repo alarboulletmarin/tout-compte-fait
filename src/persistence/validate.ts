@@ -36,7 +36,7 @@ import type {
   Settings,
   ThemeSetting,
 } from '@/domain/types'
-import { DEFAULT_PALETTE, isPaletteSetting } from '@/domain/types'
+import { DEFAULT_LOCALE, DEFAULT_PALETTE, isLocale, isPaletteSetting } from '@/domain/types'
 import { defaultFamilies, fallbackFamilyId, repairedCategory } from './defaults'
 import { CURRENT_SCHEMA_VERSION } from './schema'
 
@@ -394,6 +394,13 @@ function settings(raw: unknown): Settings {
        c'est un réglage d'apparence, et un document par ailleurs sain n'a pas à
        être signalé parce qu'il vient d'une version qui en proposait une de plus. */
     palette: isPaletteSetting(source['palette']) ? source['palette'] : DEFAULT_PALETTE,
+    /* Une langue inconnue — ou absente, dans un document d'avant le champ —
+       retombe sur le français, et surtout pas sur celle du navigateur : c'est
+       la valeur écrite dans le document qui fait foi, et la deviner ferait
+       changer de langue un même fichier selon l'appareil qui l'ouvre. La
+       détection n'a lieu qu'à la création (`emptyData`), là où il n'y a
+       justement rien à lire. */
+    locale: isLocale(source['locale']) ? source['locale'] : DEFAULT_LOCALE,
     currency: str(source['currency'], 'EUR'),
     monthStartsOn: startsOn >= 1 && startsOn <= 28 ? startsOn : 1,
   }

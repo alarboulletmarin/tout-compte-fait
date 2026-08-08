@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink, LINK } from '@/app/AppFooter'
 import { REPO_URL, THIRD_PARTY_URL } from '@/app/meta'
-import { LEGAL_NOTICE_PATH, LEGAL_ROUTES, PRIVACY_PATH, TERMS_PATH } from '@/app/routes'
+import { LEGAL_NOTICE_PATH, legalRoutes, PRIVACY_PATH, TERMS_PATH } from '@/app/routes'
 import { type LegalDocument, legalNotice, privacyPolicy, terms } from '@/i18n/legal'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
@@ -28,7 +28,7 @@ import { Tile } from '@/ui/Tile'
  * pied de page, et on cherche presque toujours celle d'à côté.
  */
 function LegalDoc({ path, doc }: { path: string; doc: LegalDocument }) {
-  const title = LEGAL_ROUTES.find((route) => route.path === path)?.label ?? ''
+  const title = legalRoutes().find((route) => route.path === path)?.label ?? ''
 
   return (
     <>
@@ -36,7 +36,7 @@ function LegalDoc({ path, doc }: { path: string; doc: LegalDocument }) {
       <div className="flex max-w-3xl flex-col gap-4">
         <Tile className="gap-3">
           <p className="t-body">{doc.intro}</p>
-          <p className="t-axis text-muted">{tpl(fr.legal.updated, doc.updated)}</p>
+          <p className="t-axis text-muted">{tpl(t.legal.updated, doc.updated)}</p>
         </Tile>
 
         {doc.sections.map((section) => (
@@ -51,9 +51,9 @@ function LegalDoc({ path, doc }: { path: string; doc: LegalDocument }) {
         ))}
 
         <Tile className="gap-3">
-          <h2 className="t-section">{fr.legal.alsoRead}</h2>
+          <h2 className="t-section">{t.legal.alsoRead}</h2>
           <div className="flex flex-wrap items-center gap-x-5">
-            {LEGAL_ROUTES.filter((route) => route.path !== path).map((route) => (
+            {legalRoutes().filter((route) => route.path !== path).map((route) => (
               <Link key={route.path} to={route.path} className={LINK}>
                 {route.label}
               </Link>
@@ -61,8 +61,8 @@ function LegalDoc({ path, doc }: { path: string; doc: LegalDocument }) {
             {/* Fichier statique, donc un vrai départ de l'app : `ExternalLink`
                 l'ouvre à côté, ce qui est la seule façon de revenir quand l'app
                 est installée et n'a pas de bouton retour. */}
-            <ExternalLink href={THIRD_PARTY_URL}>{fr.legal.thirdParty}</ExternalLink>
-            <ExternalLink href={REPO_URL}>{fr.about.repo}</ExternalLink>
+            <ExternalLink href={THIRD_PARTY_URL}>{t.legal.thirdParty}</ExternalLink>
+            <ExternalLink href={REPO_URL}>{t.about.repo}</ExternalLink>
           </div>
         </Tile>
       </div>

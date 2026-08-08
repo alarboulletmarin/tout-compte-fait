@@ -17,6 +17,16 @@
  * personne — c'est déjà l'argument des questions de confirmation (cahier §4.8).
  * ==========================================================================*/
 
+import {
+  legalNotice as enNotice,
+  privacyPolicy as enPrivacy,
+  terms as enTerms,
+} from './legal.en'
+import { HOST, PUBLISHER } from './parties'
+import { currentLocale, subscribeLocale } from './strings'
+
+export { HOST, PUBLISHER } from './parties'
+
 export type LegalSection = {
   heading: string
   /** Un paragraphe par entrée. Aucune mise en forme : c'est de la prose. */
@@ -34,30 +44,9 @@ export type LegalDocument = {
   updated: string
 }
 
-/**
- * L'hébergeur, que la loi impose de nommer avec son adresse et son téléphone
- * (LCEN, article 1-1 depuis la loi SREN du 21 mai 2024).
- *
- * Coordonnées relevées sur les registres publics d'entreprises américains ;
- * Vercel publie les siennes sur `vercel.com`, et c'est là qu'il faut aller les
- * revérifier — une adresse d'hébergeur qui a bougé rend la mention fausse, donc
- * inutile, et c'est le genre de ligne que personne ne relit jamais.
- */
-export const HOST = {
-  name: 'Vercel Inc.',
-  address: '440 N. Barranca Ave #4133, Covina, CA 91723, États-Unis',
-  phone: '+1 (951) 383-6898',
-  url: 'https://vercel.com',
-} as const
-
-export const PUBLISHER = {
-  name: 'Andréa Larboullet Marin',
-  domain: 'toutcomptefait.xyz',
-} as const
-
 const UPDATED = 'août 2026'
 
-export const legalNotice: LegalDocument = {
+const frNotice: LegalDocument = {
   intro:
     'Qui édite ce site, qui l’héberge, et sous quelles licences il est publié. Ces informations sont obligatoires : l’article 1-1 de la LCEN — l’ancien article 6 III, déplacé par la loi du 21 mai 2024 — impose à tout éditeur de se rendre identifiable.',
   updated: UPDATED,
@@ -79,7 +68,7 @@ export const legalNotice: LegalDocument = {
     {
       heading: 'Hébergeur',
       body: [
-        `${HOST.name} — ${HOST.address} — ${HOST.phone} — ${HOST.url}`,
+        `${HOST.name} — ${HOST.address}, États-Unis — ${HOST.phone} — ${HOST.url}`,
         'Le site est servi depuis l’infrastructure de cet hébergeur. Il n’y a aucun autre serveur : l’app est un ensemble de fichiers statiques, et tout le calcul se fait dans ton navigateur.',
       ],
     },
@@ -104,7 +93,7 @@ export const legalNotice: LegalDocument = {
   ],
 }
 
-export const privacyPolicy: LegalDocument = {
+const frPrivacy: LegalDocument = {
   intro:
     'Tes données ne quittent pas ton appareil. Ni l’éditeur, ni l’hébergeur, ni personne d’autre ne peut les lire — il n’existe aucun serveur où elles pourraient se trouver.',
   updated: UPDATED,
@@ -157,7 +146,7 @@ export const privacyPolicy: LegalDocument = {
   ],
 }
 
-export const terms: LegalDocument = {
+const frTerms: LegalDocument = {
   intro:
     'Ce que le service promet, et ce qu’il ne promet pas. C’est court, parce qu’il n’y a ni compte, ni paiement, ni donnée collectée — donc presque rien à encadrer.',
   updated: UPDATED,
@@ -209,3 +198,27 @@ export const terms: LegalDocument = {
     },
   ],
 }
+
+/**
+ * Les trois documents, dans la langue active.
+ *
+ * Même mécanique que `history.ts` et `landing.ts` : des liaisons d'export
+ * vivantes, et les deux langues dans le même morceau — celui-ci est déjà hors
+ * du graphe initial.
+ *
+ * **Une traduction, pas un second document.** Le droit applicable ne change
+ * pas avec la langue de lecture : l'éditeur est français, l'hébergeur est le
+ * même, et les conditions restent soumises au droit français. La version
+ * anglaise dit donc exactement la même chose, et le dit dans la langue de qui
+ * lit — ce qui est le seul moyen qu'un texte juridique serve à quelque chose.
+ */
+export let legalNotice: LegalDocument = currentLocale() === 'en' ? enNotice : frNotice
+export let privacyPolicy: LegalDocument = currentLocale() === 'en' ? enPrivacy : frPrivacy
+export let terms: LegalDocument = currentLocale() === 'en' ? enTerms : frTerms
+
+subscribeLocale(() => {
+  const english = currentLocale() === 'en'
+  legalNotice = english ? enNotice : frNotice
+  privacyPolicy = english ? enPrivacy : frPrivacy
+  terms = english ? enTerms : frTerms
+})

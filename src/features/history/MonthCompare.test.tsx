@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { makeCategory, makeData, makeEntry, makeFamily } from '@/domain/fixtures'
 import { money } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { formatDelta, formatMoney, formatYearMonthShort, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
@@ -145,7 +145,7 @@ describe('la comparaison de deux mois', () => {
     setup()
     await userEvent.click(screen.getByText(history.compareUnchanged))
     expect(
-      screen.getByText(`${fr.direction.out.toLowerCase()} ${euros(30000)}`, EXACT),
+      screen.getByText(`${t.direction.out.toLowerCase()} ${euros(30000)}`, EXACT),
     ).toBeInTheDocument()
     expect(screen.queryByText(formatDelta(0), EXACT)).not.toBeInTheDocument()
   })

@@ -6,7 +6,7 @@ import { useState } from 'react'
 import type { MonthPoint } from '@/domain/history'
 import type { Money } from '@/domain/money'
 import { parseYm } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { NO_VALUE, formatMoney, formatYearMonth, monthNameShort, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
@@ -239,7 +239,7 @@ export function MonthlyBars({ points, label, srText, className }: MonthlyBarsPro
               labels={labels}
               shown={shown}
               onShow={setActive}
-              label={fr.a11y.chartCursor}
+              label={t.a11y.chartCursor}
             />
           </div>
 

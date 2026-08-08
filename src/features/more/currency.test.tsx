@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { money } from '@/domain/money'
 import { makeCategory, makeData, makeEntry, makeFamily } from '@/domain/fixtures'
 import { formatMoney } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { closeDb } from '@/persistence/db'
 import { useStore } from '@/store/store'
 import { Amount } from '@/ui/Amount'
@@ -47,7 +47,7 @@ describe('la devise', () => {
     )
 
     await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: fr.settings.currency }),
+      screen.getByRole('combobox', { name: t.settings.currency }),
       'CHF',
     )
     expect(useStore.getState().data.settings.currency).toBe('CHF')

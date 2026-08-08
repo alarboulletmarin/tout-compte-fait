@@ -1,27 +1,27 @@
 import { useId } from 'react'
 import { PALETTES, type PaletteSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import type { ResolvedTheme } from '@/theme/theme'
 import { PalettePreview } from './PalettePreview'
 
-const NAME: Record<PaletteSetting, string> = {
-  classique: fr.palettes.classique,
-  monochrome: fr.palettes.monochrome,
-  douce: fr.palettes.douce,
-  vive: fr.palettes.vive,
-  neutre: fr.palettes.neutre,
-  contrastee: fr.palettes.contrastee,
-}
+const paletteName = (): Record<PaletteSetting, string> => ({
+  classique: t.palettes.classique,
+  monochrome: t.palettes.monochrome,
+  douce: t.palettes.douce,
+  vive: t.palettes.vive,
+  neutre: t.palettes.neutre,
+  contrastee: t.palettes.contrastee,
+})
 
-const HINT: Record<PaletteSetting, string> = {
-  classique: fr.palettes.classiqueHint,
-  monochrome: fr.palettes.monochromeHint,
-  douce: fr.palettes.douceHint,
-  vive: fr.palettes.viveHint,
-  neutre: fr.palettes.neutreHint,
-  contrastee: fr.palettes.contrasteeHint,
-}
+const paletteHint = (): Record<PaletteSetting, string> => ({
+  classique: t.palettes.classiqueHint,
+  monochrome: t.palettes.monochromeHint,
+  douce: t.palettes.douceHint,
+  vive: t.palettes.viveHint,
+  neutre: t.palettes.neutreHint,
+  contrastee: t.palettes.contrasteeHint,
+})
 
 /**
  * Le choix de palette : six vignettes, et la case native derrière chacune.
@@ -53,7 +53,7 @@ export function PaletteChoice({
 
   return (
     <fieldset className="min-w-0">
-      <legend className="t-label mb-2">{fr.appearance.paletteLabel}</legend>
+      <legend className="t-label mb-2">{t.appearance.paletteLabel}</legend>
       {/* Deux colonnes au pouce, trois dès qu'il y a la place : une vignette
           sous 140px ne montre plus ses quatre pastilles. */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -93,8 +93,8 @@ export function PaletteChoice({
                 className="absolute inset-0 cursor-pointer opacity-0"
               />
               <PalettePreview palette={palette} theme={theme} />
-              <span className="t-num-label px-0.5 text-text">{NAME[palette]}</span>
-              <span className="t-label px-0.5">{HINT[palette]}</span>
+              <span className="t-num-label px-0.5 text-text">{paletteName()[palette]}</span>
+              <span className="t-label px-0.5">{paletteHint()[palette]}</span>
             </label>
           )
         })}

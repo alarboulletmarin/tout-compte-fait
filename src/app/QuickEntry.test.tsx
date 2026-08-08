@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { ENTRY_NEW_PATH, entryNewPath } from './routes'
 import { QuickEntry } from './QuickEntry'
 
@@ -20,7 +20,7 @@ function renderAt(path: string) {
       <QuickEntry />
       <CurrentUrl />
       {/* Tient lieu d'onglet : une navigation qui ne passe pas par le bouton. */}
-      <Link to="/calendrier">{fr.nav.calendar}</Link>
+      <Link to="/calendrier">{t.nav.calendar}</Link>
       <Routes>
         <Route path="*" element={null} />
       </Routes>
@@ -28,18 +28,18 @@ function renderAt(path: string) {
   )
 }
 
-const trigger = () => screen.getByRole('button', { name: fr.shell.quickEntry })
+const trigger = () => screen.getByRole('button', { name: t.shell.quickEntry })
 const url = () => screen.getByTestId('url').textContent
 
 describe('QuickEntry — le bouton de saisie flottant', () => {
   it('ne montre les trois portes qu’une fois déplié', async () => {
     renderAt('/')
-    expect(screen.queryByRole('menuitem', { name: fr.entry.newOut })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: t.entry.newOut })).not.toBeInTheDocument()
 
     await userEvent.click(trigger())
-    expect(screen.getByRole('menuitem', { name: fr.entry.newOut })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: fr.entry.newIn })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: fr.entry.newSaving })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: t.entry.newOut })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: t.entry.newIn })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: t.entry.newSaving })).toBeInTheDocument()
   })
 
   it('annonce son état et change de nom quand il se déplie', async () => {
@@ -47,16 +47,16 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
     expect(trigger()).toHaveAttribute('aria-expanded', 'false')
 
     await userEvent.click(trigger())
-    const open = screen.getByRole('button', { name: fr.shell.quickEntryClose })
+    const open = screen.getByRole('button', { name: t.shell.quickEntryClose })
     expect(open).toHaveAttribute('aria-expanded', 'true')
   })
 
   /* Les trois portes mènent à trois saisies différentes, et c'est tout l'objet
      du bouton : un FAB unique ramènerait la dépense pour tout le monde. */
   it.each([
-    [fr.entry.newOut, entryNewPath({ direction: 'out' })],
-    [fr.entry.newIn, entryNewPath({ direction: 'in' })],
-    [fr.entry.newSaving, entryNewPath({ direction: 'out', saving: true })],
+    [t.entry.newOut, entryNewPath({ direction: 'out' })],
+    [t.entry.newIn, entryNewPath({ direction: 'in' })],
+    [t.entry.newSaving, entryNewPath({ direction: 'out', saving: true })],
   ])('« %s » ouvre %s', async (label, expected) => {
     renderAt('/')
     await userEvent.click(trigger())
@@ -67,18 +67,18 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
   it('se replie sur Échap, et rend le focus au bouton', async () => {
     renderAt('/')
     await userEvent.click(trigger())
-    expect(screen.getByRole('menuitem', { name: fr.entry.newOut })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newOut })).toHaveFocus()
 
     await userEvent.keyboard('{Escape}')
-    expect(screen.queryByRole('menuitem', { name: fr.entry.newOut })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: t.entry.newOut })).not.toBeInTheDocument()
     expect(trigger()).toHaveFocus()
   })
 
   it('se replie une fois la porte franchie', async () => {
     renderAt('/')
     await userEvent.click(trigger())
-    await userEvent.click(screen.getByRole('menuitem', { name: fr.entry.newOut }))
-    expect(screen.queryByRole('menuitem', { name: fr.entry.newIn })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('menuitem', { name: t.entry.newOut }))
+    expect(screen.queryByRole('menuitem', { name: t.entry.newIn })).not.toBeInTheDocument()
   })
 
   /* Il vit dans la coquille et ne se démonte jamais : l'état survivrait à un
@@ -87,10 +87,10 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
   it('se replie quand l’écran change sans passer par lui', async () => {
     renderAt('/')
     await userEvent.click(trigger())
-    expect(screen.getByRole('menuitem', { name: fr.entry.newOut })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: t.entry.newOut })).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('link', { name: fr.nav.calendar }))
-    expect(screen.queryByRole('menuitem', { name: fr.entry.newOut })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: t.nav.calendar }))
+    expect(screen.queryByRole('menuitem', { name: t.entry.newOut })).not.toBeInTheDocument()
     expect(url()).toBe('/calendrier')
   })
 
@@ -99,20 +99,20 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
   it('se parcourt aux flèches, et boucle', async () => {
     renderAt('/')
     await userEvent.click(trigger())
-    expect(screen.getByRole('menuitem', { name: fr.entry.newOut })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newOut })).toHaveFocus()
 
     await userEvent.keyboard('{ArrowDown}')
-    expect(screen.getByRole('menuitem', { name: fr.entry.newIn })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newIn })).toHaveFocus()
 
     await userEvent.keyboard('{End}')
-    expect(screen.getByRole('menuitem', { name: fr.entry.newSaving })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newSaving })).toHaveFocus()
 
     // La dernière porte suivie d'une flèche bas ramène à la première.
     await userEvent.keyboard('{ArrowDown}')
-    expect(screen.getByRole('menuitem', { name: fr.entry.newOut })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newOut })).toHaveFocus()
 
     await userEvent.keyboard('{ArrowUp}')
-    expect(screen.getByRole('menuitem', { name: fr.entry.newSaving })).toHaveFocus()
+    expect(screen.getByRole('menuitem', { name: t.entry.newSaving })).toHaveFocus()
   })
 
   /* Ce que le repli coûte : les portes restent montées, et c'est une règle CSS
@@ -180,7 +180,7 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
     const overlay = container.querySelector('.quick-scrim')
     expect(overlay).not.toBeNull()
     await userEvent.click(overlay as Element)
-    expect(screen.queryByRole('menuitem', { name: fr.entry.newOut })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: t.entry.newOut })).not.toBeInTheDocument()
   })
 
   /* Même garde que le raccourci « n » : sur un écran de saisie, il partirait
@@ -188,7 +188,7 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
      brouillon qui ne surveille que les deux boutons de sortie. */
   it('n’existe pas sur un écran de saisie', () => {
     const { container } = renderAt(ENTRY_NEW_PATH)
-    expect(screen.queryByRole('button', { name: fr.shell.quickEntry })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.shell.quickEntry })).not.toBeInTheDocument()
     expect(container).not.toBeEmptyDOMElement()
   })
 })

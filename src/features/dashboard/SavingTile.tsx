@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { SAVINGS_PATH } from '@/app/routes'
 import { ZERO, abs } from '@/domain/money'
 import { savingCapacity, savingLeft } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { useKindTotals } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -78,15 +78,15 @@ export function SavingTile() {
     totals.saving === ZERO
       ? null
       : totals.saving > ZERO
-        ? tpl(fr.dashboard.savingPlaced, formatMoney(totals.saving, currency))
-        : tpl(fr.dashboard.savingWithdrawn, formatMoney(abs(totals.saving), currency))
+        ? tpl(t.dashboard.savingPlaced, formatMoney(totals.saving, currency))
+        : tpl(t.dashboard.savingWithdrawn, formatMoney(abs(totals.saving), currency))
 
   /* Le dépassement n'est pas un reste : placer plus qu'on ne dégage est une
      information, et « reste −57 € » n'en serait pas une. */
   const leftHint =
     left < 0
-      ? tpl(fr.savings.overHint, formatMoney(abs(left), currency))
-      : tpl(fr.dashboard.savingLeft, formatMoney(left, currency))
+      ? tpl(t.savings.overHint, formatMoney(abs(left), currency))
+      : tpl(t.dashboard.savingLeft, formatMoney(left, currency))
 
   /* La part de la capacité déjà placée : c'est ce que l'anneau dessine, et
      c'est la question qu'on se pose devant ce chiffre — « combien j'ai déjà
@@ -115,7 +115,7 @@ export function SavingTile() {
       onClick={() => {
         void navigate(SAVINGS_PATH)
       }}
-      label={tpl(fr.dashboard.showSavings, fr.dashboard.capacity)}
+      label={tpl(t.dashboard.showSavings, t.dashboard.capacity)}
       /* Repère nu, sans nommer l'écran d'arrivée : « CAPACITÉ D'ÉPARGNE » est
          l'étiquette la plus longue de la grille, et une `2x2` n'offre que 185px
          à 1024px. « Épargne › » en demandait soixante de plus et passait par
@@ -123,7 +123,7 @@ export function SavingTile() {
          raison exactement. */
       affordance={{ kind: 'navigate' }}
     >
-      <Eyebrow icon={SavingsIcon}>{fr.dashboard.capacity}</Eyebrow>
+      <Eyebrow icon={SavingsIcon}>{t.dashboard.capacity}</Eyebrow>
       <div className="flex flex-col gap-1">
         {/* L'anneau contre le chiffre, et les deux clauses sur toute la largeur
             dessous. Posées *à côté* de l'anneau elles n'avaient plus que 129px
@@ -137,7 +137,7 @@ export function SavingTile() {
             size={48}
             thickness={8}
             value={placedShare}
-            label={fr.dashboard.capacity}
+            label={t.dashboard.capacity}
             className="shrink-0"
           />
           <Amount value={capacity} size="tile-fit" tone={capacity < 0 ? 'danger' : 'default'} />

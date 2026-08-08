@@ -1,5 +1,5 @@
 import { type Money, ZERO } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, tpl } from '@/i18n/format'
 import { useSavingTotal } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -50,15 +50,15 @@ export function CapitalTile({ net, owner }: { net: Money; owner: string | null }
 
   return (
     <Tile variant="accent" className="gap-2">
-      <Eyebrow icon={SavingsIcon}>{fr.savings.total}</Eyebrow>
+      <Eyebrow icon={SavingsIcon}>{t.savings.total}</Eyebrow>
 
       {total.valued === 0 ? (
-        <p className="t-body">{fr.savings.totalNone}</p>
+        <p className="t-body">{t.savings.totalNone}</p>
       ) : (
         <>
           <Amount value={total.known} size="hero-fit" />
           <span className="t-label">
-            {owner === null ? fr.savings.totalHint : tpl(fr.savings.totalHintOf, de(owner))}
+            {owner === null ? t.savings.totalHint : tpl(t.savings.totalHintOf, de(owner))}
           </span>
           {/* Jamais fondu dans le total : l'écran doit pouvoir dire « 32 450 €
               sur les supports relevés » sans laisser croire que c'est tout.
@@ -68,8 +68,8 @@ export function CapitalTile({ net, owner }: { net: Money; owner: string | null }
           {total.unvalued > 0 && (
             <span className="t-label">
               {total.unvalued === 1
-                ? fr.savings.totalMissingOne
-                : tpl(fr.savings.totalMissing, total.unvalued)}
+                ? t.savings.totalMissingOne
+                : tpl(t.savings.totalMissing, total.unvalued)}
             </span>
           )}
         </>
@@ -80,8 +80,8 @@ export function CapitalTile({ net, owner }: { net: Money; owner: string | null }
           pas ce que le marché a fait. */}
       {total.movedSince !== ZERO && (
         <div className="mt-1 flex flex-col gap-1 border-t border-border pt-3">
-          <Line label={fr.savings.estimated} value={total.estimated} />
-          <Line label={fr.savings.movedSinceTotal} value={total.movedSince} signed />
+          <Line label={t.savings.estimated} value={total.estimated} />
+          <Line label={t.savings.movedSinceTotal} value={total.movedSince} signed />
         </div>
       )}
 
@@ -91,7 +91,7 @@ export function CapitalTile({ net, owner }: { net: Money; owner: string | null }
           de flux vide. */}
       {net !== ZERO && (
         <div className="mt-1 border-t border-border pt-3">
-          <Line label={fr.savings.netMonth} value={net} signed />
+          <Line label={t.savings.netMonth} value={net} signed />
         </div>
       )}
     </Tile>

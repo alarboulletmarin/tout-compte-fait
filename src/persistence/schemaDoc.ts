@@ -23,7 +23,7 @@
 
 import typesSource from '@/domain/types.ts?raw'
 import type { CategoryKind } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { defaultCategories, defaultFamilies } from './defaults'
 import { CURRENT_SCHEMA_VERSION } from './schema'
 import type { ImportReason } from './validate'
@@ -86,7 +86,7 @@ const RULES = [
  * Un `Record<ImportReason, string>` et non une liste en prose : `ImportReason`
  * est une union fermée, et le compilateur refuse ce fichier si une raison est
  * ajoutée à `validate.ts` sans être décrite ici. C'est le même contrat que
- * `fr.settings.reportReason`, qui tient déjà l'écran du rapport d'import — et
+ * `t.settings.reportReason`, qui tient déjà l'écran du rapport d'import — et
  * c'est le seul moyen que cette liste ne devienne pas, à son tour, la seconde
  * description du modèle que ce document existe pour éviter.
  */
@@ -500,7 +500,7 @@ function catalogue(): string {
 const directionLabel = (kind: CategoryKind): string => (kind === 'resource' ? 'in' : 'out')
 
 const NATURES = (['resource', 'charge', 'debt', 'saving'] as const)
-  .map((kind) => `- \`${kind}\` — ${fr.kinds[kind]}, sens \`${directionLabel(kind)}\``)
+  .map((kind) => `- \`${kind}\` — ${t.kinds[kind]}, sens \`${directionLabel(kind)}\``)
   .join('\n')
 
 const bullets = (lines: readonly string[]): string => lines.map((line) => `- ${line}`).join('\n')

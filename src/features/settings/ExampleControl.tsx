@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { Button, type ButtonVariant } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
@@ -41,14 +41,14 @@ export function ExampleControl({
       .then((module) => replaceData(module.exampleData()))
       .then(() => {
         setAsking(false)
-        toast(fr.settings.exampleLoaded)
+        toast(t.settings.exampleLoaded)
       })
       /* Le module est chargé à la demande : hors ligne, ou le temps d'un
          déploiement, la requête échoue. Sans ce filet, le clic ne faisait
          rien — pas d'exemple, pas de message, et la boîte restait ouverte. */
       .catch(() => {
         setAsking(false)
-        toast(fr.settings.exampleFailed, 'danger')
+        toast(t.settings.exampleFailed, 'danger')
       })
   }
 
@@ -62,15 +62,15 @@ export function ExampleControl({
           else load()
         }}
       >
-        {fr.settings.exampleLoad}
+        {t.settings.exampleLoad}
       </Button>
 
       <ConfirmDialog
         open={asking}
-        title={fr.settings.example}
+        title={t.settings.example}
         steps={[
-          { question: fr.settings.exampleConfirm, action: fr.common.confirm },
-          { question: fr.settings.exampleConfirm2, action: fr.settings.exampleLoad },
+          { question: t.settings.exampleConfirm, action: t.common.confirm },
+          { question: t.settings.exampleConfirm2, action: t.settings.exampleLoad },
         ]}
         onCancel={() => {
           setAsking(false)

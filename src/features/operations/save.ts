@@ -7,7 +7,7 @@
  * lequel on est arrivé. */
 
 import type { Direction } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { addEntry, addRecurrence, addRecurrencePaidOn, replaceEntry, replaceRecurrence } from '@/store/actions'
 import type { EntryNature } from '@/ui/categoryKinds'
 import { toast } from '@/ui/toast'
@@ -15,10 +15,10 @@ import type { Built, Operation } from './useOperationForm'
 
 /** Annoncer « Dépense ajoutée » après un salaire ferait douter de ce qui vient
  *  d'être enregistré. */
-const TOAST = {
-  added: { in: fr.entry.addedIn, out: fr.entry.addedOut, saving: fr.entry.addedSaving },
-  updated: { in: fr.entry.updatedIn, out: fr.entry.updatedOut, saving: fr.entry.updatedSaving },
-} as const
+const toasts = () => ({
+  added: { in: t.entry.addedIn, out: t.entry.addedOut, saving: t.entry.addedSaving },
+  updated: { in: t.entry.updatedIn, out: t.entry.updatedOut, saving: t.entry.updatedSaving },
+} as const)
 
 /** La clé du toast : l'épargne parle d'elle-même, les deux autres du sens. */
 const toastKey = (nature: EntryNature, direction: Direction): 'in' | 'out' | 'saving' =>
@@ -29,17 +29,17 @@ export function saveOperation(built: Built, operation: Operation | null): void {
     const key = toastKey(built.nature, built.payload.direction)
     if (operation?.kind === 'entry') {
       replaceEntry(operation.entry.id, built.payload)
-      toast(TOAST.updated[key])
+      toast(toasts().updated[key])
     } else {
       addEntry(built.payload)
-      toast(TOAST.added[key])
+      toast(toasts().added[key])
     }
     return
   }
 
   if (operation?.kind === 'recurrence') {
     replaceRecurrence(operation.recurrence.id, built.payload)
-    toast(fr.recurrences.updated)
+    toast(t.recurrences.updated)
     return
   }
 
@@ -48,5 +48,5 @@ export function saveOperation(built: Built, operation: Operation | null): void {
      payée, on ne la lui redemande pas. */
   if (built.paidOn === null) addRecurrence(built.payload)
   else addRecurrencePaidOn(built.payload, built.paidOn)
-  toast(fr.recurrences.added)
+  toast(t.recurrences.added)
 }

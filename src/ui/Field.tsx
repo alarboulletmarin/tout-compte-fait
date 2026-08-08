@@ -1,6 +1,6 @@
 import { type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, useId } from 'react'
 import { cn } from '@/lib/cn'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Check } from './Icons'
 
 const CONTROL = cn(
@@ -80,8 +80,8 @@ export function Field({
     <div className={cn('flex flex-col gap-1.5', className)}>
       <label htmlFor={id} className="t-label text-text">
         {label}
-        {required === true && <span className="text-muted"> · {fr.common.required}</span>}
-        {optional === true && <span className="text-muted"> · {fr.common.optional}</span>}
+        {required === true && <span className="text-muted"> · {t.common.required}</span>}
+        {optional === true && <span className="text-muted"> · {t.common.optional}</span>}
       </label>
       {children(id, describedBy)}
       {(error ?? hint) !== undefined && (

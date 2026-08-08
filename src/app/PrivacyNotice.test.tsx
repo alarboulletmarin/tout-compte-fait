@@ -2,14 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { NOTICE_STORAGE_KEY } from '@/lib/notice'
 import { useStore } from '@/store/store'
 import {
   LEGAL_NOTICE_PATH,
   ONBOARDING_PATH,
   PRIVACY_PATH,
-  STYLEGUIDE_ROUTE,
+  styleguideRoute,
   TERMS_PATH,
 } from './routes'
 import { PrivacyNotice } from './PrivacyNotice'
@@ -38,7 +38,7 @@ function dialog(): HTMLElement {
 }
 
 function action(): HTMLElement {
-  return screen.getByRole('button', { name: fr.notice.action })
+  return screen.getByRole('button', { name: t.notice.action })
 }
 
 /**
@@ -59,7 +59,7 @@ describe('PrivacyNotice : quand elle se montre', () => {
   it('bloque au premier lancement', () => {
     mount()
     expect(dialog()).toBeInTheDocument()
-    expect(screen.getByText(fr.notice.noServer)).toBeInTheDocument()
+    expect(screen.getByText(t.notice.noServer)).toBeInTheDocument()
   })
 
   /* Le vrai contrat du « une seule fois » : sans lui, la notice serait une
@@ -87,7 +87,7 @@ describe('PrivacyNotice : quand elle se montre', () => {
     expect(dialog()).toBeInTheDocument()
 
     // Et la fermer ne lève pas, même si rien ne peut être retenu.
-    await user.click(screen.getByRole('checkbox', { name: fr.notice.check }))
+    await user.click(screen.getByRole('checkbox', { name: t.notice.check }))
     await user.click(action())
     expect(dialog()).not.toHaveAttribute('open')
 
@@ -105,7 +105,7 @@ describe('PrivacyNotice : les écrans qui ne la reçoivent pas', () => {
   })
 
   it('s’efface sur le nuancier, qui n’est pas un écran de l’app', () => {
-    mount(STYLEGUIDE_ROUTE.path)
+    mount(styleguideRoute().path)
     expect(screen.queryByRole('dialog', { hidden: true })).not.toHaveAttribute('open')
   })
 
@@ -137,7 +137,7 @@ describe('PrivacyNotice : la case et le bouton', () => {
     mount()
 
     expect(action()).toBeDisabled()
-    await user.click(screen.getByRole('checkbox', { name: fr.notice.check }))
+    await user.click(screen.getByRole('checkbox', { name: t.notice.check }))
     expect(action()).toBeEnabled()
   })
 
@@ -147,7 +147,7 @@ describe('PrivacyNotice : la case et le bouton', () => {
     const user = userEvent.setup()
     mount()
 
-    await user.click(screen.getByRole('checkbox', { name: fr.notice.check }))
+    await user.click(screen.getByRole('checkbox', { name: t.notice.check }))
     await user.click(action())
 
     expect(dialog()).not.toHaveAttribute('open')
@@ -160,9 +160,9 @@ describe('PrivacyNotice : la case et le bouton', () => {
     const user = userEvent.setup()
     mount()
 
-    expect(screen.getByText(fr.notice.checkHint)).toBeInTheDocument()
-    await user.click(screen.getByRole('checkbox', { name: fr.notice.check }))
-    expect(screen.getByText(fr.notice.checkHint)).toBeInTheDocument()
+    expect(screen.getByText(t.notice.checkHint)).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: t.notice.check }))
+    expect(screen.getByText(t.notice.checkHint)).toBeInTheDocument()
   })
 })
 
@@ -181,7 +181,7 @@ describe('PrivacyNotice : les sorties qui n’existent pas', () => {
 
   it('ne porte pas de croix, qui promettrait une sortie de plus', () => {
     mount()
-    expect(screen.queryByRole('button', { name: fr.common.close })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.common.close })).not.toBeInTheDocument()
   })
 
   it('n’écrit rien tant qu’elle est ouverte', () => {
@@ -194,7 +194,7 @@ describe('PrivacyNotice : les sorties qui n’existent pas', () => {
 describe('PrivacyNotice : ce qu’elle donne à vérifier', () => {
   it('mène à la page de confidentialité', () => {
     mount()
-    expect(screen.getByRole('link', { name: fr.legal.privacy })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: t.legal.privacy })).toHaveAttribute(
       'href',
       PRIVACY_PATH,
     )
@@ -210,7 +210,7 @@ describe('PrivacyNotice : ce qu’elle donne à vérifier', () => {
 
     const body = document.getElementById(described ?? '')
     expect(body).not.toBeNull()
-    expect(body).toHaveTextContent(fr.notice.noReader)
+    expect(body).toHaveTextContent(t.notice.noReader)
   })
 
   it('compte quatre « aucun », et les rend en liste', () => {
@@ -231,11 +231,11 @@ describe('PrivacyNotice : ce qu’elle donne à vérifier', () => {
   it('pose la case après le texte, et non dans le pied', () => {
     mount()
     const body = document.getElementById(dialog().getAttribute('aria-describedby') ?? '')
-    const box = screen.getByRole('checkbox', { name: fr.notice.check })
+    const box = screen.getByRole('checkbox', { name: t.notice.check })
 
     expect(body).toContainElement(box)
     // Et derrière le lien, donc en dernier de l'ordre de tabulation du corps.
-    const link = screen.getByRole('link', { name: fr.legal.privacy })
+    const link = screen.getByRole('link', { name: t.legal.privacy })
     expect(link.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

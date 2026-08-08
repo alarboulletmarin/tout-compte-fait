@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { Button } from '@/ui/Button'
 import { Plus } from '@/ui/Icons'
@@ -93,10 +93,10 @@ export function QuickEntry() {
   }
 
   const doors = [
-    { label: fr.entry.newOut, path: entryNewPath({ direction: 'out' }), variant: 'primary' as const },
-    { label: fr.entry.newIn, path: entryNewPath({ direction: 'in' }), variant: 'secondary' as const },
+    { label: t.entry.newOut, path: entryNewPath({ direction: 'out' }), variant: 'primary' as const },
+    { label: t.entry.newIn, path: entryNewPath({ direction: 'in' }), variant: 'secondary' as const },
     {
-      label: fr.entry.newSaving,
+      label: t.entry.newSaving,
       path: entryNewPath({ direction: 'out', saving: true }),
       variant: 'secondary' as const,
     },
@@ -204,7 +204,7 @@ export function QuickEntry() {
              se pose dans le DOM pour ne rien dire, et un attribut qui traîne
              finit par se lire comme un état. */
           aria-hidden={open ? undefined : true}
-          aria-label={fr.shell.quickEntryLabel}
+          aria-label={t.shell.quickEntryLabel}
           onKeyDown={onKeys}
           /* Repliées, les portes ne reprennent pas les appuis : `inert` le dit
              déjà aux navigateurs qui le connaissent, mais c'est une garantie
@@ -254,7 +254,7 @@ export function QuickEntry() {
           type="button"
           aria-expanded={open}
           aria-controls="portes-de-saisie"
-          aria-label={open ? fr.shell.quickEntryClose : fr.shell.quickEntry}
+          aria-label={open ? t.shell.quickEntryClose : t.shell.quickEntry}
           onClick={() => {
             setOpen((previous) => !previous)
           }}

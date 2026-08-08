@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { today } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { download } from '@/lib/download'
 import { loadRawDocument } from '@/persistence/db'
 import { toRawBlob, unreadableFilename } from '@/persistence/transfer'
@@ -28,11 +28,11 @@ export function RecoveryDoor({ message }: { message: string }) {
   const saveRaw = async (): Promise<void> => {
     const raw = await loadRawDocument()
     if (raw === undefined || raw === null) {
-      toast(fr.storage.recoverRawEmpty)
+      toast(t.storage.recoverRawEmpty)
       return
     }
     download(toRawBlob(raw), unreadableFilename(today()))
-    toast(fr.storage.recoverRawDone)
+    toast(t.storage.recoverRawDone)
   }
 
   return (
@@ -40,17 +40,17 @@ export function RecoveryDoor({ message }: { message: string }) {
        alerte que les lecteurs d'écran ne nomment pas n'en est pas une. */
     <div role="alert" className="tile flex flex-col gap-4 border-danger p-5 md:p-6">
       <div className="flex flex-col gap-1">
-        <h2 className="t-section text-danger-text">{fr.storage.recoverTitle}</h2>
+        <h2 className="t-section text-danger-text">{t.storage.recoverTitle}</h2>
         <p className="t-body">{message}</p>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
-        <p className="t-label">{fr.storage.recoverImportHint}</p>
+        <p className="t-label">{t.storage.recoverImportHint}</p>
         <ImportControl variant="primary" className="w-fit" />
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
-        <p className="t-label">{fr.storage.recoverRawHint}</p>
+        <p className="t-label">{t.storage.recoverRawHint}</p>
         <Button
           variant="secondary"
           className="w-fit"
@@ -58,12 +58,12 @@ export function RecoveryDoor({ message }: { message: string }) {
             void saveRaw()
           }}
         >
-          {fr.storage.recoverRaw}
+          {t.storage.recoverRaw}
         </Button>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
-        <p className="t-label">{fr.storage.recoverReloadHint}</p>
+        <p className="t-label">{t.storage.recoverReloadHint}</p>
         <Button
           variant="secondary"
           className="w-fit"
@@ -71,7 +71,7 @@ export function RecoveryDoor({ message }: { message: string }) {
             location.reload()
           }}
         >
-          {fr.storage.recoverReload}
+          {t.storage.recoverReload}
         </Button>
       </div>
 
@@ -79,7 +79,7 @@ export function RecoveryDoor({ message }: { message: string }) {
           de la réinitialisation, dont les questions énumèrent ce qui part —
           ici, personne ne sait ce qu'il y avait. */}
       <div className="flex flex-col gap-2 border-t border-border pt-4">
-        <p className="t-label">{fr.storage.discardHint}</p>
+        <p className="t-label">{t.storage.discardHint}</p>
         <Button
           variant="ghost"
           className="w-fit"
@@ -87,14 +87,14 @@ export function RecoveryDoor({ message }: { message: string }) {
             setConfirming(true)
           }}
         >
-          {fr.storage.discard}
+          {t.storage.discard}
         </Button>
         <ConfirmDialog
           open={confirming}
-          title={fr.storage.discard}
+          title={t.storage.discard}
           steps={[
-            { question: fr.storage.discardConfirm1, action: fr.common.confirm },
-            { question: fr.storage.discardConfirm2, action: fr.storage.discard },
+            { question: t.storage.discardConfirm1, action: t.common.confirm },
+            { question: t.storage.discardConfirm2, action: t.storage.discard },
           ]}
           onCancel={() => {
             setConfirming(false)
@@ -102,7 +102,7 @@ export function RecoveryDoor({ message }: { message: string }) {
           onConfirm={() => {
             void discardUnreadable().then(() => {
               setConfirming(false)
-              toast(fr.storage.discarded)
+              toast(t.storage.discarded)
             })
           }}
         />

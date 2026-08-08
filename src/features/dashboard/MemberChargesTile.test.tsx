@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { type Money, money } from '@/domain/money'
 import type { Entry, Recurrence } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MemberChargesTile } from './MemberChargesTile'
@@ -13,7 +13,7 @@ const initial = useStore.getState().data
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
 const out = (value: Money): string =>
-  said(`${fr.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
+  said(`${t.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
 
 const FAMILIES = [
   makeFamily({ id: 'fam-charges', label: 'Logement', kind: 'charge' }),
@@ -88,7 +88,7 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
      de quelqu'un, et hors filtre elle n'aurait rien à séparer. */
   it('s’efface hors d’un filtre par membre', () => {
     mount()
-    expect(screen.queryByText(fr.dashboard.memberCharges)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.memberCharges)).not.toBeInTheDocument()
   })
 
   /* Ce que `scopeToMember` fond dans chaque total et que plus rien ne séparait :
@@ -103,7 +103,7 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
     // Charges — elle ne le contredit pas, elle l'éclate.
     expect(
       screen.getByText(
-        said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(65_000), 'EUR', false)}`),
+        said(`${t.direction.out.toLowerCase()} ${formatMoney(eur(65_000), 'EUR', false)}`),
       ),
     ).toBeInTheDocument()
   })
@@ -115,8 +115,8 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
   it('ne dit pas un mot du virement ni du report', () => {
     mount({ filterOn: 'm-1' })
 
-    expect(screen.queryByText(fr.dashboard.memberShare)).not.toBeInTheDocument()
-    expect(screen.queryByText(fr.split.settlementShare)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.memberShare)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
   })
 
   /* Sans charge commune, « tout est à moi » reste une réponse — et c'est le
@@ -124,13 +124,13 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
   it('reste debout le mois où rien n’est commun', () => {
     mount({ filterOn: 'm-1', entries: [GROCERIES] })
 
-    expect(screen.getByText(fr.dashboard.memberCharges)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.memberCharges)).toBeInTheDocument()
     expect(screen.getByText(out(eur(5_000)))).toBeInTheDocument()
   })
 
   /* Une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va (cahier §4.6). */
   it('s’en va quand le mois ne lui a rien coûté', () => {
     mount({ filterOn: 'm-2', entries: [GROCERIES] })
-    expect(screen.queryByText(fr.dashboard.memberCharges)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.dashboard.memberCharges)).not.toBeInTheDocument()
   })
 })

@@ -2,7 +2,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CATEGORIES_PATH, categoryNewPath } from '@/app/routes'
 import { normalizeText } from '@/domain/search'
 import type { Category, Family } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { archiveCategory, renameFamily, updateCategory } from '@/store/actions'
 import { useAllCategoriesByFamily } from '@/store/selectors'
@@ -32,7 +32,7 @@ function Row({ category }: { category: Category }) {
     <li className="flex h-14 items-center gap-3 rounded-inner bg-surface-2 px-3">
       <Dot color={category.color} outlined={category.archived} />
       <input
-        aria-label={fr.settings.categoryName}
+        aria-label={t.settings.categoryName}
         maxLength={40}
         {...draft}
         className="t-body h-full min-w-0 flex-1 bg-transparent outline-none"
@@ -41,14 +41,14 @@ function Row({ category }: { category: Category }) {
         size="sm"
         variant="ghost"
         aria-label={tpl(
-          category.archived ? fr.settings.categoryRestore : fr.settings.categoryArchive,
+          category.archived ? t.settings.categoryRestore : t.settings.categoryArchive,
           category.label,
         )}
         onClick={() => {
           archiveCategory(category.id, !category.archived)
         }}
       >
-        {category.archived ? fr.settings.restore : fr.settings.archive}
+        {category.archived ? t.settings.restore : t.settings.archive}
       </Button>
     </li>
   )
@@ -96,26 +96,26 @@ function FamilyView({ family, categories }: { family: Family; categories: Catego
             « Ressources », et « Ressources RESSOURCES » n'apprend rien. C'est la
             règle du repère d'une tuile, qui ne nomme pas une destination
             homonyme (voir `Tile`). */}
-        {normalizeText(fr.kinds[family.kind]) !== normalizeText(family.label) && (
-          <Eyebrow className="shrink-0">{fr.kinds[family.kind]}</Eyebrow>
+        {normalizeText(t.kinds[family.kind]) !== normalizeText(family.label) && (
+          <Eyebrow className="shrink-0">{t.kinds[family.kind]}</Eyebrow>
         )}
       </PageTitle>
 
       <Tile>
-        <Field label={fr.settings.familyName}>
+        <Field label={t.settings.familyName}>
           {(fieldId) => <TextInput id={fieldId} maxLength={40} {...draft} />}
         </Field>
       </Tile>
 
       <Tile className="gap-3">
-        <Eyebrow icon={CategoriesIcon}>{fr.settings.categories}</Eyebrow>
+        <Eyebrow icon={CategoriesIcon}>{t.settings.categories}</Eyebrow>
         {/* L'explication reste, et seulement ici : « archiver » n'est pas
             « supprimer », et c'est le genre de conséquence qu'on ne devine pas
             avant d'avoir cliqué. */}
-        <p className="t-label">{fr.settings.categoriesHint}</p>
+        <p className="t-label">{t.settings.categoriesHint}</p>
 
         {categories.length === 0 ? (
-          <p className="t-label">{fr.settings.familyEmpty}</p>
+          <p className="t-label">{t.settings.familyEmpty}</p>
         ) : (
           <ul className="flex flex-col gap-1">
             {categories.map((category) => (
@@ -134,7 +134,7 @@ function FamilyView({ family, categories }: { family: Family; categories: Catego
             void navigate(categoryNewPath(family.id))
           }}
         >
-          {fr.settings.categoryAdd}
+          {t.settings.categoryAdd}
         </Button>
       </Tile>
     </div>

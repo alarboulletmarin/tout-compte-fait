@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { LEGAL_NOTICE_PATH, LEGAL_ROUTES, PRIVACY_PATH, TERMS_PATH } from '@/app/routes'
+import { LEGAL_NOTICE_PATH, legalRoutes, PRIVACY_PATH, TERMS_PATH } from '@/app/routes'
 import { HOST, legalNotice, privacyPolicy, terms } from '@/i18n/legal'
 import { LegalNoticePage, PrivacyPage, TermsPage } from './LegalPage'
 
@@ -11,7 +11,7 @@ function renderAt(path: string, node: React.JSX.Element) {
 
 /** Le libellé que la table des routes donne à une page — la seule source. */
 function labelOf(path: string): string {
-  const label = LEGAL_ROUTES.find((route) => route.path === path)?.label
+  const label = legalRoutes().find((route) => route.path === path)?.label
   if (label === undefined) throw new Error(`Route juridique inconnue : ${path}`)
   return label
 }

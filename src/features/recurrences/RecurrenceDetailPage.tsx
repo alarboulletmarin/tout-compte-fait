@@ -2,7 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { today } from '@/domain/date'
 import { isCostly } from '@/domain/priceHistory'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate, formatMoney, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { removeRecurrence, resumeRecurrence, stopRecurrence, undoable } from '@/store/actions'
@@ -59,7 +59,7 @@ export function RecurrenceDetailPage() {
           void navigate(RECURRENCES_PATH)
         }}
       >
-        {stopped && <Eyebrow className="shrink-0">{fr.recurrences.stoppedBadge}</Eyebrow>}
+        {stopped && <Eyebrow className="shrink-0">{t.recurrences.stoppedBadge}</Eyebrow>}
       </PageTitle>
 
       {/* Rouge et panneau seulement quand le changement coûte : une charge qui
@@ -73,46 +73,46 @@ export function RecurrenceDetailPage() {
           <span className="t-label">
             {tpl(
               // Un virement d'épargne n'a pas de prix : son montant change.
-              kind === 'saving' ? fr.recurrences.amountChanged : fr.recurrences.priceChanged,
+              kind === 'saving' ? t.recurrences.amountChanged : t.recurrences.priceChanged,
               formatMoney(priceChange.previous, currency),
               formatMoney(priceChange.current, currency),
             )}{' '}
-            {tpl(fr.recurrences.priceChangedSince, formatDate(priceChange.since))}
+            {tpl(t.recurrences.priceChangedSince, formatDate(priceChange.since))}
           </span>
         </p>
       )}
 
       <Tile className="gap-4">
         <div className="flex flex-col divide-y divide-border">
-          <Line label={fr.recurrences.form.period}>
+          <Line label={t.recurrences.form.period}>
             {describePeriod(recurrence.period, recurrence.startedOn)}
           </Line>
-          <Line label={fr.recurrences.nextDue}>
-            {row.next === null ? fr.recurrences.noNextDue : formatDate(row.next)}
+          <Line label={t.recurrences.nextDue}>
+            {row.next === null ? t.recurrences.noNextDue : formatDate(row.next)}
           </Line>
-          <Line label={fr.recurrences.monthlyCost}>
+          <Line label={t.recurrences.monthlyCost}>
             {monthly === null ? (
-              fr.recurrences.variable
+              t.recurrences.variable
             ) : (
               <Amount value={monthly} direction={recurrence.direction} />
             )}
           </Line>
-          <Line label={fr.recurrences.annualCost}>
+          <Line label={t.recurrences.annualCost}>
             {annual === null ? (
-              fr.recurrences.variable
+              t.recurrences.variable
             ) : (
               <Amount value={annual} direction={recurrence.direction} />
             )}
           </Line>
-          <Line label={fr.recurrences.form.startedOn}>{formatDate(recurrence.startedOn)}</Line>
+          <Line label={t.recurrences.form.startedOn}>{formatDate(recurrence.startedOn)}</Line>
           {recurrence.endedOn !== undefined && (
-            <Line label={fr.recurrences.stopped}>{formatDate(recurrence.endedOn)}</Line>
+            <Line label={t.recurrences.stopped}>{formatDate(recurrence.endedOn)}</Line>
           )}
         </div>
 
         {recurrence.note !== undefined && (
           <div className="flex flex-col gap-2 border-t border-border pt-4">
-            <Eyebrow>{fr.recurrences.form.note}</Eyebrow>
+            <Eyebrow>{t.recurrences.form.note}</Eyebrow>
             <p className="t-body">{recurrence.note}</p>
           </div>
         )}
@@ -125,7 +125,7 @@ export function RecurrenceDetailPage() {
             void navigate(recurrenceEditPath(recurrence.id))
           }}
         >
-          {fr.common.edit}
+          {t.common.edit}
         </Button>
         {/* Arrêter et reprendre laissent sur la fiche : elle montre justement
             ce que l'action vient de changer — échéance suivante et badge. */}
@@ -133,10 +133,10 @@ export function RecurrenceDetailPage() {
           <Button
             onClick={() => {
               resumeRecurrence(recurrence.id)
-              toast(fr.recurrences.resumed)
+              toast(t.recurrences.resumed)
             }}
           >
-            {fr.recurrences.resume}
+            {t.recurrences.resume}
           </Button>
         ) : (
           /* Arrêter emporte toutes les échéances prévues au-delà du jour :
@@ -146,12 +146,12 @@ export function RecurrenceDetailPage() {
               setConfirming('stop')
             }}
           >
-            {fr.recurrences.stop}
+            {t.recurrences.stop}
           </Button>
         )}
       </div>
 
-      <p className="t-label">{fr.recurrences.stopHint}</p>
+      <p className="t-label">{t.recurrences.stopHint}</p>
 
       <div className="border-t border-border pt-4">
         <Button
@@ -160,18 +160,18 @@ export function RecurrenceDetailPage() {
             setConfirming('remove')
           }}
         >
-          {fr.recurrences.remove}
+          {t.recurrences.remove}
         </Button>
       </div>
 
       <ConfirmDialog
         open={confirming === 'stop'}
-        title={fr.recurrences.stop}
-        steps={[{ question: fr.recurrences.stopConfirm, action: fr.recurrences.stopAction }]}
+        title={t.recurrences.stop}
+        steps={[{ question: t.recurrences.stopConfirm, action: t.recurrences.stopAction }]}
         onCancel={close}
         onConfirm={() => {
           close()
-          undoable(fr.recurrences.stopped, () => {
+          undoable(t.recurrences.stopped, () => {
             stopRecurrence(recurrence.id, today())
           })
         }}
@@ -179,12 +179,12 @@ export function RecurrenceDetailPage() {
 
       <ConfirmDialog
         open={confirming === 'remove'}
-        title={fr.recurrences.remove}
-        steps={[{ question: fr.recurrences.removeConfirm, action: fr.common.delete }]}
+        title={t.recurrences.remove}
+        steps={[{ question: t.recurrences.removeConfirm, action: t.common.delete }]}
         onCancel={close}
         onConfirm={() => {
           close()
-          undoable(fr.recurrences.deleted, () => {
+          undoable(t.recurrences.deleted, () => {
             removeRecurrence(recurrence.id)
           })
           void navigate(RECURRENCES_PATH, { replace: true })

@@ -9,7 +9,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { useToasts } from '@/ui/toast'
 import { DataSection } from './DataSection'
@@ -54,10 +54,10 @@ afterEach(() => {
 describe('un chargement à la demande qui n’aboutit pas', () => {
   it('le dit, plutôt que de laisser le clic sans effet', async () => {
     render(<ExampleControl confirm={false} />)
-    await userEvent.click(screen.getByRole('button', { name: fr.settings.exampleLoad }))
+    await userEvent.click(screen.getByRole('button', { name: t.settings.exampleLoad }))
 
     await waitFor(() => {
-      expect(dangers()).toEqual([fr.settings.exampleFailed])
+      expect(dangers()).toEqual([t.settings.exampleFailed])
     })
   })
 
@@ -65,9 +65,9 @@ describe('un chargement à la demande qui n’aboutit pas', () => {
     render(<SchemaControl />)
 
     await waitFor(() => {
-      expect(dangers()).toEqual([fr.settings.schemaUnavailable])
+      expect(dangers()).toEqual([t.settings.schemaUnavailable])
     })
-    expect(screen.getByRole('button', { name: fr.settings.schemaCopy })).toBeDisabled()
+    expect(screen.getByRole('button', { name: t.settings.schemaCopy })).toBeDisabled()
   })
 })
 
@@ -88,12 +88,12 @@ describe('un fichier dont des lignes ne passent pas', () => {
       ],
     })
 
-    await screen.findByText(fr.settings.importConfirm)
+    await screen.findByText(t.settings.importConfirm)
     const dialog = within(screen.getByRole('dialog'))
-    expect(dialog.getByText(fr.settings.reportDiscardedOne)).toBeInTheDocument()
+    expect(dialog.getByText(t.settings.reportDiscardedOne)).toBeInTheDocument()
     expect(
       dialog.getByText(
-        `${fr.settings.reportCollection.entries} « Courses » — ${fr.settings.reportReason.amount}`,
+        `${t.settings.reportCollection.entries} « Courses » — ${t.settings.reportReason.amount}`,
       ),
     ).toBeInTheDocument()
   })
@@ -110,8 +110,8 @@ describe('un fichier dont des lignes ne passent pas', () => {
       ],
     })
 
-    await screen.findByText(fr.settings.importConfirm)
-    expect(screen.queryByText(fr.settings.reportDiscardedOne)).not.toBeInTheDocument()
+    await screen.findByText(t.settings.importConfirm)
+    expect(screen.queryByText(t.settings.reportDiscardedOne)).not.toBeInTheDocument()
   })
 })
 
@@ -125,16 +125,16 @@ describe('une écriture qui n’aboutit pas', () => {
     await upload({ schemaVersion: 6 })
 
     // Deux pas avant que l'import parte : un remplacement se confirme.
-    await screen.findByText(fr.settings.importConfirm)
+    await screen.findByText(t.settings.importConfirm)
     const dialog = within(screen.getByRole('dialog'))
-    await userEvent.click(dialog.getByRole('button', { name: fr.common.confirm }))
-    await userEvent.click(dialog.getByRole('button', { name: fr.settings.import }))
+    await userEvent.click(dialog.getByRole('button', { name: t.common.confirm }))
+    await userEvent.click(dialog.getByRole('button', { name: t.settings.import }))
 
     await waitFor(() => {
       expect(replaceData).toHaveBeenCalledTimes(1)
     })
     await waitFor(() => {
-      expect(messages()).toEqual([fr.settings.importFailed])
+      expect(messages()).toEqual([t.settings.importFailed])
     })
   })
 
@@ -149,17 +149,17 @@ describe('une écriture qui n’aboutit pas', () => {
         <DataSection />
       </MemoryRouter>,
     )
-    await userEvent.click(screen.getByRole('button', { name: fr.settings.reset }))
+    await userEvent.click(screen.getByRole('button', { name: t.settings.reset }))
 
     // Trois pas : c'est le seul geste de l'app qui n'épargne rien.
     const dialog = within(screen.getByRole('dialog'))
-    await userEvent.click(dialog.getByRole('button', { name: fr.common.confirm }))
-    await userEvent.click(dialog.getByRole('button', { name: fr.common.confirm }))
-    await userEvent.click(dialog.getByRole('button', { name: fr.settings.reset }))
+    await userEvent.click(dialog.getByRole('button', { name: t.common.confirm }))
+    await userEvent.click(dialog.getByRole('button', { name: t.common.confirm }))
+    await userEvent.click(dialog.getByRole('button', { name: t.settings.reset }))
 
     await waitFor(() => {
-      expect(dangers()).toContain(fr.settings.resetFailed)
+      expect(dangers()).toContain(t.settings.resetFailed)
     })
-    expect(messages()).not.toContain(fr.settings.resetDone)
+    expect(messages()).not.toContain(t.settings.resetDone)
   })
 })

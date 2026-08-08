@@ -1,7 +1,7 @@
 import { createEvent, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Sheet } from './Sheet'
 
 /* jsdom pose la fenêtre à 1024px, donc la boîte centrée. Une feuille montante
@@ -155,7 +155,7 @@ describe('Sheet — tirer vers le bas', () => {
   it('ne part pas de la croix, qui reste un bouton', async () => {
     const user = userEvent.setup()
     const { onClose, dialog } = open()
-    const close = screen.getByRole('button', { name: fr.common.close })
+    const close = screen.getByRole('button', { name: t.common.close })
 
     pointer('pointerDown', close, { y: 100 })
     pointer('pointerMove', close, { y: 400 })
@@ -208,7 +208,7 @@ describe('Sheet : la feuille qu’on ne referme pas', () => {
 
   it('ne rend pas de croix', () => {
     open({ dismissible: false })
-    expect(screen.queryByRole('button', { name: fr.common.close })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.common.close })).not.toBeInTheDocument()
   })
 
   it('laisse les trois sorties en place par défaut', () => {
@@ -220,7 +220,7 @@ describe('Sheet : la feuille qu’on ne referme pas', () => {
     fireEvent.click(dialog)
     expect(onClose).toHaveBeenCalledTimes(2)
 
-    expect(screen.getByRole('button', { name: fr.common.close })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.common.close })).toBeInTheDocument()
   })
 
   it('désigne son texte quand on le lui demande', () => {

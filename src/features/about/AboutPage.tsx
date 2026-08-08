@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink, LINK } from '@/app/AppFooter'
 import { CHANGELOG_URL, DOCS_URL, LICENSE_URL, REPO_URL, THIRD_PARTY_URL, VERSION } from '@/app/meta'
-import { LANDING_PATH, LEGAL_ROUTES, STYLEGUIDE_ROUTE } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { LANDING_PATH, legalRoutes, styleguideRoute } from '@/app/routes'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { DataIcon, HouseholdIcon, InfoIcon, RecurrencesIcon, ShieldIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
@@ -24,29 +24,29 @@ import { Tile } from '@/ui/Tile'
 export function AboutPage() {
   return (
     <>
-      <PageTitle title={fr.nav.about} />
+      <PageTitle title={t.nav.about} />
       <div className="flex max-w-3xl flex-col gap-4">
         <Tile className="gap-3">
-          <SectionHead icon={<HouseholdIcon size={18} />} title={fr.about.what} />
-          <p className="t-body">{fr.about.whatBody}</p>
-          <p className="t-body">{fr.about.whatNotBank}</p>
-          <p className="t-body">{fr.about.whatOffline}</p>
+          <SectionHead icon={<HouseholdIcon size={18} />} title={t.about.what} />
+          <p className="t-body">{t.about.whatBody}</p>
+          <p className="t-body">{t.about.whatNotBank}</p>
+          <p className="t-body">{t.about.whatOffline}</p>
         </Tile>
 
         <Tile className="gap-3">
-          <SectionHead icon={<RecurrencesIcon size={18} />} title={fr.about.how} />
+          <SectionHead icon={<RecurrencesIcon size={18} />} title={t.about.how} />
           <ul className="flex flex-col gap-3">
-            <li className="t-body">{fr.about.howRecurring}</li>
-            <li className="t-body">{fr.about.howForecast}</li>
-            <li className="t-body">{fr.about.howSplit}</li>
-            <li className="t-body">{fr.about.howKinds}</li>
+            <li className="t-body">{t.about.howRecurring}</li>
+            <li className="t-body">{t.about.howForecast}</li>
+            <li className="t-body">{t.about.howSplit}</li>
+            <li className="t-body">{t.about.howKinds}</li>
           </ul>
         </Tile>
 
         <Tile className="gap-3">
-          <SectionHead icon={<DataIcon size={18} />} title={fr.about.data} />
-          <p className="t-body">{fr.about.dataBody}</p>
-          <p className="t-body">{fr.about.dataLimit}</p>
+          <SectionHead icon={<DataIcon size={18} />} title={t.about.data} />
+          <p className="t-body">{t.about.dataBody}</p>
+          <p className="t-body">{t.about.dataLimit}</p>
         </Tile>
 
         {/* Juste après « tes données » : c'est la phrase qu'on vient de lire —
@@ -54,10 +54,10 @@ export function AboutPage() {
             seul endroit où elles ont une chance d'être ouvertes autrement que
             par obligation. */}
         <Tile className="gap-3">
-          <SectionHead icon={<ShieldIcon size={18} />} title={fr.legal.notice} />
-          <p className="t-body">{fr.legal.aboutLead}</p>
+          <SectionHead icon={<ShieldIcon size={18} />} title={t.legal.notice} />
+          <p className="t-body">{t.legal.aboutLead}</p>
           <div className="flex flex-wrap items-center gap-x-5">
-            {LEGAL_ROUTES.map((route) => (
+            {legalRoutes().map((route) => (
               <Link key={route.path} to={route.path} className={LINK}>
                 {route.label}
               </Link>
@@ -70,34 +70,34 @@ export function AboutPage() {
             présentation les aurait dits deux fois à trois centimètres d'écart —
             sur mobile, les deux liens GitHub se retrouvaient l'un sous l'autre. */}
         <Tile className="gap-3">
-          <SectionHead icon={<InfoIcon size={18} />} title={fr.about.project} />
-          <p className="t-body">{fr.about.projectBody}</p>
+          <SectionHead icon={<InfoIcon size={18} />} title={t.about.project} />
+          <p className="t-body">{t.about.projectBody}</p>
           <div className="flex flex-wrap items-center gap-x-5">
-            <ExternalLink href={REPO_URL}>{fr.about.repo}</ExternalLink>
-            <ExternalLink href={LICENSE_URL}>{fr.about.license}</ExternalLink>
+            <ExternalLink href={REPO_URL}>{t.about.repo}</ExternalLink>
+            <ExternalLink href={LICENSE_URL}>{t.about.license}</ExternalLink>
             {/* Les fontes sont sous OFL 1.1, qui demande d'être distribuée avec
                 elles : ce lien n'est pas un ornement, c'est ce qui rend la
                 distribution conforme. Il mène au fichier servi avec l'app, et
                 non à une page qui le décrirait. */}
-            <ExternalLink href={THIRD_PARTY_URL}>{fr.legal.thirdParty}</ExternalLink>
+            <ExternalLink href={THIRD_PARTY_URL}>{t.legal.thirdParty}</ExternalLink>
             {/* Le styleguide est ici et nulle part ailleurs côté utilisateur :
                 c'est un livrable de conception, et son lecteur est celui qui
                 vient de lire que le code est ouvert — pas celui qui arrive sur
                 la présentation pour savoir ce que fait l'app. */}
-            <Link to={STYLEGUIDE_ROUTE.path} className={LINK}>
-              {STYLEGUIDE_ROUTE.label}
+            <Link to={styleguideRoute().path} className={LINK}>
+              {styleguideRoute().label}
             </Link>
-            <ExternalLink href={DOCS_URL}>{fr.about.docs}</ExternalLink>
+            <ExternalLink href={DOCS_URL}>{t.about.docs}</ExternalLink>
             <Link to={LANDING_PATH} className={LINK}>
-              {fr.about.seeLanding}
+              {t.about.seeLanding}
             </Link>
           </div>
           {/* La version ne disait pas ce qu'elle apporte. Elle mène désormais au
               journal, qui le dit — c'est aussi ce que demande `UpdatePrompt`
               quand il propose de recharger. */}
           <div className="flex flex-wrap items-center gap-x-5">
-            <p className="t-axis text-muted">{tpl(fr.about.version, VERSION)}</p>
-            <ExternalLink href={CHANGELOG_URL}>{fr.about.changelog}</ExternalLink>
+            <p className="t-axis text-muted">{tpl(t.about.version, VERSION)}</p>
+            <ExternalLink href={CHANGELOG_URL}>{t.about.changelog}</ExternalLink>
           </div>
         </Tile>
       </div>

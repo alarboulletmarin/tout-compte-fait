@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { copyText } from '@/lib/clipboard'
 import { download } from '@/lib/download'
 import { Button, type ButtonVariant } from '@/ui/Button'
@@ -52,7 +52,7 @@ export function SchemaControl({
          restaient désactivés pour toujours, sans que rien ne dise pourquoi ni
          que recharger une fois revenu en ligne suffit. */
       .catch(() => {
-        if (alive) toast(fr.settings.schemaUnavailable, 'danger')
+        if (alive) toast(t.settings.schemaUnavailable, 'danger')
       })
     return () => {
       alive = false
@@ -62,7 +62,7 @@ export function SchemaControl({
   const copy = (): void => {
     if (schema === null) return
     void copyText(schema.text).then((ok) => {
-      toast(ok ? fr.settings.schemaCopied : fr.settings.schemaCopyFailed, ok ? 'default' : 'danger')
+      toast(ok ? t.settings.schemaCopied : t.settings.schemaCopyFailed, ok ? 'default' : 'danger')
     })
   }
 
@@ -70,7 +70,7 @@ export function SchemaControl({
     <div className={className}>
       <div className="flex flex-wrap gap-2">
         <Button variant={variant} disabled={schema === null} onClick={copy}>
-          {fr.settings.schemaCopy}
+          {t.settings.schemaCopy}
         </Button>
         <Button
           variant="ghost"
@@ -80,7 +80,7 @@ export function SchemaControl({
             download(new Blob([schema.text], { type: 'text/markdown' }), schema.filename)
           }}
         >
-          {fr.settings.schemaDownload}
+          {t.settings.schemaDownload}
         </Button>
       </div>
     </div>

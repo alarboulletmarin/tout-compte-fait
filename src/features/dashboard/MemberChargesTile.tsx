@@ -1,5 +1,5 @@
 import { type Money, ZERO, add } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -69,18 +69,18 @@ export function MemberChargesTile() {
       id: 'own',
       value: shareOf(charges.own),
       color,
-      label: fr.dashboard.memberChargesOwn,
+      label: t.dashboard.memberChargesOwn,
     },
     {
       id: 'common',
       value: shareOf(charges.common),
       color: COMMON_COLOR,
-      label: fr.dashboard.memberChargesCommon,
+      label: t.dashboard.memberChargesCommon,
     },
   ]
 
   const spoken = tpl(
-    fr.dashboard.srMemberCharges,
+    t.dashboard.srMemberCharges,
     formatMoney(total, currency),
     member?.name ?? '',
     formatMoney(charges.own, currency),
@@ -94,13 +94,13 @@ export function MemberChargesTile() {
        promettrait un écran qui les montrerait ensemble. Il n'y en a pas, et
        en désigner un mentirait sur ce qu'on y trouve. */
     <Tile span="2x2" className="gap-3">
-      <Eyebrow icon={ChargesIcon}>{fr.dashboard.memberCharges}</Eyebrow>
+      <Eyebrow icon={ChargesIcon}>{t.dashboard.memberCharges}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring
           size={DONUT_SIZE}
           thickness={DONUT_THICKNESS}
           segments={segments}
-          label={fr.dashboard.memberCharges}
+          label={t.dashboard.memberCharges}
           srText={spoken}
           className="shrink-0"
         >
@@ -123,14 +123,14 @@ export function MemberChargesTile() {
           <li className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={color} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesOwn}</span>
+              <span className="t-label min-w-0 truncate">{t.dashboard.memberChargesOwn}</span>
             </span>
             <Amount value={charges.own} size="label" direction="out" />
           </li>
           <li className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={COMMON_COLOR} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesCommon}</span>
+              <span className="t-label min-w-0 truncate">{t.dashboard.memberChargesCommon}</span>
             </span>
             <Amount value={charges.common} size="label" direction="out" />
           </li>

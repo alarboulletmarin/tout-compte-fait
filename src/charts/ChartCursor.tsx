@@ -1,5 +1,5 @@
 import { type FocusEvent, type KeyboardEvent, type PointerEvent, useId, useRef } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 
 /** Où va le curseur, par touche. Il ne boucle pas : une année a un début. */
 const MOVE: Record<string, (index: number, count: number) => number> = {
@@ -117,7 +117,7 @@ export function ChartCursor({ labels, shown, onShow, label }: ChartCursorProps) 
           aucun bouton à survoler pour le dire en infobulle : il se dit donc au
           lecteur d'écran, sur le curseur lui-même. */}
       <p id={hintId} className="sr-only-text">
-        {fr.a11y.chartCursorHint}
+        {t.a11y.chartCursorHint}
       </p>
     </>
   )

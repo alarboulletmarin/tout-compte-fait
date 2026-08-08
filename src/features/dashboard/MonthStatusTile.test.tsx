@@ -11,7 +11,7 @@ import {
 } from '@/domain/fixtures'
 import { money } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MonthStatusTile } from './MonthStatusTile'
@@ -76,7 +76,7 @@ describe('« Suivi du mois » — l’avancement des confirmations', () => {
     setUp(month(12, 4))
     render(<MonthStatusTile />)
 
-    expect(screen.getByText(tpl(fr.dashboard.srMonthStatus, 12, 16))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.dashboard.srMonthStatus, 12, 16))).toBeInTheDocument()
   })
 
   /* « 0 / 0 » n'est pas un vide, c'est une division qui n'a pas lieu d'être.
@@ -105,7 +105,7 @@ describe('« Suivi du mois » — l’avancement des confirmations', () => {
     render(<MonthStatusTile onShowPending={show} />)
 
     await userEvent.click(
-      screen.getByRole('button', { name: tpl(fr.dashboard.srMonthStatusGo, 12, 16) }),
+      screen.getByRole('button', { name: tpl(t.dashboard.srMonthStatusGo, 12, 16) }),
     )
 
     expect(show).toHaveBeenCalledOnce()

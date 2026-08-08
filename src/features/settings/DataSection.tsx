@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { STORAGE_PATH } from '@/app/routes'
 import { today } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate } from '@/i18n/format'
 import { probeDurability, useStorageHealth } from '@/persistence/health'
 import { canShareExport, downloadExport, readLastExport, shareExport } from '@/persistence/transfer'
@@ -83,7 +83,7 @@ export function DataSection() {
     const on = today()
     downloadExport(data, on)
     setLastExport(on)
-    toast(fr.settings.exported)
+    toast(t.settings.exported)
   }
 
   const doShare = (): void => {
@@ -95,10 +95,10 @@ export function DataSection() {
       // n'est marqué, et il n'y a rien à lui dire.
       if (outcome === 'dismissed') return
       setLastExport(on)
-      if (outcome === 'shared') toast(fr.settings.shared)
+      if (outcome === 'shared') toast(t.settings.shared)
       // Le fichier est sur l'appareil, mais pas là où il était demandé : ça se
       // remarque, sans quoi on le cherche sur l'autre appareil.
-      else toast(fr.settings.shareFailed, 'danger')
+      else toast(t.settings.shareFailed, 'danger')
     })
   }
 
@@ -113,24 +113,24 @@ export function DataSection() {
           redemande, et le lien y mène. */}
       <Tile className="gap-3">
         <dl className="flex flex-col gap-2">
-          <Status label={fr.storage.placeLabel} value={fr.storage.placeValue} />
+          <Status label={t.storage.placeLabel} value={t.storage.placeValue} />
           <Status
-            label={fr.storage.keepLabel}
+            label={t.storage.keepLabel}
             value={
               durable === true
-                ? fr.storage.keepPersistent
+                ? t.storage.keepPersistent
                 : durable === false
-                  ? fr.storage.keepFragile
-                  : fr.storage.keepUnknown
+                  ? t.storage.keepFragile
+                  : t.storage.keepUnknown
             }
           />
           <Status
-            label={fr.storage.lastExportLabel}
-            value={lastExport === null ? fr.storage.lastExportNever : formatDate(lastExport)}
+            label={t.storage.lastExportLabel}
+            value={lastExport === null ? t.storage.lastExportNever : formatDate(lastExport)}
           />
         </dl>
         <Link to={STORAGE_PATH} className="t-label w-fit underline">
-          {fr.storage.statusMore}
+          {t.storage.statusMore}
         </Link>
       </Tile>
 
@@ -140,18 +140,18 @@ export function DataSection() {
             décide avant de cliquer. Le second bouton ne s'affiche que si le
             navigateur sait envoyer un .json ; ailleurs, le bloc est
             exactement celui d'avant. */}
-        <Block title={fr.settings.backupGroup}>
-          <p className="t-label">{fr.settings.exportHint}</p>
-          {canShare && <p className="t-label">{fr.settings.shareHint}</p>}
+        <Block title={t.settings.backupGroup}>
+          <p className="t-label">{t.settings.exportHint}</p>
+          {canShare && <p className="t-label">{t.settings.shareHint}</p>}
           {/* La date du dernier export ne se redit pas ici : elle est trois
               centimètres au-dessus, dans le résumé, où elle a un sens à côté de
               ce que le navigateur promet. */}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={doExport}>{fr.settings.export}</Button>
+            <Button onClick={doExport}>{t.settings.export}</Button>
             {canShare && (
               <Button variant="secondary" onClick={doShare}>
                 <ShareIcon size={18} />
-                {fr.settings.share}
+                {t.settings.share}
               </Button>
             )}
           </div>
@@ -161,21 +161,21 @@ export function DataSection() {
             dans la question : « remplace intégralement » est ce qui décide si
             l'on clique, et l'apprendre une fois la boîte ouverte est trop
             tard pour qui l'ouvre par curiosité. */}
-        <Block title={fr.settings.restoreGroup}>
-          <p className="t-label">{fr.settings.importHint}</p>
+        <Block title={t.settings.restoreGroup}>
+          <p className="t-label">{t.settings.importHint}</p>
           <ImportControl className="w-fit" />
         </Block>
 
         {/* Le schéma se lit juste sous l'import, parce que c'est l'import qu'il
             sert : il n'a d'autre usage que de faire exister le fichier qu'on
             déposera à la ligne du dessus. */}
-        <Block title={fr.settings.schema}>
-          <p className="t-label">{fr.settings.schemaHint}</p>
+        <Block title={t.settings.schema}>
+          <p className="t-label">{t.settings.schemaHint}</p>
           <SchemaControl />
         </Block>
 
-        <Block title={fr.settings.example}>
-          <p className="t-label">{fr.settings.exampleHint}</p>
+        <Block title={t.settings.example}>
+          <p className="t-label">{t.settings.exampleHint}</p>
           <ExampleControl className="w-fit" />
         </Block>
       </Tile>
@@ -190,9 +190,9 @@ export function DataSection() {
           Triple confirmation : c'est le seul geste qui n'épargne rien, et rien
           n'est enregistré ailleurs que dans ce navigateur. */}
       <Tile className="gap-3">
-        <Eyebrow>{fr.settings.sensitive}</Eyebrow>
-        <h2 className="t-body font-medium">{fr.settings.resetTitle}</h2>
-        <p className="t-label">{fr.settings.resetHint}</p>
+        <Eyebrow>{t.settings.sensitive}</Eyebrow>
+        <h2 className="t-body font-medium">{t.settings.resetTitle}</h2>
+        <p className="t-label">{t.settings.resetHint}</p>
         <Button
           variant="danger"
           className="w-fit"
@@ -200,15 +200,15 @@ export function DataSection() {
             setConfirming(true)
           }}
         >
-          {fr.settings.reset}
+          {t.settings.reset}
         </Button>
         <ConfirmDialog
           open={confirming}
-          title={fr.settings.reset}
+          title={t.settings.reset}
           steps={[
-            { question: fr.settings.resetConfirm1, action: fr.common.confirm },
-            { question: fr.settings.resetConfirm2, action: fr.common.confirm },
-            { question: fr.settings.resetConfirm3, action: fr.settings.reset },
+            { question: t.settings.resetConfirm1, action: t.common.confirm },
+            { question: t.settings.resetConfirm2, action: t.common.confirm },
+            { question: t.settings.resetConfirm3, action: t.settings.reset },
           ]}
           onCancel={() => {
             setConfirming(false)
@@ -218,14 +218,14 @@ export function DataSection() {
               .then(() => {
                 setConfirming(false)
                 setLastExport(null)
-                toast(fr.settings.resetDone)
+                toast(t.settings.resetDone)
               })
               // « Données effacées » sur un effacement qui n'a pas eu lieu est
               // le pire des messages : on croit reparti de zéro, et tout est
               // encore là.
               .catch(() => {
                 setConfirming(false)
-                toast(fr.settings.resetFailed, 'danger')
+                toast(t.settings.resetFailed, 'danger')
               })
           }}
         />

@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useMonthConfirmed, useMonthPending } from '@/store/selectors'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -63,19 +63,19 @@ export function MonthStatusTile({ onShowPending }: { onShowPending?: () => void 
          libellé. La phrase, elle, se dit alors plus bas. */
       label={
         go
-          ? tpl(fr.dashboard.srMonthStatusGo, confirmed.length, total)
-          : fr.dashboard.monthStatus
+          ? tpl(t.dashboard.srMonthStatusGo, confirmed.length, total)
+          : t.dashboard.monthStatus
       }
       {...(go
         ? {
             onClick: onShowPending,
             // Elle descend, elle ne pointe pas de côté : « plus bas », et non
             // « ailleurs ».
-            affordance: { kind: 'scroll' as const, destination: fr.month.toConfirm },
+            affordance: { kind: 'scroll' as const, destination: t.month.toConfirm },
           }
         : {})}
     >
-      <Eyebrow icon={ToConfirmIcon}>{fr.dashboard.monthStatus}</Eyebrow>
+      <Eyebrow icon={ToConfirmIcon}>{t.dashboard.monthStatus}</Eyebrow>
       <div className="flex flex-wrap items-baseline gap-x-2">
         {/* Pas un `Amount` : ce n'est pas de l'argent, il n'y a ni symbole ni
             centimes ni sens à en tirer — et le compteur qui égrène les chiffres
@@ -89,14 +89,14 @@ export function MonthStatusTile({ onShowPending }: { onShowPending?: () => void 
             la tuile la porte déjà en toutes lettres —, affichée dès que la
             tuile est assez large. C'est la tuile qui décide, pas l'écran. */}
         <span className="t-label tile-hint" aria-hidden="true">
-          {fr.dashboard.monthStatusConfirmed}
+          {t.dashboard.monthStatusConfirmed}
         </span>
       </div>
       {/* Ce que l'œil lit en deux morceaux, l'oreille le lit en une phrase :
           « 12 / 16 » s'annonce « douze barre oblique seize », et la lecture
           secondaire est masquée sur une tuile étroite. Ignoré quand la tuile
           est un bouton — son nom accessible dit déjà la même chose. */}
-      <p className="sr-only-text">{tpl(fr.dashboard.srMonthStatus, confirmed.length, total)}</p>
+      <p className="sr-only-text">{tpl(t.dashboard.srMonthStatus, confirmed.length, total)}</p>
     </Tile>
   )
 }

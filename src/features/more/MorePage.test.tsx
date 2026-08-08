@@ -17,12 +17,12 @@ import {
   APPEARANCE_PATH,
   CATEGORIES_PATH,
   DATA_PATH,
-  MANAGE_ROUTES,
+  manageRoutes,
   PEOPLE_PATH,
   STORAGE_PATH,
 } from '@/app/routes'
 import { makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { MorePage } from './MorePage'
@@ -69,7 +69,7 @@ describe('« Plus » — la place qui manquait à quatre écrans', () => {
   it('mène à chaque écran que « Gérer » range', () => {
     open()
 
-    for (const route of MANAGE_ROUTES) {
+    for (const route of manageRoutes()) {
       expect(screen.getByRole('link', { name: new RegExp(route.label) })).toHaveAttribute(
         'href',
         route.path,
@@ -82,8 +82,8 @@ describe('« Plus » — la place qui manquait à quatre écrans', () => {
   it('dit d’une phrase ce qu’il y a derrière chaque porte de « Gérer »', () => {
     open()
 
-    expect(screen.getByText(fr.nav.savingsHint)).toBeInTheDocument()
-    expect(screen.getByText(fr.nav.splitHint)).toBeInTheDocument()
+    expect(screen.getByText(t.nav.savingsHint)).toBeInTheDocument()
+    expect(screen.getByText(t.nav.splitHint)).toBeInTheDocument()
   })
 })
 
@@ -93,7 +93,7 @@ describe('les quatre intentions', () => {
   it('nomme ce pour quoi on vient, et non « Réglages »', () => {
     open()
 
-    for (const title of [fr.nav.manage, fr.nav.organise, fr.nav.data, fr.nav.application]) {
+    for (const title of [t.nav.manage, t.nav.organise, t.nav.data, t.nav.application]) {
       expect(screen.getByText(title)).toBeInTheDocument()
     }
     expect(screen.queryByText('Réglages')).not.toBeInTheDocument()
@@ -104,26 +104,26 @@ describe('les quatre intentions', () => {
      préférence d'application. */
   it('range les personnes et les catégories sous « Organiser »', () => {
     open()
-    const organise = within(group(fr.nav.organise))
+    const organise = within(group(t.nav.organise))
 
-    expect(organise.getByRole('link', { name: new RegExp(fr.settings.household) })).toHaveAttribute(
+    expect(organise.getByRole('link', { name: new RegExp(t.settings.household) })).toHaveAttribute(
       'href',
       PEOPLE_PATH,
     )
     expect(
-      organise.getByRole('link', { name: new RegExp(fr.settings.categories) }),
+      organise.getByRole('link', { name: new RegExp(t.settings.categories) }),
     ).toHaveAttribute('href', CATEGORIES_PATH)
   })
 
   it('remonte les données d’un cran, au lieu de les enfouir sous un réglage', () => {
     open()
-    const data = within(group(fr.nav.data))
+    const data = within(group(t.nav.data))
 
-    expect(data.getByRole('link', { name: new RegExp(fr.storage.title) })).toHaveAttribute(
+    expect(data.getByRole('link', { name: new RegExp(t.storage.title) })).toHaveAttribute(
       'href',
       STORAGE_PATH,
     )
-    expect(data.getByRole('link', { name: new RegExp(fr.settings.transfer) })).toHaveAttribute(
+    expect(data.getByRole('link', { name: new RegExp(t.settings.transfer) })).toHaveAttribute(
       'href',
       DATA_PATH,
     )
@@ -133,13 +133,13 @@ describe('les quatre intentions', () => {
      l'app se présente — plus la page qui dit ce qu'elle est. */
   it('garde sous « Application » ce qui ne touche qu’à la présentation', () => {
     open()
-    const application = within(group(fr.nav.application))
+    const application = within(group(t.nav.application))
 
     expect(
-      application.getByRole('link', { name: new RegExp(fr.appearance.title) }),
+      application.getByRole('link', { name: new RegExp(t.appearance.title) }),
     ).toHaveAttribute('href', APPEARANCE_PATH)
-    expect(application.getByRole('combobox', { name: fr.settings.currency })).toBeInTheDocument()
-    expect(application.getByRole('link', { name: new RegExp(fr.nav.about) })).toHaveAttribute(
+    expect(application.getByRole('combobox', { name: t.settings.currency })).toBeInTheDocument()
+    expect(application.getByRole('link', { name: new RegExp(t.nav.about) })).toHaveAttribute(
       'href',
       ABOUT_PATH,
     )
@@ -167,7 +167,7 @@ describe('les repères', () => {
   it('en donne un aussi à la rangée qui ne mène nulle part', () => {
     open()
 
-    const row = screen.getByText(fr.settings.currency).closest('div')
+    const row = screen.getByText(t.settings.currency).closest('div')
     expect(row?.querySelectorAll('svg')).toHaveLength(1)
   })
 })
@@ -178,12 +178,12 @@ describe('ce que chaque rangée dit d’elle-même', () => {
   it('affiche la valeur des rangées qui en ont une', () => {
     open()
 
-    expect(screen.getByText(`Maison · ${tpl(fr.settings.membersCountOne, 1)}`)).toBeInTheDocument()
+    expect(screen.getByText(`Maison · ${tpl(t.settings.membersCountOne, 1)}`)).toBeInTheDocument()
     expect(
-      screen.getByText(`${tpl(fr.settings.familyCount, 2)} · ${tpl(fr.settings.familiesCount, 2)}`),
+      screen.getByText(`${tpl(t.settings.familyCount, 2)} · ${tpl(t.settings.familiesCount, 2)}`),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(tpl(fr.settings.appearanceSummary, fr.theme.system, fr.palettes.classique)),
+      screen.getByText(tpl(t.settings.appearanceSummary, t.theme.system, t.palettes.classique)),
     ).toBeInTheDocument()
   })
 
@@ -193,7 +193,7 @@ describe('ce que chaque rangée dit d’elle-même', () => {
     useStore.setState({ data: makeData({ household: { name: '', members: [] } }) })
     open()
 
-    expect(screen.getByText(fr.settings.membersNone)).toBeInTheDocument()
+    expect(screen.getByText(t.settings.membersNone)).toBeInTheDocument()
   })
 
   /* Un second tableau de bord serait en retard d'une règle sur le premier : les

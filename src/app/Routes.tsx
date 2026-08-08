@@ -15,7 +15,7 @@ import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { AppShell } from './AppShell'
 import { PlainShell } from './PlainShell'
@@ -136,7 +136,7 @@ const TermsPage = lazy(async () => ({
  * coquille, elle, a déjà annoncé le titre de l'écran où l'on arrive.
  */
 function RouteFallback() {
-  return <p className="t-label">{fr.shell.loading}</p>
+  return <p className="t-label">{t.shell.loading}</p>
 }
 
 /**

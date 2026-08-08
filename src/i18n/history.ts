@@ -16,7 +16,11 @@
  * disent avec les clés de `fr.ts`, comme partout ailleurs.
  * ==========================================================================*/
 
-export const history = {
+import { en } from './history.en'
+import { currentLocale, subscribeLocale } from './strings'
+import type { Widen } from './widen'
+
+const fr = {
   title: 'Historique',
   /* L'étiquette de la tuile, et le mot le plus court qui dise ce qu'elle
      montre. La fenêtre, elle, se dit à côté : deux étiquettes empilées
@@ -132,3 +136,22 @@ export const history = {
   emptyHint:
     'Il n’y a encore rien à comparer : la courbe, l’écart entre deux mois et le cumul annuel arrivent avec les premières entrées.',
 } as const
+
+export type HistoryStrings = Widen<typeof fr>
+
+/**
+ * Les chaînes de l'historique, dans la langue active.
+ *
+ * Même mécanique que `strings.ts` — une liaison d'export vivante, réaffectée
+ * quand la langue change —, à une différence près : les deux langues sont ici
+ * dans le **même morceau**, importées statiquement l'une et l'autre. Le
+ * découpage qui vaut pour `fr.ts` ne vaut pas pour celui-ci : ce fichier est
+ * déjà hors du graphe initial, et un second aller-retour de réseau pour
+ * quelques kibioctets de prose coûterait plus cher que de les emporter
+ * ensemble.
+ */
+export let history: HistoryStrings = currentLocale() === 'en' ? en : fr
+
+subscribeLocale(() => {
+  history = currentLocale() === 'en' ? en : fr
+})

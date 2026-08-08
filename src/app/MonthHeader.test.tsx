@@ -3,13 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { today, ymOf } from '@/domain/date'
 import { formatYearMonth, tpl } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { MonthHeader } from './MonthHeader'
 
 const current = ymOf(today())
 
-const backButton = () => screen.queryByRole('button', { name: fr.shell.thisMonth })
+const backButton = () => screen.queryByRole('button', { name: t.shell.thisMonth })
 
 describe('MonthHeader — retour au mois courant', () => {
   afterEach(() => {
@@ -49,7 +49,7 @@ describe('MonthHeader — retour au mois courant', () => {
 
     expect(backButton()).toHaveAttribute(
       'title',
-      tpl(fr.shell.thisMonthTitle, formatYearMonth(current)),
+      tpl(t.shell.thisMonthTitle, formatYearMonth(current)),
     )
   })
 })

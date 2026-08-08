@@ -1,7 +1,7 @@
 import { SPLIT_PATH } from '@/app/routes'
 import { addMonthsToYm } from '@/domain/date'
 import { add } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import {
   de,
@@ -71,7 +71,7 @@ export function MemberShareTile() {
 
   const member = members.get(filter)
   const percent = formatPercent(charges.shareBp / 10_000, 1)
-  const spoken = tpl(fr.dashboard.srMemberShare, member?.name ?? '', percent)
+  const spoken = tpl(t.dashboard.srMemberShare, member?.name ?? '', percent)
   /* Le virement se rattrape : celui qui a trop avancé le mois passé verse moins
      ce mois-ci, et l'autre un peu plus. */
   const toPay = add(charges.common, charges.adjustment)
@@ -99,21 +99,21 @@ export function MemberShareTile() {
     <Tile
       span="4x2"
       className="gap-3"
-      label={fr.dashboard.memberShare}
+      label={t.dashboard.memberShare}
       /* Le repère nu, sans nommer sa destination : « À VERSER SUR LE COMMUN »
          est l'eyebrow le plus long de la grille (~195px en mono 11px, sans
          césure possible) et « Répartition › » en demande 95 de plus, quand la
          tuile n'en offre que 288 sur un écran de 360. Les deux se croisaient.
          `SplitTile` passe déjà son repère nu, pour la même raison. Le nom du
          lien, lui, est entier : il ne coûte aucun pixel. */
-      link={{ to: SPLIT_PATH, label: fr.dashboard.showMemberShare }}
+      link={{ to: SPLIT_PATH, label: t.dashboard.showMemberShare }}
     >
       {/* L'eyebrow nomme le chiffre, au lieu qu'un libellé le refasse juste
           au-dessus : la tuile portait cinq éléments là où le DS §5 en autorise
           quatre, et les trente pixels de trop se coupaient en haut comme en
           bas — le libellé remontait sous l'eyebrow, le total à payer sortait
           par le bas. */}
-      <Eyebrow icon={SplitIcon}>{fr.dashboard.memberShare}</Eyebrow>
+      <Eyebrow icon={SplitIcon}>{t.dashboard.memberShare}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         {/* Une jauge et non un donut : la question n'est pas comment le pot
             commun se découpe entre tous — c'est la tuile Répartition — mais
@@ -126,7 +126,7 @@ export function MemberShareTile() {
             thickness={DONUT_THICKNESS}
             value={charges.shareBp / 10_000}
             color={member?.color ?? 'var(--cat-rest)'}
-            label={fr.dashboard.memberShare}
+            label={t.dashboard.memberShare}
             srText={spoken}
             className="shrink-0"
           >
@@ -171,11 +171,11 @@ export function MemberShareTile() {
                   vérifiables, et « 1 732,86 + 282,56 = 2 015,42 » ne tombe plus
                   juste si on l'arrondit. */}
               <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
+                <span className="t-axis min-w-0">{t.split.settlementShare}</span>
                 <span className="t-axis tnum">{formatMoney(charges.common, currency)}</span>
               </li>
               <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="t-axis min-w-0">{tpl(fr.split.settlement, previous)}</span>
+                <span className="t-axis min-w-0">{tpl(t.split.settlement, previous)}</span>
                 {/* Signé, et sans direction : ce n'est pas un flux dont on
                     lirait la valeur absolue, c'est un écart dont le signe est
                     toute la lecture. */}

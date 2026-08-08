@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { CREDIT_NEW_PATH, creditEditPath } from '@/app/routes'
 import { totalRemaining } from '@/domain/debt'
 import type { DebtStatus } from '@/domain/debt'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate, formatPercent, tpl } from '@/i18n/format'
 import { useCategoryMap, useDebtStatuses } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -39,7 +39,7 @@ function DebtRow({ status }: { status: DebtStatus }) {
   return (
     <Tile
       label={debt.label}
-      link={{ to: creditEditPath(debt.id), label: tpl(fr.credits.open, debt.label) }}
+      link={{ to: creditEditPath(debt.id), label: tpl(t.credits.open, debt.label) }}
       className="gap-3"
     >
       <div className="flex items-center gap-4">
@@ -47,7 +47,7 @@ function DebtRow({ status }: { status: DebtStatus }) {
           size={72}
           thickness={10}
           value={progress}
-          label={tpl(fr.credits.progress, formatPercent(progress))}
+          label={tpl(t.credits.progress, formatPercent(progress))}
           color={category?.color ?? 'var(--cat-rest)'}
           className="shrink-0"
         />
@@ -56,15 +56,15 @@ function DebtRow({ status }: { status: DebtStatus }) {
           <Amount value={remaining} size="tile" />
           <span className="t-axis">
             {settled
-              ? fr.credits.settled
-              : tpl(fr.credits.monthsLeft, monthsLeft, plural(monthsLeft), plural(monthsLeft))}
+              ? t.credits.settled
+              : tpl(t.credits.monthsLeft, monthsLeft, plural(monthsLeft), plural(monthsLeft))}
           </span>
         </div>
       </div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-border pt-3">
-        <span className="t-label">{fr.credits.monthly}</span>
+        <span className="t-label">{t.credits.monthly}</span>
         {monthly === null ? (
-          <span className="t-label">{fr.credits.linkedNone}</span>
+          <span className="t-label">{t.credits.linkedNone}</span>
         ) : (
           <Amount value={monthly} size="body" direction="out" />
         )}
@@ -86,21 +86,21 @@ export function CreditsPage() {
     <>
       {/* L'état vide porte déjà le même bouton : le garder en titre l'afficherait
           deux fois dans le même écran. */}
-      <PageTitle title={fr.credits.title}>
+      <PageTitle title={t.credits.title}>
         {statuses.length > 0 && (
           <Button onClick={openCreate}>
             <Plus size={18} />
-            {fr.common.add}
+            {t.common.add}
           </Button>
         )}
       </PageTitle>
 
       {statuses.length === 0 ? (
-        <EmptyState message={fr.credits.empty} actionLabel={fr.credits.add} onAction={openCreate} />
+        <EmptyState message={t.credits.empty} actionLabel={t.credits.add} onAction={openCreate} />
       ) : (
         <div className="flex max-w-3xl flex-col gap-4">
           <Tile variant="accent">
-            <Eyebrow icon={CreditsIcon}>{fr.credits.total}</Eyebrow>
+            <Eyebrow icon={CreditsIcon}>{t.credits.total}</Eyebrow>
             <Amount value={totalRemaining(statuses)} size="tile" className="mt-3" />
           </Tile>
 

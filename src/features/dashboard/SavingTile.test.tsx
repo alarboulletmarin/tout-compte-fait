@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { type Money, money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { SavingTile } from './SavingTile'
@@ -90,7 +90,7 @@ describe('« Capacité d’épargne » — ce que le mois verse', () => {
     renderTile()
 
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingPlaced, euros(money(30000))))),
+      screen.getByText(said(tpl(t.dashboard.savingPlaced, euros(money(30000))))),
     ).toBeInTheDocument()
   })
 
@@ -104,10 +104,10 @@ describe('« Capacité d’épargne » — ce que le mois verse', () => {
     renderTile()
 
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingPlaced, euros(money(30000))))),
+      screen.getByText(said(tpl(t.dashboard.savingPlaced, euros(money(30000))))),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingLeft, euros(money(80000))))),
+      screen.getByText(said(tpl(t.dashboard.savingLeft, euros(money(80000))))),
     ).toBeInTheDocument()
     // 300 versés + 800 restants = 1 100 de capacité. Le nom accessible du
     // chiffre porte le montant entier ; l'affichage le découpe en parties.
@@ -124,7 +124,7 @@ describe('« Capacité d’épargne » — ce que le mois verse', () => {
     renderTile()
 
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingWithdrawn, euros(money(51000))))),
+      screen.getByText(said(tpl(t.dashboard.savingWithdrawn, euros(money(51000))))),
     ).toBeInTheDocument()
     expect(screen.queryByText(/€ versé/)).not.toBeInTheDocument()
   })
@@ -138,7 +138,7 @@ describe('« Capacité d’épargne » — ce que le mois verse', () => {
     expect(screen.queryByText(/€ versé/)).not.toBeInTheDocument()
     expect(screen.queryByText(/repris de l’épargne/)).not.toBeInTheDocument()
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingLeft, euros(money(110000))))),
+      screen.getByText(said(tpl(t.dashboard.savingLeft, euros(money(110000))))),
     ).toBeInTheDocument()
   })
 
@@ -150,7 +150,7 @@ describe('« Capacité d’épargne » — ce que le mois verse', () => {
     renderTile()
 
     expect(
-      screen.getByText(said(tpl(fr.dashboard.savingPlaced, euros(money(30000))))),
+      screen.getByText(said(tpl(t.dashboard.savingPlaced, euros(money(30000))))),
     ).toBeInTheDocument()
   })
 })

@@ -9,7 +9,8 @@ import {
   directionOfKind,
 } from '@/domain/types'
 import type { Data } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import type { Strings } from '@/i18n/fr'
+import { currentLocale, t } from '@/i18n/strings'
 import { CURRENT_SCHEMA_VERSION } from './schema'
 
 /** Les six teintes du DS §2.4, dans l'ordre, puis on recommence. */
@@ -30,135 +31,155 @@ function colorAt(index: number): string {
  * Le catalogue par défaut, en un seul endroit : une famille, sa nature, ses
  * catégories. L'ordre des familles fait foi — c'est celui des onglets, et
  * celui dans lequel les teintes sont distribuées.
+ *
+ * **La table porte des clés de catalogue, pas des libellés.** Elle en portait,
+ * et elle figeait alors la langue du démarrage : les noms étaient lus à
+ * l'évaluation du module, donc un foyer créé après un passage à l'anglais
+ * héritait de quarante-six catégories françaises. Les libellés se résolvent
+ * maintenant à l'appel, dans `defaultFamilies` et `defaultCategories`.
+ *
+ * Ce qui reste ici est ce qui ne dépend d'aucune langue — l'identifiant, la
+ * nature, l'ordre —, et c'est aussi ce qui permet à `familyColor` de rester une
+ * lecture de table : elle est appelée une fois par ligne de liste, elle n'a pas
+ * à reconstruire quarante-six libellés pour trouver un rang.
  */
-const SEED: { id: string; label: string; kind: CategoryKind; categories: [string, string][] }[] = [
+const SEED: {
+  id: string
+  label: keyof Strings['defaultFamilies']
+  kind: CategoryKind
+  categories: [string, keyof Strings['defaultCategories']][]
+}[] = [
   {
     id: 'fam-resources',
-    label: fr.defaultFamilies.resources,
+    label: 'resources',
     kind: 'resource',
     categories: [
-      ['salary', fr.defaultCategories.salary],
-      ['benefits', fr.defaultCategories.benefits],
-      ['family-benefits', fr.defaultCategories.familyBenefits],
-      ['alimony-in', fr.defaultCategories.alimonyIn],
-      ['housing-aid', fr.defaultCategories.housingAid],
-      ['rental-income', fr.defaultCategories.rentalIncome],
+      ['salary', 'salary'],
+      ['benefits', 'benefits'],
+      ['family-benefits', 'familyBenefits'],
+      ['alimony-in', 'alimonyIn'],
+      ['housing-aid', 'housingAid'],
+      ['rental-income', 'rentalIncome'],
     ],
   },
   {
     id: 'fam-housing',
-    label: fr.defaultFamilies.housing,
+    label: 'housing',
     kind: 'charge',
     categories: [
-      ['rent', fr.defaultCategories.rent],
-      ['energy', fr.defaultCategories.energy],
-      ['home-insurance', fr.defaultCategories.homeInsurance],
-      ['housing-tax', fr.defaultCategories.housingTax],
-      ['property-tax', fr.defaultCategories.propertyTax],
+      ['rent', 'rent'],
+      ['energy', 'energy'],
+      ['home-insurance', 'homeInsurance'],
+      ['housing-tax', 'housingTax'],
+      ['property-tax', 'propertyTax'],
     ],
   },
   {
     id: 'fam-communication',
-    label: fr.defaultFamilies.communication,
+    label: 'communication',
     kind: 'charge',
     categories: [
-      ['mobile', fr.defaultCategories.mobile],
-      ['internet', fr.defaultCategories.internet],
-      ['streaming', fr.defaultCategories.streaming],
+      ['mobile', 'mobile'],
+      ['internet', 'internet'],
+      ['streaming', 'streaming'],
     ],
   },
   {
     id: 'fam-transport',
-    label: fr.defaultFamilies.transport,
+    label: 'transport',
     kind: 'charge',
     categories: [
-      ['fuel', fr.defaultCategories.fuel],
-      ['car-insurance', fr.defaultCategories.carInsurance],
-      ['car-maintenance', fr.defaultCategories.carMaintenance],
-      ['public-transport', fr.defaultCategories.publicTransport],
-      ['tolls', fr.defaultCategories.tolls],
+      ['fuel', 'fuel'],
+      ['car-insurance', 'carInsurance'],
+      ['car-maintenance', 'carMaintenance'],
+      ['public-transport', 'publicTransport'],
+      ['tolls', 'tolls'],
     ],
   },
   {
     id: 'fam-daily',
-    label: fr.defaultFamilies.daily,
+    label: 'daily',
     kind: 'charge',
     categories: [
-      ['groceries', fr.defaultCategories.groceries],
-      ['clothing', fr.defaultCategories.clothing],
-      ['household', fr.defaultCategories.household],
-      ['hygiene', fr.defaultCategories.hygiene],
+      ['groceries', 'groceries'],
+      ['clothing', 'clothing'],
+      ['household', 'household'],
+      ['hygiene', 'hygiene'],
     ],
   },
   {
     id: 'fam-health',
-    label: fr.defaultFamilies.health,
+    label: 'health',
     kind: 'charge',
     categories: [
-      ['health-insurance', fr.defaultCategories.healthInsurance],
-      ['medical', fr.defaultCategories.medical],
-      ['pharmacy', fr.defaultCategories.pharmacy],
+      ['health-insurance', 'healthInsurance'],
+      ['medical', 'medical'],
+      ['pharmacy', 'pharmacy'],
     ],
   },
   {
     id: 'fam-family',
-    label: fr.defaultFamilies.family,
+    label: 'family',
     kind: 'charge',
     categories: [
-      ['childcare', fr.defaultCategories.childcare],
-      ['school', fr.defaultCategories.school],
-      ['alimony-out', fr.defaultCategories.alimonyOut],
-      ['child-activities', fr.defaultCategories.childActivities],
+      ['childcare', 'childcare'],
+      ['school', 'school'],
+      ['alimony-out', 'alimonyOut'],
+      ['child-activities', 'childActivities'],
     ],
   },
   {
     id: 'fam-taxes',
-    label: fr.defaultFamilies.taxes,
+    label: 'taxes',
     kind: 'charge',
     categories: [
-      ['income-tax', fr.defaultCategories.incomeTax],
-      ['other-taxes', fr.defaultCategories.otherTaxes],
+      ['income-tax', 'incomeTax'],
+      ['other-taxes', 'otherTaxes'],
     ],
   },
   {
     id: 'fam-leisure',
-    label: fr.defaultFamilies.leisure,
+    label: 'leisure',
     kind: 'charge',
     categories: [
-      ['outings', fr.defaultCategories.outings],
-      ['culture', fr.defaultCategories.culture],
-      ['gifts', fr.defaultCategories.gifts],
-      ['misc', fr.defaultCategories.misc],
+      ['outings', 'outings'],
+      ['culture', 'culture'],
+      ['gifts', 'gifts'],
+      ['misc', 'misc'],
     ],
   },
   {
     id: 'fam-credits',
-    label: fr.defaultFamilies.credits,
+    label: 'credits',
     kind: 'debt',
     categories: [
-      ['car-loan', fr.defaultCategories.carLoan],
-      ['mortgage', fr.defaultCategories.mortgage],
-      ['leasing', fr.defaultCategories.leasing],
-      ['consumer-loan', fr.defaultCategories.consumerLoan],
-      ['other-loan', fr.defaultCategories.otherLoan],
+      ['car-loan', 'carLoan'],
+      ['mortgage', 'mortgage'],
+      ['leasing', 'leasing'],
+      ['consumer-loan', 'consumerLoan'],
+      ['other-loan', 'otherLoan'],
     ],
   },
   {
     id: 'fam-savings',
-    label: fr.defaultFamilies.savings,
+    label: 'savings',
     kind: 'saving',
     categories: [
-      ['passbook', fr.defaultCategories.passbook],
-      ['plans', fr.defaultCategories.plans],
-      ['life-insurance', fr.defaultCategories.lifeInsurance],
-      ['retirement', fr.defaultCategories.retirement],
-      ['company-savings', fr.defaultCategories.companySavings],
+      ['passbook', 'passbook'],
+      ['plans', 'plans'],
+      ['life-insurance', 'lifeInsurance'],
+      ['retirement', 'retirement'],
+      ['company-savings', 'companySavings'],
     ],
   },
 ]
 
 export function defaultFamilies(): Family[] {
-  return SEED.map((family) => ({ id: family.id, label: family.label, kind: family.kind }))
+  return SEED.map((family) => ({
+    id: family.id,
+    label: t.defaultFamilies[family.label],
+    kind: family.kind,
+  }))
 }
 
 /**
@@ -175,7 +196,7 @@ export function defaultCategories(): Category[] {
   return SEED.flatMap((family) =>
     family.categories.map(([id, label]) => ({
       id,
-      label,
+      label: t.defaultCategories[label],
       familyId: family.id,
       icon: '',
       color: familyColor(family.id),
@@ -208,7 +229,7 @@ export function repairedCategory(direction: 'in' | 'out'): Category {
   const familyId = fallbackFamilyId(direction)
   return {
     id: direction === 'in' ? 'repaired-in' : 'repaired-out',
-    label: fr.defaults.repairedCategory,
+    label: t.defaults.repairedCategory,
     familyId,
     icon: '',
     color: familyColor(familyId),
@@ -230,7 +251,18 @@ export function emptyData(): Data {
     savingSupports: [],
     savingValuations: [],
     months: [],
-    settings: { theme: 'system', palette: DEFAULT_PALETTE, currency: 'EUR', monthStartsOn: 1 },
+    settings: {
+      theme: 'system',
+      palette: DEFAULT_PALETTE,
+      /* La langue qu'on est en train de lire, et non une constante : c'est le
+         seul endroit de l'app où la langue du navigateur devient une décision.
+         Elle a été détectée au démarrage, faute de document à interroger
+         (`i18n/locale.ts`) ; le document qui naît ici en prend acte, et c'est
+         lui qui fera foi ensuite, sur tous les appareils qui l'ouvriront. */
+      locale: currentLocale(),
+      currency: 'EUR',
+      monthStartsOn: 1,
+    },
   }
 }
 

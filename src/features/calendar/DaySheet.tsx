@@ -1,6 +1,6 @@
 import type { ISODate } from '@/domain/date'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatWeekdayDate, tpl } from '@/i18n/format'
 import { useCategoryMap, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -11,9 +11,9 @@ import { Sheet } from '@/ui/Sheet'
 import { dayNet } from './grid'
 
 function countLabel(count: number): string {
-  if (count === 0) return fr.calendar.noEntry
-  if (count === 1) return fr.calendar.oneEntry
-  return tpl(fr.calendar.someEntries, count)
+  if (count === 0) return t.calendar.noEntry
+  if (count === 1) return t.calendar.oneEntry
+  return tpl(t.calendar.someEntries, count)
 }
 
 export type DaySheetProps = {
@@ -56,7 +56,7 @@ export function DaySheet({ date, entries, onOpen, onAdd, onClose }: DaySheetProp
            `t-eyebrow` nu, pas le composant `Eyebrow` — celui-ci rend une pilule
            `--surface-2`, qui est une étiquette de tuile et non une légende. */
         <p aria-hidden="true" className="t-eyebrow text-muted">
-          {fr.calendar.addLead}
+          {t.calendar.addLead}
         </p>
       }
       footer={
@@ -83,39 +83,39 @@ export function DaySheet({ date, entries, onOpen, onAdd, onClose }: DaySheetProp
         <>
           <Button
             size="sm"
-            aria-label={fr.entry.addOut}
+            aria-label={t.entry.addOut}
             onClick={() => {
               onAdd('out')
             }}
           >
-            {fr.entry.newOut}
+            {t.entry.newOut}
           </Button>
           <Button
             size="sm"
             variant="secondary"
-            aria-label={fr.entry.addIn}
+            aria-label={t.entry.addIn}
             onClick={() => {
               onAdd('in')
             }}
           >
-            {fr.entry.newIn}
+            {t.entry.newIn}
           </Button>
           <Button
             size="sm"
             variant="secondary"
-            aria-label={fr.entry.addSavingAction}
+            aria-label={t.entry.addSavingAction}
             onClick={() => {
               onAdd('saving')
             }}
           >
-            {fr.entry.newSaving}
+            {t.entry.newSaving}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <Eyebrow>{fr.calendar.dayTotal}</Eyebrow>
+          <Eyebrow>{t.calendar.dayTotal}</Eyebrow>
           {/* Sans `direction` : c'est un solde, donc le « − » s'affiche (DS §3).
               Un jour n'a pas de sens propre — il en a deux, et leur différence
               est justement ce qu'on vient chercher. */}
@@ -124,7 +124,7 @@ export function DaySheet({ date, entries, onOpen, onAdd, onClose }: DaySheetProp
         <p className="t-label">{countLabel(entries.length)}</p>
 
         {entries.length === 0 ? (
-          <p className="t-body">{fr.calendar.emptyDay}</p>
+          <p className="t-body">{t.calendar.emptyDay}</p>
         ) : (
           /* La liste se lit dans l'ordre exact des pastilles de la case : le tri
              est posé une fois pour toutes dans `useCalendarWindow`. */

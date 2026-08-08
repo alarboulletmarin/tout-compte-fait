@@ -19,7 +19,11 @@
  * ne porte que ce qui n'existe qu'ici.
  * ==========================================================================*/
 
-export const landing = {
+import { en } from './landing.en'
+import { currentLocale, subscribeLocale } from './strings'
+import type { Widen } from './widen'
+
+const fr = {
   /* La promesse est déjà `fr.app.tagline` — la répéter ici en ferait une
      seconde vérité. Ce qui suit dit le mécanisme, parce que « suivi des
      finances » ne distingue cette app d'aucune autre. */
@@ -189,4 +193,18 @@ export const landing = {
   schemaTitle: 'Partir de tes notes',
   schemaHint:
     'Tes comptes sont déjà écrits quelque part ? Donne ce schéma à un assistant avec tes notes, il t’en fera un fichier à importer.',
-}
+} as const
+
+export type LandingStrings = Widen<typeof fr>
+
+/**
+ * La prose de la présentation, dans la langue active.
+ *
+ * Même mécanique que `history.ts` : une liaison d'export vivante, et les deux
+ * langues dans le même morceau — celui-ci est déjà hors du graphe initial.
+ */
+export let landing: LandingStrings = currentLocale() === 'en' ? en : fr
+
+subscribeLocale(() => {
+  landing = currentLocale() === 'en' ? en : fr
+})

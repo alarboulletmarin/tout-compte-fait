@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { FAMILY_NEW_PATH, MORE_PATH, familyPath } from '@/app/routes'
 import { isSearchable, matchesText, normalizeText } from '@/domain/search'
 import type { Category, Family } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { type FamilyGroup, useAllCategoriesByFamily } from '@/store/selectors'
 import { Button } from '@/ui/Button'
@@ -20,7 +20,7 @@ function Count({ count }: { count: number }) {
         {String(count)}
       </span>
       <span className="sr-only">
-        {tpl(count > 1 ? fr.settings.familyCount : fr.settings.familyCountOne, count)}
+        {tpl(count > 1 ? t.settings.familyCount : t.settings.familyCountOne, count)}
       </span>
     </>
   )
@@ -77,7 +77,7 @@ export function CategoriesPage() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <PageTitle
-        title={fr.settings.categories}
+        title={t.settings.categories}
         onBack={() => {
           void navigate(MORE_PATH)
         }}
@@ -86,13 +86,13 @@ export function CategoriesPage() {
       {/* Quarante-six catégories sous douze familles : retrouver « Carburant »
           demandait de deviner qu'elle est rangée sous Transport, puis d'ouvrir
           les familles une par une jusqu'à tomber dessus. */}
-      <Field label={fr.settings.categorySearch}>
+      <Field label={t.settings.categorySearch}>
         {(id) => (
           <TextInput
             id={id}
             type="search"
             value={query}
-            placeholder={fr.settings.categorySearchPlaceholder}
+            placeholder={t.settings.categorySearchPlaceholder}
             maxLength={40}
             onChange={(event) => {
               setQuery(event.target.value)
@@ -104,14 +104,14 @@ export function CategoriesPage() {
       {empty ? (
         <p className="t-label">
           {searching
-            ? tpl(fr.settings.categorySearchEmpty, query.trim())
-            : fr.settings.familiesEmpty}
+            ? tpl(t.settings.categorySearchEmpty, query.trim())
+            : t.settings.familiesEmpty}
         </p>
       ) : (
         /* Sans étiquette pendant une recherche : ce qui s'y affiche n'est plus
            une liste de familles, et « FAMILLES » au-dessus d'une catégorie
            mentirait sur ce qu'on lit. */
-        <RowGroup {...(searching ? {} : { title: fr.settings.families })}>
+        <RowGroup {...(searching ? {} : { title: t.settings.families })}>
           {families.map((group) => (
             <Row
               key={group.family.id}
@@ -144,7 +144,7 @@ export function CategoriesPage() {
           void navigate(FAMILY_NEW_PATH)
         }}
       >
-        {fr.settings.familyAdd}
+        {t.settings.familyAdd}
       </Button>
     </div>
   )
