@@ -56,6 +56,7 @@ import {
   addSavingSupport,
   addSavingValuation,
   archiveCategory,
+  archiveSavingSupport,
   confirmEntries,
   createAdvance,
   addRecurrence,
@@ -78,18 +79,34 @@ const HISTORY_MONTHS = 15
  */
 const FUTURE_MONTHS = 0
 
+/* Deux parents, un jeune adulte en alternance, et un tout-petit à la crèche.
+   Le troisième membre n'est pas là pour faire nombre : à deux revenus, le
+   prorata est un miroir et la régularisation un aller-retour — on peut les lire
+   sans les comprendre. À trois parts inégales, le reste de `largestRemainder`
+   a quelque chose à placer, et « la somme des parts vaut exactement le total »
+   cesse d'être une évidence arithmétique. */
 const ALIX = 'ex-alix'
 const CAMILLE = 'ex-camille'
+const SACHA = 'ex-sacha'
 const PETS_FAMILY = 'ex-fam-pets'
 const PETS_CATEGORY = 'ex-cat-pets'
 
-/* Les supports d'épargne. Chacun est à quelqu'un, et deux d'entre eux relèvent
+/* Les supports d'épargne. Chacun est à quelqu'un, et trois d'entre eux relèvent
    du même poste — c'est précisément ce que la catégorie seule ne savait pas
-   dire : le livret d'Alix et celui de Camille ne sont pas le même compte. */
+   dire : le livret d'Alix, celui de Camille et celui de Sacha ne sont pas le
+   même compte. */
 const LIVRET_ALIX = 'ex-s-livret-alix'
 const LIVRET_CAMILLE = 'ex-s-livret-camille'
+const LIVRET_SACHA = 'ex-s-livret-sacha'
 const PEL_ALIX = 'ex-s-pel-alix'
 const ASSURANCE_VIE = 'ex-s-assurance-vie'
+/* Ouvert ce trimestre, aucun relevé reçu : sa valeur est **inconnue**, ce qui
+   n'est pas zéro. Il est à Alix, qui est le premier membre du foyer et donc la
+   personne que l'écran d'épargne pose d'office — c'est le seul endroit d'où
+   « un support sans valeur renseignée » se voit sans rien filtrer. */
+const PER_ALIX = 'ex-s-per-alix'
+/* Le plan d'une entreprise qu'on a quittée : archivé, et pourtant plein. */
+const PEE_CAMILLE = 'ex-s-pee-camille'
 
 /** Compteur d'identifiants — séquentiel, pour que le document soit comparable. */
 function counter(): () => string {
@@ -154,6 +171,32 @@ const RECURRENCES: RecurrenceSeed[] = [
     period: { unit: 'month', every: 1, anchorDay: 5 },
     from: 0,
   },
+  /* Le troisième revenu, très inférieur aux deux autres : c'est là que le
+     prorata cesse d'être un miroir et devient un calcul qu'on a envie de
+     vérifier. */
+  {
+    id: 'ex-r-salaire-sacha',
+    label: 'Alternance',
+    categoryId: 'salary',
+    memberId: SACHA,
+    direction: 'in',
+    amount: money(95000),
+    period: { unit: 'month', every: 1, anchorDay: 1 },
+    from: 0,
+  },
+  /* Une seconde ressource sur la même personne. Le revenu qui pèse dans le
+     prorata est la **somme** des récurrences de nature `resource` d'un membre,
+     jamais une seule — et rien dans ce jeu ne le montrait. */
+  {
+    id: 'ex-r-prime-activite',
+    label: 'Prime d’activité',
+    categoryId: 'benefits',
+    memberId: SACHA,
+    direction: 'in',
+    amount: money(8500),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: 0,
+  },
 
   /* --- Crédits. Leurs mensualités sont des `Entry` comme les autres. */
   {
@@ -182,6 +225,21 @@ const RECURRENCES: RecurrenceSeed[] = [
     amount: money(16800),
     period: { unit: 'month', every: 1, anchorDay: 15 },
     from: 2,
+  },
+  /* Le seul crédit qui va jusqu'au bout, et qui se solde dans l'historique :
+     douze mensualités de 200 € pour 2 400 € empruntés, sans taux — le capital
+     décroît donc exactement de ce qui est versé, et tombe à zéro au douzième.
+     Trois crédits en cours ne montrent jamais l'état « soldé », qui est
+     pourtant celui où l'on finit. */
+  {
+    id: 'ex-r-credit-electro',
+    label: 'Crédit électroménager',
+    categoryId: 'other-loan',
+    direction: 'out',
+    amount: money(20000),
+    period: { unit: 'month', every: 1, anchorDay: 12 },
+    from: 0,
+    until: 11,
   },
 
   /* --- Logement et énergie. L'électricité varie, le gaz tombe tous les deux
@@ -235,6 +293,15 @@ const RECURRENCES: RecurrenceSeed[] = [
     period: { unit: 'year', every: 1, anchorDay: 15 },
     from: 1,
   },
+  {
+    id: 'ex-r-ordures',
+    label: 'Redevance ordures ménagères',
+    categoryId: 'other-taxes',
+    direction: 'out',
+    amount: money(18600),
+    period: { unit: 'year', every: 1, anchorDay: 20 },
+    from: 4,
+  },
 
   /* --- Communication. Les mobiles sont à chacun, l'internet en commun. */
   {
@@ -258,14 +325,34 @@ const RECURRENCES: RecurrenceSeed[] = [
     from: 0,
   },
   {
-    id: 'ex-r-internet',
-    label: 'Internet',
-    categoryId: 'internet',
+    id: 'ex-r-mobile-sacha',
+    label: 'Mobile Sacha',
+    categoryId: 'mobile',
+    memberId: SACHA,
     direction: 'out',
-    amount: money(3899),
+    amount: money(1290),
     period: { unit: 'month', every: 1, anchorDay: 5 },
     from: 0,
   },
+  /* La ligne est au nom de Sacha, et le foyer la partage. C'est la troisième
+     charge commune avancée par quelqu'un, et c'est ce qui fait de la
+     régularisation autre chose qu'un aller-retour entre deux comptes : trois
+     reports non nuls, dont la somme vaut toujours zéro. */
+  {
+    id: 'ex-r-internet',
+    label: 'Internet',
+    categoryId: 'internet',
+    memberId: SACHA,
+    direction: 'out',
+    amount: money(3899),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    shared: true,
+    from: 0,
+  },
+  /* Résiliée, et pourtant encore là : l'engagement court jusqu'à deux mois
+     après le mois courant. C'est l'autre moitié de `endedOn`, que le jeu ne
+     montrait pas — la seule règle arrêtée l'était dans le passé, si bien
+     qu'« arrêtée, mais elle tombe encore » n'existait nulle part. */
   {
     id: 'ex-r-streaming',
     label: 'Abonnements TV',
@@ -274,6 +361,20 @@ const RECURRENCES: RecurrenceSeed[] = [
     direction: 'out',
     amount: money(1798),
     period: { unit: 'month', every: 1, anchorDay: 8 },
+    from: 0,
+    until: HISTORY_MONTHS + 2,
+    note: 'Résilié, mais l’engagement court encore deux mois.',
+  },
+  /* Un abonnement mensuel à montant fixe : c'était une « dépense ponctuelle »
+     répétée seize fois au même centime, ce qu'aucun foyer ne saisit à la main. */
+  {
+    id: 'ex-r-transport-camille',
+    label: 'Transports en commun',
+    categoryId: 'public-transport',
+    memberId: CAMILLE,
+    direction: 'out',
+    amount: money(8620),
+    period: { unit: 'month', every: 1, anchorDay: 23 },
     from: 0,
   },
 
@@ -294,6 +395,30 @@ const RECURRENCES: RecurrenceSeed[] = [
     direction: 'out',
     amount: money(32000),
     period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: 0,
+    until: HISTORY_MONTHS + 2,
+    note: 'Dernière année : l’école prend le relais à la rentrée.',
+  },
+  /* Et ce qui la remplace, pas encore commencé : trois mois après le mois
+     courant, soit exactement `RUNNING_HORIZON_MONTHS`. Elle n'a aucune
+     échéance — aucun mois du document ne va si loin — et pèse pourtant déjà
+     dans le total des récurrences, parce qu'elle a été déclarée. */
+  {
+    id: 'ex-r-cantine',
+    label: 'Cantine',
+    categoryId: 'school',
+    direction: 'out',
+    amount: money(9800),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: HISTORY_MONTHS + 3,
+  },
+  {
+    id: 'ex-r-activites',
+    label: 'Éveil musical',
+    categoryId: 'child-activities',
+    direction: 'out',
+    amount: money(3500),
+    period: { unit: 'month', every: 1, anchorDay: 13 },
     from: 0,
   },
   {
@@ -383,6 +508,17 @@ const RECURRENCES: RecurrenceSeed[] = [
     from: 0,
   },
   {
+    id: 'ex-r-livret-sacha',
+    label: 'Virement livret jeune',
+    categoryId: 'passbook',
+    memberId: SACHA,
+    savingSupportId: LIVRET_SACHA,
+    direction: 'out',
+    amount: money(5000),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: 0,
+  },
+  {
     id: 'ex-r-pel',
     label: 'PEL',
     categoryId: 'plans',
@@ -392,6 +528,36 @@ const RECURRENCES: RecurrenceSeed[] = [
     amount: money(15000),
     period: { unit: 'month', every: 1, anchorDay: 5 },
     from: 0,
+  },
+  /* Un versement sur un support dont on ignore la valeur : le flux est connu au
+     centime, le stock ne l'est pas du tout. Les deux se lisent côte à côte sans
+     que l'un serve jamais à deviner l'autre. */
+  {
+    id: 'ex-r-per',
+    label: 'PER',
+    categoryId: 'retirement',
+    memberId: ALIX,
+    savingSupportId: PER_ALIX,
+    direction: 'out',
+    amount: money(10000),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: HISTORY_MONTHS - 2,
+  },
+  /* Arrêté avec le départ de l'entreprise, six mois en arrière. La règle
+     s'éteint, le support s'archive, et le capital reste : c'est l'ensemble qui
+     rend la situation lisible — un compte fermé qui continuerait de grossir
+     serait l'état incohérent que l'archivage existe pour éviter. */
+  {
+    id: 'ex-r-pee',
+    label: 'PEE',
+    categoryId: 'company-savings',
+    memberId: CAMILLE,
+    savingSupportId: PEE_CAMILLE,
+    direction: 'out',
+    amount: money(9000),
+    period: { unit: 'month', every: 1, anchorDay: 5 },
+    from: 0,
+    until: HISTORY_MONTHS - 6,
   },
   /* Un support sans versement régulier : il vaut ce qu'il vaut, et c'est tout
      ce qu'on en sait. C'est le cas que la v1 ne pouvait pas représenter — une
@@ -488,11 +654,11 @@ const AD_HOC: AdHocSeed[] = [
   },
   {
     day: 23,
-    label: 'Transports en commun',
-    categoryId: 'public-transport',
-    memberId: CAMILLE,
+    label: 'Stationnement',
+    categoryId: 'tolls',
+    memberId: ALIX,
     direction: 'out',
-    amounts: [8620, 8620, 8620, 8620, 8620, 8620],
+    amounts: [1800, 2400, 1200, 3000, 1500, 2100],
   },
   {
     day: 26,
@@ -502,10 +668,59 @@ const AD_HOC: AdHocSeed[] = [
     direction: 'out',
     amounts: [0, 3500, 0, 0, 6200, 0],
   },
+  /* Le poste où finit ce qui ne se range nulle part. Un catalogue sans lui
+     force à mentir sur une ligne par mois. */
+  {
+    day: 27,
+    label: 'Divers',
+    categoryId: 'misc',
+    direction: 'out',
+    amounts: [1250, 890, 2140, 0, 1670, 940],
+  },
 ]
 
 /** Ce qui n'arrive qu'une fois, posé au rang de mois indiqué. */
 const ONE_OFFS: (AdHocSeed & { at: number })[] = [
+  /* --- Les trois charges que les avances financent.
+
+     `createAdvance` pose la reprise sur le livret et les mensualités, mais pas
+     la dépense : « l'app ne l'invente pas à la place de qui l'a faite ». Sans
+     elles, le mois du paiement affichait une rentrée d'argent venue de nulle
+     part — l'épargne reprise, et rien en face. Avec elles, les deux se
+     compensent au centime et le solde du mois ne bouge pas : c'est exactement
+     ce que l'avance existe pour produire, et ça ne se voyait pas.
+
+     Elles restent attribuées à qui a payé, sans `shared` : le partage passe par
+     les mensualités, et le compter ici aussi le ferait deux fois. */
+  {
+    at: 1,
+    day: 18,
+    label: 'Réparation boîte de vitesses',
+    categoryId: 'car-maintenance',
+    memberId: ALIX,
+    direction: 'out',
+    amounts: [126000],
+    note: 'Réglée depuis le livret : la reprise du même jour la compense.',
+  },
+  {
+    at: 10,
+    day: 14,
+    label: 'Assurance auto',
+    categoryId: 'car-insurance',
+    memberId: ALIX,
+    direction: 'out',
+    amounts: [67200],
+  },
+  {
+    at: 13,
+    day: 6,
+    label: 'Lunettes',
+    categoryId: 'medical',
+    memberId: CAMILLE,
+    direction: 'out',
+    amounts: [48000],
+  },
+
   {
     at: 4,
     day: 8,
@@ -535,6 +750,14 @@ const ONE_OFFS: (AdHocSeed & { at: number })[] = [
     direction: 'in',
     amounts: [120000],
     note: 'Une prime a lieu, mais elle ne dit rien de ce qu’on gagne : le prorata ne bouge pas.',
+  },
+  {
+    at: 7,
+    day: 22,
+    label: 'Pneus hiver',
+    categoryId: 'car-maintenance',
+    direction: 'out',
+    amounts: [38900],
   },
   {
     at: 12,
@@ -575,6 +798,7 @@ export function exampleData(on: ISODate = today()): Data {
   let data = setHouseholdName(emptyData(), 'Maison')
   data = addMember(data, { id: ALIX, name: 'Alix', color: memberColorAt(0) })
   data = addMember(data, { id: CAMILLE, name: 'Camille', color: memberColorAt(1) })
+  data = addMember(data, { id: SACHA, name: 'Sacha', color: memberColorAt(2) })
 
   data = withCatalogue(data)
   data = withSupports(data)
@@ -596,7 +820,20 @@ export function exampleData(on: ISODate = today()): Data {
   return data
 }
 
-/** Une famille maison et sa catégorie, et une catégorie du catalogue archivée. */
+/**
+ * Une famille maison et sa catégorie, et une catégorie du catalogue archivée.
+ *
+ * Sept catégories du jeu par défaut restent inemployées, et c'est un choix
+ * plutôt qu'un oubli : `rent` et `housing-aid` supposent un foyer locataire, qui
+ * ne paierait pas les mensualités d'un crédit immobilier ; `housing-tax` ne
+ * s'applique plus à une résidence principale, dont `property-tax` porte déjà
+ * l'impôt ; `rental-income` demanderait un second bien, donc un second crédit et
+ * une seconde charge, pour beaucoup de lisibilité en moins ; `alimony-in` et
+ * `alimony-out` trancheraient une histoire familiale qu'un jeu d'exemple n'a pas
+ * à raconter ; et `leasing` est justement celle qu'on archive ci-dessous. Un
+ * catalogue exhaustif ne fait pas un foyer cohérent, et c'est la cohérence que
+ * cet exemple doit enseigner.
+ */
 function withCatalogue(data: Data): Data {
   const family: Family = { id: PETS_FAMILY, label: 'Animaux', kind: 'charge' }
   const category: Category = {
@@ -614,12 +851,18 @@ function withCatalogue(data: Data): Data {
 }
 
 /**
- * Les quatre supports d'épargne — où l'argent est placé, et à qui.
+ * Les sept supports d'épargne — où l'argent est placé, et à qui.
  *
- * Deux d'entre eux relèvent du même poste (« Livrets ») et appartiennent à deux
- * personnes : c'est exactement ce qu'une catégorie seule ne savait pas dire, et
- * la raison d'être de cette entité. Le quatrième ne reçoit aucun versement
- * régulier — une épargne existe aussi les mois où l'on n'y touche pas.
+ * Trois d'entre eux relèvent du même poste (« Livrets ») et appartiennent à
+ * trois personnes : c'est exactement ce qu'une catégorie seule ne savait pas
+ * dire, et la raison d'être de cette entité. L'assurance-vie ne reçoit aucun
+ * versement régulier — une épargne existe aussi les mois où l'on n'y touche
+ * pas. Les cinq catégories d'épargne du catalogue sont ainsi toutes servies.
+ *
+ * Deux d'entre eux sont là pour un état, et non pour un montant : le PER n'a
+ * aucun relevé — sa valeur est inconnue, ce que l'app compte à part plutôt que
+ * d'additionner à zéro —, et le PEE est archivé sans cesser d'être lisible,
+ * parce qu'il porte une valeur.
  *
  * Aucun capital n'est écrit ici : il vit dans les valorisations, et nulle part
  * ailleurs.
@@ -641,6 +884,13 @@ function withSupports(data: Data): Data {
       archived: false,
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
+    {
+      id: LIVRET_SACHA,
+      label: 'Livret jeune',
+      memberId: SACHA,
+      categoryId: 'passbook',
+      archived: false,
+    },
     { id: PEL_ALIX, label: 'PEL', memberId: ALIX, categoryId: 'plans', archived: false },
     {
       id: ASSURANCE_VIE,
@@ -650,8 +900,28 @@ function withSupports(data: Data): Data {
       archived: false,
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
+    {
+      id: PER_ALIX,
+      label: 'PER',
+      memberId: ALIX,
+      categoryId: 'retirement',
+      archived: false,
+      note: 'Ouvert ce trimestre. Aucun relevé reçu : sa valeur est inconnue, pas nulle.',
+    },
+    {
+      id: PEE_CAMILLE,
+      label: 'PEE',
+      memberId: CAMILLE,
+      categoryId: 'company-savings',
+      archived: false,
+      note: 'Entreprise quittée : le plan est fermé, l’épargne reste.',
+    },
   ]
-  return supports.reduce(addSavingSupport, data)
+  /* Archivé par la mutation, jamais par le littéral — comme `archiveCategory`
+     pour « leasing » juste au-dessus. La règle qui l'alimentait est déjà
+     arrêtée par son `until` : archiver un support que rien n'arrête laisserait
+     un compte invisible grossir tout seul. */
+  return archiveSavingSupport(supports.reduce(addSavingSupport, data), PEE_CAMILLE)
 }
 
 /**
@@ -682,16 +952,27 @@ const VALUATIONS: { supportId: string; at: number; amount: number }[] = [
   { supportId: PEL_ALIX, at: -3, amount: 1786000 },
   { supportId: PEL_ALIX, at: 0, amount: 1832000 },
 
+  { supportId: LIVRET_SACHA, at: -6, amount: 120000 },
+  { supportId: LIVRET_SACHA, at: -3, amount: 145000 },
+  { supportId: LIVRET_SACHA, at: 0, amount: 168000 },
+
   /* Sans versement, et pourtant en mouvement : le seul support dont la valeur
      ne s'explique que par le marché. Il recule une fois — une courbe qui ne
-     ferait que monter ne dirait pas ce qu'est un placement.
-     Et il n'a pas de relevé du mois : on ne regarde pas une assurance-vie
-     toutes les quatre semaines, et le jeu d'exemple doit montrer ce que valent
-     des relevés d'âges différents — un total daté du jour serait une facilité
-     que personne n'a dans la vraie vie. */
+     ferait que monter ne dirait pas ce qu'est un placement. */
   { supportId: ASSURANCE_VIE, at: -9, amount: 960000 },
   { supportId: ASSURANCE_VIE, at: -6, amount: 1005000 },
   { supportId: ASSURANCE_VIE, at: -3, amount: 988000 },
+  { supportId: ASSURANCE_VIE, at: 0, amount: 1020000 },
+
+  /* Le PEE s'arrête six mois en arrière : c'est le dernier relevé reçu, et
+     c'est lui qui le garde visible à l'écran malgré l'archivage. Ses versements
+     cessent le 5 du même mois, le relevé tombe le 8 : rien n'a bougé après lui,
+     et le total n'annonce donc aucune estimation sur un compte fermé. */
+  { supportId: PEE_CAMILLE, at: -9, amount: 340000 },
+  { supportId: PEE_CAMILLE, at: -6, amount: 358000 },
+
+  /* Le PER n'a aucune ligne ici, et c'est tout ce qu'il vient dire : un support
+     sans relevé vaut « inconnu », jamais zéro. */
 ]
 
 function withValuations(data: Data, anchor: YearMonth, ids: () => string): Data {
@@ -722,7 +1003,7 @@ function withRules(data: Data, first: YearMonth): Data {
 }
 
 /**
- * Trois crédits, dont un sans taux.
+ * Quatre crédits, dont deux sans taux et un déjà soldé.
  *
  * Tous démarrent dans l'historique : le capital restant dû ne se dérive que des
  * mensualités **confirmées**, et un crédit ouvert avant le premier mois du
@@ -762,6 +1043,22 @@ function withDebts(data: Data, first: YearMonth): Data {
       startedOn: startOfMonth(addMonthsToYm(first, 2)),
       endsOn: endOfSpan(addMonthsToYm(first, 2), 30),
     },
+    /* Éteint. Douze mensualités de 200 € pour 2 400 € empruntés, la dernière
+       tombée il y a quatre mois : le capital restant dû vaut exactement zéro, et
+       c'est le seul état que les trois autres ne montrent pas. `endsOn` se cale
+       sur le jour de la dernière mensualité, et non sur le 5 comme les autres —
+       un crédit dont la dernière échéance tomberait après sa fin annoncée
+       n'aurait pas de sens. */
+    {
+      id: 'ex-d-electro',
+      label: 'Crédit électroménager',
+      categoryId: 'other-loan',
+      recurrenceId: 'ex-r-credit-electro',
+      principal: money(240000),
+      startedOn: startOfMonth(first),
+      endsOn: dayOf(addMonthsToYm(first, 11), 12),
+      note: 'Sans intérêt, et arrivé à son terme : ce qu’on a versé est exactement ce qu’on devait.',
+    },
   ]
   return debts.reduce(addDebt, data)
 }
@@ -770,16 +1067,41 @@ const endOfSpan = (from: YearMonth, months: number): ISODate =>
   dayOf(addMonthsToYm(from, months - 1), 5)
 
 /**
- * Deux avances — une charge payée en une fois depuis le livret, remboursée à
- * soi-même mois par mois. L'une est partagée, l'autre non : la première entre
- * dans le pot commun, la seconde reste à qui l'a avancée.
+ * Trois avances — une charge payée en une fois depuis le livret, remboursée à
+ * soi-même mois par mois. Deux sont partagées, une non : les premières entrent
+ * dans le pot commun, la dernière reste à qui l'a avancée. Et l'une des trois
+ * est entièrement reconstituée, ce qu'aucune des deux autres ne montrait : une
+ * avance finit par se solder, et cet état-là avait sa page sans jamais de ligne
+ * pour l'occuper.
  */
 function withAdvances(data: Data, anchor: YearMonth, ids: () => string): Data {
+  const gearbox = addMonthsToYm(anchor, -14)
   const car = addMonthsToYm(anchor, -5)
   const glasses = addMonthsToYm(anchor, -2)
 
+  /* Six mensualités pour un montant divisible par six : la mensualité tombe
+     juste, et le reste dû arrive à zéro au centime plutôt qu'à un arrondi
+     qu'il faudrait expliquer. */
   let next = createAdvance(
     data,
+    {
+      label: 'Réparation boîte de vitesses',
+      categoryId: 'car-maintenance',
+      memberId: ALIX,
+      amount: money(126000),
+      paidOn: dayOf(gearbox, 18),
+      from: gearbox,
+      to: addMonthsToYm(gearbox, 5),
+      savingSupportId: LIVRET_ALIX,
+      shared: true,
+      note: 'La voiture sert à tout le monde : la charge entre dans le pot commun. Entièrement remise depuis.',
+    },
+    ids,
+    startOfMonth(gearbox),
+  ).data
+
+  next = createAdvance(
+    next,
     {
       label: 'Assurance auto',
       categoryId: 'car-insurance',

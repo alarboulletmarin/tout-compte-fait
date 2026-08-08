@@ -483,6 +483,14 @@ Le recopier eût été une seconde description du modèle, qui aurait divergé d
 et enseigné un document que l'app refuse : exactement l'erreur qu'il existe pour
 éviter chez son lecteur.
 
+Ce qu'il dit de l'import est dérivé de la même façon. La liste des réparations
+est un `Record<ImportReason, …>` indexé sur l'union de `persistence/validate.ts` :
+une raison ajoutée là-bas sans être décrite ici ne compile pas. Le garde-fou est
+tenu par le compilateur et non par un test — un test qu'on peut oublier d'écrire
+n'en est pas un. Le même raisonnement vaut pour les clés du document, que le test
+lit désormais sur `emptyData()` : la liste des dix noms qu'il recopiait s'était
+périmée en silence le jour où l'épargne en a ajouté deux.
+
 **L'exemple est construit, pas commité.** `exampleData(on)` bâtit un document de
 quinze mois à partir d'une date, en posant des récurrences puis en *ouvrant*
 chaque mois par `openMonth` — jamais en écrivant une `Entry` à la main. Deux
@@ -491,6 +499,15 @@ du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe p
 éviter ; et il est produit par les mêmes règles que l'usage réel, donc une règle
 qui change le change avec elle. Les salaires y tombent en tête de mois, ce qui
 n'est pas cosmétique : chargé le 2, le jeu s'ouvrait sinon sur un solde à zéro.
+
+**Et ce qu'il contient est une liste d'états, pas une collection de lignes
+vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : un
+crédit soldé, une avance entièrement reconstituée, un support d'épargne archivé,
+un autre sans relevé — dont la valeur est donc *inconnue*, ce qui n'est pas zéro
+—, une règle qui s'arrêtera le mois prochain et une autre qui n'a pas encore
+commencé, un troisième membre au revenu très inférieur pour que le prorata cesse
+d'être un miroir. `persistence/example.test.ts` **est** cette liste, et le seul
+endroit où elle est vérifiée.
 
 Les deux modules valent une trentaine de kilo-octets pour des gestes qu'on fait
 une fois dans sa vie : ils sont chargés en `import()` dynamique, et le schéma
