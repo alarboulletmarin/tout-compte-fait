@@ -4,13 +4,12 @@ import { BreakdownTile, type ShowFamily } from './BreakdownTile'
 import { CreditsTile } from './CreditsTile'
 import { MemberShareTile } from './MemberShareTile'
 import { SavingTile } from './SavingTile'
-import { SettlementTile } from './SettlementTile'
 import { SplitTile } from './SplitTile'
 
 /**
  * Le troisième étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
  *
- * Ces six tuiles étaient dans la même grille que le solde, ce qui donnait le
+ * Ces cinq tuiles étaient dans la même grille que le solde, ce qui donnait le
  * même poids à « combien il me reste » et à « qui verse quoi sur le pot commun ».
  * Elles répondent pourtant à une question qu'on se pose *après* : le mois est
  * d'abord une situation et une tâche, et seulement ensuite une analyse. Elles
@@ -21,9 +20,12 @@ import { SplitTile } from './SplitTile'
  * l'argent, ce qu'on peut mettre de côté, comment le foyer se répartit, puis ce
  * qu'on doit encore.
  *
- * Cinq d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
- * suivi, pas de second membre, pas de filtre, rien à régulariser. C'est la règle
- * du cahier §4.6 : une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va.
+ * Quatre d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
+ * suivi, pas de second membre, pas de filtre. C'est la règle du cahier §4.6 :
+ * une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va. La
+ * régularisation du mois précédent avait la sienne ; elle est redevenue une
+ * ligne d'« À verser sur le commun », où la place que l'anneau occupait la
+ * laisse enfin tenir — et où elle rend le chiffre de tête vérifiable.
  * `SavingTile` est la seule que la grille masque elle-même, sur le commun, où
  * l'épargne ne rentre pas dans un partage.
  *
@@ -39,7 +41,6 @@ export function AnalysisGrid({ onShowFamily }: { onShowFamily?: ShowFamily }) {
       <BreakdownTile {...(onShowFamily === undefined ? {} : { onShowFamily })} />
       {!common && <SavingTile />}
       <MemberShareTile />
-      <SettlementTile />
       <SplitTile />
       <CreditsTile />
     </BentoGrid>

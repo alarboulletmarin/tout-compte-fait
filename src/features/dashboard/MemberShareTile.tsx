@@ -1,48 +1,76 @@
 import { SPLIT_PATH } from '@/app/routes'
+import { addMonthsToYm } from '@/domain/date'
 import { type Money, add } from '@/domain/money'
 import { fr } from '@/i18n/fr'
-import { formatPercent, tpl } from '@/i18n/format'
-import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
+import { de, formatMonthName, tpl } from '@/i18n/format'
+import { useCurrentYm, useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { SplitIcon } from '@/ui/Icons'
-import { Ring } from '@/ui/Ring'
 import { Tile } from '@/ui/Tile'
-import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
 
-function Line({ label, value }: { label: string; value: Money }) {
+/**
+ * Un terme du calcul : ce qu'il vaut, et ce qu'il est.
+ *
+ * `signed` pour le report, `direction` pour la part : l'un est un écart dont le
+ * signe est toute la lecture, l'autre un versement dont on lit le montant.
+ */
+function Line({ label, value, signed }: { label: string; value: Money; signed?: boolean }) {
   return (
     <li className="flex items-baseline gap-2">
       <span className="t-label min-w-0 flex-1 truncate">{label}</span>
-      {/* Au centime, alors que la colonne est étroite : arrondis, les deux
-          premières lignes annonceraient 764 € et 153 € quand la tuile Charges
-          juste au-dessus en annonce 916,22. Un décalage de quatre-vingts
-          centimes entre deux tuiles voisines se lit comme une erreur — c'est
-          le libellé qui se coupe, jamais le chiffre. */}
-      <Amount value={value} size="label" direction="out" className="shrink-0" />
+      <Amount
+        value={value}
+        size="label"
+        className="shrink-0"
+        {...(signed === true ? { signed: true } : { direction: 'out' as const })}
+      />
     </li>
   )
 }
 
 /**
- * Ce que la personne filtrée doit verser sur le pot commun, et ce que le mois
- * lui coûte en tout.
- *
- * Les chiffres d'un mois filtré comprennent déjà sa part du pot commun — sans
- * quoi chacun se lirait comme s'il vivait sans loyer. Mais une fois fondue dans
- * le total des charges, cette part ne se voit plus : le solde du mois valait
- * bien ses revenus moins ses charges moins sa part du foyer, et rien à l'écran
- * ne montrait le troisième terme ni le pourcentage dont il sort.
+ * Ce que la personne filtrée doit verser sur le pot commun — et, quand le
+ * montant n'est pas sa seule part, l'addition qui le donne.
  *
  * La tuile sert un geste, et un seul : le virement du mois sur le compte joint.
- * Ce montant est donc le chiffre de tête, en corps de tuile, et non une ligne
- * parmi trois qu'il fallait retrouver à chaque fois. Le total des charges
- * communes du foyer, lui, n'y est plus — c'est un chiffre qu'on ne doit pas, et
- * l'écran Répartition l'ouvre déjà en détail à un doigt d'ici.
+ * Ce montant est donc le chiffre de tête, celui qu'on recopie dans une
+ * application bancaire. **Tout le reste de la tuile n'existe que pour le
+ * justifier**, et rien qui ne le justifie pas n'y a sa place.
  *
- * Restent les deux montants qu'on ne peut pas déduire de la tuile Charges
- * voisine, laquelle mêle les deux : ce qu'il paie pour lui, et la somme des
- * deux — le vrai coût de son mois, qu'on faisait de tête.
+ * **L'anneau est parti, et c'est le sujet de cette version.** Il dessinait
+ * 45,3 % — la part du pot commun que le prorata des revenus met sur cette
+ * personne. Un anneau annonce « telle fraction de ce tout-là » ; or ce tout, le
+ * total des charges communes du foyer, n'est pas sur la tuile, et à dessein :
+ * c'est un chiffre qu'on ne doit pas. Restait une jauge sans son tout,
+ * c'est-à-dire un pourcentage sans son « de quoi » — sur l'écran de tout le
+ * monde la question ne se pose pas, la tuile Répartition découpe le pot entre
+ * les personnes et le tout est sous les yeux ; sous un filtre par membre, elle
+ * se posait et rien n'y répondait.
+ *
+ * **Le coefficient ne revient pas en toutes lettres pour autant.** Il ne
+ * s'explique pas d'un mot posé à côté de lui : il sort du revenu de chacun
+ * rapporté à la somme des revenus, et c'est cette division-là qu'il faut voir
+ * pour l'admettre. L'écran Répartition la montre, ligne à ligne, à un doigt
+ * d'ici — le prorata contre le revenu dont il vient. Un pourcentage qu'on ne
+ * peut pas vérifier sur l'écran où il s'affiche n'est pas une explication, quel
+ * que soit le mot qu'on lui accroche.
+ *
+ * **Le report du mois précédent rentre à sa place, et sa tuile disparaît.** Il
+ * vivait à part parce que la ligne qu'il demandait ici passait à la ligne dans
+ * une colonne de 222px — les 80px d'anneau plus la gouttière mangeaient la
+ * moitié de la tuile. L'anneau parti, la colonne fait la largeur entière, et
+ * l'objection tombe avec ce qui la causait. Le gain n'est pas de la place :
+ * c'est que le chiffre de tête devient **vérifiable**. Il vaut la part du mois
+ * plus le report, et la tuile affichait jusqu'ici trois montants dont aucun des
+ * deux termes — « 1 788,96 € » se lisait au-dessus de « 37,97 € » et
+ * « 1 697,80 € », qui ne le redonnent pas.
+ *
+ * **Sans report, il n'y a rien à additionner et la tuile ne dit que le
+ * montant.** Sa part vaut alors le virement au centime : une ligne « sa part du
+ * mois » y recopierait le chiffre de tête un cran plus bas, et deux fois le
+ * même nombre à trois lignes d'écart se lit comme une erreur avant de se lire
+ * comme une égalité.
  *
  * Elle s'efface dans les mêmes cas que sa jumelle Répartition — pas de filtre,
  * pas de prorata calculable (l'en-tête du mois nomme alors ce qui manque), ou
@@ -52,42 +80,39 @@ export function MemberShareTile() {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   const members = useMemberMap()
+  const month = useCurrentYm()
 
   if (filter === undefined || charges === null || charges.commonTotal <= 0) return null
 
   const member = members.get(filter)
-  const percent = formatPercent(charges.shareBp / 10_000, 1)
-  /* La lecture de la jauge redescend dans l'anneau, d'où elle était partie : la
-     tuile n'est plus un bouton, son contenu se lit donc ligne à ligne, et les
-     trois montants que cette phrase récitait sont désormais entendus là où ils
-     s'affichent. Reste ce que la jauge seule montre — la part, et de qui. */
-  const spoken = tpl(fr.dashboard.srMemberShare, member?.name ?? '', percent)
-  /* Le coût du mois, et lui seul : le report n'en fait pas partie. Ce qu'une
-     dépense a coûté à quelqu'un est arrêté au mois où elle a eu lieu, et ces
-     deux lignes doivent continuer de recomposer la tuile Charges voisine. */
-  const total = add(charges.own, charges.common)
-  /* Le virement, lui, se rattrape : celui qui a trop avancé le mois passé verse
-     moins ce mois-ci, et l'autre un peu plus. */
+  /* Le virement se rattrape : celui qui a trop avancé le mois passé verse moins
+     ce mois-ci, et l'autre un peu plus. Rien à rattraper, rien à dire — une
+     ligne à zéro laisserait croire à une régularisation là où les comptes
+     tombaient justes. */
+  const settled = charges.adjustment !== 0
   const toPay = add(charges.common, charges.adjustment)
+  const previous = de(formatMonthName(addMonthsToYm(month, -1)))
 
   return (
-    /* 4×2 et non 2×2 comme la Répartition, alors qu'elles portent le même
-       gabarit : celle-ci aligne des montants là où l'autre aligne des
-       pourcentages. « 1 374,50 € » prend 68 des 94 pixels qu'une demi-colonne
-       laisse à côté de l'anneau au point de bascule, et le montant à verser y
-       serait posé en corps de tuile sur une colonne qui ne peut pas le tenir.
-       Sur téléphone les deux formats sont le même : pleine largeur, deux
-       rangées.
+    /* **Le format suit le contenu, et ce contenu a deux tailles** (DS §5). Avec
+       un report, la tuile porte un chiffre et l'addition qui le donne : deux
+       rangées, qui se remplissent du calcul là où elles se remplissaient d'un
+       anneau de 80px. Sans report, elle ne porte plus que son chiffre — une
+       `4x2` y laisserait les quarante pixels de vide que le DS reproche
+       précisément à une tuile de deux rangées sans visualisation, et c'est la
+       tuile plate qui tient un eyebrow et un montant.
 
-       Un lien et non un bouton, comme la Répartition : son contenu porte une
-       liste, et le nom unique d'un bouton effaçait les deux montants qu'elle
+       Un lien et non un bouton, comme la Répartition : son contenu est une
+       liste, et le nom unique d'un bouton effacerait les deux lignes qu'elle
        sépare exprès. Le lien couvre toute la tuile et le repère reste au coin,
-       hors du flux — c'est ce qui lui permet de ne rien coûter aux 148px de
-       contenu, qui sont comptés. */
+       hors du flux. */
     <Tile
-      span="4x2"
-      className="gap-3"
-      label={fr.dashboard.memberShare}
+      span={settled ? '4x2' : '4x1'}
+      className={settled ? 'gap-3' : 'justify-between'}
+      /* Le nom du membre vit ici : rien dans le contenu ne le porte — il vient
+         du filtre, que la tuile ne redit pas —, et un lecteur d'écran qui
+         parcourt les régions d'une page les entend hors de leur voisinage. */
+      label={tpl(fr.dashboard.memberShareOf, member?.name ?? '')}
       /* Le repère nu, sans nommer sa destination : « À VERSER SUR LE COMMUN »
          est l'eyebrow le plus long de la grille (~195px en mono 11px, sans
          césure possible) et « Répartition › » en demande 95 de plus, quand la
@@ -99,47 +124,26 @@ export function MemberShareTile() {
       {/* L'eyebrow nomme le chiffre, au lieu qu'un libellé le refasse juste
           au-dessus : la tuile portait cinq éléments là où le DS §5 en autorise
           quatre, et les trente pixels de trop se coupaient en haut comme en
-          bas — le libellé remontait sous l'eyebrow, le total à payer sortait
-          par le bas.
-
-          Le renvoi vers le détail était ici, souligné comme un lien sans en
-          être un, et occupait exactement la place où la tuile pose désormais
-          son repère. C'est le repère qui le porte, et il nomme l'écran
-          d'arrivée au lieu de dire « détail ». */}
+          bas. */}
       <Eyebrow icon={SplitIcon}>{fr.dashboard.memberShare}</Eyebrow>
-      <div className="flex min-h-0 flex-1 items-center gap-4">
-        {/* Une jauge et non un donut : la question n'est pas comment le pot
-            commun se découpe entre tous — c'est la tuile Répartition — mais
-            quelle fraction en revient à cette personne-là. Le pourcentage est
-            au centre parce qu'il est la réponse ; les montants qu'il produit
-            se lisent à côté. */}
-        <Ring
-          size={DONUT_SIZE}
-          thickness={DONUT_THICKNESS}
-          value={charges.shareBp / 10_000}
-          color={member?.color ?? 'var(--cat-rest)'}
-          label={fr.dashboard.memberShare}
-          srText={spoken}
-          className="shrink-0"
-        >
-          <span className="t-num-body tnum">{percent}</span>
-        </Ring>
-        {/* Bornée : sur six colonnes la tuile fait 650px, et une liste qui les
-            prendrait toutes séparerait chaque libellé de son montant par un
-            demi-écran de vide — on ne lit plus une ligne, on la suit. */}
-        <div className="flex min-w-0 max-w-xs flex-1 flex-col gap-1">
-          {/* Le montant du virement, en corps de tuile : c'est la réponse, et
-              on vient la recopier dans une application bancaire. */}
+      {settled ? (
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-1">
           <Amount value={toPay} size="tile-fit" direction="out" />
+          {/* Les deux termes, dans l'ordre où l'addition se fait, sous le
+              chiffre qu'ils redonnent. C'est tout ce que la tuile a à dire de
+              plus que son montant. */}
           <ul className="flex flex-col gap-1 border-t border-border pt-2">
-            {/* Ce qu'il paie pour lui, puis la somme des deux : la tuile
-                Charges voisine mêle déjà les deux sans les séparer, et le coût
-                réel de son mois se faisait de tête. */}
-            <Line label={fr.dashboard.memberShareOwn} value={charges.own} />
-            <Line label={fr.dashboard.memberShareTotal} value={total} />
+            <Line label={fr.dashboard.memberSharePart} value={charges.common} />
+            <Line
+              label={tpl(fr.dashboard.settlementOf, previous)}
+              value={charges.adjustment}
+              signed
+            />
           </ul>
         </div>
-      </div>
+      ) : (
+        <Amount value={toPay} size="tile-fit" direction="out" />
+      )}
     </Tile>
   )
 }

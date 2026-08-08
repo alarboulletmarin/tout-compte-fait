@@ -856,35 +856,36 @@ export const fr = {
        filtrée porte du pot commun — et le coefficient qui le produit, qui
        n'apparaissait nulle part sur son mois.
 
-       Le montant à virer est le chiffre de tête, et non une ligne parmi trois.
-       C'est le geste que la tuile sert : un virement sur le compte joint, dont
-       la somme se recopie telle quelle. Le total des charges communes en est
-       parti — c'est un chiffre qu'on ne doit pas, et il se lit encore sur
-       l'écran Répartition, qui est fait pour ça. */
+       Le montant à virer est le chiffre de tête, et les lignes en dessous sont
+       les termes qui le donnent. C'est le geste que la tuile sert : un virement
+       sur le compte joint, dont la somme se recopie telle quelle. Le total des
+       charges communes n'y est pas — c'est un chiffre qu'on ne doit pas, et il
+       se lit sur l'écran Répartition, qui est fait pour ça. */
     /* L'eyebrow nomme le chiffre plutôt que la tuile : un nom de tuile puis
        « À verser sur le commun » juste en dessous disaient deux fois la même
        chose, et cette redite valait les trente pixels qui débordaient. */
     memberShare: 'À verser sur le commun',
-    memberShareOwn: 'Charges perso',
-    memberShareTotal: 'Total à payer',
-    /* Le report a sa tuile, et non une cinquième ligne dans celle-ci : le DS §5
-       plafonne une tuile à un eyebrow, un chiffre, une lecture secondaire et une
-       visualisation, puis tranche — « si elle en demande un cinquième, c'est
-       deux tuiles ». La ligne qu'il portait ici passait à la ligne sur mobile,
-       dans une colonne de 222px, et se faisait couper par le bas. */
-    settlement: 'Régularisation',
-    /* Le mois sans son année, et la direction en deux mots : une 4×1 fait 88px
-       de haut dont 56 utiles, et sur un écran de 320 elle n'offre que 143px à
-       droite du montant. « de juillet 2026 · à verser en moins » y passait à la
-       ligne, et la seconde ligne se faisait couper par le bas. */
-    settlementLess: '%s · en moins',
-    settlementMore: '%s · en plus',
-    srSettlement: 'Régularisation %s : %s sur ce que %s verse au commun ce mois-ci.',
-    /* La lecture de la jauge, et elle seule : les trois montants qu'elle
-       accompagnait se lisent maintenant ligne à ligne dans la tuile, qui n'est
-       plus un bouton derrière lequel tout disparaissait. Le nom du membre y
-       reste, lui : rien dans le contenu ne le porte, il vient du filtre. */
-    srMemberShare: '%s porte %s des charges communes.',
+    /* Le nom du membre ne s'affiche pas — il vient du filtre, que la tuile ne
+       redit pas —, mais il nomme la région : un lecteur d'écran sait lister les
+       régions d'une page hors de leur voisinage, et « À verser sur le commun »
+       seul n'y dit pas de qui. */
+    memberShareOf: 'À verser sur le commun · %s',
+    /* Les deux termes du virement, et rien d'autre : sa part du mois, plus ou
+       moins ce que le mois précédent reporte. Ils s'additionnent pour redonner
+       le chiffre de tête, ce qu'aucune des lignes d'avant ne faisait —
+       « Charges perso » et « Total à payer » répondaient à une autre question
+       que celle de la tuile, et trois montants dont aucun ne redonne le
+       quatrième se lisent comme une erreur de calcul.
+
+       Le pourcentage n'y est plus, ni en anneau ni en toutes lettres : il sort
+       du revenu de chacun rapporté à la somme des revenus, et cette division-là
+       ne tient pas sur une ligne de tuile. C'est l'écran Répartition qui la
+       montre, où le prorata se lit contre le revenu dont il vient. */
+    memberSharePart: 'Sa part du mois',
+    /* Le report, et le mois d'où il vient. Le « de » vit dans le mois, pas dans
+       le gabarit : « d'août » et « de juillet » ne s'écrivent pas pareil —
+       c'est la tuile qui l'élide, comme `SplitPage`. */
+    settlementOf: 'Régularisation %s',
 
     /* Quatre soldes qui se ressemblent à l'œil sans dire la même chose. Chacun
        dit son calcul, puis ce qui le sépare de son voisin — c'est la question

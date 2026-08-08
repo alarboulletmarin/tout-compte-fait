@@ -12,6 +12,46 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — « À verser sur le commun » montre son addition, plus son anneau
+
+La tuile portait un anneau à 45,3 %. C'est la part du pot commun que le prorata
+des revenus met sur la personne filtrée — mais un anneau annonce *une fraction
+d'un tout*, et ce tout, le total des charges communes du foyer, n'est pas sur la
+tuile : c'est un chiffre qu'on ne doit pas, et il en avait été retiré à dessein.
+Restait une jauge sans son tout, c'est-à-dire un pourcentage sans son « de
+quoi ». Sur l'écran de tout le monde la question ne se pose pas — la tuile
+Répartition découpe le pot entre les personnes, le tout est sous les yeux ; sous
+un filtre par membre, elle se posait et rien à l'écran n'y répondait.
+
+- **L'anneau est retiré, et le pourcentage avec lui.** Il ne s'explique pas d'un
+  mot posé à côté : il sort du revenu de chacun rapporté à la somme des revenus,
+  et c'est cette division-là qu'il faut voir pour l'admettre. L'écran
+  Répartition la montre, à un doigt d'ici, le prorata contre le revenu dont il
+  vient. Un pourcentage qu'on ne peut pas vérifier sur l'écran où il s'affiche
+  n'explique rien, quel que soit le mot qu'on lui accroche.
+- **Le chiffre de tête devient vérifiable.** Il vaut la part du mois plus le
+  report du mois précédent, et la tuile montrait jusqu'ici trois montants dont
+  aucun des deux termes : « 1 788,96 € » se lisait au-dessus de « 37,97 € » et
+  « 1 697,80 € », qui ne le redonnent pas. Les deux lignes sont désormais
+  « Sa part du mois » et « Régularisation de juillet », dans l'ordre où
+  l'addition se fait.
+- **La tuile « Régularisation » disparaît**, sa ligne étant rentrée ici. Elle
+  vivait à part parce que la ligne qu'elle demandait passait à la ligne dans une
+  colonne de 222px — les 80px d'anneau plus la gouttière mangeaient la moitié de
+  la tuile. L'anneau parti, la colonne fait la largeur entière et l'objection
+  tombe avec ce qui la causait.
+- **« Charges perso » et « Total à payer » s'en vont.** Elles répondaient à une
+  autre question que celle de la tuile — ce que le mois coûte, quand la tuile
+  sert un virement —, et « Total à payer » posé juste sous « à verser » se
+  confondait avec lui. Ce que le mois coûte se lit sur la tuile Charges, et son
+  détail sur l'écran Répartition.
+- **Sans report, la tuile ne dit que le montant** et passe en `4x1` : la part
+  vaut alors le virement au centime, une ligne « sa part du mois » y recopierait
+  le chiffre de tête un cran plus bas, et deux fois le même nombre à trois
+  lignes d'écart se lit comme une erreur avant de se lire comme une égalité. Le
+  format suit le contenu (DS §5) : deux rangées quand il y a une addition à
+  montrer, une quand il n'y a qu'un chiffre.
+
 ### Modifié — « Réglages » disparaît, et « Plus » range par intention
 
 « Réglages » ne nommait pas une intention, il nommait ce qui restait. Derrière
