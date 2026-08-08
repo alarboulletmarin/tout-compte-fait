@@ -295,3 +295,108 @@ describe('l’écran range chaque question dans sa zone', () => {
     expect(screen.getByRole('button', { name: fr.savings.supportAdd })).toBeInTheDocument()
   })
 })
+
+/* ============================================================================
+ * La cascade de la capacité nomme son troisième terme.
+ *
+ * « Charges » d'un bloc mêlait ses lignes à elle et sa part du pot commun, sans
+ * que rien ne le dise : le seul terme sur lequel on peut agir seul·e était
+ * indiscernable de celui qui se décide à deux, sur l'écran qui sert justement à
+ * décider quoi changer.
+ * ==========================================================================*/
+
+describe('la cascade sépare ce qui est à soi de la part du commun', () => {
+  const MONTHLY = { unit: 'month' as const, every: 1, anchorDay: 1 }
+
+  /**
+   * Deux revenus égaux — donc une part chacun —, 900 € de loyer commun, 300 €
+   * de mensualité commune et 50 € de courses au seul nom d'Andrea. Sa capacité
+   * vaut 2 500 − 450 − 150 − 50 = 1 850 €, et les trois termes se lisent.
+   */
+  function seedShared() {
+    useStore.setState({
+      ym: MONTH,
+      filter: ALL_FILTER,
+      data: makeData({
+        household: { name: '', members: [ANDREA, MARIE] },
+        families: [
+          makeFamily({ id: 'fam-res', label: 'Ressources', kind: 'resource' }),
+          makeFamily({ id: 'fam-home', label: 'Logement', kind: 'charge' }),
+          makeFamily({ id: 'fam-loan', label: 'Crédits', kind: 'debt' }),
+        ],
+        categories: [
+          makeCategory({ id: 'salaire', label: 'Salaire', familyId: 'fam-res', direction: 'in' }),
+          makeCategory({ id: 'loyer', label: 'Loyer', familyId: 'fam-home' }),
+          makeCategory({ id: 'courses', label: 'Courses', familyId: 'fam-home' }),
+          makeCategory({ id: 'auto', label: 'Prêt auto', familyId: 'fam-loan' }),
+        ],
+        recurrences: [
+          { id: 'r-1', label: 'Salaire', categoryId: 'salaire', memberId: 'm-1', direction: 'in', amount: eur(250_000), startedOn: '2026-01-01', period: MONTHLY },
+          { id: 'r-2', label: 'Salaire', categoryId: 'salaire', memberId: 'm-2', direction: 'in', amount: eur(250_000), startedOn: '2026-01-01', period: MONTHLY },
+        ],
+        entries: [
+          makeEntry({ id: 'p1', date: '2026-07-01', direction: 'in', amount: eur(250_000), categoryId: 'salaire', memberId: 'm-1' }),
+          makeEntry({ id: 'p2', date: '2026-07-01', direction: 'in', amount: eur(250_000), categoryId: 'salaire', memberId: 'm-2' }),
+          makeEntry({ id: 'loyer', date: '2026-07-05', amount: eur(90_000), categoryId: 'loyer' }),
+          makeEntry({ id: 'pret', date: '2026-07-08', amount: eur(30_000), categoryId: 'auto' }),
+          makeEntry({ id: 'sien', date: '2026-07-12', amount: eur(5_000), categoryId: 'courses', memberId: 'm-1' }),
+        ],
+      }),
+    })
+  }
+
+  /* Les quatre termes, et leur soustraction qui tombe juste : trois montants
+     posés à côté d'un résultat qu'ils ne redonnent pas se lisent comme une
+     erreur de calcul, et c'est bien ce qu'on vient vérifier ici. */
+  it('nomme les charges perso, les crédits perso et la part du commun', () => {
+    seedShared()
+    open()
+
+    const details = assertElement(screen.getByText(fr.savings.method).closest('details'))
+    const cascade = within(details)
+
+    expect(cascade.getByText(fr.savings.flowOwnCharges)).toBeInTheDocument()
+    expect(cascade.getByText(fr.savings.flowCommon)).toBeInTheDocument()
+    expect(cascade.queryByText(fr.savings.flowCharges)).not.toBeInTheDocument()
+
+    /* Les termes portent leur sens — `Amount` le donne à lire hors de l'œil, un
+       « + » pour une entrée et le mot pour une sortie —, le résultat non :
+       c'est un solde. 2 500 − 50 − 600 = 1 850. */
+    const paid = (cents: number): string =>
+      said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(cents), 'EUR')}`)
+
+    expect(cascade.getByText(said(`+${formatMoney(eur(250_000), 'EUR')}`))).toBeInTheDocument()
+    expect(cascade.getByText(paid(5_000))).toBeInTheDocument()
+    expect(cascade.getByText(paid(60_000))).toBeInTheDocument()
+    expect(cascade.getByText(spoken(185_000))).toBeInTheDocument()
+  })
+
+  /* Un crédit commun n'est plus un crédit sur cette cascade : il est dans la
+     part du commun, avec le loyer. Sans crédit à son seul nom, la ligne
+     « Crédits perso » n'a rien à dire et s'en va — une ligne à zéro laisserait
+     croire à une nature qu'on aurait oublié de renseigner. */
+  it('range le crédit commun dans la part du commun, pas dans ses crédits', () => {
+    seedShared()
+    open()
+
+    const cascade = within(assertElement(screen.getByText(fr.savings.method).closest('details')))
+    expect(cascade.queryByText(fr.savings.flowOwnDebts)).not.toBeInTheDocument()
+    expect(cascade.queryByText(fr.savings.flowDebts)).not.toBeInTheDocument()
+  })
+
+  /* Sans prorata calculable, les chiffres du mois sont ceux de ses seules
+     lignes : il n'y a aucune part à distinguer, et la cascade reprend ses deux
+     termes d'origine plutôt que d'annoncer un commun à zéro. */
+  it('reprend ses termes d’origine tant que le prorata ne se calcule pas', () => {
+    seedShared()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: { ...data, recurrences: data.recurrences.filter((r) => r.memberId !== 'm-2') },
+    })
+    open()
+
+    const cascade = within(assertElement(screen.getByText(fr.savings.method).closest('details')))
+    expect(cascade.getByText(fr.savings.flowCharges)).toBeInTheDocument()
+    expect(cascade.queryByText(fr.savings.flowCommon)).not.toBeInTheDocument()
+  })
+})

@@ -37,6 +37,55 @@ se lit comme un chiffre faux.
   repliées : celles-ci montrent un montant et non un écart, et leur propre
   phrase le dit déjà.
 
+### Modifié : ce qu'un mois coûte et ce qu'il fait verser cessent d'être le même chiffre
+
+La carte « À verser sur le commun » portait trois montants assis sur deux bases
+différentes. Le chiffre de tête — 2 015,42 € — est un **virement** : la part du
+pot commun, plus la régularisation du mois précédent. Les deux lignes en
+dessous — « Charges perso » 72,87 € et « Total à payer » 1 805,73 € — sont un
+**coût**, dont le report est exclu par construction : ce qu'une dépense a coûté
+à quelqu'un est arrêté au mois où elle a eu lieu, seul le virement se rattrape.
+D'où l'anomalie qu'on lisait tous les mois — un « Total à payer » **plus petit**
+que le « À verser » posé juste au-dessus, dans une carte dont le seul métier est
+le virement.
+
+- **La carte du virement ne parle plus que du virement**, et elle pose son
+  calcul au lieu de le taire : sa part du mois, plus la régularisation, égale ce
+  qu'elle verse — les mots et l'ordre de l'écran Répartition, où le même calcul
+  se lit déjà. Deux écrans qui montrent le même chiffre doivent le montrer de la
+  même façon, sinon c'est deux chiffres.
+- **La régularisation se lisait deux fois.** Elle était déjà comprise —
+  silencieusement — dans le chiffre de tête, et s'affichait une seconde fois en
+  carte autonome juste en dessous. Rien ne disait que les deux montants voisins
+  ne s'ajoutaient pas, et deux montants voisins dont rien ne le dit s'ajoutent.
+  Elle redevient un terme du calcul, sur la tuile dont elle change le montant,
+  et ne se lit qu'aux mois où elle existe.
+- **Une tuile « Perso et commun » répond à la question que l'autre répondait
+  mal** : ce que le mois coûte à quelqu'un, éclaté en ses lignes à elle et sa
+  part du pot. C'est la seule chose que ses chiffres ne disaient jamais — le
+  découpage du prorata fond les deux dans chaque total, sans quoi chacun se
+  lirait comme s'il vivait sans loyer, et une fois fondus plus rien ne sépare ce
+  qu'on décide seul·e de ce qui se décide à deux. Son total est celui de la
+  tuile Charges au centime : elle ne le contredit pas, elle l'éclate — et c'est
+  ce qui interdit d'y arrondir.
+- **La cascade de la capacité d'épargne nomme son troisième terme.** Elle disait
+  « Charges » d'un bloc là où le montant mêlait les deux, sur l'écran qui sert
+  précisément à décider quoi changer. Elle dit maintenant « Charges perso »,
+  « Crédits perso » et « Part du commun » — crédits communs compris, la légende
+  le précise. Les termes redonnent la capacité au centime : ce sont les mêmes
+  totaux, seulement séparés. Sans prorata calculable, il n'y a aucune part à
+  distinguer et la cascade reprend ses termes d'origine.
+- **Le mois où le report est le seul virement garde sa lecture.** Sans charge
+  commune, l'ancienne tuile s'effaçait et c'est la carte de régularisation qui
+  tenait seule ce cas ; elle n'existe plus, donc la carte du virement reste
+  debout. Son montant garde alors son signe : qui a trop avancé le mois d'avant
+  **reçoit** au lieu de verser, et l'annoncer comme une sortie disait « 282,56 €
+  à verser » à qui on devait 282,56 €. Même correction sur l'écran Répartition,
+  qui avait la même.
+
+Aucune migration de schéma : rien de ce qui est enregistré ne change, seulement
+la façon dont les mêmes montants se lisent.
+
 ### Modifié — « Réglages » disparaît, et « Plus » range par intention
 
 « Réglages » ne nommait pas une intention, il nommait ce qui restait. Derrière
