@@ -12,6 +12,31 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
+
+Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
+la grandeur qu'ils mesurent. On lisait « 2026 · 9 994 € », « 2025 · 1 489 € »,
+« Écart · +8 505 € » sous le mot « mai » : de quelle année vient chaque nombre,
+c'était clair ; ce qu'il compte, jamais. Un chiffre juste qu'on ne sait pas lire
+se lit comme un chiffre faux.
+
+- **Le cumul annuel porte son nom à l'œil.** « Cumul du solde depuis janvier »
+  s'écrit au-dessus de la lecture, là où l'information manquait. Le graphique
+  avait pourtant déjà ce nom — dans l'`aria-label` du tracé, c'est-à-dire pour
+  les seuls lecteurs d'écran : la lecture accessible existait, la lecture
+  visible n'existait pas. Sans elle, rien ne tranchait entre « le solde de mai »
+  et « tout ce qui s'est accumulé de janvier à mai », deux nombres différents
+  pour la même position du curseur. La chaîne est la même des deux côtés, et
+  elle a changé de sujet au passage : « mois après mois » décrivait la forme de
+  la courbe, pas ce qu'elle empile.
+- **L'écart entre deux mois dit son périmètre et son sens.** « Écart des
+  sorties, du mois de référence au mois comparé » : la liste ne compare que les
+  sorties — les entrées n'y sont jamais entrées — et un « +150 € » ne dit pas de
+  lui-même dans quel sens il se lit. Deux règles qui n'étaient écrites nulle
+  part, et qu'un signe ne suffit pas à porter. La phrase ne suit pas les rangées
+  repliées : celles-ci montrent un montant et non un écart, et leur propre
+  phrase le dit déjà.
+
 ### Modifié : ce qu'un mois coûte et ce qu'il fait verser cessent d'être le même chiffre
 
 La carte « À verser sur le commun » portait trois montants assis sur deux bases

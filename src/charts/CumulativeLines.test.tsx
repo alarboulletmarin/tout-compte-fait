@@ -122,4 +122,17 @@ describe('CumulativeLines', () => {
     expect(screen.getByText('Cumul 2026 contre 2025 : …')).toHaveClass('sr-only-text')
     expect(screen.getByRole('img')).toHaveAccessibleName('Cumul du solde')
   })
+
+  /* Le défaut que règle ce changement : le graphique ne portait son nom que
+     dans l'`aria-label` du SVG, et les trois montants n'avaient au-dessus d'eux
+     que « 2026 », « 2025 » et « Écart » — de quelle année, jamais de quelle
+     grandeur. */
+  it('écrit au-dessus des chiffres ce qu’ils mesurent', () => {
+    const { container } = draw([serie('2026', twelve(10_000, 20_000))])
+    const title = screen.getByText('Cumul du solde')
+    expect(title).toBeVisible()
+    expect(title).toHaveClass('t-label')
+    // Le titre précède le mois lu, qui garde son rang.
+    expect(title.nextElementSibling).toBe(container.querySelector('.t-section'))
+  })
 })

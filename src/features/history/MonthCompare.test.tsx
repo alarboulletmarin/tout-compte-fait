@@ -85,6 +85,20 @@ describe('la comparaison de deux mois', () => {
     expect(screen.getByText(`+${euros(15100)}`, EXACT)).toBeInTheDocument()
   })
 
+  /* Deux règles qui ne s'écrivaient nulle part : la liste ne compare que les
+     sorties, et son signe se lit du mois de référence vers le mois comparé. */
+  it('dit ce que la colonne des écarts compte, et dans quel sens', () => {
+    setup()
+    expect(screen.getByText(history.compareScope)).toBeVisible()
+  })
+
+  /* Les rangées repliées portent un montant et non un écart : la phrase de
+     l'écart n'a rien à y faire, celle du repli dit déjà ce qu'elles montrent. */
+  it('ne définit pas l’écart là où il n’y en a pas', () => {
+    setup([out('2026-05-05', 'assurance', 30000), out('2026-06-05', 'assurance', 30000)])
+    expect(screen.queryByText(history.compareScope)).not.toBeInTheDocument()
+  })
+
   it('accorde le compte au singulier', () => {
     setup([out('2026-05-03', 'alimentation', 67000), out('2026-06-03', 'alimentation', 53600)])
     expect(screen.getByText(history.compareChangedOne)).toBeInTheDocument()
