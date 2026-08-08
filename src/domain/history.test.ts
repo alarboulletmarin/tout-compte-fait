@@ -3,13 +3,16 @@ import { eur, makeEntry } from './fixtures'
 import {
   compareMonths,
   coveredYears,
+  cumulativeLine,
   hasDataInYear,
+  kindSeries,
   monthSeries,
   splitDeltas,
   trailingMonths,
   yearHorizon,
   yearSeries,
 } from './history'
+import type { CategoryKind } from './types'
 
 const entries = [
   makeEntry({ date: '2026-05-01', direction: 'in', amount: eur(200000) }),
@@ -53,6 +56,49 @@ describe('série mensuelle', () => {
     const series = trailingMonths(single, '2026-07')
     expect(series.filter((p) => p.hasData)).toHaveLength(1)
     expect(series.at(-1)?.in).toBe(1000)
+  })
+})
+
+describe('série mensuelle par nature', () => {
+  const kindOf = (id: string): CategoryKind =>
+    id === 'salaire'
+      ? 'resource'
+      : id === 'livret'
+        ? 'saving'
+        : id === 'credit'
+          ? 'debt'
+          : 'charge'
+
+  const byKind = [
+    makeEntry({ id: 'a', date: '2026-07-01', direction: 'in', categoryId: 'salaire', amount: eur(250000) }),
+    makeEntry({ id: 'b', date: '2026-07-05', categoryId: 'logement', amount: eur(80000) }),
+    makeEntry({ id: 'c', date: '2026-07-10', categoryId: 'credit', amount: eur(20000) }),
+    makeEntry({ id: 'd', date: '2026-07-15', categoryId: 'livret', amount: eur(50000) }),
+  ]
+
+  /* Ce que `monthSeries` ne sait pas dire : les trois sorties s'y confondent
+     dans `out`, et le versement d'épargne y pèse à côté du loyer. */
+  it('sépare le versement d’épargne des charges et des crédits', () => {
+    const [july] = kindSeries(byKind, '2026-07', '2026-07', kindOf)
+    expect(july?.totals).toEqual({ resource: 250000, charge: 80000, debt: 20000, saving: 50000 })
+    expect(monthSeries(byKind, '2026-07', '2026-07')[0]?.out).toBe(150000)
+  })
+
+  it('produit un point par mois et signale les mois vides', () => {
+    const series = kindSeries(byKind, '2026-06', '2026-08', kindOf)
+    expect(series.map((p) => p.ym)).toEqual(['2026-06', '2026-07', '2026-08'])
+    expect(series.map((p) => p.hasData)).toEqual([false, true, false])
+  })
+
+  /* Un mois passé porte souvent des `planned` que personne n'a confirmées :
+     elles ont pourtant été payées. */
+  it('compte les échéances prévues quand on le lui demande', () => {
+    const planned = [makeEntry({ date: '2026-07-20', categoryId: 'logement', amount: eur(30000), status: 'planned' })]
+    const entries = [...byKind, ...planned]
+    expect(kindSeries(entries, '2026-07', '2026-07', kindOf)[0]?.totals.charge).toBe(80000)
+    expect(kindSeries(entries, '2026-07', '2026-07', kindOf, undefined, true)[0]?.totals.charge).toBe(
+      110000,
+    )
   })
 })
 
@@ -178,6 +224,24 @@ describe('série annuelle', () => {
     expect(yearSeries([], 2026).map((p) => p.month)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
     ])
+  })
+})
+
+describe('le cumul en ligne de graphique', () => {
+  /* Un mois vide n'est pas un cumul plat : il n'est pas tracé du tout. Sans la
+     coupe, une année en cours plongerait sur sa dernière valeur jusqu'en
+     décembre, et l'œil lirait « ça s'arrête » là où il n'y a rien encore. */
+  it('ne trace qu’entre le premier et le dernier mois chiffrés', () => {
+    const line = cumulativeLine(yearSeries(entries, 2026))
+    expect(line.slice(0, 4)).toEqual([null, null, null, null])
+    expect(line[4]).toBe(150000) // mai
+    expect(line[5]).toBe(150000) // juin, entre deux mois chiffrés : tracé plat
+    expect(line[6]).toBe(283000) // juillet
+    expect(line.slice(7)).toEqual([null, null, null, null, null])
+  })
+
+  it('ne trace rien d’une année vide', () => {
+    expect(cumulativeLine(yearSeries(entries, 2025)).every((value) => value === null)).toBe(true)
   })
 })
 

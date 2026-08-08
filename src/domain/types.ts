@@ -82,6 +82,33 @@ export type Period = {
 }
 
 /**
+ * À quel rythme un support demande d'être relevé.
+ *
+ * Le réflexe comptable : une entreprise ne réévalue pas ses actifs tous les
+ * mois, elle fait un inventaire à la clôture et vit sur les flux le reste de
+ * l'année. L'épargne suit la même cadence, et elle n'est pas la même partout.
+ *
+ * - **Un livret réglementé** — A, LDDS, LEP — a une valeur *déterministe* entre
+ *   deux relevés : elle ne bouge que des versements, que l'app connaît déjà,
+ *   plus des intérêts, capitalisés une seule fois au 31 décembre. Un relevé par
+ *   an suffit, et il est exact à l'euro.
+ * - **Un PEA, un compte-titres, une assurance-vie en unités de compte** sont
+ *   imprévisibles entre deux relevés, mais consulter son PEA tous les mois n'est
+ *   pas du budget : le trimestre est large.
+ *
+ * C'est le seul classement que `categoryId` ne peut pas porter — non par
+ * exception à la règle qui suit, mais parce que le catalogue est **libre** : une
+ * catégorie se crée et se renomme, et rien ne garantit qu'un « Livret A » soit
+ * rangé ailleurs que sous « Divers ». Une cadence déduite du classement se
+ * tromperait silencieusement, ce qui est exactement le défaut qu'elle existe
+ * pour corriger.
+ *
+ * Et ce n'est pas un rendement déguisé : elle ne sert à projeter aucune valeur,
+ * seulement à savoir **quand se taire**.
+ */
+export type SavingPace = 'yearly' | 'quarterly'
+
+/**
  * Un support d'épargne — le livret, le plan, le contrat : **où** l'argent est
  * placé, et **à qui** il est.
  *
@@ -99,7 +126,9 @@ export type Period = {
  * première.
  *
  * Aucun rendement, aucun objectif, aucune échéance : le stock se photographie
- * (`SavingValuation`), il ne se projette pas encore.
+ * (`SavingValuation`), il ne se projette pas encore. `pace` ne fait pas
+ * exception — il dit à quel rythme la photographie est attendue, pas ce que le
+ * support rapportera entre-temps.
  */
 export type SavingSupport = {
   id: string
@@ -115,6 +144,8 @@ export type SavingSupport = {
   categoryId: string
   /** Fermé, mais conservé : ses valorisations et ses mouvements restent. */
   archived: boolean
+  /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
+  pace?: SavingPace
   note?: string
 }
 

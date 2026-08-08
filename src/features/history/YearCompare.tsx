@@ -1,6 +1,12 @@
 import { useMemo } from 'react'
 import { CumulativeLines, type ExtraRead, type Serie } from '@/charts/CumulativeLines'
-import { type YearPoint, coveredYears, yearHorizon, yearSeries } from '@/domain/history'
+import {
+  type YearPoint,
+  coveredYears,
+  cumulativeLine,
+  yearHorizon,
+  yearSeries,
+} from '@/domain/history'
 import type { Money } from '@/domain/money'
 import { history } from '@/i18n/history'
 import { NO_VALUE, formatMoney, monthName, tpl } from '@/i18n/format'
@@ -14,19 +20,13 @@ export type YearCompareProps = {
   onPick: (next: number) => void
 }
 
-/**
- * Le cumul n'est tracé qu'entre le premier et le dernier mois portant des
- * données : un mois vide n'est pas un cumul plat, il n'est pas tracé du tout.
- */
-function cumulative(points: readonly YearPoint[]): (number | null)[] {
-  const first = points.findIndex((point) => point.hasData)
-  if (first === -1) return points.map(() => null)
-  let last = points.length - 1
-  while (last > first && points[last]?.hasData !== true) last -= 1
-  return points.map((point, index) => (index >= first && index <= last ? point.cumulative : null))
-}
+/* La coupe aux mois portant des données — « un mois vide n'est pas un cumul
+   plat » — vit dans `domain/history`, depuis que l'écran de l'épargne trace le
+   cumul de ses versements avec le même graphique. Deux copies de cette règle
+   auraient fini par ne plus couper au même mois, et l'écart se serait vu d'un
+   écran à l'autre sans qu'on sache lequel des deux a raison. */
 
-/** Cumul du solde mois après mois, année N contre année N−1. */
+/** Cumul du solde depuis janvier, année N contre année N−1. */
 export function YearCompare({ pick, onPick }: YearCompareProps) {
   const entries = useEntries()
   // Voir `MonthCompare` : la portée, pas le membre.
@@ -65,7 +65,7 @@ export function YearCompare({ pick, onPick }: YearCompareProps) {
     {
       id: String(year),
       label: String(year),
-      values: cumulative(current),
+      values: cumulativeLine(current),
       color: 'var(--accent-2)',
     },
   ]
@@ -73,7 +73,7 @@ export function YearCompare({ pick, onPick }: YearCompareProps) {
     series.push({
       id: String(previous),
       label: String(previous),
-      values: cumulative(before),
+      values: cumulativeLine(before),
       color: 'var(--text-muted)',
       dashed: true,
     })

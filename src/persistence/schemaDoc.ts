@@ -72,6 +72,7 @@ const RULES = [
   '**Un support d’épargne est une entité, pas une catégorie.** La catégorie dit la *nature* du mouvement (livret, plan, assurance-vie) ; le `SavingSupport` dit *lequel* et *à qui*. Deux personnes peuvent avoir chacune leur « Livret A » : ce sont deux supports, sous la même catégorie. `SavingSupport.categoryId` doit désigner une catégorie de nature `saving`.',
   '**`SavingSupport.memberId` est obligatoire**, comme sur une avance : une épargne est toujours à quelqu’un, et il n’existe pas de support commun. Un support sans porteur est écarté à l’import.',
   '**Le capital ne se pose jamais sur le support.** Il vit dans les `savingValuations`, qui s’empilent : la valeur courante est le relevé le plus récent, et les précédents font l’historique. Un support sans relevé a une valeur *inconnue* — ce qui n’est pas zéro, et ce qui ne s’additionne à rien.',
+  '**`SavingSupport.pace` dit à quel rythme un relevé est attendu**, et rien d’autre : `"yearly"` — un livret réglementé, dont la valeur est déterministe entre deux relevés — ou `"quarterly"` — un PEA, un compte-titres, une assurance-vie en unités de compte. Ce n’est ni un rendement ni une projection : l’app s’en sert pour savoir **quand se taire**, pas pour calculer une valeur. Le champ est facultatif ; absent, l’app lit « annuel » sans l’écrire.',
   '**Un mouvement d’épargne désigne son support par identifiant** — `Entry.savingSupportId`, `Recurrence.savingSupportId`, `Advance.savingSupportId` — et jamais par libellé ni par catégorie. Le champ n’a de sens que sur une ligne de nature `saving` ; ailleurs, omets-le. Une échéance générée hérite du support de sa règle.',
   '**Les `id` sont des chaînes libres**, à toi de les choisir. Ils doivent être uniques dans leur tableau, et tout `categoryId`, `memberId`, `familyId` ou `recurrenceId` cité doit désigner quelque chose qui existe.',
   '**L’import ne refuse presque rien : il répare, ou il écarte.** Un lien mort ne fait pas rejeter le fichier — il fait garder un document qui n’est plus celui que tu as écrit. La section « Ce que l’import répare, et ce qu’il écarte » le dit cas par cas ; elle vaut la lecture avant de produire quoi que ce soit.',
@@ -136,6 +137,7 @@ const SILENT = [
   'Un `label` absent devient `"—"`.',
   '`families` vide ou illisible fait **substituer tout le catalogue par défaut** : sans premier niveau, aucune catégorie ne sait plus de quelle nature elle relève. Tes propres catégories se retrouvent alors orphelines de la famille que tu croyais poser.',
   'Un `theme`, une `palette`, une `currency` ou un `monthStartsOn` hors de leurs valeurs retombent sur les valeurs par défaut, sans que la ligne soit écartée.',
+  'Un `pace` qui ne vaut ni `"yearly"` ni `"quarterly"` devient **absent**, ce qui n’est pas `"yearly"` : l’app lit alors « annuel » sans que le support porte ce choix, et le formulaire recueillera la vraie réponse.',
 ]
 
 /**
@@ -451,7 +453,8 @@ const MINIMAL = `{
       "label": "Livret A",
       "memberId": "m-alix",
       "categoryId": "passbook",
-      "archived": false
+      "archived": false,
+      "pace": "yearly"
     }
   ],
   "savingValuations": [

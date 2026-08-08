@@ -18,15 +18,26 @@ import {
   type ISODate,
   type YearMonth,
   addDays,
+  addMonthsToYm,
   endOfMonth,
   isWithin,
   parseISO,
   startOfMonth,
   today,
+  ym,
+  ymOf,
 } from './date'
-import { type Money, ZERO, add, ratio, sub, sum } from './money'
-import { type KindOf, type MemberFilter, entriesOfMonth } from './stats'
-import type { Advance, Entry, Recurrence, SavingSupport, SavingValuation } from './types'
+import { kindSeries } from './history'
+import { type Money, ZERO, add, divInt, ratio, sub, sum } from './money'
+import { type KindOf, type MemberFilter, entriesOfMonth, totalsByKind } from './stats'
+import type {
+  Advance,
+  Entry,
+  Recurrence,
+  SavingPace,
+  SavingSupport,
+  SavingValuation,
+} from './types'
 
 /* --- Supports -------------------------------------------------------------*/
 
@@ -94,6 +105,22 @@ export function latestValuation(
   return valuationsOf(valuations, supportId).find((valuation) => valuation.date <= on) ?? null
 }
 
+/** Le délai au bout duquel un relevé est attendu, par cadence. */
+export const PACE_MONTHS: Record<SavingPace, number> = { yearly: 12, quarterly: 3 }
+
+/**
+ * La cadence d'un support qui n'en porte aucune — un document d'avant le champ.
+ *
+ * L'année, et non le trimestre : sur un écran dont tout le problème est de ne
+ * pas réclamer de saisie inutile, se taire trop est un défaut réparable, alors
+ * que réclamer à tort ne produit que de la culpabilité. Et c'est de surcroît la
+ * cadence du support le plus répandu, le livret.
+ */
+export const DEFAULT_PACE: SavingPace = 'yearly'
+
+export const paceOf = (support: Pick<SavingSupport, 'pace'>): SavingPace =>
+  support.pace ?? DEFAULT_PACE
+
 /**
  * L'âge d'un relevé, en mois entiers, et ce qu'il faut en dire.
  *
@@ -107,6 +134,13 @@ export function latestValuation(
  * mots et jamais en rouge — le DS §2.3 réserve l'alerte aux dépassements, et un
  * livret dont le relevé date de l'été n'en est pas un.
  *
+ * **Le dernier palier suit la cadence du support**, et c'est ce qui distingue
+ * un chiffre périmé d'un chiffre simplement daté. Il valait six mois pour tout
+ * le monde : un Livret A relevé en février était annoncé « à actualiser » en
+ * août alors que l'app savait son capital à l'euro près, et un PEA relevé en
+ * mai passait pour frais en juillet alors que le marché avait tout changé. Un
+ * seuil unique se trompait donc dans les deux sens à la fois.
+ *
  * En mois entiers plutôt qu'en jours : c'est le rythme réel du geste — un relevé
  * de banque arrive à la fin d'un mois ou d'un trimestre —, et « il y a 187
  * jours » demande une division mentale que « il y a 6 mois » évite.
@@ -118,10 +152,11 @@ export type ValuationAge = {
   months: number
 }
 
-/** Au-delà, le relevé se dit « à actualiser » plutôt que simplement daté. */
-const STALE_MONTHS = 6
-
-export function valuationAge(date: ISODate, on: ISODate = today()): ValuationAge {
+export function valuationAge(
+  date: ISODate,
+  pace: SavingPace = DEFAULT_PACE,
+  on: ISODate = today(),
+): ValuationAge {
   const from = parseISO(date)
   const to = parseISO(on)
   /* Le jour du mois arbitre le dernier palier : du 31 mai au 30 août il s'est
@@ -132,7 +167,35 @@ export function valuationAge(date: ISODate, on: ISODate = today()): ValuationAge
   const elapsed = (to.y - from.y) * 12 + (to.m - from.m) - (to.d < from.d ? 1 : 0)
   const months = Math.max(0, elapsed)
 
-  return { level: months === 0 ? 'fresh' : months >= STALE_MONTHS ? 'stale' : 'ageing', months }
+  return {
+    level: months === 0 ? 'fresh' : months >= PACE_MONTHS[pace] ? 'stale' : 'ageing',
+    months,
+  }
+}
+
+/**
+ * Les supports dont le relevé est attendu — et eux seuls.
+ *
+ * C'est ce qui permet à l'écran de **se taire** : un raccourci « Mettre à jour
+ * les relevés » posé en permanence laisse entendre un rituel mensuel, qui n'est
+ * la bonne cadence d'aucun support. Réclamer une donnée qui ne produit rien ne
+ * produit que de la culpabilité.
+ *
+ * Un support jamais relevé en fait partie : c'est le seul dont l'app ne sait
+ * rien dire du tout, ni relevé ni estimation, et une première valeur est
+ * exactement ce qui lui manque.
+ *
+ * Les archivés en sortent : un compte clôturé n'a plus de valeur à confirmer.
+ */
+export function supportsDue(
+  supports: readonly SavingSupport[],
+  valuations: readonly SavingValuation[],
+  on: ISODate = today(),
+): SavingSupport[] {
+  return activeSupports(supports).filter((support) => {
+    const latest = latestValuation(valuations, support.id, on)
+    return latest === null || valuationAge(latest.date, paceOf(support), on).level === 'stale'
+  })
 }
 
 /* --- Flux : les mouvements ------------------------------------------------*/
@@ -320,6 +383,148 @@ export function savingTotal(
   }
 
   return { known, movedSince, estimated: add(known, movedSince), valued, unvalued }
+}
+
+/* --- Combien de temps le capital tient ------------------------------------*/
+
+/**
+ * Ce que le capital couvre de mois, si les revenus s'arrêtaient.
+ *
+ * C'est le seul chiffre de l'écran qu'une banque ne calculera jamais — pas par
+ * paresse, par structure : elle voit le solde, elle ne sait pas ce qu'est une
+ * charge chez quelqu'un. L'app tient les deux bouts, et c'est ce qui fait
+ * qu'un relevé produit ici une décision plutôt qu'une transcription : « 10 450 € »
+ * est une anecdote, « tu tiens 4,2 mois » n'en est pas une.
+ *
+ * **Le dénominateur fait toute la justesse du chiffre**, et il se lit par
+ * nature, jamais par sens de trésorerie :
+ *
+ * - les **charges** comptent, évidemment ;
+ * - les **mensualités de crédit** aussi : elles ne s'arrêtent pas quand le
+ *   revenu s'arrête, c'est même tout leur problème ;
+ * - les **versements d'épargne**, non : c'est la première chose qu'on coupe, et
+ *   les compter reviendrait à exiger de continuer d'épargner pendant qu'on vit
+ *   sur son épargne.
+ *
+ * Le piège est que les trois sortent du compte : lus en trésorerie ils se
+ * confondent, et un foyer qui met 500 € de côté chaque mois se verrait tenir un
+ * tiers de temps de moins qu'il ne tient. D'où `kindSeries` plutôt que
+ * `monthSeries`.
+ *
+ * **Sur des mois révolus seulement.** Un mois en cours n'a pas encore tout
+ * dépensé : le compter tirerait la moyenne vers le bas et gonflerait d'autant
+ * le nombre de mois annoncé — c'est-à-dire que le chiffre serait le plus faux
+ * le jour où on le regarde. Les mois qui n'ont rien du tout sont écartés de
+ * même : diviser par douze un foyer qui saisit depuis trois mois inventerait
+ * neuf mois sans charges.
+ */
+export type SavingCoverage = {
+  /** Le capital divisé — les supports relevés, mouvements depuis compris. */
+  capital: Money
+  /** Ce que coûte un mois moyen : charges et crédits, jamais les versements. */
+  monthly: Money
+  /** Sur combien de mois révolus la moyenne est faite. Zéro : rien à dire. */
+  months: number
+  /** Le nombre de mois couverts. `null` quand il n'y a rien à diviser. */
+  covered: number | null
+}
+
+/** Douze mois : une année pleine, donc chaque charge annuelle comptée une fois. */
+export const COVERAGE_MONTHS = 12
+
+export function savingCoverage(
+  capital: Money,
+  entries: readonly Entry[],
+  kindOf: KindOf,
+  on: ISODate = today(),
+  memberId?: MemberFilter,
+  count = COVERAGE_MONTHS,
+): SavingCoverage {
+  /* Le mois d'avant : celui où l'on regarde n'est pas encore un mois. */
+  const last = addMonthsToYm(ymOf(on), -1)
+  const lived = kindSeries(
+    entries,
+    addMonthsToYm(last, -(count - 1)),
+    last,
+    kindOf,
+    memberId,
+    /* Échéances prévues comprises : un mois passé porte souvent des `planned`
+       que personne n'a confirmées — elles ont pourtant été payées, et les
+       exclure ferait passer un mois entier pour un mois sans loyer. */
+    true,
+  ).filter((point) => point.hasData)
+
+  const monthly =
+    lived.length === 0
+      ? ZERO
+      : divInt(
+          sum(lived.map((point) => add(point.totals.charge, point.totals.debt))),
+          lived.length,
+        )
+
+  return {
+    capital,
+    monthly,
+    months: lived.length,
+    /* Un foyer sans aucune charge sur l'année ne « tient pas l'infini » : il n'y
+       a rien à diviser, et un ratio sans dénominateur ne vaut pas zéro non plus
+       — il ne veut rien dire. C'est la règle de `savingRate`. */
+    covered: monthly <= 0 ? null : capital / monthly,
+  }
+}
+
+/* --- L'accumulation, année après année ------------------------------------*/
+
+/**
+ * Ce qui est mis de côté mois après mois, et son cumul depuis janvier.
+ *
+ * L'app est une machine à mois : tout y est borné par `ym`, et l'épargne est la
+ * seule notion qui n'ait aucun sens à l'intérieur d'un mois. D'où la sensation
+ * que rien ne s'additionne jamais — on voit douze états mensuels, pas une
+ * trajectoire, alors que la donnée est là depuis le premier jour.
+ *
+ * C'est du **flux pur** : les mêmes `Entry` que la capacité et la ventilation,
+ * comptées en net comme partout — verser 300 € puis en reprendre 600 € n'a pas
+ * mis 900 € de côté. Aucun relevé n'y entre, et c'est ce qui rend la lecture
+ * gratuite : elle répond à « est-ce que ça monte » sans rien demander de plus
+ * que ce qui est déjà saisi.
+ *
+ * `hasData` se lit sur le mois entier et non sur ses seuls versements : un mois
+ * vécu sans rien mettre de côté est un vrai zéro — le cumul y reste plat, et
+ * c'est une information —, quand un mois jamais ouvert n'est pas un mois à
+ * zéro et ne se trace pas (cahier §4.7).
+ */
+export type SavingYearPoint = {
+  /** De 1 à 12. */
+  month: number
+  /** Versements − reprises du mois. */
+  net: Money
+  /** Le cumul depuis janvier. */
+  cumulative: Money
+  hasData: boolean
+}
+
+export function savingYearSeries(
+  entries: readonly Entry[],
+  year: number,
+  kindOf: KindOf,
+  memberId?: MemberFilter,
+): SavingYearPoint[] {
+  let running = ZERO
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = ym(year, index + 1)
+    /* Le mois entier, échéances prévues comprises : c'est le chiffre de la
+       tuile Capacité et du « versé ce mois », et deux totaux d'épargne qui
+       diffèrent d'un écran à l'autre sous le même mot ne s'expliquent pas. */
+    const net = totalsByKind(entries, month, kindOf, memberId, true).saving
+    running = add(running, net)
+    return {
+      month: index + 1,
+      net,
+      cumulative: running,
+      hasData: entriesOfMonth(entries, month, memberId).length > 0,
+    }
+  })
 }
 
 /* --- Ventilation du mois --------------------------------------------------*/

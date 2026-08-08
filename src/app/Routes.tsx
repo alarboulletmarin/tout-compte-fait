@@ -49,10 +49,18 @@ import {
  * Les deux écrans qu'on n'ouvre pas tous les jours, et qui pèsent le plus.
  *
  * L'historique emporte avec lui les trois graphiques de `src/charts` — barres,
- * lignes cumulées, curseur —, dont aucun autre écran ne se sert. Les cinq vues
- * que « Plus » ouvre emportent l'import, l'export, les sauvegardes et le
- * catalogue de catégories. Ni l'un ni l'autre n'est sur le chemin du geste
- * quotidien, qui est d'ouvrir son mois et d'y saisir une ligne.
+ * lignes cumulées, curseur. Les cinq vues que « Plus » ouvre emportent
+ * l'import, l'export, les sauvegardes et le catalogue de catégories. Ni l'un ni
+ * l'autre n'est sur le chemin du geste quotidien, qui est d'ouvrir son mois et
+ * d'y saisir une ligne.
+ *
+ * L'écran de l'épargne se sert lui aussi des lignes cumulées, depuis qu'il trace
+ * ce qu'on met de côté d'une année sur l'autre — mais lui **est** sur ce
+ * chemin-là : il s'atteint d'un geste depuis la tuile Capacité du mois, et reste
+ * donc chargé d'avance. C'est sa **section d'année** qui se découpe, chez elle
+ * (`SavingsPage`), et non la route entière. Les deux morceaux se rejoignent
+ * alors sur le même graphique, qui vit dans un troisième — sans qu'aucun ne pèse
+ * sur l'entrée.
  *
  * Le reste ne se découpe pas : le mois, la saisie, le calendrier et les fiches
  * s'atteignent en un geste depuis n'importe où, et un aller-retour de réseau à

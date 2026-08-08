@@ -65,8 +65,28 @@ const DIST = 'dist'
    texte seul.
 
    Le budget ne suit pas la mesure au plus juste — il resterait un dixième de
-   kibioctet, ce qui n'est plus une marge mais un plafond. */
-const BUDGET_KIB = 217
+   kibioctet, ce qui n'est plus une marge mais un plafond.
+
+   Relevé à 221 quand l'épargne se met à **répondre**, après avoir seulement
+   enregistré : les mois de charges que le capital couvre, et le cumul des
+   versements d'une année sur l'autre. L'app en pèse 216,5 à ce moment-là.
+
+   Ce que ce chantier ajoute au graphe initial est plus petit que son étiquette :
+   deux lectures de domaine — une série mensuelle consciente des natures et le
+   quotient qu'elle nourrit —, lues par la page Épargne, qui est chargée
+   d'avance ; et la prose, qui pèse le reste. Le **graphique n'y est pas**, et
+   c'est délibéré : la section qui trace l'année part à la demande
+   (`SavingsPage`), et les lignes cumulées qu'elle partage avec l'historique
+   vivent dans un morceau à elles. Mesuré sans ce découpage, le premier
+   chargement prenait quatre kibioctets de plus — pour un bloc qui vit sous le
+   pli, et davantage que tout le reste du chantier réuni.
+
+   Le chiffre est donc relevé pour la **marge**, pas pour le poids. Le paragraphe
+   précédent l'avait laissée à un dixième de kibioctet, ce qu'il nomme lui-même
+   un plafond plutôt qu'une marge ; elle revient à quatre et demi. Ce que ce
+   nombre tient n'est pas ce que l'app pèse, c'est la place qui reste — de quoi
+   ajouter une fonctionnalité, pas de quoi ramener un écran. */
+const BUDGET_KIB = 221
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

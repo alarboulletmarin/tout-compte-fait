@@ -1597,6 +1597,16 @@ export const fr = {
        champ, c'est de savoir à quoi il sert, pas ce qu'il ne fait pas. */
     supportKindHint: 'Sert à classer le support.',
     supportKindRequired: 'Choisis un type.',
+    /* La cadence des relevés — le seul champ du formulaire qui parle du temps,
+       et il ne projette rien : il dit quand l'app réclamera un relevé, et
+       surtout quand elle se taira. Deux réponses, parce qu'il n'en existe que
+       deux : une valeur qui ne bouge que de tes virements, ou une valeur que le
+       marché refait. La question se tranche sans rien consulter. */
+    supportPace: 'Rythme des relevés',
+    supportPaceHint:
+      'Un livret ne bouge que de tes versements : un relevé par an suffit, et l’app calcule le reste. Un PEA, un compte-titres ou une assurance-vie en unités de compte bougent tout seuls.',
+    paceYearly: 'Une fois par an',
+    paceQuarterly: 'Chaque trimestre',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
     /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin
@@ -1631,7 +1641,10 @@ export const fr = {
        Une date seule ne dit pas son âge : personne ne compte les mois de tête
        devant un « 8 février » posé sous un chiffre. Et un relevé ancien n'est
        pas une erreur — il attend une confirmation, d'où « à actualiser » et non
-       une alerte. */
+       une alerte.
+       Le dernier palier arrive à la cadence du support, et non au sixième mois
+       pour tout le monde : un Livret A relevé en février se disait « à
+       actualiser » en août quand l'app connaissait son capital à l'euro près. */
     valueAgeOne: 'relevé il y a 1 mois',
     valueAge: 'relevé il y a %s mois',
     valueStale: 'à actualiser · relevé il y a %s mois',
@@ -1667,6 +1680,14 @@ export const fr = {
        vocabulaire au pluriel pour ne pas le confondre avec la fiche d'un
        support — où l'on ne parle que de lui. */
     valuesUpdate: 'Mettre à jour les relevés',
+    /* Ce que l'écran dit quand il a quelque chose à demander — et il ne le dit
+       que là. Un raccourci posé en permanence laissait entendre un rituel
+       mensuel, qui n'est la bonne cadence d'aucun support : réclamer une donnée
+       qui ne produit rien ne produit que de la culpabilité. Le reste du temps le
+       geste reste atteignable, en `ghost` : c'est le poids du bouton qui dit la
+       fréquence, comme pour « Ajouter un support » juste en dessous. */
+    valuesDueOne: '1 relevé à faire',
+    valuesDue: '%s relevés à faire',
     valuesHint:
       'Saisis seulement les valeurs que tu as vérifiées. Un champ laissé vide ne change rien.',
     valuesDateHint: 'Elle vaut pour tous les relevés saisis ci-dessous.',
@@ -1686,6 +1707,65 @@ export const fr = {
     /* Le même chiffre, mais au pluriel des supports : sur un total, « depuis »
        ne désigne pas un relevé mais autant qu'il y a de comptes. */
     movedSinceTotal: 'Versé depuis les derniers relevés',
+
+    /* --- Combien de temps le capital tient ---------------------------------
+       Le seul chiffre de cet écran qu'une banque ne calculera jamais : elle
+       voit le solde, elle ne sait pas ce qu'est une charge chez quelqu'un.
+       « 10 450 € » est une anecdote — l'appli de la banque le dit mieux, plus
+       vite et sans rien demander ; « tu tiens 4,2 mois » est une décision, et
+       c'est ce qui rend un relevé utile. */
+    coverage: 'Combien de temps je tiens',
+    /* Le nombre porte son unité et rien d'autre : la condition se lit sous lui,
+       où elle ne coupe pas le chiffre en deux. */
+    coverageValue: '%s mois',
+    coverageHint: 'sans revenus, aux charges d’un mois moyen',
+    /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien dire.
+       L'écran dit alors ce qui manque, plutôt qu'un chiffre qu'il faudrait
+       corriger de tête. */
+    coverageNoMonth: 'Il faudra un mois entier pour le dire : celui-ci n’est pas fini.',
+    coverageNoCharge: 'Aucune charge sur la période : il n’y a rien à diviser.',
+    /* La vérification, repliée comme celle de la capacité : c'est ce qu'on
+       ouvre une fois pour comprendre d'où sort le chiffre, pas ce qu'on relit
+       chaque mois.
+       Un autre libellé que « Comprendre le calcul », qui vit une tuile plus
+       bas : deux sommaires du même nom sur le même écran ouvrent sur deux
+       contenus différents, et rien ne dit lequel on déplie. Celui-ci nomme
+       d'ailleurs ce qu'on vient y chercher — quelles sorties entrent dans le
+       dénominateur, question à laquelle aucun autre écran ne répond. */
+    coverageMethod: 'Ce que ce chiffre compte',
+    coverageCapital: 'Capital estimé',
+    coverageMonthly: 'Charges d’un mois moyen',
+    coverageOverOne: 'moyenne sur 1 mois',
+    coverageOver: 'moyenne sur %s mois',
+    /* Les trois décisions qui font la justesse du chiffre, et qu'aucun autre
+       écran ne dit. */
+    coverageMethodDenominator:
+      'Les charges et les mensualités de crédit comptent : elles ne s’arrêtent pas quand le revenu s’arrête. Les versements d’épargne, non — c’est la première chose qu’on coupe.',
+    coverageMethodMonths:
+      'Le mois en cours ne compte pas : il n’a pas encore tout dépensé, et il ferait paraître les charges plus légères qu’elles ne sont.',
+    coverageMethodUnvalued:
+      'Un support sans relevé n’entre pas dans le capital : l’app ne sait pas ce qu’il vaut, et le compter à zéro serait aussi faux que l’inventer.',
+
+    /* --- L'accumulation, année après année ---------------------------------
+       « Combien j'ai versé cette année » est du flux pur : aucune donnée
+       nouvelle, aucun relevé, et ça répond à la question que l'app ne posait
+       nulle part — elle est une machine à mois, et l'épargne est la seule notion
+       qui n'ait aucun sens à l'intérieur d'un mois. */
+    years: 'Ce que tu mets de côté',
+    year: 'Année',
+    yearsVersus: '%s contre %s',
+    yearsDelta: 'Écart',
+    /* Ce que les chiffres mesurent, et non la forme du tracé : « mois après
+       mois » décrivait la courbe, quand ce qu'on ne sait pas est ce que vaut le
+       nombre lu à un mois donné — ce qui a été versé ce mois-là, ou tout ce qui
+       s'est accumulé depuis janvier. C'est le second. Même correction que sur le
+       cumul du solde de l'historique, et pour la même raison. */
+    yearsCumulative: 'Cumul des versements depuis janvier',
+    yearsEmpty: 'Pas encore d’année à lire.',
+    yearsPartial: '%s s’arrête à %s : les deux années se lisent à ce mois-là.',
+    yearsNoPrevious: 'Rien de versé en %s : rien à comparer.',
+    srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
+    srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
 
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',

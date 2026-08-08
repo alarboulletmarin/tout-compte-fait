@@ -219,18 +219,25 @@ function debt(raw: unknown, index: number): Read<Debt> {
  * Le capital, lui, n'est pas ici : il vit dans les valorisations, et un support
  * sans relevé est un support dont on ne connaît pas la valeur — ce qui n'est
  * pas la même chose qu'un support à zéro.
+ *
+ * La cadence est **omise plutôt que posée à sa valeur par défaut** quand elle
+ * manque : un document d'avant le champ n'a jamais répondu à la question, et
+ * écrire « annuel » à sa place ferait passer un silence pour un choix. C'est le
+ * domaine qui retombe sur `DEFAULT_PACE` à la lecture, en un seul endroit.
  */
 function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
   if (!isRecord(raw)) return 'shape'
   const memberId = optionalStr(raw['memberId'])
   if (memberId === undefined) return 'noMember'
   const note = optionalStr(raw['note'])
+  const pace = raw['pace']
   return {
     id: str(raw['id'], `saving-support-${String(index)}`),
     label: str(raw['label'], '—'),
     memberId,
     categoryId: str(raw['categoryId'], ''),
     archived: bool(raw['archived'], false),
+    ...(pace === 'yearly' || pace === 'quarterly' ? { pace } : {}),
     ...(note === undefined ? {} : { note }),
   }
 }
