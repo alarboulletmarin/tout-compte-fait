@@ -15,7 +15,7 @@ import { useSavingSupport, useSupportValuations } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
-import { AmountInput, Field, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { toast } from '@/ui/toast'
@@ -120,13 +120,17 @@ function ValuationForm({
             required
             {...(showError && error !== undefined ? { error } : {})}
           >
+            {/* « Nouvelle valeur » et non « 0,00 » : posé au-dessus du relevé
+                précédent, un placeholder chiffré se lit comme une valeur déjà
+                saisie — et laisser le champ tel quel enregistrerait alors non
+                pas « rien » mais « ce compte est vide ». */}
             {(fieldId, describedBy) => (
               <AmountInput
                 id={fieldId}
                 aria-describedby={describedBy}
                 value={draft.amountText}
                 invalid={showError && error !== undefined}
-                placeholder="0,00"
+                placeholder={fr.savings.valueNew}
                 autoFocus
                 onChange={(event) => {
                   setDraft((current) => ({ ...current, amountText: event.target.value }))
@@ -137,9 +141,8 @@ function ValuationForm({
 
           <Field label={fr.savings.valueDate} required>
             {(fieldId) => (
-              <TextInput
+              <DateInput
                 id={fieldId}
-                type="date"
                 value={draft.date}
                 onChange={(event) => {
                   if (event.target.value !== '') {
@@ -151,7 +154,9 @@ function ValuationForm({
           </Field>
 
           {/* Le relevé d'avant, pour comparer sans quitter l'écran : c'est la
-              seule chose qui permette de repérer un chiffre tapé de travers. */}
+              seule chose qui permette de repérer un chiffre tapé de travers.
+              Sous le champ et non dedans : c'est une référence, pas une valeur
+              par défaut. */}
           {previous !== null && (
             <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
               <span className="t-label min-w-0 flex-1 truncate">

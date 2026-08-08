@@ -11,6 +11,40 @@ const CONTROL = cn(
   'disabled:opacity-40',
 )
 
+/**
+ * Le plafond d'un contrôle dont le contenu a une longueur bornée.
+ *
+ * `w-full` sur tout ce qui se saisit donnait la même boîte à un taux annuel de
+ * quatre caractères et à une note de cent quarante : 316px sur un téléphone de
+ * 390, mesuré sur les trois formulaires de l'app. Le DS §5 tranche déjà la
+ * question pour les tuiles — « le format suit le contenu, jamais l'inverse » —,
+ * et rien ne justifie que la règle s'arrête au bord d'un formulaire.
+ *
+ * Ce n'est pas qu'une affaire de vide : un montant est aligné à droite, si bien
+ * que dans une boîte pleine largeur le chiffre qu'on tape se pose à 280px de
+ * l'étiquette qui le nomme. La colonne devient une pile de dalles identiques où
+ * plus rien ne distingue ce qui prend deux caractères de ce qui en prend cent.
+ *
+ * **Mesuré, pas décidé.** « 12 345 678,90 » dans la fonte du champ demande 97px,
+ * soit 125 avec le cadre — un capital restant dû, le plus gros chiffre de
+ * l'app, en réclame moins. Un `input[type=date]` veut 156px de largeur
+ * intrinsèque sous Chrome, et davantage sous Safari iOS, qui écrit « 22
+ * septembre 2026 » en toutes lettres au lieu d'une date en chiffres. 12rem
+ * couvre les deux et laisse de l'air aux deux.
+ *
+ * **Un plafond, jamais une largeur.** `max-width` borne le `w-full` sans entrer
+ * en concurrence avec lui ; deux `width` sur le même élément se départageraient
+ * par l'ordre de la feuille générée, `cn` ne fusionnant pas les classes
+ * Tailwind. C'est exactement le piège que la colonne de `PendingSection` a déjà
+ * rencontré, et c'est pour ça que le champ y garde sa largeur de colonne : 96px,
+ * sous ce plafond, qui ne la touche donc pas.
+ *
+ * Ce que ce plafond ne borne pas : les textes libres, les notes et les `Select`,
+ * dont le contenu n'a pas de longueur connue — un libellé de catégorie ou un nom
+ * de foyer prend la place qu'il prend.
+ */
+const BOUNDED = 'max-w-48'
+
 export type FieldProps = {
   label: string
   children: (id: string, describedBy: string | undefined) => ReactNode
@@ -80,12 +114,37 @@ export function AmountInput({ invalid = false, className, ...rest }: TextInputPr
     <input
       className={cn(
         CONTROL,
+        BOUNDED,
         'tnum h-11 text-right font-medium',
         invalid && 'border-danger',
         className,
       )}
       inputMode="decimal"
       autoComplete="off"
+      aria-invalid={invalid || undefined}
+      {...rest}
+    />
+  )
+}
+
+/**
+ * Saisie de date — le contrôle natif, et rien d'autre.
+ *
+ * Il existe pour la même raison qu'`AmountInput` : une date a une longueur
+ * connue, et poser `type="date"` sur un `TextInput` laissait chaque appelant
+ * décider de sa largeur, c'est-à-dire n'en décider aucun. Sept écrans, sept
+ * champs pleine largeur pour dix caractères.
+ *
+ * Natif plutôt qu'un sélecteur écrit à la main : il apporte le clavier de la
+ * plateforme, le format local — Safari iOS écrit « 8 août 2026 » là où Chrome
+ * écrit « 08/08/2026 » — et la saisie au clavier, qu'aucune reconstitution ne
+ * rend aussi bien.
+ */
+export function DateInput({ invalid = false, className, ...rest }: TextInputProps) {
+  return (
+    <input
+      type="date"
+      className={cn(CONTROL, BOUNDED, 'h-11', invalid && 'border-danger', className)}
       aria-invalid={invalid || undefined}
       {...rest}
     />

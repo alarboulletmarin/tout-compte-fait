@@ -14,7 +14,16 @@
  * nature d'une catégorie sous forme de fonction, comme `stats.ts` et `split.ts`.
  * ==========================================================================*/
 
-import { type ISODate, type YearMonth, addDays, endOfMonth, isWithin, startOfMonth, today } from './date'
+import {
+  type ISODate,
+  type YearMonth,
+  addDays,
+  endOfMonth,
+  isWithin,
+  parseISO,
+  startOfMonth,
+  today,
+} from './date'
 import { type Money, ZERO, add, ratio, sub, sum } from './money'
 import { type KindOf, type MemberFilter, entriesOfMonth } from './stats'
 import type { Advance, Entry, Recurrence, SavingSupport, SavingValuation } from './types'
@@ -83,6 +92,47 @@ export function latestValuation(
   on: ISODate = today(),
 ): SavingValuation | null {
   return valuationsOf(valuations, supportId).find((valuation) => valuation.date <= on) ?? null
+}
+
+/**
+ * L'âge d'un relevé, en mois entiers, et ce qu'il faut en dire.
+ *
+ * Un relevé se saisit à la main : il vieillit, et sa fraîcheur fait partie de ce
+ * qu'il vaut. « 10 631 € » n'a pas le même poids relevé hier ou il y a huit
+ * mois, et la date seule ne le dit pas — personne ne compte les mois de tête
+ * devant un « 8 février » posé sous un chiffre.
+ *
+ * Trois paliers, et **aucune alerte** : un capital qu'on n'a pas revu n'est pas
+ * une erreur, c'est un chiffre à confirmer. Le vieillissement se dit donc en
+ * mots et jamais en rouge — le DS §2.3 réserve l'alerte aux dépassements, et un
+ * livret dont le relevé date de l'été n'en est pas un.
+ *
+ * En mois entiers plutôt qu'en jours : c'est le rythme réel du geste — un relevé
+ * de banque arrive à la fin d'un mois ou d'un trimestre —, et « il y a 187
+ * jours » demande une division mentale que « il y a 6 mois » évite.
+ */
+export type ValuationAge = {
+  /** Frais tant qu'un mois entier ne s'est pas écoulé : la date se lit telle quelle. */
+  level: 'fresh' | 'ageing' | 'stale'
+  /** Le nombre de mois entiers écoulés, jamais négatif. */
+  months: number
+}
+
+/** Au-delà, le relevé se dit « à actualiser » plutôt que simplement daté. */
+const STALE_MONTHS = 6
+
+export function valuationAge(date: ISODate, on: ISODate = today()): ValuationAge {
+  const from = parseISO(date)
+  const to = parseISO(on)
+  /* Le jour du mois arbitre le dernier palier : du 31 mai au 30 août il s'est
+     écoulé deux mois pleins et non trois, et annoncer le troisième vieillirait
+     le relevé d'un mois qu'il n'a pas.
+     Jamais négatif : un relevé daté d'après-demain n'a pas −1 mois, il est
+     frais — c'est une saisie en avance, pas une anomalie à signaler. */
+  const elapsed = (to.y - from.y) * 12 + (to.m - from.m) - (to.d < from.d ? 1 : 0)
+  const months = Math.max(0, elapsed)
+
+  return { level: months === 0 ? 'fresh' : months >= STALE_MONTHS ? 'stale' : 'ageing', months }
 }
 
 /* --- Flux : les mouvements ------------------------------------------------*/

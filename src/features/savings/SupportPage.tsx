@@ -12,42 +12,48 @@ import type { SavingSupport } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { formatDate, tpl } from '@/i18n/format'
 import {
-  archiveSavingSupport,
-  removeSavingSupport,
-  unarchiveSavingSupport,
-  undoable,
-} from '@/store/actions'
-import {
-  isSupportEmpty,
   useCategoryMap,
   useMemberMap,
   useSavingSupport,
   useSupportEntries,
   useSupportMonthFlows,
-  useSupportUsage,
   useSupportValuations,
   useSupportValue,
 } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
-import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { ValuationChart } from './ValuationChart'
+import { freshness } from './freshness'
 
-/** Au-delà, la liste devient l'écran plutôt qu'une lecture de la fiche. */
+/**
+ * Au-delà, la liste devient l'écran plutôt qu'une lecture de la fiche — et le
+ * reste s'ouvre d'un bouton, jamais d'une phrase.
+ *
+ * « et 15 de plus » annonçait quinze lignes sans donner le moyen de les
+ * atteindre : un compte sans geste est une impasse, et c'est la seule chose que
+ * la coupe ne doit pas produire.
+ */
+const SHOWN_VALUATIONS = 8
 const SHOWN_MOVEMENTS = 12
 
 /**
  * La fiche d'un support — ce qu'il vaut, ce qu'il a reçu, et son histoire.
  *
- * Trois lectures dans cet ordre, parce que c'est celui des questions : combien
- * ça vaut, ce que le mois y a mis, et comment on en est arrivé là. La valeur
- * **renseignée** est toujours nommée comme telle, avec sa date : c'est un fait
- * daté, pas un solde de compte que l'app connaîtrait.
+ * Quatre lectures dans cet ordre, parce que c'est celui des questions : combien
+ * ça vaut, ce que le mois y a mis, comment la valeur a évolué, et quels
+ * mouvements l'ont traversé. Le **dernier relevé** est nommé comme tel, avec son
+ * âge : c'est un fait daté, pas un solde de compte que l'app connaîtrait.
+ *
+ * **La gestion du support n'est plus ici.** Archiver, rouvrir, supprimer sont
+ * des gestes rares, dont l'un est destructif, et ils occupaient une tuile
+ * permanente sous l'historique — c'est-à-dire le même poids qu'une lecture
+ * quotidienne. Ils vivent au bout de « Modifier le support », où l'on va
+ * justement quand on veut agir sur le compte plutôt que le lire.
  */
 export function SupportPage() {
   const { id } = useParams()
@@ -64,42 +70,39 @@ function SupportView({ support }: { support: SavingSupport }) {
   const valuations = useSupportValuations(support.id)
   const flows = useSupportMonthFlows(support.id)
   const entries = useSupportEntries(support.id)
-  const usage = useSupportUsage(support.id)
-  const [archiving, setArchiving] = useState(false)
-  const [removing, setRemoving] = useState(false)
+  const [allValuations, setAllValuations] = useState(false)
+  const [allMovements, setAllMovements] = useState(false)
 
   const member = members.get(support.memberId)
   const category = categories.get(support.categoryId)
   const color = category?.color ?? 'var(--cat-rest)'
-  const back = (): void => {
-    void navigate(SAVINGS_PATH)
-  }
+  const known = value?.known ?? null
 
-  /* Le geste de suppression n'existe que sur ce qui n'a pas d'histoire. Ailleurs
-     c'est l'archivage, et l'écran dit pourquoi plutôt que de laisser chercher un
-     bouton qui n'est pas là. */
-  const deletable = isSupportEmpty(usage)
-  const running = usage.runningRecurrences
+  const restValuations = valuations.length - SHOWN_VALUATIONS
+  const restMovements = entries.length - SHOWN_MOVEMENTS
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <PageTitle title={support.label} onBack={back}>
+      <PageTitle
+        title={support.label}
+        onBack={() => {
+          void navigate(SAVINGS_PATH)
+        }}
+      >
         <Dot color={color} size={10} className="shrink-0" />
       </PageTitle>
 
-      {/* Ce que ça vaut. Renseignée, elle porte sa date ; estimée, elle porte
-          sa réserve — jamais « valeur actuelle » tout court, qui promettrait
-          une précision que ce calcul n'a pas. */}
+      {/* Ce que ça vaut. Le relevé porte son âge ; l'estimation porte sa
+          réserve — jamais « valeur actuelle » tout court, qui promettrait une
+          précision que ce calcul n'a pas. */}
       <Tile variant="accent" className="gap-2">
-        <Eyebrow>{value?.known === null ? fr.savings.valueUnknown : fr.savings.valueKnown}</Eyebrow>
-        {value?.known === null || value === null ? (
-          <p className="t-body">{fr.savings.historyEmpty}</p>
+        <Eyebrow>{fr.savings.valueKnown}</Eyebrow>
+        {known === null || value === null ? (
+          <p className="t-body">{fr.savings.valueNone}</p>
         ) : (
           <>
-            <Amount value={value.known} size="tile" />
-            <span className="t-label">
-              {tpl(fr.savings.valueOn, formatDate(value.knownOn ?? ''))}
-            </span>
+            <Amount value={known} size="tile" />
+            <span className="t-label">{freshness(value.knownOn)}</span>
             {value.movedSince !== ZERO && value.estimated !== null && (
               <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
                 <div className="flex items-baseline justify-between gap-3">
@@ -125,17 +128,17 @@ function SupportView({ support }: { support: SavingSupport }) {
         </div>
       </Tile>
 
+      {/* Le geste principal nomme ce qu'il fait : un relevé s'empile, il ne
+          réécrit pas le précédent. Sans historique, il invite au premier. */}
       <div className="flex flex-wrap gap-2">
         <Button
-          size="sm"
           onClick={() => {
             void navigate(valuationNewPath(support.id))
           }}
         >
-          {fr.savings.valueUpdate}
+          {valuations.length === 0 ? fr.savings.valueFirst : fr.savings.valueUpdate}
         </Button>
         <Button
-          size="sm"
           variant="secondary"
           onClick={() => {
             void navigate(supportEditPath(support.id))
@@ -165,14 +168,15 @@ function SupportView({ support }: { support: SavingSupport }) {
             <Amount value={flows.withdrawals} size="body" className="shrink-0" />
           </li>
           <li className="flex items-baseline gap-3 border-t border-border pt-2">
-            <span className="t-label min-w-0 flex-1 truncate">{fr.savings.net}</span>
+            <span className="t-body min-w-0 flex-1 truncate">{fr.savings.net}</span>
             <Amount value={flows.net} size="body" signed className="shrink-0" />
           </li>
         </ul>
       </Tile>
 
       {/* L'histoire du stock. La courbe ne relie que des points relevés : entre
-          deux, le trait est un dessin, pas une donnée. */}
+          deux, le trait est un dessin, pas une donnée. Elle reste visible quoi
+          qu'il arrive — c'est la liste qui se replie, pas ce qu'on vient voir. */}
       <Tile className="gap-3">
         <Eyebrow>{fr.savings.history}</Eyebrow>
         {valuations.length === 0 ? (
@@ -185,19 +189,33 @@ function SupportView({ support }: { support: SavingSupport }) {
               <ValuationChart valuations={valuations} color={color} />
             )}
             <ul className="flex flex-col">
-              {valuations.map((valuation) => (
-                <li key={valuation.id}>
-                  <ListRow
-                    color={color}
-                    label={formatDate(valuation.date)}
-                    trailing={<Amount value={valuation.amount} />}
-                    onClick={() => {
-                      void navigate(valuationEditPath(support.id, valuation.id))
-                    }}
-                  />
-                </li>
-              ))}
+              {(allValuations ? valuations : valuations.slice(0, SHOWN_VALUATIONS)).map(
+                (valuation) => (
+                  <li key={valuation.id}>
+                    <ListRow
+                      color={color}
+                      label={formatDate(valuation.date)}
+                      trailing={<Amount value={valuation.amount} />}
+                      onClick={() => {
+                        void navigate(valuationEditPath(support.id, valuation.id))
+                      }}
+                    />
+                  </li>
+                ),
+              )}
             </ul>
+            {restValuations > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-fit"
+                onClick={() => {
+                  setAllValuations((shown) => !shown)
+                }}
+              >
+                {allValuations ? fr.common.less : tpl(fr.savings.historyMore, restValuations)}
+              </Button>
+            )}
           </>
         )}
       </Tile>
@@ -211,7 +229,7 @@ function SupportView({ support }: { support: SavingSupport }) {
         ) : (
           <>
             <ul className="flex flex-col">
-              {entries.slice(0, SHOWN_MOVEMENTS).map((entry) => (
+              {(allMovements ? entries : entries.slice(0, SHOWN_MOVEMENTS)).map((entry) => (
                 <li key={entry.id}>
                   <ListRow
                     color={color}
@@ -226,110 +244,21 @@ function SupportView({ support }: { support: SavingSupport }) {
                 </li>
               ))}
             </ul>
-            {entries.length > SHOWN_MOVEMENTS && (
-              <p className="t-label">
-                {tpl(fr.savings.movementsMore, entries.length - SHOWN_MOVEMENTS)}
-              </p>
+            {restMovements > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-fit"
+                onClick={() => {
+                  setAllMovements((shown) => !shown)
+                }}
+              >
+                {allMovements ? fr.common.less : tpl(fr.savings.movementsMore, restMovements)}
+              </Button>
             )}
           </>
         )}
       </Tile>
-
-      {/* À part, en bas, jamais dans la rangée des gestes courants : archiver
-          retire le support des formulaires, supprimer l'efface. Le second n'est
-          proposé que là où il ne perd rien. */}
-      <Tile className="gap-3">
-        <p className="t-label">{fr.savings.archivedHint}</p>
-        {/* Pourquoi le bouton « Supprimer » n'est pas là : la règle se lit, elle
-            ne se devine pas à l'absence d'un bouton. */}
-        {!support.archived && !deletable && (
-          <p className="t-label">{fr.savings.removeBlocked}</p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {support.archived ? (
-            <Button
-              variant="ghost"
-              className="w-fit"
-              onClick={() => {
-                undoable(fr.savings.supportUnarchived, () => {
-                  unarchiveSavingSupport(support.id)
-                })
-              }}
-            >
-              {fr.savings.unarchive}
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              className="w-fit"
-              onClick={() => {
-                setArchiving(true)
-              }}
-            >
-              {fr.savings.archive}
-            </Button>
-          )}
-          {deletable && (
-            <Button
-              variant="ghost"
-              className="w-fit"
-              onClick={() => {
-                setRemoving(true)
-              }}
-            >
-              {fr.savings.remove}
-            </Button>
-          )}
-        </div>
-      </Tile>
-
-      {/* Un support archivé qui continue de recevoir 300 € par mois serait un
-          compte invisible qui grossit tout seul : la question le dit, et le
-          bouton fait les deux gestes d'un coup. */}
-      <ConfirmDialog
-        open={archiving}
-        title={fr.savings.archive}
-        steps={[
-          {
-            question:
-              running === 0
-                ? fr.savings.archiveConfirm
-                : `${running === 1 ? fr.savings.archiveRunningOne : tpl(fr.savings.archiveRunning, running)} ${fr.savings.archiveConfirm}`,
-            action:
-              running === 0
-                ? fr.savings.archive
-                : running === 1
-                  ? fr.savings.archiveAndStop
-                  : fr.savings.archiveAndStopMany,
-          },
-        ]}
-        onCancel={() => {
-          setArchiving(false)
-        }}
-        onConfirm={() => {
-          setArchiving(false)
-          undoable(fr.savings.supportArchived, () => {
-            archiveSavingSupport(support.id, { stopRecurrences: running > 0 })
-          })
-          back()
-        }}
-      />
-
-      <ConfirmDialog
-        open={removing}
-        title={fr.savings.remove}
-        steps={[{ question: fr.savings.removeConfirm, action: fr.common.delete }]}
-        onCancel={() => {
-          setRemoving(false)
-        }}
-        onConfirm={() => {
-          setRemoving(false)
-          undoable(fr.savings.supportRemoved, () => {
-            removeSavingSupport(support.id)
-          })
-          back()
-        }}
-      />
     </div>
   )
 }

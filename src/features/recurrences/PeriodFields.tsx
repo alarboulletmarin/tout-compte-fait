@@ -103,12 +103,16 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
         />
       )}
 
+      {/* Un quantième tient sur deux chiffres : le plafond des champs bornés
+          (`ui/Field`) est encore quinze fois trop large pour lui, et c'est avec
+          l'intervalle le seul endroit de l'app où il l'est. */}
       {MONTH_DAY_KINDS.includes(draft.kind) && (
         <Field label={fr.recurrences.form.monthDay} required hint={fr.recurrences.form.monthDayHint}>
           {(id, describedBy) => (
             <TextInput
               id={id}
               type="number"
+              className="max-w-24"
               min={1}
               max={LAST_DAY}
               aria-describedby={describedBy}
@@ -137,11 +141,13 @@ function IntervalField({
   onChange: (value: number) => void
 }) {
   return (
+    /* « Tous les 2 mois » : deux chiffres, comme le quantième. */
     <Field label={label} required>
       {(id) => (
         <TextInput
           id={id}
           type="number"
+          className="max-w-24"
           min={1}
           max={max}
           value={String(value)}

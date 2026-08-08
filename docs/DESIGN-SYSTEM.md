@@ -337,6 +337,20 @@ Un état **pressé** sur toute tuile actionnable, et pas seulement un survol : l
 
 **Field** — libellé, contrôle, aide ou erreur. Le libellé porte la mention `· obligatoire` ou `· facultatif`, dans la même graisse atténuée. Elle vit dans le `<label>`, donc dans le nom accessible du contrôle : aucun `aria-required` à poser en plus. On la met sur les formulaires qui créent ou modifient une entité, pas sur les rangées d'ajout à un seul champ — un bouton désactivé tant que le champ est vide y dit déjà tout.
 
+**Un contrôle a la largeur de ce qu'il reçoit, et « le format suit le contenu » ne s'arrête pas au bord d'un formulaire.** `w-full` sur tout ce qui se saisit donnait la même boîte à un taux annuel de quatre caractères et à une note de cent quarante : mesuré, **316px sur un téléphone de 390**, sur les trois formulaires de l'app. Le coût n'est pas seulement du vide — un montant est aligné à droite, donc dans une boîte pleine largeur le chiffre qu'on tape se pose à 280px de l'étiquette qui le nomme, et la colonne devient une pile de dalles identiques où plus rien ne distingue deux caractères de cent.
+
+| Contenu | Largeur |
+|---|---|
+| Montant, date | plafond commun de **12rem** |
+| Entier d'un ou deux chiffres — un quantième, un « tous les N mois » | **6rem** |
+| Texte libre, note, `Select` | pleine largeur : leur contenu n'a pas de longueur connue |
+
+Les deux plafonds sont **mesurés, pas décidés** : « 12 345 678,90 » dans la fonte du champ demande 97px, soit 125 avec le cadre — le capital restant dû d'un crédit, le plus gros chiffre de l'app, en réclame moins. Un `input[type=date]` veut 156px de largeur intrinsèque sous Chrome, davantage sous Safari iOS, qui écrit « 22 septembre 2026 » en toutes lettres là où Chrome écrit une date en chiffres. 12rem couvre les deux et leur laisse de l'air.
+
+**Un plafond, jamais une largeur.** `max-width` borne le `w-full` sans entrer en concurrence avec lui ; deux `width` sur le même élément se départageraient par l'ordre de la feuille générée, `cn` ne fusionnant pas les classes Tailwind. C'est le piège qu'a rencontré la colonne de « À confirmer », dont le champ garde sa largeur de colonne — 96px, sous le plafond, qui ne la touche donc pas.
+
+La date a son composant, `DateInput`, pour la même raison qu'un montant a le sien : une longueur connue n'a pas à être redécidée par sept appelants. Il reste le contrôle **natif**, qui apporte le clavier de la plateforme, le format local et la saisie au clavier — qu'aucune reconstitution ne rend aussi bien.
+
 **Écrans de saisie** — un formulaire ou une fiche est un écran plein avec son URL, jamais une feuille modale : chevron de retour et titre en haut, le formulaire dans une tuile, les actions dessous dans le flux. Rien à faire glisser, rien à refermer pour revenir. La règle vise la **saisie**, pas la confirmation : une question fermée qui n'attend que oui ou non est exactement ce pour quoi un `<dialog>` existe.
 
 Une **lecture courte et refermable** est le troisième cas, et elle va aussi sur la feuille : la journée qu'on ouvre depuis le calendrier, la feuille d'explication d'une tuile. Elle ne saisit rien — elle montre ce qu'il y a, et passe la main à l'écran plein pour créer. Ce qu'elle y gagne est ce que le §8 demande et que rien d'écrit à la main ne fait aussi bien : piège de focus, touche Échap, clic sur le fond, et retour du focus à ce qui l'a ouverte. En tuile sous le contenu, il fallait réécrire les quatre, et il en manquait toujours un.

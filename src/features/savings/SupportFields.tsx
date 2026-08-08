@@ -1,6 +1,6 @@
 import { fr } from '@/i18n/fr'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
-import { AmountInput, Field, Select, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import type { SupportDraft, SupportErrors } from './supportDraft'
 
 /**
@@ -70,7 +70,7 @@ export function SupportFields({
               patch({ memberId: event.target.value })
             }}
           >
-            <option value="">{fr.savings.supportOwner}</option>
+            <option value="">{fr.savings.supportOwnerPlaceholder}</option>
             {members.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name}
@@ -110,13 +110,16 @@ export function SupportFields({
         )}
       </Field>
 
-      {/* La valeur est facultative, et son absence a un sens : on ne connaît
-          pas le capital. La laisser vide n'écrit rien — surtout pas zéro, qui
-          dirait « ce livret est vide ». */}
+      {/* Le premier relevé est facultatif, et son absence a un sens : on ne
+          connaît pas le capital. Le laisser vide n'écrit rien — surtout pas
+          zéro, qui dirait « ce livret est vide ».
+          Sans placeholder : « 0,00 » dans un champ vide est précisément le
+          chiffre qu'on ne veut pas voir enregistré, et un champ de relevé ne
+          peut pas se permettre de le suggérer. */}
       {withValue && (
         <>
           <Field
-            label={fr.savings.value}
+            label={fr.savings.valueInitial}
             optional
             hint={fr.savings.valueHint}
             {...(errors.amount === undefined ? {} : { error: errors.amount })}
@@ -127,7 +130,6 @@ export function SupportFields({
                 aria-describedby={describedBy}
                 value={draft.amountText}
                 invalid={errors.amount !== undefined}
-                placeholder="0,00"
                 onChange={(event) => {
                   patch({ amountText: event.target.value })
                 }}
@@ -141,9 +143,8 @@ export function SupportFields({
           {draft.amountText.trim() !== '' && (
             <Field label={fr.savings.valueDate} required>
               {(id) => (
-                <TextInput
+                <DateInput
                   id={id}
-                  type="date"
                   value={draft.valueDate}
                   onChange={(event) => {
                     if (event.target.value !== '') patch({ valueDate: event.target.value })

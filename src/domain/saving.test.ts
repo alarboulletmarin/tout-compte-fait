@@ -13,6 +13,7 @@ import {
   supportUsage,
   supportValue,
   supportsOfMember,
+  valuationAge,
   valuationsOf,
 } from './saving'
 import type { CategoryKind } from './types'
@@ -81,6 +82,34 @@ describe('la dernière valeur connue', () => {
        l'autre relevé. L'ordre est donc bien celui de l'arrivée, et il est
        total — deux lectures du même document rendent le même « dernier ». */
     expect(latestValuation([fix, typo], 's-livret', '2026-08-08')?.amount).toBe(eur(100))
+  })
+})
+
+describe('l’âge d’un relevé', () => {
+  it('reste frais tant qu’un mois entier ne s’est pas écoulé', () => {
+    expect(valuationAge('2026-08-08', '2026-08-08')).toEqual({ level: 'fresh', months: 0 })
+    expect(valuationAge('2026-08-08', '2026-09-07')).toEqual({ level: 'fresh', months: 0 })
+  })
+
+  it('compte des mois entiers, et le jour du mois arbitre', () => {
+    expect(valuationAge('2026-08-08', '2026-09-08')).toEqual({ level: 'ageing', months: 1 })
+    /* Du 31 mai au 30 août, deux mois pleins et non trois : annoncer le
+       troisième vieillirait le relevé d'un mois qu'il n'a pas. */
+    expect(valuationAge('2026-05-31', '2026-08-30')).toEqual({ level: 'ageing', months: 2 })
+    expect(valuationAge('2026-05-31', '2026-08-31')).toEqual({ level: 'ageing', months: 3 })
+  })
+
+  it('bascule sur « à actualiser » au sixième mois, pas avant', () => {
+    expect(valuationAge('2026-03-09', '2026-08-08')).toEqual({ level: 'ageing', months: 4 })
+    expect(valuationAge('2026-03-08', '2026-08-08')).toEqual({ level: 'ageing', months: 5 })
+    expect(valuationAge('2026-02-08', '2026-08-08')).toEqual({ level: 'stale', months: 6 })
+    expect(valuationAge('2025-08-08', '2026-08-08')).toEqual({ level: 'stale', months: 12 })
+  })
+
+  /* Un relevé daté d'après-demain n'a pas −1 mois : c'est une saisie en avance,
+     pas une anomalie, et l'écran n'a rien de spécial à en dire. */
+  it('ne rend jamais un âge négatif', () => {
+    expect(valuationAge('2026-09-08', '2026-08-08')).toEqual({ level: 'fresh', months: 0 })
   })
 })
 

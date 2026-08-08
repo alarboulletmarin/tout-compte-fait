@@ -12,7 +12,7 @@ import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { CategorySelect } from '@/ui/CategorySelect'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
-import { AmountInput, Field, Select, TextInput } from '@/ui/Field'
+import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
@@ -185,11 +185,15 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
             )}
           </Field>
 
+          {/* Un taux annuel s'écrit « 1,89 » : quatre caractères, bornés à cent
+              par `parseRateBp`. Il porte donc le plafond des champs bornés, sans
+              être un montant — il n'a ni symbole ni centimes. */}
           <Field label={fr.credits.rate} optional hint={fr.credits.rateHint}>
             {(id, describedBy) => (
               <TextInput
                 id={id}
                 aria-describedby={describedBy}
+                className="max-w-48"
                 value={draft.rateText}
                 invalid={rateBp === null}
                 inputMode="decimal"
@@ -225,9 +229,8 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
 
           <Field label={fr.credits.startedOn} required>
             {(id) => (
-              <TextInput
+              <DateInput
                 id={id}
-                type="date"
                 value={draft.startedOn}
                 onChange={(e) => {
                   if (e.target.value !== '') patch({ startedOn: e.target.value })
@@ -238,9 +241,8 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
 
           <Field label={fr.credits.endsOn} required>
             {(id) => (
-              <TextInput
+              <DateInput
                 id={id}
-                type="date"
                 value={draft.endsOn}
                 onChange={(e) => {
                   if (e.target.value !== '') patch({ endsOn: e.target.value })

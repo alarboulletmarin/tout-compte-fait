@@ -125,14 +125,39 @@ describe('relever plusieurs supports d’un coup', () => {
     expect(valuationsOf('s-1')).toEqual([expect.objectContaining({ amount: eur(1_200_000) })])
   })
 
-  it('n’enregistre rien quand tout est vide, et le dit', async () => {
+  /* Rien à enregistrer tant qu'aucun chiffre n'est saisi : le bouton le dit
+     avant le clic plutôt que de l'accepter pour répondre « non ». La raison
+     vit dans l'aide de l'écran, qui reste affichée une fois débloqué — un
+     `disabled` ne prend pas le focus, son nom n'est jamais lu (DS §6). */
+  it('n’offre pas d’enregistrer tant que rien n’est saisi', async () => {
     seed()
     open()
 
+    const save = screen.getByRole('button', { name: fr.common.save })
+    expect(save).toBeDisabled()
+    expect(screen.getByText(fr.savings.valuesHint)).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText(/PEA/), '5000')
+
+    expect(screen.getByRole('button', { name: fr.common.save })).toBeEnabled()
+    expect(screen.getByText(fr.savings.valuesHint)).toBeInTheDocument()
+  })
+
+  /* Vide et zéro ne sont pas la même chose : l'un ne dit rien, l'autre dit
+     qu'un compte a été vidé. Le placeholder ne peut donc pas ressembler à un
+     chiffre, et un « 0 » tapé volontairement doit s'enregistrer. */
+  it('distingue une case vide d’un zéro saisi', async () => {
+    seed()
+    open()
+
+    expect(screen.getByLabelText(/PEA/)).toHaveAttribute('placeholder', fr.savings.valueNew)
+
+    await userEvent.type(screen.getByLabelText(/PEA/), '0')
     await userEvent.click(screen.getByRole('button', { name: fr.common.save }))
 
-    expect(useStore.getState().data.savingValuations).toHaveLength(1)
-    expect(screen.getByText(fr.savings.valuesNone)).toBeInTheDocument()
+    expect(valuationsOf('s-2')).toEqual([expect.objectContaining({ amount: eur(0) })])
+    // Le Livret A, laissé vide, n'a rien reçu.
+    expect(valuationsOf('s-1')).toHaveLength(1)
   })
 
   /* Un seul geste, donc un seul retour arrière : deux relevés qu'on annulerait

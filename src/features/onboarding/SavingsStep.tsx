@@ -90,7 +90,7 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
                   meta={member?.name ?? ''}
                   trailing={
                     latest === null ? (
-                      <span className="t-label">{fr.savings.valueUnknown}</span>
+                      <span className="t-label">{fr.savings.valueNever}</span>
                     ) : (
                       <Amount value={latest.amount} />
                     )

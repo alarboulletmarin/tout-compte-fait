@@ -13,7 +13,7 @@ import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { CategorySelect } from '@/ui/CategorySelect'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
-import { AmountInput, Checkbox, Field, TextInput } from '@/ui/Field'
+import { AmountInput, Checkbox, DateInput, Field, TextInput } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
@@ -187,9 +187,8 @@ export function AdvanceFormPage() {
 
             <Field label={fr.advances.paidOn} required>
               {(id) => (
-                <TextInput
+                <DateInput
                   id={id}
-                  type="date"
                   value={draft.paidOn}
                   onChange={(e) => {
                     const next = e.target.value
