@@ -7,7 +7,7 @@
  * n'ont pas « 20 000 € » — un total du foyer ne se place nulle part.
  * ==========================================================================*/
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -35,6 +35,12 @@ const MONTH = '2026-07'
    ordinaire. */
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 const spoken = (cents: number): string => said(formatMoney(eur(cents), 'EUR'))
+
+/** `closest` rend `null`, et `within` n'en veut pas : on échoue ici plutôt que là. */
+function assertElement(node: Element | null): HTMLElement {
+  expect(node).not.toBeNull()
+  return node as HTMLElement
+}
 
 const ANDREA = makeMember({ id: 'm-1', name: 'Andrea' })
 const MARIE = makeMember({ id: 'm-2', name: 'Marie', color: 'var(--member-2)' })
@@ -228,6 +234,47 @@ describe('l’écran range chaque question dans sa zone', () => {
     expect(details).toContainElement(screen.getByText(fr.savings.methodBalance))
     // La règle qui fait exister l'écran y est aussi, et une seule fois.
     expect(details).toContainElement(screen.getByText(fr.savings.valueMethod))
+  })
+
+  /* La liste des supports ne montre que les comptes de la personne lue, donc
+     son nom n'y apprend rien. La ventilation, elle, compte des `Entry` : une
+     mensualité d'avance cochée « à partager » est de nature épargne, et Camille
+     en porte sa part **sur le livret d'Alix**. Deux « Livret A » se retrouvent
+     alors dans la même liste, et le titulaire est la seule chose qui les
+     départage — c'est ce que le support existe pour lever. */
+  it('nomme le titulaire dans la ventilation, jamais dans la liste des supports', () => {
+    seed()
+    useStore.setState({
+      data: {
+        ...useStore.getState().data,
+        entries: [
+          ...useStore.getState().data.entries,
+          /* Le versement d'Andrea sur son livret, porté par Marie : c'est la
+             forme que prend une part de mensualité partagée. */
+          makeEntry({
+            id: 'part',
+            date: '2026-07-08',
+            amount: eur(2_570),
+            categoryId: 'passbook',
+            memberId: 'm-2',
+            savingSupportId: 's-1',
+          }),
+        ],
+      },
+    })
+    useStore.getState().setFilter({ kind: 'member', memberId: 'm-2' })
+    open()
+
+    // Deux lignes au même nom dans la ventilation, départagées par leur nom.
+    const ventilation = within(assertElement(screen.getByText(fr.savings.placed).closest('section')))
+    expect(ventilation.getAllByText('Livret A')).toHaveLength(2)
+    expect(ventilation.getByText(/Andrea/)).toBeInTheDocument()
+    expect(ventilation.getByText(/Marie/)).toBeInTheDocument()
+
+    // La liste des supports, elle, n'a qu'une personne et ne la répète pas.
+    const supports = within(assertElement(screen.getByText(fr.savings.supports).closest('section')))
+    expect(supports.queryByText(/Andrea/)).not.toBeInTheDocument()
+    expect(supports.queryByText(/Marie/)).not.toBeInTheDocument()
   })
 
   /* La section disparaissait quand la personne n'avait aucun support — y

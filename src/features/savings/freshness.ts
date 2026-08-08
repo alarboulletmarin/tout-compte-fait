@@ -19,14 +19,19 @@
 import type { ISODate } from '@/domain/date'
 import { valuationAge } from '@/domain/saving'
 import { fr } from '@/i18n/fr'
-import { formatDate, tpl } from '@/i18n/format'
+import { formatDayMonthShort, tpl } from '@/i18n/format'
 
 /** `null` quand le support n'a jamais été relevé — jamais « le 0 ». */
 export function freshness(date: ISODate | null): string {
   if (date === null) return fr.savings.valueNever
 
   const age = valuationAge(date)
-  if (age.level === 'fresh') return tpl(fr.savings.valueOn, formatDate(date))
+  /* Sans l'année : la date ne s'affiche que sous le mois, où elle est
+     forcément proche, et « relevé le 8 août 2026 » passait à la ligne sur une
+     rangée de 320px. Passé un mois, il n'y a plus de date du tout — c'est
+     l'écart qui se lit. L'historique, lui, garde les dates entières : là, deux
+     relevés peuvent être à des années l'un de l'autre. */
+  if (age.level === 'fresh') return tpl(fr.savings.valueOn, formatDayMonthShort(date))
   if (age.level === 'stale') return tpl(fr.savings.valueStale, age.months)
   return age.months === 1 ? fr.savings.valueAgeOne : tpl(fr.savings.valueAge, age.months)
 }

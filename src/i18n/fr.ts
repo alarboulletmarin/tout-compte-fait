@@ -253,10 +253,12 @@ export const fr = {
     prorataSoloShort: 'Seule personne du foyer : ses chiffres sont ceux de l’ensemble.',
     prorataSolo:
       '%s est la seule personne ici : elle porte tout le commun, et ses chiffres sont ceux de l’ensemble. Les listes gardent les échéances entières.',
-    /* Le titre de la feuille. Les avertissements de prorata incomplet, eux, ne
-       s'ouvrent pas : ils nomment déjà ce qui manque, et il n'y a rien de plus
-       à en dire que le geste qu'ils appellent. */
-    prorataSheet: 'Comment ces chiffres sont calculés',
+    /* Le titre de la feuille — court, parce que l'en-tête d'une feuille tronque
+       et que « Comment ces chiffres sont calculés » y perdait ses trois derniers
+       mots. Les avertissements de prorata incomplet, eux, ne s'ouvrent pas : ils
+       nomment déjà ce qui manque, et il n'y a rien de plus à en dire que le
+       geste qu'ils appellent. */
+    prorataSheet: 'Le calcul de ces chiffres',
     prorataMissingOne:
       'Charges communes non réparties, faute de connaître le revenu de %s : seules les lignes à son nom sont comptées.',
     prorataMissingMany:

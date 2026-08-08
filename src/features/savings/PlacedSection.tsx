@@ -6,6 +6,7 @@ import { fr } from '@/i18n/fr'
 import { formatPercent } from '@/i18n/format'
 import {
   useCategoryMap,
+  useMemberMap,
   useSavingSupportMap,
   useSavingsBySupport,
   useUnassignedSavings,
@@ -38,6 +39,7 @@ export function PlacedSection({ saved }: { saved: Money }) {
   const slices = useSavingsBySupport()
   const supports = useSavingSupportMap()
   const categories = useCategoryMap()
+  const members = useMemberMap()
   const unassigned = useUnassignedSavings()
   const unlinked = useUnlinkedSavings()
 
@@ -48,10 +50,11 @@ export function PlacedSection({ saved }: { saved: Money }) {
 
   return (
     <Tile className="gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <Eyebrow>{fr.savings.placed}</Eyebrow>
-        <Amount value={saved} size="body" signed />
-      </div>
+      {/* L'étiquette seule : le total est déjà « Versé ce mois », juste
+          au-dessus, et il se disait une troisième fois ici. Le même montant sous
+          trois libellés apprend surtout qu'on ne sait pas lequel lire — et à
+          320px il poussait l'étiquette à la ligne pour rien. */}
+      <Eyebrow>{fr.savings.placed}</Eyebrow>
 
       {slices.length === 0 ? (
         <p className="t-label">{fr.savings.placedEmpty}</p>
@@ -64,17 +67,26 @@ export function PlacedSection({ saved }: { saved: Money }) {
                 ? 'var(--cat-rest)'
                 : (categories.get(support.categoryId)?.color ?? 'var(--cat-rest)')
 
-            /* Le titulaire ne se dit plus ici : l'écran ne montre jamais que
-               les supports d'une seule personne, et le bandeau la nomme. Deux
-               personnes qui ont chacune leur « Livret A » ne se croisent donc
-               pas dans cette liste — c'est le filtre qui l'interdit, pas le
-               libellé qui les départageait. */
+            /* Le titulaire sur la ligne, et pas seulement la part — **ici**, à
+               la différence de la liste des supports.
+               Celle-ci ne montre que les comptes de la personne lue, et le
+               titulaire y serait le même sur toutes les lignes. La ventilation,
+               elle, compte des `Entry`, et une mensualité d'avance cochée « à
+               partager » est de nature épargne : Camille en porte sa part, sur
+               le livret d'Alix. Deux « Livret A » se retrouvent alors dans la
+               même liste, et sans le nom rien ne les départage — c'est
+               exactement la confusion que le support existe pour lever. */
+            const owner = support === undefined ? undefined : members.get(support.memberId)?.name
+            const meta = [owner, shares ? formatPercent(slice.share) : undefined]
+              .filter((part) => part !== undefined && part !== '')
+              .join(' · ')
+
             return (
               <li key={slice.supportId}>
                 <ListRow
                   color={color}
                   label={support?.label ?? fr.savings.unlinked}
-                  {...(shares ? { meta: formatPercent(slice.share) } : {})}
+                  {...(meta === '' ? {} : { meta })}
                   trailing={<Amount value={slice.total} signed />}
                   {...(support === undefined
                     ? {}
