@@ -15,6 +15,7 @@
 
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise'
+import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { Archive } from '@phosphor-icons/react/dist/csr/Archive'
 import { ArrowUpRight } from '@phosphor-icons/react/dist/csr/ArrowUpRight'
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
@@ -41,6 +42,7 @@ import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
 import { PiggyBank } from '@phosphor-icons/react/dist/csr/PiggyBank'
 import { Plus as PhPlus } from '@phosphor-icons/react/dist/csr/Plus'
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { Money } from '@phosphor-icons/react/dist/csr/Money'
 import { Receipt } from '@phosphor-icons/react/dist/csr/Receipt'
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
@@ -155,6 +157,18 @@ export const ShieldIcon = adapt(ShieldCheck)
 /* Le coffre, et non une seconde base : « Données » parle des fichiers qui
    sortent, « Sur cet appareil » de ce qui y reste rangé. */
 export const DeviceIcon = adapt(Archive)
+/* Ce qui sort et ce qui rentre, dans un seul glyphe : deux flèches opposées.
+   L'écran s'appelle « Exporter / importer », et un repère qui n'en montrerait
+   qu'un des deux sens désignerait la moitié de ce qu'il ouvre. Distinct de
+   `ShareIcon`, qui est le geste — passer le fichier à une autre app — et non
+   la destination. */
+export const TransferIcon = adapt(ArrowsDownUp)
+/* Le billet, et non une pièce : `IncomeIcon` tient déjà les pièces pour les
+   revenus, et un repère qui sert deux concepts n'en repère plus aucun (DS §9).
+   Le billet est aussi le seul glyphe d'argent de la bibliothèque qui ne porte
+   aucun symbole monétaire — sur le réglage qui choisit lequel afficher, un « $»
+   gravé dans l'icône aurait dit le contraire de ce que fait le sélecteur. */
+export const CurrencyIcon = adapt(Money)
 export const CompareIcon = adapt(ChartBar)
 /* La courbe nue, et non celle du prévisionnel : les deux montaient dans le même
    cadre à axes, et le glyphe partagé disait qu'il s'agissait du même chiffre —

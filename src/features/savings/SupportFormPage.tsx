@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { SAVINGS_PATH, SETTINGS_PEOPLE_PATH, supportPath } from '@/app/routes'
+import { SAVINGS_PATH, PEOPLE_PATH, supportPath } from '@/app/routes'
 import type { SavingSupport } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { tpl } from '@/i18n/format'
@@ -104,7 +104,7 @@ function SupportForm({ support }: { support?: SavingSupport }) {
           message={fr.savings.supportsNoMember}
           actionLabel={fr.split.goToSettings}
           onAction={() => {
-            void navigate(SETTINGS_PEOPLE_PATH)
+            void navigate(PEOPLE_PATH)
           }}
         />
       </div>

@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { SETTINGS_STORAGE_PATH } from '@/app/routes'
+import { STORAGE_PATH } from '@/app/routes'
 import { today } from '@/domain/date'
 import { fr } from '@/i18n/fr'
 import { formatDate } from '@/i18n/format'
@@ -129,7 +129,7 @@ export function DataSection() {
             value={lastExport === null ? fr.storage.lastExportNever : formatDate(lastExport)}
           />
         </dl>
-        <Link to={SETTINGS_STORAGE_PATH} className="t-label w-fit underline">
+        <Link to={STORAGE_PATH} className="t-label w-fit underline">
           {fr.storage.statusMore}
         </Link>
       </Tile>

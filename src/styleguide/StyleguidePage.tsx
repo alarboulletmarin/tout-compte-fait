@@ -54,7 +54,7 @@ export function StyleguidePage() {
           <h1 className="t-hero">{fr.styleguide.title}</h1>
           <p className="t-label max-w-prose">{fr.styleguide.subtitle}</p>
         </div>
-        {/* Les deux réglages d'apparence, comme sur `/reglages/apparence` : le
+        {/* Les deux réglages d'apparence, comme sur `/apparence` : le
             nuancier montre l'app, donc il se règle comme elle. */}
         <div className="flex flex-col items-end gap-2">
           <Segmented

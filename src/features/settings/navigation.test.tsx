@@ -1,10 +1,16 @@
 /* ============================================================================
- * Les réglages sont une section, pas un écran.
+ * Cinq vues, chacune à son adresse, et « Plus » pour seule entrée.
  *
- * Ce qui est éprouvé ici n'est pas la mise en forme mais l'architecture : ce que
- * la page d'entrée montre — et surtout ce qu'elle ne montre plus —, les quatre
- * pas de navigation qui y mènent, et le retour de chacun. C'est exactement ce
- * qu'un rangement de composants casse sans que rien ne le dise.
+ * Ce qui est éprouvé ici n'est pas la mise en forme mais l'architecture : les
+ * pas de navigation qui mènent à chaque vue, et le retour de chacune. Ce que
+ * « Plus » montre de son côté — les quatre groupes, et le fait qu'aucun ne
+ * s'appelle « Réglages » — est éprouvé avec lui, dans `features/more`.
+ *
+ * Ces vues vivaient sous `/reglages/…`, derrière une page d'entrée qui les
+ * réunissait toutes. La page a disparu et les adresses ont remonté d'un cran :
+ * deux d'entre elles ne réglaient rien — les personnes et les catégories sont
+ * la structure du budget —, et un écran rangé sous un parent qui n'existe plus
+ * n'aurait gardé de la hiérarchie que ce qu'elle avait de faux.
  * ==========================================================================*/
 
 import { render, screen, within } from '@testing-library/react'
@@ -12,14 +18,16 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  SETTINGS_APPEARANCE_PATH,
-  SETTINGS_CATEGORIES_PATH,
-  SETTINGS_FAMILY_NEW_PATH,
-  SETTINGS_MEMBER_NEW_PATH,
-  SETTINGS_PATH,
-  SETTINGS_PEOPLE_PATH,
+  APPEARANCE_PATH,
+  CATEGORIES_PATH,
+  FAMILY_NEW_PATH,
+  LEGACY_SETTINGS_PATH,
+  MEMBER_NEW_PATH,
+  MORE_PATH,
+  PEOPLE_PATH,
+  familyPath,
   isFocusScreen,
-  settingsFamilyPath,
+  legacySettingsTarget,
 } from '@/app/routes'
 import { makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
 import { fr } from '@/i18n/fr'
@@ -31,24 +39,24 @@ import { FamilyPage } from './FamilyPage'
 import { MemberPage } from './MemberPage'
 import { PeoplePage } from './PeoplePage'
 import { AppearancePage } from './AppearancePage'
-import { SettingsPage } from './SettingsPage'
 
 /* Les mêmes chemins que `app/Routes.tsx`, par les mêmes constantes : un test
    qui écrirait ses URL à la main resterait vert le jour où l'app change les
-   siennes. */
+   siennes. « Plus » n'est ici qu'une cible de retour — un titre suffit à dire
+   qu'on y est revenu, et le vrai écran est éprouvé chez lui. */
 function open(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path={SETTINGS_PATH} element={<SettingsPage />} />
-        <Route path={SETTINGS_APPEARANCE_PATH} element={<AppearancePage />} />
-        <Route path={SETTINGS_PEOPLE_PATH} element={<PeoplePage />} />
-        <Route path={SETTINGS_MEMBER_NEW_PATH} element={<MemberPage />} />
-        <Route path={`${SETTINGS_PEOPLE_PATH}/:id`} element={<MemberPage />} />
-        <Route path={SETTINGS_CATEGORIES_PATH} element={<CategoriesPage />} />
-        <Route path={SETTINGS_FAMILY_NEW_PATH} element={<FamilyNewPage />} />
-        <Route path={`${SETTINGS_CATEGORIES_PATH}/:id`} element={<FamilyPage />} />
-        <Route path={`${SETTINGS_CATEGORIES_PATH}/:id/nouvelle`} element={<CategoryNewPage />} />
+        <Route path={MORE_PATH} element={<h1>{fr.nav.more}</h1>} />
+        <Route path={APPEARANCE_PATH} element={<AppearancePage />} />
+        <Route path={PEOPLE_PATH} element={<PeoplePage />} />
+        <Route path={MEMBER_NEW_PATH} element={<MemberPage />} />
+        <Route path={`${PEOPLE_PATH}/:id`} element={<MemberPage />} />
+        <Route path={CATEGORIES_PATH} element={<CategoriesPage />} />
+        <Route path={FAMILY_NEW_PATH} element={<FamilyNewPage />} />
+        <Route path={`${CATEGORIES_PATH}/:id`} element={<FamilyPage />} />
+        <Route path={`${CATEGORIES_PATH}/:id/nouvelle`} element={<CategoryNewPage />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -72,67 +80,30 @@ beforeEach(() => {
   })
 })
 
-describe('la page d’entrée', () => {
-  /* C'est le reproche d'origine : la page portait tout, catalogue compris, et
-     l'on faisait défiler quarante-six catégories pour atteindre le thème. */
-  it('résume au lieu de tout déplier', () => {
-    open(SETTINGS_PATH)
+/* Le retour de chaque vue mène à « Plus », et non plus à une page d'entrée qui
+   n'existe plus. C'est ce qu'un rangement de composants casse sans que rien ne
+   le dise : la vue reste juste, et le bouton « retour » atterrit sur une
+   redirection. */
+describe('le retour des cinq vues', () => {
+  it.each([
+    ['l’apparence', APPEARANCE_PATH],
+    ['les personnes', PEOPLE_PATH],
+    ['le catalogue', CATEGORIES_PATH],
+  ])('remonte de %s à « Plus »', async (_, path) => {
+    const user = userEvent.setup()
+    open(path)
 
-    expect(screen.getByText('Maison')).toBeInTheDocument()
-    expect(screen.getByText(tpl(fr.settings.membersCountOne, 1))).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        `${tpl(fr.settings.familyCount, 3)} · ${tpl(fr.settings.familiesCount, 2)}`,
-      ),
-    ).toBeInTheDocument()
-
-    expect(screen.queryByText('Carburant')).not.toBeInTheDocument()
-    expect(screen.queryByText('Transport')).not.toBeInTheDocument()
-  })
-
-  /* Le nom du foyer est facultatif. Sans lui, la rangée dit ce qu'elle a à dire
-     sur une ligne plutôt que de reprendre le mot de son étiquette. */
-  it('se passe du nom quand il n’y en a pas', () => {
-    useStore.setState({ data: makeData({ household: { name: '', members: [] } }) })
-    open(SETTINGS_PATH)
-
-    expect(screen.getByRole('link', { name: fr.settings.membersNone })).toBeInTheDocument()
-  })
-
-  /* La devise reste modifiable sur place — six codes dans un sélecteur natif
-     n'ont rien à montrer qu'une vue rendrait mieux. L'apparence, elle, est une
-     rangée qui dit sa valeur : le thème l'a suivie le jour où la palette est
-     arrivée à côté de lui. */
-  it('garde la devise à portée et renvoie l’apparence à sa vue', () => {
-    open(SETTINGS_PATH)
-
-    expect(screen.getByRole('combobox', { name: fr.settings.currency })).toBeInTheDocument()
-    expect(screen.queryByRole('radiogroup', { name: fr.theme.label })).not.toBeInTheDocument()
-
-    const row = screen.getByRole('link', { name: new RegExp(fr.appearance.title) })
-    expect(row).toHaveAttribute('href', SETTINGS_APPEARANCE_PATH)
-    expect(row).toHaveTextContent(fr.theme.system)
-    expect(row).toHaveTextContent(fr.palettes.classique)
+    await user.click(screen.getByRole('button', { name: fr.common.back }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.nav.more)
   })
 })
 
 describe('l’apparence', () => {
-  it('descend depuis la page d’entrée, et remonte', async () => {
-    const user = userEvent.setup()
-    open(SETTINGS_PATH)
-
-    await user.click(screen.getByRole('link', { name: new RegExp(fr.appearance.title) }))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.appearance.title)
-
-    await user.click(screen.getByRole('button', { name: fr.common.back }))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.nav.settings)
-  })
-
   /* Deux réglages, deux groupes de choix : c'est ce qui les rend combinables
      plutôt que confondus. */
   it('porte le thème et les six palettes', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_APPEARANCE_PATH)
+    open(APPEARANCE_PATH)
 
     expect(screen.getByRole('radiogroup', { name: fr.theme.label })).toBeInTheDocument()
     const palettes = screen.getByRole('group', { name: fr.appearance.paletteLabel })
@@ -148,7 +119,7 @@ describe('l’apparence', () => {
   it('ne touche qu’au réglage, jamais aux teintes enregistrées', async () => {
     const user = userEvent.setup()
     const before = useStore.getState().data.categories.map((c) => c.color)
-    open(SETTINGS_APPEARANCE_PATH)
+    open(APPEARANCE_PATH)
 
     await user.click(screen.getByRole('radio', { name: new RegExp(fr.palettes.contrastee) }))
     expect(useStore.getState().data.categories.map((c) => c.color)).toEqual(before)
@@ -159,9 +130,8 @@ describe('l’apparence', () => {
 describe('le catalogue', () => {
   it('descend famille par famille, et remonte', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_PATH)
+    open(CATEGORIES_PATH)
 
-    await user.click(screen.getByRole('link', { name: /Catégories/ }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.settings.categories)
 
     await user.click(screen.getByRole('link', { name: /Transport/ }))
@@ -178,7 +148,7 @@ describe('le catalogue', () => {
      catégorie sans ouvrir sa famille — et de dire de laquelle il s'agit. */
   it('retrouve une catégorie sans ouvrir sa famille, et nomme celle-ci', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_CATEGORIES_PATH)
+    open(CATEGORIES_PATH)
 
     await user.type(screen.getByRole('searchbox', { name: fr.settings.categorySearch }), 'carbu')
 
@@ -192,7 +162,7 @@ describe('le catalogue', () => {
 
   it('dit ce qu’aucune recherche ne trouve', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_CATEGORIES_PATH)
+    open(CATEGORIES_PATH)
 
     await user.type(screen.getByRole('searchbox', { name: fr.settings.categorySearch }), 'zzz')
 
@@ -203,7 +173,7 @@ describe('le catalogue', () => {
      demande, et la famille qu'il crée s'ouvre pour qu'on y range. */
   it('crée une famille sur demande, et atterrit dessus', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_CATEGORIES_PATH)
+    open(CATEGORIES_PATH)
 
     await user.click(screen.getByRole('button', { name: fr.settings.familyAdd }))
     await user.type(screen.getByRole('textbox', { name: fr.settings.familyName }), 'Animaux')
@@ -216,7 +186,7 @@ describe('le catalogue', () => {
   /* La famille est connue : la création d'une catégorie ne la redemande pas. */
   it('crée une catégorie dans la famille où l’on est', async () => {
     const user = userEvent.setup()
-    open(settingsFamilyPath('fam-transport'))
+    open(familyPath('fam-transport'))
 
     await user.click(screen.getByRole('button', { name: fr.settings.categoryAdd }))
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
@@ -233,7 +203,7 @@ describe('le catalogue', () => {
 describe('les personnes', () => {
   it('mènent à la fiche d’un membre, où le prénom se valide', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_PEOPLE_PATH)
+    open(PEOPLE_PATH)
 
     await user.click(screen.getByRole('button', { name: /Aix/ }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Aix')
@@ -251,7 +221,7 @@ describe('les personnes', () => {
 
   it('ajoutent un membre depuis une vue à part', async () => {
     const user = userEvent.setup()
-    open(SETTINGS_PEOPLE_PATH)
+    open(PEOPLE_PATH)
 
     await user.click(screen.getByRole('button', { name: fr.settings.memberAdd }))
     await user.type(screen.getByRole('textbox', { name: fr.settings.memberName }), 'Sacha')
@@ -265,11 +235,30 @@ describe('les personnes', () => {
 /* Le bouton flottant pose la saisie d'une dépense ; « Ajouter un membre » pose
    un membre. Deux actions principales sur le même écran, à trois centimètres
    l'une de l'autre, ne disent plus laquelle est celle de l'écran. */
+/* Une URL qu'on a pu mettre en signet, poser sur son écran d'accueil ou envoyer
+   à quelqu'un ne se supprime pas : elle se redirige. Et elle se redirige
+   *entièrement* — atterrir sur l'accueil de la section aurait laissé le travail
+   à moitié fait, comme si le lien n'avait jamais désigné qu'un rayon. */
+describe('les anciennes adresses sous /reglages', () => {
+  it.each([
+    [LEGACY_SETTINGS_PATH, MORE_PATH],
+    [`${LEGACY_SETTINGS_PATH}/`, MORE_PATH],
+    [`${LEGACY_SETTINGS_PATH}/personnes`, PEOPLE_PATH],
+    [`${LEGACY_SETTINGS_PATH}/personnes/m-1`, `${PEOPLE_PATH}/m-1`],
+    [`${LEGACY_SETTINGS_PATH}/categories`, CATEGORIES_PATH],
+    [`${LEGACY_SETTINGS_PATH}/categories/fam-1/nouvelle`, `${CATEGORIES_PATH}/fam-1/nouvelle`],
+    [`${LEGACY_SETTINGS_PATH}/apparence`, APPEARANCE_PATH],
+  ])('mène de %s à %s', (from, to) => {
+    expect(legacySettingsTarget(from)).toBe(to)
+  })
+})
+
 describe('le bouton flottant', () => {
-  it('se retire des vues des réglages, et reste sur la page d’entrée', () => {
-    expect(isFocusScreen(SETTINGS_PATH)).toBe(false)
-    expect(isFocusScreen(SETTINGS_PEOPLE_PATH)).toBe(true)
-    expect(isFocusScreen(SETTINGS_CATEGORIES_PATH)).toBe(true)
-    expect(isFocusScreen(settingsFamilyPath('fam-transport'))).toBe(true)
+  it('se retire des cinq vues, et reste sur « Plus »', () => {
+    expect(isFocusScreen(MORE_PATH)).toBe(false)
+    expect(isFocusScreen(PEOPLE_PATH)).toBe(true)
+    expect(isFocusScreen(CATEGORIES_PATH)).toBe(true)
+    expect(isFocusScreen(APPEARANCE_PATH)).toBe(true)
+    expect(isFocusScreen(familyPath('fam-transport'))).toBe(true)
   })
 })

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { RECURRENCES_PATH, SAVINGS_PATH, SETTINGS_PEOPLE_PATH } from '@/app/routes'
+import { RECURRENCES_PATH, SAVINGS_PATH, PEOPLE_PATH } from '@/app/routes'
 import type { Member } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
@@ -69,7 +69,7 @@ export function MemberPage() {
 
   // Retiré depuis un autre onglet, ou URL fausse.
   if (id !== undefined && member === undefined) {
-    return <Navigate to={SETTINGS_PEOPLE_PATH} replace />
+    return <Navigate to={PEOPLE_PATH} replace />
   }
 
   /* La clef porte l'identité de la fiche : le champ tient son brouillon en état
@@ -92,7 +92,7 @@ function MemberView({ member }: { member?: Member }) {
 
   const trimmed = name.trim()
   const back = (): void => {
-    void navigate(SETTINGS_PEOPLE_PATH)
+    void navigate(PEOPLE_PATH)
   }
 
   const read = member === undefined ? undefined : incomes.find((one) => one.memberId === member.id)
