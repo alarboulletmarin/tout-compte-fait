@@ -538,6 +538,18 @@ export type MemberCharges = {
   own: Money
   /** Sa part des charges communes, au prorata des revenus. */
   common: Money
+  /**
+   * La même part, ventilée par nature — la cascade de la capacité d'épargne
+   * lit « charges » et « crédits » séparément, et ne peut retrancher du
+   * commun que ce qui vient de la même nature qu'elle.
+   *
+   * `commonCharge + commonDebt` vaut `common` sauf sur un document qui aurait
+   * marqué « à partager » une nature que la saisie n'y autorise pas : ces
+   * deux-ci s'arrêtent aux natures que `spendingFlow` compte, `common` non.
+   */
+  commonCharge: Money
+  /** Sa part des crédits communs. Voir `commonCharge`. */
+  commonDebt: Money
   /** Le total commun dont cette part est tirée, pour que le chiffre se vérifie. */
   commonTotal: Money
   /** Le coefficient qui la produit, en points de base. 5556 = 55,56 %. */
@@ -577,12 +589,18 @@ export function memberCharges(
   const solo = incomes.length === 1
   let own = ZERO
   let common = ZERO
+  let commonCharge = ZERO
+  let commonDebt = ZERO
   let commonTotal = ZERO
 
   for (const entry of entriesOfMonth(entries, month)) {
     if (isCommon(entry, kindOf)) {
+      const part = allocate(entry.amount, weights)[index] ?? ZERO
       commonTotal = add(commonTotal, entry.amount)
-      common = add(common, allocate(entry.amount, weights)[index] ?? ZERO)
+      common = add(common, part)
+      const kind = kindOf(entry.categoryId)
+      if (kind === 'charge') commonCharge = add(commonCharge, part)
+      else if (kind === 'debt') commonDebt = add(commonDebt, part)
       continue
     }
     // Seul du foyer, une ligne de personne est à lui — même règle que
@@ -595,5 +613,12 @@ export function memberCharges(
     own = add(own, entry.amount)
   }
 
-  return { own, common, commonTotal, shareBp: largestRemainder(10_000, weights)[index] ?? 0 }
+  return {
+    own,
+    common,
+    commonCharge,
+    commonDebt,
+    commonTotal,
+    shareBp: largestRemainder(10_000, weights)[index] ?? 0,
+  }
 }
