@@ -192,6 +192,17 @@ function MonthCompareBody({
             <p className="t-label">{history.compareNoChange}</p>
           ) : (
             <>
+              {/* Ce que la colonne de droite compte, avant de la lire. La liste
+                  ne montre que des **sorties** — `compareMonths(…, 'out')` —,
+                  et son signe se lit du mois de référence vers le mois comparé :
+                  deux règles qui ne s'écrivaient nulle part, et qu'un « + » ne
+                  suffit pas à dire. Une phrase ici plutôt qu'un mot ajouté au
+                  compte, qui aurait fait « 2 catégories de sorties ont
+                  changé » — le compte porte le combien, pas la définition.
+                  Elle ne suit pas les rangées repliées : celles-ci portent un
+                  montant, pas un écart, et leur propre phrase le dit déjà. */}
+              <p className="t-label">{history.compareScope}</p>
+
               {/* Le compte et l'écart net sur une seule rangée : combien de
                   catégories ont bougé, et de combien au total. C'est la réponse
                   à « qu'est-ce qui explique la différence » avant même de lire
