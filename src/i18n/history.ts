@@ -43,6 +43,13 @@ export const history = {
      mot qui distingue les deux est le second. */
   compareLeft: 'Référence',
   compareRight: 'Comparé',
+  /* Ce que la liste mesure, et dans quel sens. Les deux étaient à deviner : la
+     comparaison ne porte que sur les **sorties** — les entrées n'y entrent
+     jamais —, et un « +150 € » ne dit pas de lui-même s'il se lit du mois de
+     référence vers le mois comparé ou l'inverse. Deux règles qu'aucun libellé
+     n'écrivait, et un chiffre dont on ne sait pas ce qu'il compte se lit comme
+     un chiffre faux. */
+  compareScope: 'Écart des sorties, du mois de référence au mois comparé.',
   compareEmpty: 'Ces deux mois n’ont aucune sortie à comparer.',
   compareSingleMonth:
     'Un seul mois de données pour l’instant. La comparaison arrivera avec le deuxième.',
@@ -73,7 +80,13 @@ export const history = {
      chiffre juste qu'on ne comprend pas se lit comme un chiffre faux. */
   yearsPartial: '%s s’arrête à %s : les deux années se lisent à ce mois-là.',
   yearsNoPrevious: 'Aucune donnée en %s : rien à comparer.',
-  cumulative: 'Cumul du solde, mois après mois',
+  /* Le nom de ce que le tracé et ses trois chiffres mesurent — et non plus la
+     forme du tracé. « Mois après mois » décrivait la courbe ; ce qu'on ne
+     savait pas, c'est ce que valait le nombre lu à un mois donné : le solde de
+     ce mois-là, ou tout ce qui s'est accumulé depuis janvier. C'est le second,
+     et il faut l'écrire. Cette chaîne sert des deux côtés — nom accessible du
+     graphique, et titre visible au-dessus de la lecture. */
+  cumulative: 'Cumul du solde depuis janvier',
   srTrailing: 'Solde mensuel : %s',
   /* L'horizon est nommé, et les deux cumuls s'y arrêtent tous les deux : une
      année en cours lue jusqu'à son dernier mois contre une année pleine lue

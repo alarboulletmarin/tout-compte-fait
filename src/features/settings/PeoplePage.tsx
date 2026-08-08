@@ -2,11 +2,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   RECURRENCES_PATH,
   RECURRENCE_NEW_PATH,
-  SETTINGS_MEMBER_NEW_PATH,
-  SETTINGS_PATH,
+  MEMBER_NEW_PATH,
+  MORE_PATH,
   SPLIT_PATH,
   recurrenceEditPath,
-  settingsMemberPath,
+  memberPath,
 } from '@/app/routes'
 import type { MemberIncome } from '@/domain/split'
 import { fr } from '@/i18n/fr'
@@ -90,7 +90,7 @@ export function PeoplePage() {
       <PageTitle
         title={fr.settings.household}
         onBack={() => {
-          void navigate(SETTINGS_PATH)
+          void navigate(MORE_PATH)
         }}
       />
 
@@ -125,7 +125,7 @@ export function PeoplePage() {
                   meta={incomeOf(incomeMap.get(member.id), shares?.get(member.id), currency)}
                   trailing={<ChevronRight size={16} className="text-muted" aria-hidden="true" />}
                   onClick={() => {
-                    void navigate(settingsMemberPath(member.id))
+                    void navigate(memberPath(member.id))
                   }}
                 />
               </li>
@@ -166,7 +166,7 @@ export function PeoplePage() {
           variant="secondary"
           className="w-fit"
           onClick={() => {
-            void navigate(SETTINGS_MEMBER_NEW_PATH)
+            void navigate(MEMBER_NEW_PATH)
           }}
         >
           {fr.settings.memberAdd}

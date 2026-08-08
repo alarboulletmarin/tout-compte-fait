@@ -81,7 +81,8 @@ npm run dev
 | `npm run verify` | les six d'un coup — c'est la porte de sortie |
 
 Rien à configurer : aucune variable d'environnement, aucune clé d'API. Pour voir
-l'app pleine plutôt que vide, **Réglages → Jeu d'exemple → Charger l'exemple**
+l'app pleine plutôt que vide, **Plus → Exporter / importer → Jeu d'exemple →
+Charger l'exemple**
 monte quinze mois de données à partir d'aujourd'hui — c'est ce qu'on voit sur
 les captures ci-dessus.
 

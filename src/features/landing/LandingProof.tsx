@@ -136,7 +136,7 @@ function SplitProof() {
               <span className="t-axis min-w-0">{landing.settlement}</span>
               {/* Signé, et sans `direction` : ce n'est pas un flux dont on lirait
                   la valeur absolue, c'est un écart dont le signe est toute la
-                  lecture — la règle qu'applique déjà `SettlementTile`. */}
+                  lecture — la règle qu'applique déjà `MemberShareTile`. */}
               <span className="t-axis tnum shrink-0">
                 {formatSignedMoney(share.adjustment, currency)}
               </span>

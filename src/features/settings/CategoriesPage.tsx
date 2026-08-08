@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SETTINGS_FAMILY_NEW_PATH, SETTINGS_PATH, settingsFamilyPath } from '@/app/routes'
+import { FAMILY_NEW_PATH, MORE_PATH, familyPath } from '@/app/routes'
 import { isSearchable, matchesText, normalizeText } from '@/domain/search'
 import type { Category, Family } from '@/domain/types'
 import { fr } from '@/i18n/fr'
@@ -79,7 +79,7 @@ export function CategoriesPage() {
       <PageTitle
         title={fr.settings.categories}
         onBack={() => {
-          void navigate(SETTINGS_PATH)
+          void navigate(MORE_PATH)
         }}
       />
 
@@ -117,7 +117,7 @@ export function CategoriesPage() {
               key={group.family.id}
               label={group.family.label}
               trailing={<Count count={group.categories.length} />}
-              to={settingsFamilyPath(group.family.id)}
+              to={familyPath(group.family.id)}
             />
           ))}
           {found.matches.map(({ category, family }) => (
@@ -129,7 +129,7 @@ export function CategoriesPage() {
                  chercher — « où est rangé Carburant » — et c'est aussi ce que la
                  ligne ouvre. */
               description={family.label}
-              to={settingsFamilyPath(family.id)}
+              to={familyPath(family.id)}
             />
           ))}
         </RowGroup>
@@ -141,7 +141,7 @@ export function CategoriesPage() {
         variant="secondary"
         className="w-fit"
         onClick={() => {
-          void navigate(SETTINGS_FAMILY_NEW_PATH)
+          void navigate(FAMILY_NEW_PATH)
         }}
       >
         {fr.settings.familyAdd}

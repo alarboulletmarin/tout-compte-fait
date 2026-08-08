@@ -3,11 +3,9 @@ import {
   CreditsIcon,
   HistoryIcon,
   type IconComponent,
-  InfoIcon,
   NavCalendar,
   NavMonth,
   NavMore,
-  NavSettings,
   RecurrencesIcon,
   SavingsIcon,
   SplitIcon,
@@ -18,10 +16,12 @@ export type RouteDef = { path: string; label: string; icon: IconComponent }
 /* Déclaré avant la table : un `const` ne remonte pas, et `NAV_ROUTES` le lit à
    l'évaluation du module. */
 export const RECURRENCES_PATH = '/recurrences'
-export const SETTINGS_PATH = '/reglages'
 /* Le quatrième onglet : tout ce que la barre ne peut pas porter. Voir
-   `MORE_SECTIONS` plus bas, qui dit ce qu'on y trouve et pourquoi. */
+   `MORE_PREFIXES` plus bas, qui dit ce qu'il range et pourquoi. La destination
+   est déclarée une fois — la barre d'onglets et la colonne latérale la lisent
+   toutes les deux, et deux littéraux auraient fini par diverger. */
 export const MORE_PATH = '/plus'
+const MORE_ROUTE: RouteDef = { path: MORE_PATH, label: fr.nav.more, icon: NavMore }
 /* Segment fixe : React Router le classe avant `/recurrences/:id`, une
    récurrence ne peut donc pas éclipser le formulaire de création. */
 export const RECURRENCE_NEW_PATH = `${RECURRENCES_PATH}/nouveau`
@@ -43,11 +43,12 @@ export const recurrenceEditPath = (id: string): string => `${RECURRENCES_PATH}/$
  *
  * Restent donc les trois lectures qu'on ouvre pour regarder — ce mois, les
  * jours, les mois d'avant — et une quatrième porte, « Plus », qui range le
- * reste au lieu de le laisser sans adresse (`MORE_SECTIONS`).
+ * reste au lieu de le laisser sans adresse (`features/more/MorePage.tsx`).
  *
- * Le prix est assumé : les récurrences et les réglages passent de un à deux
- * appuis. Les premières restent à un appui depuis l'état vide du mois, qui est
- * l'endroit où l'on va justement en poser une.
+ * Le prix est assumé : les récurrences passent de un à deux appuis, et restent
+ * à un appui depuis l'état vide du mois, qui est l'endroit où l'on va justement
+ * en poser une. Les réglages, eux, en gagnent un : « Plus » ouvre directement ce
+ * qui vivait derrière une page d'entrée.
  *
  * Chaque destination porte son glyphe ici, en un seul endroit, pour que les
  * deux navigations ne puissent pas diverger.
@@ -56,7 +57,7 @@ export const NAV_ROUTES: RouteDef[] = [
   { path: '/', label: fr.nav.month, icon: NavMonth },
   { path: '/calendrier', label: fr.nav.calendar, icon: NavCalendar },
   { path: '/historique', label: fr.nav.history, icon: HistoryIcon },
-  { path: MORE_PATH, label: fr.nav.more, icon: NavMore },
+  MORE_ROUTE,
 ]
 
 export const STYLEGUIDE_ROUTE = { path: '/styleguide', label: fr.nav.styleguide }
@@ -174,6 +175,78 @@ export const valuationEditPath = (supportId: string, valuationId: string): strin
 export const ADVANCES_PATH = '/avances'
 export const ADVANCE_NEW_PATH = `${ADVANCES_PATH}/nouveau`
 
+/* --- Ce que « Réglages » rangeait ----------------------------------------*/
+
+/**
+ * Cinq écrans qui n'étaient pas des réglages, et qui vivaient sous ce mot.
+ *
+ * `/reglages` réunissait les personnes, le catalogue des catégories,
+ * l'apparence, la devise, le stockage, l'export/import et « à propos ». Six
+ * natures de tâches derrière un seul intitulé, et deux d'entre elles ne réglent
+ * rien du tout : **qui compose le foyer et sous quelles étiquettes on range**
+ * sont la structure du budget, pas une préférence d'application — on les
+ * modifie parce qu'on a déménagé ou changé de vie, pas parce qu'on veut que
+ * l'app se présente autrement. Les données non plus : sauvegarder et restaurer
+ * n'est pas un goût, c'est ce qui décide si l'on retrouve ses comptes après une
+ * casse d'appareil.
+ *
+ * Chacun de ces cinq écrans remonte donc à la racine, comme les quatre écrans
+ * de « Gérer », et « Plus » les range par intention plutôt que par un mot
+ * fourre-tout (voir `features/more/MorePage.tsx`). L'URL suit : un écran rangé
+ * sous un parent qui n'existe plus n'aurait gardé de la hiérarchie que ce
+ * qu'elle avait de faux.
+ */
+export const PEOPLE_PATH = '/personnes'
+/* Segment fixe avant `:id`, comme pour les récurrences : React Router le classe
+   d'abord, un membre ne peut donc pas éclipser le formulaire de création. */
+export const MEMBER_NEW_PATH = `${PEOPLE_PATH}/nouveau`
+export const memberPath = (id: string): string => `${PEOPLE_PATH}/${id}`
+
+export const CATEGORIES_PATH = '/categories'
+export const FAMILY_NEW_PATH = `${CATEGORIES_PATH}/nouvelle`
+export const familyPath = (id: string): string => `${CATEGORIES_PATH}/${id}`
+/* La création d'une catégorie vit sous sa famille : celle-ci porte la nature et
+   la teinte, et l'écran n'a donc plus à redemander ce qu'on vient de choisir en
+   ouvrant la famille. */
+export const categoryNewPath = (familyId: string): string =>
+  `${CATEGORIES_PATH}/${familyId}/nouvelle`
+
+/* L'apparence a sa vue, contrairement à la devise qui se règle sur place :
+   trois positions de thème y tenaient, six aperçus de palette non — et une
+   palette ne se choisit pas à la lecture de son nom. Le thème l'y suit, parce
+   que les deux réglages se regardent ensemble : « Sombre » ne veut rien dire
+   sans savoir de quelle palette il est le sombre. */
+export const APPEARANCE_PATH = '/apparence'
+
+export const STORAGE_PATH = '/stockage'
+export const DATA_PATH = '/donnees'
+
+/**
+ * L'ancienne section, gardée pour ce qui pointe encore dessus.
+ *
+ * Un signet, une icône posée sur l'écran d'accueil, un lien envoyé à quelqu'un :
+ * les cinq vues ont changé d'adresse, pas de nom. `/reglages/personnes` devient
+ * `/personnes` par simple retrait du préfixe — c'est la raison pour laquelle
+ * aucun segment n'a été renommé au passage — et `/reglages` seul retombe sur
+ * l'écran qui l'a remplacé. Même filet que `/abonnements`, et même motif : une
+ * URL qu'on a pu enregistrer ne se supprime pas, elle se redirige.
+ */
+export const LEGACY_SETTINGS_PATH = '/reglages'
+
+/**
+ * Où mène une ancienne adresse `/reglages/…`.
+ *
+ * Un simple retrait de préfixe, et c'est ce qui rend la redirection exacte
+ * plutôt qu'approximative : `/reglages/categories/fam-1/nouvelle` retrouve le
+ * formulaire de création d'une catégorie, pas seulement l'accueil de la section.
+ * Une fonction pure plutôt qu'un calcul dans le composant — c'est la promesse
+ * faite aux signets, et une promesse s'éprouve.
+ */
+export function legacySettingsTarget(pathname: string): string {
+  const rest = pathname.slice(LEGACY_SETTINGS_PATH.length)
+  return rest === '' || rest === '/' ? MORE_PATH : rest
+}
+
 /* --- Le rangement de la navigation ---------------------------------------*/
 
 /**
@@ -199,12 +272,6 @@ export const MANAGE_ROUTES: RouteDef[] = [
   { path: CREDITS_PATH, label: fr.nav.credits, icon: CreditsIcon },
 ]
 
-const SETTINGS_ROUTE: RouteDef = {
-  path: SETTINGS_PATH,
-  label: fr.nav.settings,
-  icon: NavSettings,
-}
-
 export type NavGroup = { title?: string; routes: RouteDef[] }
 
 /**
@@ -213,50 +280,58 @@ export type NavGroup = { title?: string; routes: RouteDef[] }
  * Elle alignait cinq entrées à plat, ce qui donnait le même poids à « Le mois »
  * et à « Réglages » — et laissait 224px de colonne à moitié vides pendant que
  * quatre écrans n'y figuraient pas du tout. Le premier groupe est ce qu'on
- * ouvre pour regarder, le deuxième ce qu'on tient, le troisième ce qu'on règle.
+ * ouvre pour regarder, le deuxième ce qu'on tient, le troisième range le reste.
  *
  * **Seul celui du milieu porte un titre.** Le premier n'en a pas parce que la
  * colonne doit s'ouvrir sur les destinations quotidiennes, pas sur un mot à
  * lire avant elles ; le dernier n'en a pas parce qu'il ne contient qu'une
- * destination, et qu'un titre « Réglages » posé au-dessus d'un lien « Réglages »
- * est une étiquette qui ne sépare rien de ce qu'elle nomme. Un titre dit qu'on
- * descend d'un cran ; sur un groupe d'un seul, il n'y a pas de cran.
+ * destination, et qu'un titre posé au-dessus d'un lien unique est une étiquette
+ * qui ne sépare rien de ce qu'elle nomme. Un titre dit qu'on descend d'un cran ;
+ * sur un groupe d'un seul, il n'y a pas de cran.
  *
- * **Elle ne montre pas « Plus ».** Cet écran est le repli d'une barre de quatre
- * onglets ; ici la colonne a la place de déplier ce qu'il contient, et un lien
- * vers une page qui redirait la colonne serait un tour sur soi-même.
+ * **Elle montre « Plus », et c'est un revirement.** Elle ne le montrait pas, et
+ * l'argument tenait tant que « Plus » était le repli d'une barre trop courte :
+ * la colonne avait la place de déplier ses deux groupes, et un lien vers une
+ * page qui l'aurait redite aurait été un tour sur soi-même. Il ne tient plus
+ * depuis que « Plus » range quatre groupes au lieu de deux — les onze
+ * destinations doubleraient la colonne — et surtout depuis qu'il porte un
+ * **contrôle** : la devise se règle sur place, dans un sélecteur, et une
+ * colonne de navigation n'a pas à héberger un champ de formulaire. Le déplier
+ * ne serait donc plus le déplier tout à fait.
+ *
+ * Aucune porte n'est perdue au change : ce que la colonne montrait d'un clic,
+ * elle le montre encore, et ce qui vivait derrière « Réglages » vit derrière
+ * « Plus », au même rang qu'avant.
  */
 export const SIDEBAR_GROUPS: NavGroup[] = [
   { routes: NAV_ROUTES.filter((route) => route.path !== MORE_PATH) },
   { title: fr.nav.manage, routes: MANAGE_ROUTES },
-  { routes: [SETTINGS_ROUTE] },
+  { routes: [MORE_ROUTE] },
 ]
 
-/**
- * Ce que l'écran « Plus » range, et dans le même ordre que la colonne.
- *
- * Les deux navigations lisent les mêmes tables : ce qui est atteignable au
- * doigt l'est à la souris, et l'inverse. C'est la règle que `NAV_ROUTES` posait
- * déjà pour la barre et la colonne, étendue au cran du dessous.
- *
- * Le second groupe n'a pas de titre, pour la raison qui le lui retire dans la
- * colonne — et « À propos » l'y rejoint, parce que sous 1024px c'est la seule
- * porte vers cette page : la barre ne peut pas la porter, et la colonne, elle,
- * a son propre lien en pied.
- */
-export const MORE_SECTIONS: NavGroup[] = [
-  { title: fr.nav.manage, routes: MANAGE_ROUTES },
-  { routes: [SETTINGS_ROUTE, { path: ABOUT_PATH, label: fr.nav.about, icon: InfoIcon }] },
-]
-
-/* Ce que « Plus » recouvre. Sans cette liste, descendre dans l'une des sections
-   qu'il range éteignait les quatre onglets d'un coup, sans rien pour dire d'où
-   l'on venait — c'est le défaut que le cas particulier d'« à propos » corrigeait
-   déjà à la main pour l'onglet des réglages, et qui vaut désormais pour six
-   sections. `NavLink` apparie par préfixe, cette table dit lesquels. */
-const MORE_PREFIXES = [
+/* Ce que « Plus » range et que la colonne ne déplie pas : les cinq vues dont il
+   est la seule porte, quelle que soit la largeur. Son lien doit rester allumé
+   quand on y descend, sans quoi la colonne n'aurait plus rien d'allumé du tout.
+   « À propos » n'y figure pas — la colonne porte son propre lien en pied, et
+   deux entrées allumées à la fois ne diraient plus où l'on est. */
+const MORE_ONLY_PREFIXES = [
   MORE_PATH,
-  SETTINGS_PATH,
+  PEOPLE_PATH,
+  CATEGORIES_PATH,
+  APPEARANCE_PATH,
+  STORAGE_PATH,
+  DATA_PATH,
+]
+
+/* Ce que l'onglet « Plus » recouvre, lui : les cinq ci-dessus, plus les écrans
+   de « Gérer » que la colonne déplie mais que la barre, elle, ne peut pas
+   porter. Sans cette liste, descendre dans l'une de ces sections éteignait les
+   quatre onglets d'un coup, sans rien pour dire d'où l'on venait — c'est le
+   défaut que le cas particulier d'« à propos » corrigeait déjà à la main pour
+   l'onglet des réglages. `NavLink` apparie par préfixe, cette table dit
+   lesquels. */
+const MORE_PREFIXES = [
+  ...MORE_ONLY_PREFIXES,
   RECURRENCES_PATH,
   SAVINGS_PATH,
   SPLIT_PATH,
@@ -265,51 +340,25 @@ const MORE_PREFIXES = [
   ABOUT_PATH,
 ]
 
-/** L'onglet « Plus » est-il celui de l'écran affiché ? */
-export function isInMoreSection(pathname: string): boolean {
-  return MORE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  )
+function under(pathname: string, prefixes: string[]): boolean {
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
-/* Les réglages ne sont plus un écran mais une section.
- *
- * Ils tenaient dans une seule page : les personnes, le catalogue entier des
- * catégories, le thème, la devise, le stockage, l'export, l'import, le schéma,
- * le jeu d'exemple, l'effacement et « à propos », formulaires ouverts compris.
- * On y cherchait un réglage en faisant défiler une page d'administration.
- *
- * Une page d'entrée, donc, et huit vues qu'on n'ouvre qu'en les demandant.
- * Chacune porte son URL — c'est ce qui rend le retour du navigateur, le partage
- * d'un lien et le bouton « retour » de l'écran identiques à ceux du reste de
- * l'app, plutôt qu'un état de composant qu'aucune de ces trois choses ne
- * connaît. « À propos » n'en fait pas partie : la page existe déjà, elle parle
- * de l'app et non d'un foyer, et la dupliquer sous `/reglages` aurait donné
- * deux adresses au même texte. */
-export const SETTINGS_PEOPLE_PATH = `${SETTINGS_PATH}/personnes`
-/* Segment fixe avant `:id`, comme pour les récurrences : React Router le classe
-   d'abord, un membre ne peut donc pas éclipser le formulaire de création. */
-export const SETTINGS_MEMBER_NEW_PATH = `${SETTINGS_PEOPLE_PATH}/nouveau`
-export const settingsMemberPath = (id: string): string => `${SETTINGS_PEOPLE_PATH}/${id}`
+/** L'onglet « Plus » est-il celui de l'écran affiché ? */
+export function isInMoreSection(pathname: string): boolean {
+  return under(pathname, MORE_PREFIXES)
+}
 
-export const SETTINGS_CATEGORIES_PATH = `${SETTINGS_PATH}/categories`
-export const SETTINGS_FAMILY_NEW_PATH = `${SETTINGS_CATEGORIES_PATH}/nouvelle`
-export const settingsFamilyPath = (id: string): string => `${SETTINGS_CATEGORIES_PATH}/${id}`
-/* La création d'une catégorie vit sous sa famille : celle-ci porte la nature et
-   la teinte, et l'écran n'a donc plus à redemander ce qu'on vient de choisir en
-   ouvrant la famille. */
-export const settingsCategoryNewPath = (familyId: string): string =>
-  `${SETTINGS_CATEGORIES_PATH}/${familyId}/nouvelle`
+/** Le lien « Plus » de la colonne latérale l'est-il ? */
+export function isUnderMore(pathname: string): boolean {
+  return under(pathname, MORE_ONLY_PREFIXES)
+}
 
-/* L'apparence a sa vue, contrairement au thème seul qui restait sur la page
-   d'entrée : trois positions y tenaient, six aperçus non — et une palette ne se
-   choisit pas à la lecture de son nom. Le thème l'y suit, parce que les deux
-   réglages se regardent ensemble : « Sombre » ne veut rien dire sans savoir de
-   quelle palette il est le sombre. */
-export const SETTINGS_APPEARANCE_PATH = `${SETTINGS_PATH}/apparence`
-
-export const SETTINGS_STORAGE_PATH = `${SETTINGS_PATH}/stockage`
-export const SETTINGS_DATA_PATH = `${SETTINGS_PATH}/donnees`
+/* Les cinq vues que « Plus » ouvre et que rien d'autre n'ouvre. Elles n'ont
+   qu'un sujet, leur propre retour, et le plus souvent leur propre action
+   principale — « Ajouter un membre », « Ajouter une famille », « Ajouter une
+   catégorie ». Voir `isFocusScreen`, juste dessous. */
+const MORE_VIEWS = [PEOPLE_PATH, CATEGORIES_PATH, APPEARANCE_PATH, STORAGE_PATH, DATA_PATH]
 
 /**
  * Écrans qui n'ont qu'une chose à montrer — une saisie, une fiche. Aucune
@@ -325,15 +374,13 @@ export function isFocusScreen(pathname: string): boolean {
     (pathname.startsWith(`${SAVINGS_PATH}/`) && pathname !== `${SAVINGS_PATH}/`) ||
     (pathname.startsWith(`${RECURRENCES_PATH}/`) && pathname !== `${RECURRENCES_PATH}/`) ||
     (pathname.startsWith(`${CREDITS_PATH}/`) && pathname !== `${CREDITS_PATH}/`) ||
-    /* Les vues des réglages, et non la page d'entrée. Chacune n'a qu'un sujet,
-       son propre retour, et le plus souvent sa propre action principale —
-       « Ajouter un membre », « Ajouter une famille », « Ajouter une catégorie ».
-       Le bouton flottant y poserait une seconde action principale sur le même
-       écran, à trois centimètres de la première et sans rapport avec elle ; et
-       le rappel d'export s'intercalerait au-dessus d'un titre qui, sur la vue
-       des données, mène justement à l'export. La page d'entrée reste une
-       destination de la barre d'onglets : elle garde les deux. */
-    pathname.startsWith(`${SETTINGS_PATH}/`)
+    /* Les cinq vues que « Plus » ouvre, et non « Plus » lui-même. Le bouton
+       flottant y poserait une seconde action principale sur le même écran, à
+       trois centimètres de la première et sans rapport avec elle ; et le rappel
+       d'export s'intercalerait au-dessus d'un titre qui, sur la vue des
+       données, mène justement à l'export. « Plus » reste, lui, une destination
+       de la barre d'onglets : il garde les deux. */
+    under(pathname, MORE_VIEWS)
   )
 }
 

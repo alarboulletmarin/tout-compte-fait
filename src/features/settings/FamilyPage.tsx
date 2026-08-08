@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { SETTINGS_CATEGORIES_PATH, settingsCategoryNewPath } from '@/app/routes'
+import { CATEGORIES_PATH, categoryNewPath } from '@/app/routes'
 import { normalizeText } from '@/domain/search'
 import type { Category, Family } from '@/domain/types'
 import { fr } from '@/i18n/fr'
@@ -72,7 +72,7 @@ export function FamilyPage() {
   const group = groups.find((one) => one.family.id === id)
 
   // Supprimée depuis un autre onglet, ou URL fausse.
-  if (group === undefined) return <Navigate to={SETTINGS_CATEGORIES_PATH} replace />
+  if (group === undefined) return <Navigate to={CATEGORIES_PATH} replace />
 
   return <FamilyView family={group.family} categories={group.categories} />
 }
@@ -88,7 +88,7 @@ function FamilyView({ family, categories }: { family: Family; categories: Catego
       <PageTitle
         title={family.label}
         onBack={() => {
-          void navigate(SETTINGS_CATEGORIES_PATH)
+          void navigate(CATEGORIES_PATH)
         }}
       >
         {/* La nature se tait quand la famille porte déjà son nom : le catalogue
@@ -131,7 +131,7 @@ function FamilyView({ family, categories }: { family: Family; categories: Catego
           variant="secondary"
           className="w-fit"
           onClick={() => {
-            void navigate(settingsCategoryNewPath(family.id))
+            void navigate(categoryNewPath(family.id))
           }}
         >
           {fr.settings.categoryAdd}

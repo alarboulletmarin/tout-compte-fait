@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { SETTINGS_PATH } from '@/app/routes'
+import { MORE_PATH } from '@/app/routes'
 import { fr } from '@/i18n/fr'
 import { useStore } from '@/store/store'
 import { prefersDark } from '@/theme/theme'
@@ -44,7 +44,7 @@ export function AppearancePage() {
       <PageTitle
         title={fr.appearance.title}
         onBack={() => {
-          void navigate(SETTINGS_PATH)
+          void navigate(MORE_PATH)
         }}
       />
 

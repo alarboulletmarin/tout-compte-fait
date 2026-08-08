@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, SETTINGS_PEOPLE_PATH } from '@/app/routes'
+import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH } from '@/app/routes'
 import type { YearMonth } from '@/domain/date'
 import { sum } from '@/domain/money'
 import { totalToPay } from '@/domain/split'
@@ -163,7 +163,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
             </span>
             {/* Signé, et sans `direction` : ce n'est pas un flux dont on lirait
                 la valeur absolue, c'est un écart dont le signe est toute la
-                lecture — la règle qu'applique déjà `SettlementTile`. */}
+                lecture — la règle qu'applique déjà `MemberShareTile`. */}
             <span className="t-axis tnum shrink-0">
               {formatSignedMoney(share.adjustment, currency)}
             </span>
@@ -173,7 +173,17 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
 
       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
         <span className="t-label">{fr.split.due}</span>
-        <Amount value={share.toPay} size="body" direction="out" />
+        {/* Une sortie tant que c'en est une, et un solde sinon : un mois sans
+            charge commune ne laisse que le report, et celui qui a tout avancé
+            le mois d'avant reçoit alors au lieu de verser. `direction`
+            afficherait la valeur absolue et la ferait annoncer « sortie » —
+            donc « 282,56 € à verser » à qui on doit cette somme. Le cas
+            ordinaire ne bouge pas d'un pixel ni d'un mot. */}
+        <Amount
+          value={share.toPay}
+          size="body"
+          {...(share.toPay < 0 ? {} : { direction: 'out' as const })}
+        />
       </div>
     </li>
   )
@@ -227,7 +237,7 @@ export function SplitPage() {
      membres se gèrent depuis qu'elle n'est plus qu'une entrée, et l'écran
      renvoie ici précisément parce qu'il en manque un. */
   const goToSettings = (): void => {
-    void navigate(SETTINGS_PEOPLE_PATH)
+    void navigate(PEOPLE_PATH)
   }
 
   // Sans aucun membre, il n'y a personne à qui donner une part. Un seul

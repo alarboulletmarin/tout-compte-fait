@@ -48,22 +48,45 @@ const DIST = 'dist'
    premier rendu. Quatre kibioctets de plus, dont on retrouve la marge d'usage —
    de quoi ajouter une fonctionnalité, pas de quoi ramener un écran.
 
-   Relevé à 218 pour ce que l'épargne **répond**, après ce qu'elle enregistre :
-   les mois de charges que le capital couvre, et le cumul des versements d'une
-   année sur l'autre. Le chiffre à retenir n'est pas celui du chantier mais celui
-   de la marge : elle était retombée à 0,6 Kio, c'est-à-dire moins que ce qu'a
-   coûté une poignée de phrases — exactement la situation que le passage de 200
-   à 214 décrit deux paragraphes plus haut comme n'étant pas la marge que ce
-   nombre est censé tenir. Le poids ajouté au graphe initial se lit en deux
-   lignes : une série mensuelle consciente des natures et le quotient qu'elle
-   nourrit, lus par la page Épargne qui est chargée d'avance ; et la prose, qui
-   pèse le reste — les trois paragraphes de méthode d'un chiffre dont aucune
-   autre app ne dit le calcul. Le graphique, lui, **ne compte pas** : la section
-   qui trace l'année part à la demande (`SavingsPage`), et les lignes cumulées
-   qu'elle partage avec l'historique vivent dans un morceau à elles. Sans ce
-   découpage le premier chargement prenait quatre kibioctets de plus, pour un
-   bloc qui vit sous le pli. */
-const BUDGET_KIB = 218
+   Relevé à 217 pour le **rangement de « Plus »**, et deux kibioctets en sont la
+   mesure exacte. L'écran a absorbé la page d'entrée des réglages, qui se
+   chargeait à la demande ; lui ne le peut pas — c'est un onglet de la barre, et
+   un aller-retour de réseau pour l'atteindre coûterait plus que ce qu'il pèse.
+   Un demi-kibioctet pour ce déplacement : le sélecteur de devise, les noms des
+   thèmes et des palettes, quatre groupes de rangées au lieu de deux.
+
+   Un kibioctet et demi pour les **repères**, et c'est la dépense qu'il faut
+   assumer explicitement : chaque rangée porte le glyphe de sa destination, donc
+   sept définitions Phosphor remontent dans le graphe initial — les personnes,
+   les catégories, l'apparence, le stockage, le transfert, la devise, « à
+   propos ». Elles ne se chargeaient jusqu'ici qu'avec les écrans qui les
+   ouvrent. C'est le prix d'un écran qu'on parcourt à l'œil : sous 1024px la
+   barre ne porte que quatre glyphes, et tout ce qu'elle range se lisait en
+   texte seul.
+
+   Le budget ne suit pas la mesure au plus juste — il resterait un dixième de
+   kibioctet, ce qui n'est plus une marge mais un plafond.
+
+   Relevé à 221 quand l'épargne se met à **répondre**, après avoir seulement
+   enregistré : les mois de charges que le capital couvre, et le cumul des
+   versements d'une année sur l'autre. L'app en pèse 216,5 à ce moment-là.
+
+   Ce que ce chantier ajoute au graphe initial est plus petit que son étiquette :
+   deux lectures de domaine — une série mensuelle consciente des natures et le
+   quotient qu'elle nourrit —, lues par la page Épargne, qui est chargée
+   d'avance ; et la prose, qui pèse le reste. Le **graphique n'y est pas**, et
+   c'est délibéré : la section qui trace l'année part à la demande
+   (`SavingsPage`), et les lignes cumulées qu'elle partage avec l'historique
+   vivent dans un morceau à elles. Mesuré sans ce découpage, le premier
+   chargement prenait quatre kibioctets de plus — pour un bloc qui vit sous le
+   pli, et davantage que tout le reste du chantier réuni.
+
+   Le chiffre est donc relevé pour la **marge**, pas pour le poids. Le paragraphe
+   précédent l'avait laissée à un dixième de kibioctet, ce qu'il nomme lui-même
+   un plafond plutôt qu'une marge ; elle revient à quatre et demi. Ce que ce
+   nombre tient n'est pas ce que l'app pèse, c'est la place qui reste — de quoi
+   ajouter une fonctionnalité, pas de quoi ramener un écran. */
+const BUDGET_KIB = 221
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

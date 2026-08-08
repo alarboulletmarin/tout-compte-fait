@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AdvanceFormPage } from '@/features/advances/AdvanceFormPage'
 import { AdvancesPage } from '@/features/advances/AdvancesPage'
 import { AboutPage } from '@/features/about/AboutPage'
@@ -23,40 +23,44 @@ import {
   ABOUT_PATH,
   ADVANCES_PATH,
   ADVANCE_NEW_PATH,
+  APPEARANCE_PATH,
+  CATEGORIES_PATH,
+  DATA_PATH,
+  FAMILY_NEW_PATH,
   LANDING_PATH,
+  LEGACY_SETTINGS_PATH,
   LEGAL_NOTICE_PATH,
+  MEMBER_NEW_PATH,
   MORE_PATH,
   ONBOARDING_PATH,
+  PEOPLE_PATH,
   PRIVACY_PATH,
   RECURRENCES_PATH,
   RECURRENCE_NEW_PATH,
   SAVINGS_PATH,
+  STORAGE_PATH,
   SUPPORT_NEW_PATH,
-  SETTINGS_APPEARANCE_PATH,
-  SETTINGS_CATEGORIES_PATH,
-  SETTINGS_DATA_PATH,
-  SETTINGS_FAMILY_NEW_PATH,
-  SETTINGS_MEMBER_NEW_PATH,
-  SETTINGS_PATH,
-  SETTINGS_PEOPLE_PATH,
-  SETTINGS_STORAGE_PATH,
   TERMS_PATH,
   VALUATIONS_PATH,
+  legacySettingsTarget,
 } from './routes'
 
 /**
  * Les deux écrans qu'on n'ouvre pas tous les jours, et qui pèsent le plus.
  *
  * L'historique emporte avec lui les trois graphiques de `src/charts` — barres,
- * lignes cumulées, curseur. L'écran de l'épargne se sert des lignes cumulées
- * depuis qu'il trace ce qu'on met de côté d'une année sur l'autre, mais lui est
- * sur le chemin quotidien : il reste chargé d'avance, et c'est **sa section
- * d'année** qui est découpée, chez elle (`SavingsPage`). Les deux morceaux se
- * rejoignent alors sur le même graphique, sans qu'il pèse sur l'entrée.
- * Les réglages, eux,
- * emportent l'import, l'export, les sauvegardes et le catalogue de catégories.
- * Ni l'un ni l'autre n'est sur le chemin du geste quotidien, qui est d'ouvrir
- * son mois et d'y saisir une ligne.
+ * lignes cumulées, curseur. Les cinq vues que « Plus » ouvre emportent
+ * l'import, l'export, les sauvegardes et le catalogue de catégories. Ni l'un ni
+ * l'autre n'est sur le chemin du geste quotidien, qui est d'ouvrir son mois et
+ * d'y saisir une ligne.
+ *
+ * L'écran de l'épargne se sert lui aussi des lignes cumulées, depuis qu'il trace
+ * ce qu'on met de côté d'une année sur l'autre — mais lui **est** sur ce
+ * chemin-là : il s'atteint d'un geste depuis la tuile Capacité du mois, et reste
+ * donc chargé d'avance. C'est sa **section d'année** qui se découpe, chez elle
+ * (`SavingsPage`), et non la route entière. Les deux morceaux se rejoignent
+ * alors sur le même graphique, qui vit dans un troisième — sans qu'aucun ne pèse
+ * sur l'entrée.
  *
  * Le reste ne se découpe pas : le mois, la saisie, le calendrier et les fiches
  * s'atteignent en un geste depuis n'importe où, et un aller-retour de réseau à
@@ -69,17 +73,16 @@ const HistoryPage = lazy(async () => ({
 }))
 
 /**
- * Les réglages, en un seul morceau — pour sept écrans.
+ * Les écrans que « Plus » ouvre, en un seul morceau.
  *
- * Toutes les vues de la section passent par le même spécificateur, donc par le
- * même chunk : ouvrir « Réglages » amène la section entière, et descendre vers
- * les catégories puis vers une famille n'attend plus le réseau à chaque pas.
- * Un `import()` par vue aurait rendu sept morceaux dont six se chargent
- * toujours à la suite du premier — c'est-à-dire six allers-retours au lieu
- * d'un, sur les écrans où l'on fait justement des allers-retours.
+ * Toutes ces vues passent par le même spécificateur, donc par le même chunk :
+ * en ouvrir une les amène toutes, et descendre vers les catégories puis vers
+ * une famille n'attend plus le réseau à chaque pas. Un `import()` par vue aurait
+ * rendu sept morceaux dont six se chargent toujours à la suite du premier —
+ * c'est-à-dire six allers-retours au lieu d'un, sur les écrans où l'on fait
+ * justement des allers-retours.
  */
 const settings = () => import('@/features/settings/pages')
-const SettingsPage = lazy(async () => ({ default: (await settings()).SettingsPage }))
 const AppearancePage = lazy(async () => ({ default: (await settings()).AppearancePage }))
 const PeoplePage = lazy(async () => ({ default: (await settings()).PeoplePage }))
 const MemberPage = lazy(async () => ({ default: (await settings()).MemberPage }))
@@ -136,6 +139,27 @@ function RouteFallback() {
   return <p className="t-label">{fr.shell.loading}</p>
 }
 
+/**
+ * Les anciennes adresses de la section « Réglages », rendues à leurs écrans.
+ *
+ * Les cinq vues ont remonté à la racine — elles n'étaient pas toutes des
+ * réglages, et « Plus » les range désormais par intention (`routes.ts`) — mais
+ * aucune n'a changé de nom au passage, et c'est ce qui rend la redirection
+ * exacte plutôt qu'approximative : il suffit de retirer le préfixe.
+ * `/reglages/categories/fam-1/nouvelle` retrouve donc le formulaire de création
+ * d'une catégorie, et pas seulement l'écran d'accueil de la section. `/reglages`
+ * seul retombe sur « Plus », qui l'a remplacé.
+ *
+ * Le splat de la route porte le reste du chemin, mais on lit `pathname` : le
+ * paramètre `*` est décodé, et un identifiant qui contiendrait un caractère
+ * encodé rentrerait alors dans l'URL sous une forme que le routeur ne reconnaît
+ * plus. Un signet ne se répare pas en le réécrivant à moitié.
+ */
+function LegacySettingsRoute() {
+  const { pathname, search } = useLocation()
+  return <Navigate to={`${legacySettingsTarget(pathname)}${search}`} replace />
+}
+
 /** Les routes de l'app, une fois le foyer créé. */
 export function AppRoutes() {
   return (
@@ -180,21 +204,25 @@ export function AppRoutes() {
               — un aller-retour de réseau pour l'atteindre coûterait plus que
               les quelques octets qu'il pèse. */}
           <Route path={MORE_PATH} element={<MorePage />} />
-          {/* Les réglages et leurs vues. L'ordre d'écriture n'y fait rien —
-              React Router classe les segments fixes avant les paramètres —,
-              mais il dit la hiérarchie : une page d'entrée, puis ce qu'elle
-              ouvre, dans l'ordre où elle le propose. */}
-          <Route path={SETTINGS_PATH} element={<SettingsPage />} />
-          <Route path={SETTINGS_APPEARANCE_PATH} element={<AppearancePage />} />
-          <Route path={SETTINGS_PEOPLE_PATH} element={<PeoplePage />} />
-          <Route path={SETTINGS_MEMBER_NEW_PATH} element={<MemberPage />} />
-          <Route path={`${SETTINGS_PEOPLE_PATH}/:id`} element={<MemberPage />} />
-          <Route path={SETTINGS_CATEGORIES_PATH} element={<CategoriesPage />} />
-          <Route path={SETTINGS_FAMILY_NEW_PATH} element={<FamilyNewPage />} />
-          <Route path={`${SETTINGS_CATEGORIES_PATH}/:id`} element={<FamilyPage />} />
-          <Route path={`${SETTINGS_CATEGORIES_PATH}/:id/nouvelle`} element={<CategoryNewPage />} />
-          <Route path={SETTINGS_STORAGE_PATH} element={<StoragePage />} />
-          <Route path={SETTINGS_DATA_PATH} element={<DataPage />} />
+          {/* Les cinq vues que « Plus » ouvre. L'ordre d'écriture n'y fait rien
+              — React Router classe les segments fixes avant les paramètres —,
+              mais il dit le rangement : les deux d'« Organiser », puis celles de
+              « Données » et d'« Application », dans l'ordre où l'écran les
+              propose. */}
+          <Route path={PEOPLE_PATH} element={<PeoplePage />} />
+          <Route path={MEMBER_NEW_PATH} element={<MemberPage />} />
+          <Route path={`${PEOPLE_PATH}/:id`} element={<MemberPage />} />
+          <Route path={CATEGORIES_PATH} element={<CategoriesPage />} />
+          <Route path={FAMILY_NEW_PATH} element={<FamilyNewPage />} />
+          <Route path={`${CATEGORIES_PATH}/:id`} element={<FamilyPage />} />
+          <Route path={`${CATEGORIES_PATH}/:id/nouvelle`} element={<CategoryNewPage />} />
+          <Route path={STORAGE_PATH} element={<StoragePage />} />
+          <Route path={DATA_PATH} element={<DataPage />} />
+          <Route path={APPEARANCE_PATH} element={<AppearancePage />} />
+          {/* Ce qui pointe encore sur `/reglages`. Même filet que
+              `/abonnements`, et même motif : une URL qu'on a pu mettre en
+              signet ne se supprime pas, elle se redirige. */}
+          <Route path={`${LEGACY_SETTINGS_PATH}/*`} element={<LegacySettingsRoute />} />
           {/* Déclarée ici *et* dans les routes d'avant le foyer, pour qu'elle
               hérite de la navigation quand celle-ci existe. La hisser au niveau de
               `/styleguide` l'en aurait privée une fois le foyer créé : pas de

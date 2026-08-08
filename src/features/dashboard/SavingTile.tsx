@@ -119,7 +119,7 @@ export function SavingTile() {
       /* Repère nu, sans nommer l'écran d'arrivée : « CAPACITÉ D'ÉPARGNE » est
          l'étiquette la plus longue de la grille, et une `2x2` n'offre que 185px
          à 1024px. « Épargne › » en demandait soixante de plus et passait par
-         dessus. `SplitTile` et `SettlementTile` passent le leur nu pour la même
+         dessus. `SplitTile` et `MemberShareTile` passent le leur nu pour la même
          raison exactement. */
       affordance={{ kind: 'navigate' }}
     >

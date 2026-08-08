@@ -78,6 +78,152 @@ des sorties sont des charges et lesquelles sont des virements vers soi-même.
   que sous « Divers », et une cadence lue sur le classement se tromperait en
   silence — le défaut même qu'elle existe pour corriger.
 
+Le budget de taille passe de 217 à 221 Kio, et c'est la **marge** qu'il relève,
+pas le poids : l'app en pèse 216,5, et le rangement de « Plus » l'avait laissée à
+un dixième de kibioctet — un plafond, pas une marge. Le graphique de l'année n'y
+entre pour rien : sa section part à la demande, et les lignes cumulées qu'elle
+partage avec l'historique vivent dans un morceau à elles. Mesuré sans ce
+découpage, le premier chargement prenait quatre kibioctets de plus, pour un bloc
+qui vit sous le pli.
+
+### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
+
+Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
+la grandeur qu'ils mesurent. On lisait « 2026 · 9 994 € », « 2025 · 1 489 € »,
+« Écart · +8 505 € » sous le mot « mai » : de quelle année vient chaque nombre,
+c'était clair ; ce qu'il compte, jamais. Un chiffre juste qu'on ne sait pas lire
+se lit comme un chiffre faux.
+
+- **Le cumul annuel porte son nom à l'œil.** « Cumul du solde depuis janvier »
+  s'écrit au-dessus de la lecture, là où l'information manquait. Le graphique
+  avait pourtant déjà ce nom — dans l'`aria-label` du tracé, c'est-à-dire pour
+  les seuls lecteurs d'écran : la lecture accessible existait, la lecture
+  visible n'existait pas. Sans elle, rien ne tranchait entre « le solde de mai »
+  et « tout ce qui s'est accumulé de janvier à mai », deux nombres différents
+  pour la même position du curseur. La chaîne est la même des deux côtés, et
+  elle a changé de sujet au passage : « mois après mois » décrivait la forme de
+  la courbe, pas ce qu'elle empile.
+- **L'écart entre deux mois dit son périmètre et son sens.** « Écart des
+  sorties, du mois de référence au mois comparé » : la liste ne compare que les
+  sorties — les entrées n'y sont jamais entrées — et un « +150 € » ne dit pas de
+  lui-même dans quel sens il se lit. Deux règles qui n'étaient écrites nulle
+  part, et qu'un signe ne suffit pas à porter. La phrase ne suit pas les rangées
+  repliées : celles-ci montrent un montant et non un écart, et leur propre
+  phrase le dit déjà.
+
+### Modifié : ce qu'un mois coûte et ce qu'il fait verser cessent d'être le même chiffre
+
+La carte « À verser sur le commun » portait trois montants assis sur deux bases
+différentes. Le chiffre de tête — 2 015,42 € — est un **virement** : la part du
+pot commun, plus la régularisation du mois précédent. Les deux lignes en
+dessous — « Charges perso » 72,87 € et « Total à payer » 1 805,73 € — sont un
+**coût**, dont le report est exclu par construction : ce qu'une dépense a coûté
+à quelqu'un est arrêté au mois où elle a eu lieu, seul le virement se rattrape.
+D'où l'anomalie qu'on lisait tous les mois — un « Total à payer » **plus petit**
+que le « À verser » posé juste au-dessus, dans une carte dont le seul métier est
+le virement.
+
+- **La carte du virement ne parle plus que du virement**, et elle pose son
+  calcul au lieu de le taire : sa part du mois, plus la régularisation, égale ce
+  qu'elle verse — les mots et l'ordre de l'écran Répartition, où le même calcul
+  se lit déjà. Deux écrans qui montrent le même chiffre doivent le montrer de la
+  même façon, sinon c'est deux chiffres.
+- **La régularisation se lisait deux fois.** Elle était déjà comprise —
+  silencieusement — dans le chiffre de tête, et s'affichait une seconde fois en
+  carte autonome juste en dessous. Rien ne disait que les deux montants voisins
+  ne s'ajoutaient pas, et deux montants voisins dont rien ne le dit s'ajoutent.
+  Elle redevient un terme du calcul, sur la tuile dont elle change le montant,
+  et ne se lit qu'aux mois où elle existe.
+- **Une tuile « Perso et commun » répond à la question que l'autre répondait
+  mal** : ce que le mois coûte à quelqu'un, éclaté en ses lignes à elle et sa
+  part du pot. C'est la seule chose que ses chiffres ne disaient jamais — le
+  découpage du prorata fond les deux dans chaque total, sans quoi chacun se
+  lirait comme s'il vivait sans loyer, et une fois fondus plus rien ne sépare ce
+  qu'on décide seul·e de ce qui se décide à deux. Son total est celui de la
+  tuile Charges au centime : elle ne le contredit pas, elle l'éclate — et c'est
+  ce qui interdit d'y arrondir.
+- **La cascade de la capacité d'épargne nomme son troisième terme.** Elle disait
+  « Charges » d'un bloc là où le montant mêlait les deux, sur l'écran qui sert
+  précisément à décider quoi changer. Elle dit maintenant « Charges perso »,
+  « Crédits perso » et « Part du commun » — crédits communs compris, la légende
+  le précise. Les termes redonnent la capacité au centime : ce sont les mêmes
+  totaux, seulement séparés. Sans prorata calculable, il n'y a aucune part à
+  distinguer et la cascade reprend ses termes d'origine.
+- **Le mois où le report est le seul virement garde sa lecture.** Sans charge
+  commune, l'ancienne tuile s'effaçait et c'est la carte de régularisation qui
+  tenait seule ce cas ; elle n'existe plus, donc la carte du virement reste
+  debout. Son montant garde alors son signe : qui a trop avancé le mois d'avant
+  **reçoit** au lieu de verser, et l'annoncer comme une sortie disait « 282,56 €
+  à verser » à qui on devait 282,56 €. Même correction sur l'écran Répartition,
+  qui avait la même.
+
+Aucune migration de schéma : rien de ce qui est enregistré ne change, seulement
+la façon dont les mêmes montants se lisent.
+
+### Modifié — « Réglages » disparaît, et « Plus » range par intention
+
+« Réglages » ne nommait pas une intention, il nommait ce qui restait. Derrière
+ce mot vivaient les personnes, le catalogue des catégories, l'apparence, la
+devise, le stockage, l'export/import et « à propos » : sept destinations de six
+natures différentes, présentées par l'écran « Plus » comme une porte unique. Et
+le mot mentait sur trois d'entre elles au moins — qui compose le foyer et sous
+quelles étiquettes on classe sont **la structure du budget**, pas une préférence
+d'application, et sauvegarder ses données n'est pas un goût.
+
+- **Quatre groupes, sur le critère « avec quelle intention vient-on ? »** :
+  **Gérer** (récurrences, épargne, répartition, crédits), **Organiser**
+  (personnes, catégories), **Données** (sur cet appareil, exporter/importer),
+  **Application** (apparence, devise, à propos). Trois verbes et un nom, parce
+  que le quatrième ne se fait pas. « Organiser » plutôt que « Configuration »,
+  qui retomberait dans le générique de « Réglages », et plutôt que « Budget »,
+  que les quatre écrans de « Gérer » composent tout autant.
+- **La page d'entrée des réglages est supprimée**, et les cinq vues remontent
+  d'un cran : `/personnes`, `/categories`, `/apparence`, `/stockage`,
+  `/donnees`. « Plus → Réglages → Catégories » devient « Plus → Catégories », et
+  « Plus → Réglages → Données → Exporter/importer » devient
+  « Plus → Exporter/importer ». Un niveau de navigation pour quatre options
+  n'était plus un rangement, c'était un détour.
+- **Les anciennes adresses répondent encore.** `/reglages/…` redirige par simple
+  retrait du préfixe — aucun segment n'a été renommé au passage, exprès —, si
+  bien qu'un signet sur `/reglages/categories/fam-1/nouvelle` retrouve le
+  formulaire qu'il visait et pas seulement l'accueil de la section. Même filet
+  que `/abonnements`, et même motif.
+- **Chaque rangée porte le glyphe de sa destination**, celui-là même que la
+  colonne latérale affiche à la souris. C'était le manque de cet écran sous
+  1024px : la barre d'onglets ne porte que quatre repères, et tout ce qu'elle
+  range se parcourait en lisant onze libellés de haut en bas. Le DS §9.2 demande
+  qu'un concept garde le même glyphe partout — la colonne l'appliquait, « Plus »
+  ne l'appliquait pas. Le repère est atténué comme le chevron d'en face, et les
+  deux ne se doublent pas : l'un dit *vers quoi*, l'autre *qu'on y va*.
+- **Chaque rangée dit sa valeur** — « Maison · 3 membres »,
+  « 47 catégories · 12 familles », « Système · Classique », « Version 1.0.0 » —
+  ou, quand elle n'en a pas, une phrase. Jamais un chiffre du budget : les
+  écrans qui les calculent les disent déjà, et un second tableau de bord serait
+  en retard d'une règle sur le premier. L'écran est un peu plus long qu'avant,
+  et c'est le bon échange sur un téléphone — quatre groupes qu'on comprend en
+  les balayant valent mieux qu'un écran court qui oblige à en ouvrir un autre
+  pour savoir ce qu'il contient.
+- **La colonne latérale nomme « Plus » au lieu de le déplier**, et c'est un
+  revirement assumé. Elle le dépliait tant qu'il tenait en deux groupes ; il en
+  porte quatre, les onze destinations la doubleraient, et l'un des groupes n'est
+  pas fait que de liens — la devise se règle dans un sélecteur, et une colonne
+  de navigation n'héberge pas un champ de formulaire. Aucune porte n'est perdue :
+  ce qu'elle montrait d'un clic, elle le montre encore, et ce qui vivait derrière
+  « Réglages » vit derrière « Plus », au même rang qu'avant.
+- **Rien du langage visuel ne change** : mêmes tuiles, mêmes filets, mêmes
+  étiquettes en capsule, même rangée à titre, description et chevron. Le défaut
+  n'était pas dans le dessin, il était dans le rangement.
+
+Deux glyphes nouveaux : `TransferIcon` (deux flèches opposées — ce qui sort et
+ce qui rentre) et `CurrencyIcon` (un billet, le seul glyphe d'argent sans
+symbole monétaire gravé : sur le réglage qui choisit lequel afficher, un « $ »
+aurait dit le contraire de ce que fait le sélecteur).
+
+Le budget de taille passe de 214 à 217 Kio, et deux kibioctets en sont la mesure
+exacte : un demi pour la page absorbée — « Plus » est un onglet de la barre, il
+ne peut pas se charger à la demande —, un et demi pour les sept définitions de
+glyphes qui remontent dans le graphe initial avec les repères.
+
 ### Ajouté : la promesse se lit avant la première saisie, pas dans les pages qu'on ne lit pas
 
 « Pas de compte, pas de serveur » était écrit quatre fois : sur la présentation,
