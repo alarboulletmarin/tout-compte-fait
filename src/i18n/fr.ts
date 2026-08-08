@@ -1738,7 +1738,9 @@ export const fr = {
       'Un versement laissé « en commun » n’entre dans l’épargne de personne. Attribue-le pour qu’il compte.',
 
     left: 'Reste à placer',
-    leftHint: 'capacité − versements',
+    /* « capacité − versements » ne se dit plus : les deux rangées au-dessus
+       *sont* la soustraction, et l'écrire à côté la commente au lieu de
+       l'expliquer. */
     leftNone: 'Toute la capacité est placée.',
     /* Verser plus qu'on ne dégage n'est pas une erreur de saisie : c'est une
        lecture, et celle qu'on vient chercher. */
