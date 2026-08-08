@@ -245,6 +245,7 @@ describe('supports d’épargne', () => {
         label: 'Livret A',
         memberId: 'm1',
         categoryId: 'passbook',
+        pace: 'yearly',
         value: { amount: eur(1245000), date: '2026-08-08' },
       },
       sequentialIds(),
@@ -260,7 +261,7 @@ describe('supports d’épargne', () => {
   it('ne pose aucune valorisation quand la valeur n’est pas connue', () => {
     const { data, valuation } = createSavingSupport(
       base,
-      { label: 'PEA', memberId: 'm1', categoryId: 'plans' },
+      { label: 'PEA', memberId: 'm1', categoryId: 'plans', pace: 'quarterly' },
       sequentialIds(),
     )
     expect(valuation).toBeNull()
@@ -274,6 +275,7 @@ describe('supports d’épargne', () => {
         label: 'Livret A',
         memberId: 'm1',
         categoryId: 'passbook',
+        pace: 'yearly',
         value: { amount: eur(1000000), date: '2026-07-08' },
       },
       sequentialIds(),

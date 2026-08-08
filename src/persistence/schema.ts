@@ -12,7 +12,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 8
+export const CURRENT_SCHEMA_VERSION = 9
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -282,6 +282,27 @@ function toVersion8(doc: RawDocument): RawDocument {
   }
 }
 
+/**
+ * La cadence des relevés, portée par chaque support.
+ *
+ * Rien à convertir, et surtout **rien à poser** : contrairement à la palette de
+ * la v7, l'absence de cadence n'est pas remplacée par sa valeur par défaut. Un
+ * document d'avant le champ n'a jamais répondu à la question, et écrire
+ * « annuel » sur sept supports ferait passer un silence pour sept choix — dont
+ * l'écran de modification affirmerait ensuite qu'ils viennent de quelqu'un.
+ * C'est le domaine qui retombe sur `DEFAULT_PACE` à la lecture, en un seul
+ * endroit, et le formulaire qui recueille la vraie réponse quand on la lui
+ * donne.
+ *
+ * La marche existe quand même, pour la raison qui a fait exister la v7 : le
+ * pipeline veut une étape par incrément, et une version non incrémentée
+ * laisserait une app plus ancienne ouvrir sans broncher un document dont elle
+ * perdrait le champ à la réécriture.
+ */
+function toVersion9(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 9 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -291,6 +312,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 6, migrate: toVersion6 },
   { to: 7, migrate: toVersion7 },
   { to: 8, migrate: toVersion8 },
+  { to: 9, migrate: toVersion9 },
 ]
 
 export class ImportError extends Error {

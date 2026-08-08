@@ -3,12 +3,13 @@ import { SUPPORT_NEW_PATH, VALUATIONS_PATH, supportPath } from '@/app/routes'
 import { ZERO } from '@/domain/money'
 import { latestValuation } from '@/domain/saving'
 import { fr } from '@/i18n/fr'
-import { NO_VALUE } from '@/i18n/format'
+import { NO_VALUE, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
   useSavingValuations,
   useSavingsBySupport,
   useScopedSavingSupports,
+  useSupportsDue,
 } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
@@ -46,6 +47,7 @@ export function SupportsSection() {
   const valuations = useSavingValuations()
   const categories = useCategoryMap()
   const slices = useSavingsBySupport()
+  const due = useSupportsDue()
   const netOf = new Map(slices.map((slice) => [slice.supportId, slice.total]))
 
   /* Un support archivé sort des formulaires, pas de la lecture : il reste
@@ -64,11 +66,19 @@ export function SupportsSection() {
         {/* Relever ses comptes sans ouvrir quatre fiches. C'est le geste réel —
             un relevé de banque donne tous les chiffres en même temps, donc on
             met tout à jour, on ne met pas à jour le Livret A. Corriger un seul
-            chiffre à une autre date reste sur la fiche du support. */}
+            chiffre à une autre date reste sur la fiche du support.
+
+            **Le poids du bouton dit s'il y a quelque chose à faire.** Posé en
+            `secondary` en permanence, il laissait entendre un rituel mensuel —
+            qui n'est la bonne cadence d'aucun support : un livret se relève une
+            fois l'an, un PEA au trimestre. Un écran qui réclame une mise à jour
+            dont il n'a pas besoin ne produit que de la culpabilité. Le geste
+            reste atteignable quand rien n'est dû, mais en `ghost`, comme
+            « Ajouter un support » : c'est le poids qui dit la fréquence. */}
         {shown.length > 0 && (
           <Button
             size="sm"
-            variant="secondary"
+            variant={due.length > 0 ? 'secondary' : 'ghost'}
             onClick={() => {
               void navigate(VALUATIONS_PATH)
             }}
@@ -77,6 +87,15 @@ export function SupportsSection() {
           </Button>
         )}
       </div>
+
+      {/* Le décompte, et non une alerte : un capital qu'on n'a pas revu n'est
+          pas une erreur (DS §2.3). Il ne s'écrit que lorsqu'il y a quelque
+          chose à écrire — le reste du temps, la section se tait. */}
+      {due.length > 0 && (
+        <span className="t-label">
+          {due.length === 1 ? fr.savings.valuesDueOne : tpl(fr.savings.valuesDue, due.length)}
+        </span>
+      )}
 
       {/* Un écran vide est une invitation, pas un constat (DS §7). La section
           disparaissait quand la personne n'avait aucun support, y compris quand
@@ -95,7 +114,7 @@ export function SupportsSection() {
                 key={support.id}
                 leading={<Dot color={color} />}
                 label={support.label}
-                description={freshness(latest?.date ?? null)}
+                description={freshness(latest?.date ?? null, support.pace)}
                 trailing={
                   <span className="flex flex-col items-end gap-0.5">
                     {/* « — » et jamais « 0 € » : zéro est une information

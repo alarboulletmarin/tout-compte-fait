@@ -48,7 +48,12 @@ import {
  * Les deux écrans qu'on n'ouvre pas tous les jours, et qui pèsent le plus.
  *
  * L'historique emporte avec lui les trois graphiques de `src/charts` — barres,
- * lignes cumulées, curseur —, dont aucun autre écran ne se sert. Les réglages
+ * lignes cumulées, curseur. L'écran de l'épargne se sert des lignes cumulées
+ * depuis qu'il trace ce qu'on met de côté d'une année sur l'autre, mais lui est
+ * sur le chemin quotidien : il reste chargé d'avance, et c'est **sa section
+ * d'année** qui est découpée, chez elle (`SavingsPage`). Les deux morceaux se
+ * rejoignent alors sur le même graphique, sans qu'il pèse sur l'entrée.
+ * Les réglages, eux,
  * emportent l'import, l'export, les sauvegardes et le catalogue de catégories.
  * Ni l'un ni l'autre n'est sur le chemin du geste quotidien, qui est d'ouvrir
  * son mois et d'y saisir une ligne.

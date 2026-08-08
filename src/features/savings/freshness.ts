@@ -3,8 +3,13 @@
  *
  * La date seule ne dit pas ce qu'elle vaut : « 8 février » posé sous un chiffre
  * n'apprend rien tant qu'on n'a pas compté les mois de tête. Passé le premier
- * mois, la lecture bascule donc sur l'écart ; passé le sixième, elle dit ce
- * qu'il faut en faire.
+ * mois, la lecture bascule donc sur l'écart ; passé la **cadence du support**,
+ * elle dit ce qu'il faut en faire.
+ *
+ * La cadence, et non un seuil unique : « à actualiser » se disait au sixième
+ * mois pour tout le monde, ce qui se trompait dans les deux sens à la fois — un
+ * Livret A dont l'app connaît le capital à l'euro près était réputé périmé, et
+ * un PEA que le marché avait refait passait pour frais.
  *
  * **Sans une couleur, et c'est délibéré.** Un capital qu'on n'a pas revu depuis
  * six mois n'est pas une erreur : c'est un chiffre qui attend d'être confirmé.
@@ -18,14 +23,15 @@
 
 import type { ISODate } from '@/domain/date'
 import { valuationAge } from '@/domain/saving'
+import type { SavingPace } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { formatDayMonthShort, tpl } from '@/i18n/format'
 
 /** `null` quand le support n'a jamais été relevé — jamais « le 0 ». */
-export function freshness(date: ISODate | null): string {
+export function freshness(date: ISODate | null, pace?: SavingPace): string {
   if (date === null) return fr.savings.valueNever
 
-  const age = valuationAge(date)
+  const age = valuationAge(date, pace)
   /* Sans l'année : la date ne s'affiche que sous le mois, où elle est
      forcément proche, et « relevé le 8 août 2026 » passait à la ligne sur une
      rangée de 320px. Passé un mois, il n'y a plus de date du tout — c'est

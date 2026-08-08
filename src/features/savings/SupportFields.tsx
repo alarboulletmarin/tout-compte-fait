@@ -1,3 +1,4 @@
+import type { SavingPace } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
 import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
@@ -13,7 +14,9 @@ import type { SupportDraft, SupportErrors } from './supportDraft'
  * se rangeront, et non un second classement à tenir d'accord avec le premier.
  *
  * **Aucun rendement, aucun objectif, aucune échéance.** Ce formulaire répond à
- * « combien j'ai, et où », et s'arrête là.
+ * « combien j'ai, et où », et s'arrête là. La cadence n'y déroge pas : elle dit
+ * quand un relevé sera attendu, jamais ce que le support rapportera d'ici là —
+ * c'est le champ qui permet à l'écran de **se taire**, et non de projeter.
  */
 export function SupportFields({
   draft,
@@ -106,6 +109,28 @@ export function SupportFields({
                 ))}
               </optgroup>
             ))}
+          </Select>
+        )}
+      </Field>
+
+      {/* La cadence, et non un rendement : elle ne sert à projeter aucune
+          valeur, seulement à savoir quand l'écran doit réclamer un relevé et
+          quand il doit se taire. C'est une question à laquelle on répond sans
+          rien consulter — « est-ce que ce compte bouge tout seul ? » — d'où
+          deux réponses et pas un champ libre, et une présélection plutôt qu'une
+          case vide : elle n'exige rien de plus qu'un regard. */}
+      <Field label={fr.savings.supportPace} hint={fr.savings.supportPaceHint}>
+        {(id, describedBy) => (
+          <Select
+            id={id}
+            aria-describedby={describedBy}
+            value={draft.pace}
+            onChange={(event) => {
+              patch({ pace: event.target.value as SavingPace })
+            }}
+          >
+            <option value="yearly">{fr.savings.paceYearly}</option>
+            <option value="quarterly">{fr.savings.paceQuarterly}</option>
           </Select>
         )}
       </Field>

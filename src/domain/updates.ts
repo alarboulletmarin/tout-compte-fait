@@ -19,6 +19,7 @@ import type {
   Family,
   Member,
   Recurrence,
+  SavingPace,
   SavingSupport,
   SavingValuation,
   Settings,
@@ -166,6 +167,8 @@ export type SavingSupportInput = {
   label: string
   memberId: string
   categoryId: string
+  /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
+  pace: SavingPace
   note?: string
   /** Le capital du jour, s'il est connu, et la date à laquelle il l'est. */
   value?: { amount: Money; date: ISODate }

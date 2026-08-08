@@ -12,6 +12,72 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Ajouté — l'épargne répond à ce que la banque ne sait pas, et cesse de réclamer ce qu'elle sait déjà
+
+**Migration de schéma : v8 → v9.** Un champ `SavingSupport.pace` s'ajoute —
+`"yearly"` ou `"quarterly"` —, et il est le seul du modèle dont l'absence n'est
+**pas** remplacée par une valeur par défaut à l'import : un document d'avant le
+champ n'a jamais répondu à la question, et écrire « annuel » sur sept supports
+ferait passer un silence pour sept choix. L'app lit « annuel » sans l'écrire, et
+le formulaire recueille la vraie réponse quand on la lui donne. Rien d'autre ne
+bouge.
+
+L'écran de l'épargne répondait à « combien j'ai ». C'est la question où il ne
+peut pas gagner : l'appli de la banque y répond mieux, plus vite, sans qu'on
+saisisse quoi que ce soit, et sans se tromper. Chaque relevé demandé était donc
+une **transcription** — recopier un nombre lu trente secondes plus tôt ailleurs.
+Ce que cette app est seule à savoir, c'est ce qui *nourrit* le capital : elle
+tient le stock et les flux, quand la banque voit un solde sans savoir lesquelles
+des sorties sont des charges et lesquelles sont des virements vers soi-même.
+
+- **« Tu tiens 4,2 mois sans revenus »**, sous le capital. C'est le fonds
+  d'urgence — capital estimé ÷ charges d'un mois moyen —, la première chose que
+  regarde n'importe quel conseiller, et il est *arithmétiquement impossible* sans
+  les charges de l'app. Trois décisions font sa justesse, et aucun autre écran ne
+  les dit : les **mensualités de crédit comptent** au dénominateur — elles ne
+  s'arrêtent pas quand le revenu s'arrête —, les **versements d'épargne non** —
+  c'est la première chose qu'on coupe —, et le **mois en cours ne compte pas**,
+  faute d'avoir tout dépensé. Les trois sortaient pourtant du même compte : lus
+  en trésorerie ils se confondent, et qui met 500 € de côté chaque mois se serait
+  vu tenir un tiers de temps de moins qu'il ne tient. D'où une série mensuelle
+  **consciente des natures**, à côté de celle qui ne connaît que les entrées et
+  les sorties.
+- **La moyenne porte sur les douze derniers mois vécus**, jamais sur douze cases :
+  diviser par douze un foyer qui saisit depuis trois mois inventerait neuf mois
+  sans charges, et doublerait le chiffre annoncé. Faute d'un mois complet ou
+  d'une charge, l'écran **nomme ce qui manque** plutôt que d'écrire « 0 mois » —
+  un quotient sans dénominateur ne vaut pas zéro, il ne veut rien dire.
+- **Le cumul des versements, mois après mois, année contre année d'avant.**
+  L'app est une machine à mois : tout y est borné par le mois affiché, et
+  l'épargne est la seule notion qu'on y ait greffée qui n'ait aucun sens à
+  l'intérieur d'un mois. On voyait douze états mensuels, jamais une trajectoire —
+  alors que la donnée était intégralement là depuis le premier jour, et que la
+  machine à cumuler existait déjà, testée, pour le solde de l'historique. Elle
+  n'était pas branchée. **Aucun relevé n'y entre**, aucune saisie nouvelle : la
+  question ne se posait simplement nulle part.
+- **Un relevé est un arrêté, pas une corvée mensuelle.** Chaque support porte
+  désormais son rythme. Un livret réglementé ne bouge que des versements — que
+  l'app connaît — et d'intérêts capitalisés une fois au 31 décembre : sa valeur
+  est déterministe entre deux relevés, et un relevé **par an** suffit. Un PEA, un
+  compte-titres, une assurance-vie en unités de compte se relèvent au
+  **trimestre**. Le seuil unique de six mois se trompait dans les deux sens à la
+  fois : il déclarait « à actualiser » un Livret A dont l'app connaît le capital
+  à l'euro près, et laissait passer pour frais un PEA que le marché avait refait.
+- **Et l'écran se tait le reste du temps.** « Mettre à jour les relevés » laissait
+  entendre un rituel mensuel, qui n'est la bonne cadence d'aucun support. Le
+  geste reste atteignable en permanence, mais son **poids dit s'il y a quelque
+  chose à faire** — appuyé quand un support a dépassé sa cadence ou n'a jamais
+  été relevé, discret sinon —, avec un décompte, « 2 relevés à faire », qui ne
+  s'écrit que lorsqu'il a quelque chose à écrire. Ni couleur ni panneau : un
+  capital qu'on n'a pas revu n'est pas une erreur, et un écran qui réclame une
+  donnée dont il n'a pas besoin ne produit que de la culpabilité.
+- **Aucun taux, aucune projection, aucun intérêt calculé.** La cadence dit quand
+  un relevé sera *redemandé*, jamais ce que le support rapportera d'ici là. Elle
+  se demande plutôt qu'elle ne se déduit du classement, parce que le catalogue de
+  catégories est libre : rien ne garantit qu'un « Livret A » soit rangé ailleurs
+  que sous « Divers », et une cadence lue sur le classement se tromperait en
+  silence — le défaut même qu'elle existe pour corriger.
+
 ### Ajouté : la promesse se lit avant la première saisie, pas dans les pages qu'on ne lit pas
 
 « Pas de compte, pas de serveur » était écrit quatre fois : sur la présentation,

@@ -4,7 +4,10 @@ import {
   UNLINKED_SUPPORT,
   activeSupports,
   isSupportEmpty,
+  paceOf,
+  savingCoverage,
   savingTotal,
+  savingYearSeries,
   latestValuation,
   savingsBySupport,
   supportEntries,
@@ -12,6 +15,7 @@ import {
   supportMonthFlows,
   supportUsage,
   supportValue,
+  supportsDue,
   supportsOfMember,
   valuationAge,
   valuationsOf,
@@ -19,7 +23,13 @@ import {
 import type { CategoryKind } from './types'
 
 const kindOf = (id: string): CategoryKind =>
-  id === 'passbook' || id === 'plans' ? 'saving' : id === 'salaire' ? 'resource' : 'charge'
+  id === 'passbook' || id === 'plans'
+    ? 'saving'
+    : id === 'salaire'
+      ? 'resource'
+      : id === 'credit'
+        ? 'debt'
+        : 'charge'
 
 const livret = makeSavingSupport({ id: 's-livret', label: 'Livret A', memberId: 'm1' })
 const pea = makeSavingSupport({
@@ -87,29 +97,108 @@ describe('la dernière valeur connue', () => {
 
 describe('l’âge d’un relevé', () => {
   it('reste frais tant qu’un mois entier ne s’est pas écoulé', () => {
-    expect(valuationAge('2026-08-08', '2026-08-08')).toEqual({ level: 'fresh', months: 0 })
-    expect(valuationAge('2026-08-08', '2026-09-07')).toEqual({ level: 'fresh', months: 0 })
+    expect(valuationAge('2026-08-08', 'yearly', '2026-08-08')).toEqual({ level: 'fresh', months: 0 })
+    expect(valuationAge('2026-08-08', 'yearly', '2026-09-07')).toEqual({ level: 'fresh', months: 0 })
   })
 
   it('compte des mois entiers, et le jour du mois arbitre', () => {
-    expect(valuationAge('2026-08-08', '2026-09-08')).toEqual({ level: 'ageing', months: 1 })
+    expect(valuationAge('2026-08-08', 'yearly', '2026-09-08')).toEqual({
+      level: 'ageing',
+      months: 1,
+    })
     /* Du 31 mai au 30 août, deux mois pleins et non trois : annoncer le
        troisième vieillirait le relevé d'un mois qu'il n'a pas. */
-    expect(valuationAge('2026-05-31', '2026-08-30')).toEqual({ level: 'ageing', months: 2 })
-    expect(valuationAge('2026-05-31', '2026-08-31')).toEqual({ level: 'ageing', months: 3 })
+    expect(valuationAge('2026-05-31', 'yearly', '2026-08-30')).toEqual({
+      level: 'ageing',
+      months: 2,
+    })
+    expect(valuationAge('2026-05-31', 'yearly', '2026-08-31')).toEqual({
+      level: 'ageing',
+      months: 3,
+    })
   })
 
-  it('bascule sur « à actualiser » au sixième mois, pas avant', () => {
-    expect(valuationAge('2026-03-09', '2026-08-08')).toEqual({ level: 'ageing', months: 4 })
-    expect(valuationAge('2026-03-08', '2026-08-08')).toEqual({ level: 'ageing', months: 5 })
-    expect(valuationAge('2026-02-08', '2026-08-08')).toEqual({ level: 'stale', months: 6 })
-    expect(valuationAge('2025-08-08', '2026-08-08')).toEqual({ level: 'stale', months: 12 })
+  /* Le palier « à actualiser » suit la cadence du support, et c'est tout
+     l'objet du champ : un seuil unique se trompait dans les deux sens à la
+     fois — il vieillissait un livret dont l'app connaît le capital à l'euro
+     près, et laissait passer pour frais un PEA que le marché avait refait. */
+  it('attend l’année sur un support annuel', () => {
+    expect(valuationAge('2026-02-08', 'yearly', '2026-08-08')).toEqual({
+      level: 'ageing',
+      months: 6,
+    })
+    expect(valuationAge('2025-08-09', 'yearly', '2026-08-08')).toEqual({
+      level: 'ageing',
+      months: 11,
+    })
+    expect(valuationAge('2025-08-08', 'yearly', '2026-08-08')).toEqual({
+      level: 'stale',
+      months: 12,
+    })
+  })
+
+  it('n’attend qu’un trimestre sur un support trimestriel', () => {
+    expect(valuationAge('2026-05-09', 'quarterly', '2026-08-08')).toEqual({
+      level: 'ageing',
+      months: 2,
+    })
+    expect(valuationAge('2026-05-08', 'quarterly', '2026-08-08')).toEqual({
+      level: 'stale',
+      months: 3,
+    })
+  })
+
+  /* Un document d'avant le champ ne porte aucune cadence, et l'app ne peut pas
+     la deviner : elle se tait plutôt que de réclamer à tort. */
+  it('retombe sur l’année quand aucune cadence n’est dite', () => {
+    expect(valuationAge('2026-02-08', undefined, '2026-08-08').level).toBe('ageing')
+    expect(paceOf({})).toBe('yearly')
+    expect(paceOf({ pace: 'quarterly' })).toBe('quarterly')
   })
 
   /* Un relevé daté d'après-demain n'a pas −1 mois : c'est une saisie en avance,
      pas une anomalie, et l'écran n'a rien de spécial à en dire. */
   it('ne rend jamais un âge négatif', () => {
-    expect(valuationAge('2026-09-08', '2026-08-08')).toEqual({ level: 'fresh', months: 0 })
+    expect(valuationAge('2026-09-08', 'yearly', '2026-08-08')).toEqual({
+      level: 'fresh',
+      months: 0,
+    })
+  })
+})
+
+describe('les supports dont le relevé est attendu', () => {
+  const supports = [
+    livret,
+    makeSavingSupport({ id: 's-pea', label: 'PEA', memberId: 'm1', pace: 'quarterly' }),
+  ]
+  const valuations = [
+    makeSavingValuation({
+      id: 'v1',
+      supportId: 's-livret',
+      amount: eur(1000000),
+      date: '2026-02-08',
+    }),
+    makeSavingValuation({ id: 'v2', supportId: 's-pea', amount: eur(1800000), date: '2026-02-08' }),
+  ]
+
+  /* Le même relevé, le même jour, deux réponses : c'est exactement ce que le
+     seuil unique ne savait pas dire. */
+  it('ne réclame que ceux qui ont dépassé leur cadence', () => {
+    expect(supportsDue(supports, valuations, '2026-08-08').map((s) => s.id)).toEqual(['s-pea'])
+  })
+
+  it('réclame un support jamais relevé', () => {
+    expect(supportsDue(supports, [], '2026-08-08').map((s) => s.id)).toEqual(['s-livret', 's-pea'])
+  })
+
+  /* Un compte clôturé n'a plus de valeur à confirmer. */
+  it('laisse les archivés tranquilles', () => {
+    const closed = [makeSavingSupport({ id: 's-pee', memberId: 'm1', archived: true })]
+    expect(supportsDue(closed, [], '2026-08-08')).toEqual([])
+  })
+
+  it('se tait quand tout est à jour', () => {
+    expect(supportsDue(supports, valuations, '2026-03-08')).toEqual([])
   })
 })
 
@@ -274,6 +363,134 @@ describe('la valeur estimée depuis le dernier relevé', () => {
       withdrawals: 0,
       net: 0,
     })
+  })
+})
+
+/* --- Combien de temps le capital tient ------------------------------------*/
+
+describe('les mois de charges que le capital couvre', () => {
+  /** Un mois complet : un salaire, un loyer, une mensualité, un versement. */
+  const monthOf = (ym: string, saving = 50000) => [
+    makeEntry({
+      id: `${ym}-in`,
+      categoryId: 'salaire',
+      direction: 'in',
+      date: `${ym}-01`,
+      amount: eur(250000),
+    }),
+    makeEntry({ id: `${ym}-loyer`, categoryId: 'loyer', date: `${ym}-05`, amount: eur(80000) }),
+    makeEntry({ id: `${ym}-pret`, categoryId: 'credit', date: `${ym}-10`, amount: eur(20000) }),
+    makeEntry({
+      id: `${ym}-eco`,
+      categoryId: 'passbook',
+      savingSupportId: 's-livret',
+      date: `${ym}-15`,
+      amount: eur(saving),
+    }),
+  ]
+
+  const year = ['2026-01', '2026-02', '2026-03', '2026-04'].flatMap((ym) => monthOf(ym))
+
+  /* Le piège que la fonction existe pour éviter : les trois sortent du compte,
+     et lus en trésorerie ils se confondent. Un dénominateur à 1 500 € au lieu
+     de 1 000 € ferait tenir un tiers de temps de moins qu'on ne tient. */
+  it('compte les charges et les crédits, jamais les versements', () => {
+    const coverage = savingCoverage(eur(500000), year, kindOf, '2026-05-10')
+    expect(coverage.monthly).toBe(100000)
+    expect(coverage.months).toBe(4)
+    expect(coverage.covered).toBe(5)
+  })
+
+  /* Une mensualité ne s'arrête pas quand le revenu s'arrête : la retirer du
+     dénominateur ferait tenir plus longtemps qu'on ne tient. */
+  it('garde la mensualité de crédit au dénominateur', () => {
+    const sansCredit = year.filter((entry) => entry.categoryId !== 'credit')
+    expect(savingCoverage(eur(500000), sansCredit, kindOf, '2026-05-10').monthly).toBe(80000)
+  })
+
+  /* Un mois en cours n'a pas encore tout dépensé : le compter tirerait la
+     moyenne vers le bas, donc gonflerait le nombre de mois annoncé — le chiffre
+     serait le plus faux le jour où on le regarde. */
+  it('ne compte pas le mois où l’on regarde', () => {
+    const withToday = [...year, ...monthOf('2026-05')]
+    const coverage = savingCoverage(eur(500000), withToday, kindOf, '2026-05-10')
+    expect(coverage.months).toBe(4)
+    expect(coverage.monthly).toBe(100000)
+  })
+
+  /* Diviser par douze un foyer qui saisit depuis trois mois inventerait neuf
+     mois sans charges, et doublerait le nombre de mois annoncé. */
+  it('ne divise que par les mois réellement vécus', () => {
+    const troisMois = ['2026-02', '2026-03', '2026-04'].flatMap((ym) => monthOf(ym))
+    expect(savingCoverage(eur(500000), troisMois, kindOf, '2026-05-10')).toMatchObject({
+      months: 3,
+      monthly: 100000,
+    })
+  })
+
+  /* Un ratio sans dénominateur ne vaut pas zéro : il ne veut rien dire. */
+  it('ne dit rien plutôt que l’infini quand rien n’a été payé', () => {
+    expect(savingCoverage(eur(500000), [], kindOf, '2026-05-10')).toEqual({
+      capital: 500000,
+      monthly: 0,
+      months: 0,
+      covered: null,
+    })
+  })
+
+  it('ne remonte pas au-delà de la fenêtre demandée', () => {
+    const long = ['2025-01', '2026-03', '2026-04'].flatMap((ym) => monthOf(ym))
+    expect(savingCoverage(eur(500000), long, kindOf, '2026-05-10').months).toBe(2)
+  })
+})
+
+/* --- L'accumulation, année après année ------------------------------------*/
+
+describe('ce qui est mis de côté au fil de l’année', () => {
+  const entries = [
+    makeEntry({
+      id: 'a',
+      categoryId: 'passbook',
+      savingSupportId: 's-livret',
+      date: '2026-01-15',
+      amount: eur(30000),
+    }),
+    makeEntry({ id: 'b', categoryId: 'loyer', date: '2026-02-05', amount: eur(80000) }),
+    makeEntry({
+      id: 'c',
+      categoryId: 'passbook',
+      savingSupportId: 's-livret',
+      date: '2026-03-15',
+      amount: eur(50000),
+    }),
+    /* Une reprise : l'épargne se compte en net, comme partout. */
+    makeEntry({
+      id: 'd',
+      categoryId: 'passbook',
+      savingSupportId: 's-livret',
+      direction: 'in',
+      date: '2026-03-20',
+      amount: eur(20000),
+    }),
+  ]
+
+  it('cumule les versements depuis janvier, reprises déduites', () => {
+    const series = savingYearSeries(entries, 2026, kindOf)
+    expect(series.map((point) => point.net).slice(0, 4)).toEqual([30000, 0, 30000, 0])
+    expect(series.map((point) => point.cumulative).slice(0, 4)).toEqual([30000, 30000, 60000, 60000])
+  })
+
+  /* Un mois vécu sans rien mettre de côté est un vrai zéro — le cumul y reste
+     plat, et c'est une information. Un mois jamais ouvert n'est pas un mois à
+     zéro, et il ne se trace pas. */
+  it('distingue un mois sans versement d’un mois sans données', () => {
+    const series = savingYearSeries(entries, 2026, kindOf)
+    expect(series[1]).toMatchObject({ month: 2, net: 0, hasData: true })
+    expect(series[4]).toMatchObject({ month: 5, net: 0, hasData: false })
+  })
+
+  it('ne compte que l’année demandée', () => {
+    expect(savingYearSeries(entries, 2025, kindOf).every((point) => !point.hasData)).toBe(true)
   })
 })
 

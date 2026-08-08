@@ -46,8 +46,24 @@ const DIST = 'dist'
    formulaire quotidien, et il faut donc qu'il soit là avec lui. Le reste est la
    prose : une trentaine de chaînes d'interface, que `fr.ts` porte avant le
    premier rendu. Quatre kibioctets de plus, dont on retrouve la marge d'usage —
-   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran. */
-const BUDGET_KIB = 214
+   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran.
+
+   Relevé à 218 pour ce que l'épargne **répond**, après ce qu'elle enregistre :
+   les mois de charges que le capital couvre, et le cumul des versements d'une
+   année sur l'autre. Le chiffre à retenir n'est pas celui du chantier mais celui
+   de la marge : elle était retombée à 0,6 Kio, c'est-à-dire moins que ce qu'a
+   coûté une poignée de phrases — exactement la situation que le passage de 200
+   à 214 décrit deux paragraphes plus haut comme n'étant pas la marge que ce
+   nombre est censé tenir. Le poids ajouté au graphe initial se lit en deux
+   lignes : une série mensuelle consciente des natures et le quotient qu'elle
+   nourrit, lus par la page Épargne qui est chargée d'avance ; et la prose, qui
+   pèse le reste — les trois paragraphes de méthode d'un chiffre dont aucune
+   autre app ne dit le calcul. Le graphique, lui, **ne compte pas** : la section
+   qui trace l'année part à la demande (`SavingsPage`), et les lignes cumulées
+   qu'elle partage avec l'historique vivent dans un morceau à elles. Sans ce
+   découpage le premier chargement prenait quatre kibioctets de plus, pour un
+   bloc qui vit sous le pli. */
+const BUDGET_KIB = 218
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`
