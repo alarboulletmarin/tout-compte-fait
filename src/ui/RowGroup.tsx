@@ -90,8 +90,23 @@ export type RowProps = {
   description?: string
   /** À droite du libellé — un compte, un sélecteur court. */
   trailing?: ReactNode
-  /** Avant le libellé — une pastille de couleur. */
+  /** Avant le libellé — une pastille de couleur. Exclusif d'`icon`. */
   leading?: ReactNode
+  /**
+   * Le repère de la destination, à gauche du libellé — **le même glyphe qu'en
+   * navigation**, et c'est tout l'intérêt (DS §9.2).
+   *
+   * Sur un écran qui n'est qu'une liste de portes, il est ce que la colonne
+   * latérale offre déjà et que le téléphone n'avait pas : la barre d'onglets ne
+   * porte que quatre glyphes, et tout ce qu'elle range se lisait donc en texte
+   * seul. Retrouver « Répartition » demandait de lire quatre libellés au lieu
+   * de reconnaître trois silhouettes.
+   *
+   * Il ne double pas le chevron : celui-ci dit *qu'on* navigue, le repère dit
+   * *vers quoi*. Il double en revanche une pastille — d'où l'exclusivité avec
+   * `leading` : deux marqueurs à la même place n'en font plus aucun.
+   */
+  icon?: IconComponent
   /**
    * Un contrôle posé **sous** l'étiquette, pour ceux qui ne tiennent pas à sa
    * droite : à 320px, une tuile n'offre que 250px utiles, et une bascule à
@@ -124,11 +139,23 @@ export function Row({
   description,
   trailing,
   leading,
+  icon: Repere,
   control,
   to,
   onClick,
   affordance = 'navigate',
 }: RowProps) {
+  /* La pastille l'emporte : elle est tirée d'une donnée — la teinte d'une
+     catégorie —, quand le repère est décidé par la table des routes. Une rangée
+     qui aurait les deux poserait deux marques au même endroit, et le DS §9.1
+     n'en veut pas.
+     Atténué comme le chevron d'en face : le libellé porte le sens, ces deux-là
+     l'encadrent sans lui disputer la ligne. 18px, la taille du repère en
+     navigation (DS §9.1) — c'est le même glyphe au même rang. */
+  const mark =
+    leading ??
+    (Repere === undefined ? undefined : <Repere size={18} className="shrink-0 text-muted" />)
+
   const heading = (
     <span className="flex min-w-0 flex-1 flex-col">
       {labelFor === undefined ? (
@@ -150,7 +177,7 @@ export function Row({
 
   const content = (marker: boolean): ReactNode => (
     <>
-      {leading}
+      {mark}
       {heading}
       {trailing !== undefined && <span className="flex shrink-0 items-center">{trailing}</span>}
       {/* `aria-hidden` : le nom accessible du lien dit déjà où il mène, et un

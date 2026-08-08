@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { SETTINGS_PATH } from '@/app/routes'
+import { MORE_PATH } from '@/app/routes'
 import { fr } from '@/i18n/fr'
 import { PageTitle } from '@/ui/PageTitle'
 import { DataSection } from './DataSection'
@@ -18,7 +18,7 @@ export function DataPage() {
       <PageTitle
         title={fr.settings.transfer}
         onBack={() => {
-          void navigate(SETTINGS_PATH)
+          void navigate(MORE_PATH)
         }}
       />
       <DataSection />

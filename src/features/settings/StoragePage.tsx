@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { SETTINGS_PATH } from '@/app/routes'
+import { MORE_PATH } from '@/app/routes'
 import { fr } from '@/i18n/fr'
 import { PageTitle } from '@/ui/PageTitle'
 import { StorageSection } from './StorageSection'
@@ -18,7 +18,7 @@ export function StoragePage() {
       <PageTitle
         title={fr.storage.title}
         onBack={() => {
-          void navigate(SETTINGS_PATH)
+          void navigate(MORE_PATH)
         }}
       />
       <StorageSection />

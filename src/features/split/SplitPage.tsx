@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, SETTINGS_PEOPLE_PATH } from '@/app/routes'
+import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH } from '@/app/routes'
 import type { YearMonth } from '@/domain/date'
 import { sum } from '@/domain/money'
 import { totalToPay } from '@/domain/split'
@@ -227,7 +227,7 @@ export function SplitPage() {
      membres se gèrent depuis qu'elle n'est plus qu'une entrée, et l'écran
      renvoie ici précisément parce qu'il en manque un. */
   const goToSettings = (): void => {
-    void navigate(SETTINGS_PEOPLE_PATH)
+    void navigate(PEOPLE_PATH)
   }
 
   // Sans aucun membre, il n'y a personne à qui donner une part. Un seul

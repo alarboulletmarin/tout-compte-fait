@@ -9,7 +9,7 @@
  *
  * Trois invariants, donc, et ce sont ceux qu'un rangement de composants défait
  * sans que rien ne le dise : aucune destination perdue, l'onglet « Plus » reste
- * allumé dans ce qu'il range, et la colonne latérale déplie au lieu de replier.
+ * allumé dans ce qu'il range, et son lien dans la colonne latérale aussi.
  * ==========================================================================*/
 
 import { render, screen, within } from '@testing-library/react'
@@ -20,16 +20,21 @@ import { Sidebar, TabBar } from './Nav'
 import {
   ABOUT_PATH,
   ADVANCES_PATH,
+  APPEARANCE_PATH,
+  CATEGORIES_PATH,
   CREDITS_PATH,
+  DATA_PATH,
   MANAGE_ROUTES,
   MORE_PATH,
   NAV_ROUTES,
+  PEOPLE_PATH,
   RECURRENCES_PATH,
   SAVINGS_PATH,
-  SETTINGS_PATH,
   SIDEBAR_GROUPS,
   SPLIT_PATH,
+  STORAGE_PATH,
   isInMoreSection,
+  isUnderMore,
 } from './routes'
 
 function tabs(at = '/') {
@@ -40,9 +45,9 @@ function tabs(at = '/') {
   )
 }
 
-function sidebar() {
+function sidebar(at = '/') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[at]}>
       <Sidebar householdName="Maison" />
     </MemoryRouter>,
   )
@@ -73,8 +78,12 @@ describe('Barre d’onglets — quatre destinations, et une porte pour le reste'
     ['la répartition', SPLIT_PATH],
     ['les crédits', CREDITS_PATH],
     ['les avances', ADVANCES_PATH],
-    ['les réglages', SETTINGS_PATH],
-    ['une vue des réglages', `${SETTINGS_PATH}/personnes`],
+    ['les personnes', PEOPLE_PATH],
+    ['la fiche d’un membre', `${PEOPLE_PATH}/m-1`],
+    ['le catalogue', CATEGORIES_PATH],
+    ['l’apparence', APPEARANCE_PATH],
+    ['le stockage', STORAGE_PATH],
+    ['les données', DATA_PATH],
     ['à propos', ABOUT_PATH],
     ['lui-même', MORE_PATH],
   ])('laisse « Plus » allumé sur %s', (_, path) => {
@@ -92,18 +101,22 @@ describe('Barre d’onglets — quatre destinations, et une porte pour le reste'
 })
 
 describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
-  it('déplie ce que « Plus » range, au lieu d’y renvoyer', () => {
+  /* Elle déplie ce qu'on ouvre souvent, et nomme le reste. Elle dépliait tout
+     tant que « Plus » tenait en deux groupes ; il en porte quatre, dont un qui
+     n'est pas fait que de liens — la devise se règle dans un sélecteur, et une
+     colonne de navigation n'héberge pas un champ de formulaire. */
+  it('déplie « Gérer » et nomme « Plus » pour le reste', () => {
     sidebar()
 
     for (const route of MANAGE_ROUTES) {
       expect(screen.getByRole('link', { name: route.label })).toBeInTheDocument()
     }
-    expect(screen.queryByRole('link', { name: fr.nav.more })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: fr.nav.more })).toHaveAttribute('href', MORE_PATH)
   })
 
   /* Un seul titre : le premier groupe s'ouvre sur les destinations
-     quotidiennes, et le dernier ne contient qu'une destination — « Réglages »
-     posé au-dessus d'un lien « Réglages » n'aurait rien séparé. */
+     quotidiennes, et le dernier ne contient qu'une destination — un titre posé
+     au-dessus d'un lien unique n'aurait rien séparé de ce qu'il nomme. */
   it('ne nomme que le groupe qui fait descendre d’un cran', () => {
     sidebar()
 
@@ -112,8 +125,8 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
   })
 
   /* L'invariant qui compte : le regroupement ne doit retirer aucune porte. Les
-     trois lectures, les quatre écrans du foyer, les réglages, et les deux liens
-     de pied — tout est atteignable d'un clic depuis la colonne. */
+     trois lectures, les quatre écrans du foyer, « Plus », et les deux liens de
+     pied — tout est atteignable d'un clic depuis la colonne. */
   it('mène à toutes les destinations sans exception', () => {
     const { container } = sidebar()
     const nav = within(container).getByRole('navigation')
@@ -123,5 +136,35 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
       for (const route of group.routes) expect(paths).toContain(route.path)
     }
     expect(paths).toContain(ABOUT_PATH)
+  })
+
+  /* Le pendant de la table de préfixes de la barre d'onglets : sans elle, le
+     premier pas dans l'une des cinq vues que « Plus » ouvre éteignait toute la
+     colonne, sans rien pour dire d'où l'on venait. Elle est plus étroite que
+     celle des onglets — la colonne déplie « Gérer », dont les écrans s'allument
+     donc eux-mêmes, et elle porte son propre lien « À propos » en pied. */
+  it.each([
+    ['les personnes', PEOPLE_PATH],
+    ['la fiche d’un membre', `${PEOPLE_PATH}/m-1`],
+    ['le catalogue', CATEGORIES_PATH],
+    ['l’apparence', APPEARANCE_PATH],
+    ['le stockage', STORAGE_PATH],
+    ['les données', DATA_PATH],
+    ['lui-même', MORE_PATH],
+  ])('garde « Plus » allumé sur %s', (_, path) => {
+    expect(isUnderMore(path)).toBe(true)
+  })
+
+  it.each([RECURRENCES_PATH, SAVINGS_PATH, ABOUT_PATH, '/'])(
+    'laisse « Plus » éteint sur %s, que la colonne déplie déjà',
+    (path) => {
+      expect(isUnderMore(path)).toBe(false)
+    },
+  )
+
+  it('allume son lien « Plus » dans les vues qu’il ouvre', () => {
+    sidebar(PEOPLE_PATH)
+
+    expect(screen.getByRole('link', { name: fr.nav.more })).toHaveClass('bg-accent')
   })
 })

@@ -46,8 +46,27 @@ const DIST = 'dist'
    formulaire quotidien, et il faut donc qu'il soit là avec lui. Le reste est la
    prose : une trentaine de chaînes d'interface, que `fr.ts` porte avant le
    premier rendu. Quatre kibioctets de plus, dont on retrouve la marge d'usage —
-   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran. */
-const BUDGET_KIB = 214
+   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran.
+
+   Relevé à 217 pour le **rangement de « Plus »**, et deux kibioctets en sont la
+   mesure exacte. L'écran a absorbé la page d'entrée des réglages, qui se
+   chargeait à la demande ; lui ne le peut pas — c'est un onglet de la barre, et
+   un aller-retour de réseau pour l'atteindre coûterait plus que ce qu'il pèse.
+   Un demi-kibioctet pour ce déplacement : le sélecteur de devise, les noms des
+   thèmes et des palettes, quatre groupes de rangées au lieu de deux.
+
+   Un kibioctet et demi pour les **repères**, et c'est la dépense qu'il faut
+   assumer explicitement : chaque rangée porte le glyphe de sa destination, donc
+   sept définitions Phosphor remontent dans le graphe initial — les personnes,
+   les catégories, l'apparence, le stockage, le transfert, la devise, « à
+   propos ». Elles ne se chargeaient jusqu'ici qu'avec les écrans qui les
+   ouvrent. C'est le prix d'un écran qu'on parcourt à l'œil : sous 1024px la
+   barre ne porte que quatre glyphes, et tout ce qu'elle range se lisait en
+   texte seul.
+
+   Le budget ne suit pas la mesure au plus juste — il resterait un dixième de
+   kibioctet, ce qui n'est plus une marge mais un plafond. */
+const BUDGET_KIB = 217
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

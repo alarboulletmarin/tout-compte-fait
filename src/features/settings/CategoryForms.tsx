@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { SETTINGS_CATEGORIES_PATH, settingsFamilyPath } from '@/app/routes'
+import { CATEGORIES_PATH, familyPath } from '@/app/routes'
 import type { CategoryKind } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 import { addCategory, addFamily } from '@/store/actions'
@@ -88,11 +88,11 @@ export function FamilyNewPage() {
       submit={fr.settings.familyAdd}
       disabled={trimmed === ''}
       onBack={() => {
-        void navigate(SETTINGS_CATEGORIES_PATH)
+        void navigate(CATEGORIES_PATH)
       }}
       onSubmit={() => {
         const family = addFamily({ label: trimmed, kind })
-        void navigate(settingsFamilyPath(family.id), { replace: true })
+        void navigate(familyPath(family.id), { replace: true })
       }}
     >
       <Field label={fr.settings.familyName}>
@@ -146,7 +146,7 @@ export function CategoryNewPage() {
   const families = useFamilies()
   const family = families.find((one) => one.id === id)
 
-  if (family === undefined) return <Navigate to={SETTINGS_CATEGORIES_PATH} replace />
+  if (family === undefined) return <Navigate to={CATEGORIES_PATH} replace />
 
   return <CategoryNewForm familyId={family.id} familyLabel={family.label} />
 }
@@ -163,11 +163,11 @@ function CategoryNewForm({ familyId, familyLabel }: { familyId: string; familyLa
       submit={fr.settings.categoryAdd}
       disabled={trimmed === ''}
       onBack={() => {
-        void navigate(settingsFamilyPath(familyId))
+        void navigate(familyPath(familyId))
       }}
       onSubmit={() => {
         addCategory({ label: trimmed, familyId, icon: '' })
-        void navigate(settingsFamilyPath(familyId), { replace: true })
+        void navigate(familyPath(familyId), { replace: true })
       }}
     >
       <Field label={fr.settings.categoryName}>

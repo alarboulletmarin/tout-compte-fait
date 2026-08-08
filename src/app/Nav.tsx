@@ -9,6 +9,7 @@ import {
   SIDEBAR_GROUPS,
   STYLEGUIDE_ROUTE,
   isInMoreSection,
+  isUnderMore,
 } from './routes'
 
 /* Un onglet ramène en haut de sa section, qu'on y soit déjà ou non — c'est ce
@@ -31,16 +32,20 @@ const ITEM = cn(
  * temps, quatre écrans de l'app n'y figuraient pas du tout, faute d'une place
  * que la barre d'onglets n'avait pas et que la colonne, elle, avait de reste.
  *
- * Ce qu'on ouvre pour regarder, puis ce qu'on tient, puis ce qu'on règle. Le
- * premier groupe n'a pas de titre : la colonne doit s'ouvrir sur les
- * destinations quotidiennes, pas sur un mot à lire avant elles. Voir
- * `SIDEBAR_GROUPS`, qui porte l'ordre et le rationale.
+ * Ce qu'on ouvre pour regarder, puis ce qu'on tient, puis « Plus », qui range
+ * le reste. Le premier groupe n'a pas de titre : la colonne doit s'ouvrir sur
+ * les destinations quotidiennes, pas sur un mot à lire avant elles. Voir
+ * `SIDEBAR_GROUPS`, qui porte l'ordre et le rationale — dont celui du dernier
+ * groupe, qui dépliait la section des réglages et nomme désormais l'écran qui
+ * l'a remplacée.
  *
  * Le titre d'un groupe est un `t-eyebrow` atténué — exactement la classe du nom
  * de l'app juste au-dessus. Aucune convention visuelle nouvelle : c'est déjà
  * comme ça que cet écran nomme ce qui surplombe une liste.
  */
 export function Sidebar({ householdName }: { householdName: string }) {
+  const { pathname } = useLocation()
+
   return (
     <nav
       aria-label={fr.nav.label}
@@ -71,6 +76,14 @@ export function Sidebar({ householdName }: { householdName: string }) {
           )}
           {group.routes.map((route) => {
             const Icon = route.icon
+            /* « Plus » reste allumé dans les cinq vues dont il est la seule
+               porte — les personnes, les catégories, l'apparence, le stockage,
+               les données. `NavLink` n'apparie que son propre préfixe, et sans
+               ce complément la colonne n'aurait plus rien d'allumé dès le
+               premier pas à l'intérieur. Le prédicat est plus étroit que celui
+               de la barre d'onglets : la colonne déplie « Gérer », dont les
+               écrans s'allument donc eux-mêmes. */
+            const inSection = route.path === MORE_PATH && isUnderMore(pathname)
             return (
               <NavLink
                 key={route.path}
@@ -81,7 +94,7 @@ export function Sidebar({ householdName }: { householdName: string }) {
                   cn(
                     ITEM,
                     'h-11 justify-start gap-3',
-                    isActive ? 'bg-accent text-accent-fg' : 'hover:bg-surface-2',
+                    isActive || inSection ? 'bg-accent text-accent-fg' : 'hover:bg-surface-2',
                   )
                 }
               >
