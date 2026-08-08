@@ -146,6 +146,32 @@ describe('les quatre intentions', () => {
   })
 })
 
+/* Sous 1024px, cet écran *est* la navigation : la barre ne porte que quatre
+   repères, et tout ce qu'elle range se lisait en texte seul. Le glyphe est
+   aria-hidden — il ne s'atteint donc pas par un rôle, et c'est bien ce qu'on
+   veut : le libellé porte le sens, le glyphe porte la reconnaissance. */
+describe('les repères', () => {
+  it('donne à chaque rangée le glyphe de sa destination', () => {
+    open()
+
+    /* Deux glyphes par rangée qui mène ailleurs : le repère à gauche, le
+       chevron à droite. Un seul voudrait dire que le repère manque. */
+    for (const link of screen.getAllByRole('link')) {
+      expect(link.querySelectorAll('svg')).toHaveLength(2)
+    }
+  })
+
+  /* La devise ne mène nulle part — elle se règle sur place —, donc pas de
+     chevron ; elle garde son repère, sans quoi la colonne de glyphes
+     s'interromprait au milieu du groupe. */
+  it('en donne un aussi à la rangée qui ne mène nulle part', () => {
+    open()
+
+    const row = screen.getByText(fr.settings.currency).closest('div')
+    expect(row?.querySelectorAll('svg')).toHaveLength(1)
+  })
+})
+
 describe('ce que chaque rangée dit d’elle-même', () => {
   /* La valeur plutôt que la phrase : elle renseigne mieux, et c'est ce qui fait
      qu'on n'ouvre que ce qu'on venait changer. */

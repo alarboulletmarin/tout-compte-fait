@@ -40,6 +40,13 @@ d'application, et sauvegarder ses données n'est pas un goût.
   bien qu'un signet sur `/reglages/categories/fam-1/nouvelle` retrouve le
   formulaire qu'il visait et pas seulement l'accueil de la section. Même filet
   que `/abonnements`, et même motif.
+- **Chaque rangée porte le glyphe de sa destination**, celui-là même que la
+  colonne latérale affiche à la souris. C'était le manque de cet écran sous
+  1024px : la barre d'onglets ne porte que quatre repères, et tout ce qu'elle
+  range se parcourait en lisant onze libellés de haut en bas. Le DS §9.2 demande
+  qu'un concept garde le même glyphe partout — la colonne l'appliquait, « Plus »
+  ne l'appliquait pas. Le repère est atténué comme le chevron d'en face, et les
+  deux ne se doublent pas : l'un dit *vers quoi*, l'autre *qu'on y va*.
 - **Chaque rangée dit sa valeur** — « Maison · 3 membres »,
   « 47 catégories · 12 familles », « Système · Classique », « Version 1.0.0 » —
   ou, quand elle n'en a pas, une phrase. Jamais un chiffre du budget : les
@@ -59,8 +66,15 @@ d'application, et sauvegarder ses données n'est pas un goût.
   étiquettes en capsule, même rangée à titre, description et chevron. Le défaut
   n'était pas dans le dessin, il était dans le rangement.
 
-Le budget de taille passe de 214 à 215 Kio : « Plus » a absorbé une page qui se
-chargeait à la demande, et lui ne le peut pas — c'est un onglet de la barre.
+Deux glyphes nouveaux : `TransferIcon` (deux flèches opposées — ce qui sort et
+ce qui rentre) et `CurrencyIcon` (un billet, le seul glyphe d'argent sans
+symbole monétaire gravé : sur le réglage qui choisit lequel afficher, un « $ »
+aurait dit le contraire de ce que fait le sélecteur).
+
+Le budget de taille passe de 214 à 217 Kio, et deux kibioctets en sont la mesure
+exacte : un demi pour la page absorbée — « Plus » est un onglet de la barre, il
+ne peut pas se charger à la demande —, un et demi pour les sept définitions de
+glyphes qui remontent dans le graphe initial avec les repères.
 
 ### Ajouté : la promesse se lit avant la première saisie, pas dans les pages qu'on ne lit pas
 

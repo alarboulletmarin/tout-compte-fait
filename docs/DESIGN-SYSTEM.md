@@ -477,9 +477,11 @@ Un seul point d'entrée, `ui/Icons.tsx`, qui réexporte sous des noms à nous. A
 | Emploi | Où | Taille |
 |---|---|---|
 | **Action** | Sur un contrôle qui fait quelque chose : chevron, plus, croix, coche | 16–20px |
-| **Repère** | Sur un onglet, une tuile, une section — pour la retrouver à l'œil sans relire son libellé | 13px dans un eyebrow, 18px en navigation |
+| **Repère** | Sur un onglet, une tuile, une section, une rangée de navigation — pour la retrouver à l'œil sans relire son libellé | 13px dans un eyebrow, 18px en navigation |
 
-Rien en dehors. Une icône qui n'aide ni à agir ni à se repérer décore, et §1 ne veut pas de décor. En particulier : jamais d'icône sur une ligne de liste — la pastille de catégorie y tient déjà ce rôle, et deux marqueurs côte à côte n'en font plus aucun.
+Rien en dehors. Une icône qui n'aide ni à agir ni à se repérer décore, et §1 ne veut pas de décor. En particulier : **jamais d'icône sur une ligne de données** — une entrée du mois porte déjà sa pastille de catégorie, et deux marqueurs à la même place n'en font plus aucun.
+
+La frontière est là, et pas ailleurs : une `ListRow` montre une **donnée** — elle est identifiée par ce qu'elle contient —, une `Row` de « Plus » montre une **destination**, qui a un glyphe et le même partout (§9.2). L'écran « Plus » est la navigation sous 1024px, où la barre ne porte que quatre repères : sans eux, tout ce qu'elle range se parcourt en lisant onze libellés. La rangée porte donc son repère à gauche et son chevron à droite, et les deux ne se doublent pas — l'un dit *vers quoi*, l'autre *qu'on y va*. Une rangée qui porte déjà une pastille n'y a pas droit.
 
 ### 9.2 Règles
 

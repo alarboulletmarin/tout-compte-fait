@@ -19,6 +19,15 @@ import { currencySymbol, tpl } from '@/i18n/format'
 import { useCategories, useFamilies, useHouseholdName, useMembers } from '@/store/selectors'
 import { useStore } from '@/store/store'
 import { Select } from '@/ui/Field'
+import {
+  CategoriesIcon,
+  CurrencyIcon,
+  DeviceIcon,
+  InfoIcon,
+  PeopleIcon,
+  ThemeIcon,
+  TransferIcon,
+} from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row, RowGroup } from '@/ui/RowGroup'
 
@@ -64,6 +73,15 @@ import { Row, RowGroup } from '@/ui/RowGroup'
  * « Système · Classique » — ou, quand elle n'en a pas, une phrase : sur un écran
  * qui n'est qu'une liste de portes, un libellé seul demande d'ouvrir pour savoir
  * si c'était la bonne.
+ *
+ * **Et chaque rangée porte le glyphe de sa destination**, celui-là même que la
+ * colonne latérale affiche à la souris. C'était le manque de cet écran sous
+ * 1024px : la barre d'onglets ne porte que quatre repères, et tout ce qu'elle
+ * range se lisait donc en texte seul, onze libellés à parcourir de haut en bas.
+ * Le DS §9.2 demande qu'un concept garde le même glyphe partout — la colonne
+ * l'appliquait, cet écran-ci ne l'appliquait pas. Le repère est atténué et le
+ * chevron aussi : le libellé garde la ligne, les deux marques l'encadrent, et
+ * elles ne disent pas la même chose — l'une *vers quoi*, l'autre *qu'on y va*.
  */
 
 /* La phrase d'une rangée de « Gérer », par destination — indexée sur les
@@ -121,6 +139,7 @@ function AppearanceRow() {
   return (
     <Row
       label={fr.appearance.title}
+      icon={ThemeIcon}
       description={tpl(fr.settings.appearanceSummary, THEME_NAME[theme], PALETTE_NAME[palette])}
       to={APPEARANCE_PATH}
     />
@@ -149,6 +168,7 @@ function CurrencyRow() {
     <Row
       label={fr.settings.currency}
       labelFor={id}
+      icon={CurrencyIcon}
       description={fr.settings.currencyHint}
       trailing={
         <Select
@@ -214,6 +234,7 @@ export function MorePage() {
             <Row
               key={route.path}
               label={route.label}
+              icon={route.icon}
               to={route.path}
               {...(hint === undefined ? {} : { description: hint })}
             />
@@ -225,15 +246,35 @@ export function MorePage() {
           vues pour changer l'app, on les ouvre parce que quelqu'un est arrivé
           dans le foyer ou parce qu'une dépense n'a pas d'étiquette où aller. */}
       <RowGroup title={fr.nav.organise}>
-        <Row label={fr.settings.household} description={household} to={PEOPLE_PATH} />
-        <Row label={fr.settings.categories} description={catalogue} to={CATEGORIES_PATH} />
+        <Row
+          label={fr.settings.household}
+          icon={PeopleIcon}
+          description={household}
+          to={PEOPLE_PATH}
+        />
+        <Row
+          label={fr.settings.categories}
+          icon={CategoriesIcon}
+          description={catalogue}
+          to={CATEGORIES_PATH}
+        />
       </RowGroup>
 
       {/* « Sur cet appareil » avant « Exporter / importer » : la première dit
           où les données vivent, la seconde comment les en faire sortir. */}
       <RowGroup title={fr.nav.data}>
-        <Row label={fr.storage.title} description={fr.settings.storageSummary} to={STORAGE_PATH} />
-        <Row label={fr.settings.transfer} description={fr.settings.transferSummary} to={DATA_PATH} />
+        <Row
+          label={fr.storage.title}
+          icon={DeviceIcon}
+          description={fr.settings.storageSummary}
+          to={STORAGE_PATH}
+        />
+        <Row
+          label={fr.settings.transfer}
+          icon={TransferIcon}
+          description={fr.settings.transferSummary}
+          to={DATA_PATH}
+        />
       </RowGroup>
 
       {/* Les vrais réglages, ceux qui ne touchent qu'à la présentation — plus la
@@ -245,6 +286,7 @@ export function MorePage() {
         <CurrencyRow />
         <Row
           label={fr.nav.about}
+          icon={InfoIcon}
           description={tpl(fr.settings.aboutSummary, VERSION)}
           to={ABOUT_PATH}
         />
