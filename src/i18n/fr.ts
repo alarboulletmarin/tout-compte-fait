@@ -1767,6 +1767,21 @@ export const fr = {
     srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
     srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
 
+    /* --- La porte des projections ------------------------------------------
+       Les deux seules chaînes du simulateur qui vivent ici : c'est cet écran-ci
+       qui porte la rangée, et il est chargé d'avance — il doit pouvoir nommer
+       où elle mène sans aller chercher le morceau qui la sert. Toute la prose
+       de l'écran d'arrivée est dans `i18n/projection.ts`, qui voyage avec lui.
+
+       La rangée est en fin de page, et c'est sa place : le mois se décide en
+       haut, l'année se contemple en dessous, et les années à venir viennent
+       après elles. C'est la suite de la même ligne du temps.
+
+       Le libellé ne promet pas un rendement, et la phrase dit exactement ce que
+       l'écran fait — un calcul sous une hypothèse qu'on pose soi-même. */
+    projections: 'Projections',
+    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
+
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',
     contributions: 'Versements',

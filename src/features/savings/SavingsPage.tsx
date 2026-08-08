@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
+import { PROJECTION_PATH, SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
 import { ZERO, add } from '@/domain/money'
 import { savingCapacity, savingLeft, savingRate } from '@/domain/stats'
 import { fr } from '@/i18n/fr'
@@ -13,7 +13,9 @@ import {
 } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
+import { ForecastIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
+import { Row, RowGroup } from '@/ui/RowGroup'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
 import { MonthTile } from './MonthTile'
@@ -159,6 +161,23 @@ export function SavingsPage() {
           <Suspense fallback={null}>
             <YearSection />
           </Suspense>
+
+          {/* Et après l'année, les années. La porte du simulateur vit ici parce
+              que c'est ici qu'on se demande ce que deviendra ce qu'on place —
+              pas dans la navigation, qui aurait posé une cinquième destination
+              au même rang que les quatre écrans de « Gérer » pour ne rien
+              raccourcir (voir `PROJECTION_PATH` dans `app/routes.ts`).
+              Elle ne dépend pas de la section d'année, qui arrive par le
+              réseau : une porte qui n'apparaîtrait qu'une fois le graphique
+              chargé serait une porte qu'on rate. */}
+          <RowGroup>
+            <Row
+              label={fr.savings.projections}
+              description={fr.savings.projectionsHint}
+              icon={ForecastIcon}
+              to={PROJECTION_PATH}
+            />
+          </RowGroup>
         </div>
       )}
     </>

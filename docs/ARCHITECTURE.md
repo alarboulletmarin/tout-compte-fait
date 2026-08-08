@@ -33,14 +33,18 @@ doit faire, et le [design system](DESIGN-SYSTEM.md) de quoi elle a l'air.
   en une fonction pure. Le rendu est dans `src/app/DataNotice.tsx`, qui est le
   seul bandeau de la coquille.
 - `src/i18n/fr.ts` — toutes les chaînes. Aucun texte en dur dans un composant.
-  Trois exceptions, et la même raison : `src/i18n/legal.ts`,
-  `src/i18n/landing.ts` et `src/i18n/history.ts`. Ce fichier-ci est importé par
-  presque tous les composants, donc il pèse dans le graphe initial que
-  `scripts/size.mjs` plafonne ; ces trois-là sont rendues par des écrans chargés
-  à la demande. Elles voyagent avec eux. L'historique emportait déjà ses trois
-  graphiques, dont aucun autre écran ne se sert : sa prose n'avait pas plus de
-  raison qu'eux de peser sur l'écran du mois. Le nom de l'écran, lui, reste dans
-  `fr.nav` — la barre d'onglets le dit sans charger la page.
+  Quatre exceptions, et la même raison : `src/i18n/legal.ts`,
+  `src/i18n/landing.ts`, `src/i18n/history.ts` et `src/i18n/projection.ts`. Ce
+  fichier-ci est importé par presque tous les composants, donc il pèse dans le
+  graphe initial que `scripts/size.mjs` plafonne ; ces quatre-là sont rendues par
+  des écrans chargés à la demande. Elles voyagent avec eux. L'historique
+  emportait déjà ses trois graphiques, dont aucun autre écran ne se sert : sa
+  prose n'avait pas plus de raison qu'eux de peser sur l'écran du mois. Les
+  projections sont le même cas, en plus net encore — ce que cet écran refuse de
+  calculer demande plus de mots que ce qu'il calcule. Le nom de l'écran, lui,
+  reste là où vit la porte qui y mène : `fr.nav` pour l'historique, que la barre
+  d'onglets nomme sans le charger, `fr.savings` pour les projections, dont
+  l'écran Épargne porte la rangée.
 - `src/persistence/schemaDoc.ts` — le modèle de données à donner à un assistant,
   et `src/persistence/example.ts` — le document d'exemple. Tous deux dérivés du
   code, tous deux chargés à la demande.
@@ -78,7 +82,22 @@ suffisait à le perdre. C'est le même défaut, du côté lecture, que celui que
 `period.ts` corrige du côté écriture.
 
 **Taux.** En points de base entiers — 450 = 4,50 %. Aucun flottant ne touche un
-calcul financier, pas plus un taux qu'un montant.
+calcul financier, pas plus un taux qu'un montant. La saisie qui y mène vit dans
+`domain/rate.ts`, en pendant exact de `parseAmount` : elle est née dans le
+formulaire des crédits, et les projections posaient exactement la même question
+— une primitive nommée d'après son premier appelant est une primitive qu'on
+recopie au deuxième.
+
+**Deux mensualisations d'un taux annuel coexistent, et c'est délibéré.**
+`domain/debt.ts` divise par douze, `domain/projection.ts` prend la racine
+douzième. Ce n'est pas une incohérence à réparer : un prêt immobilier français
+**est** contractuellement défini au taux nominal proportionnel, où `r/12` est la
+convention exacte et non une approximation. Une projection, elle, capitalise un
+rendement sans contrat, et la seule définition qui se tienne est celle qui,
+douze fois de suite, redonne le taux annoncé. Confondre les deux se paie : à
+11 %, `r/12` capitalisé rend 11,57 % par an, soit 216 k€ au lieu de 202 sur
+250 €/mois pendant vingt ans — et toujours dans le sens qui flatte. Chacun des
+deux modules dit pourquoi il fait ce qu'il fait, à l'endroit où il le fait.
 
 **La présentation avant la question.** L'écran d'arrivée était « Comment
 s'appelle ton foyer ? » : on demandait de répondre avant d'avoir dit ce que
@@ -250,6 +269,37 @@ avec `n` le nombre de mensualités confirmées. Retrancher les mensualités vers
 serait faux dès qu'il y a des intérêts : sur 100 000 € à 4 % sur 20 ans, la
 première année amortit ~3 000 € pour ~7 300 € versés, et le raccourci
 annoncerait le prêt soldé des années trop tôt.
+
+**Projection.** Un seul moteur, `projectSeries`, et rien à côté. Le tracé, les
+jalons et le chiffre d'arrivée lisent la **même** série : il n'existe pas de
+formule fermée qui donnerait la valeur finale plus vite, parce que deux façons
+de calculer un capital donneraient deux vérités à tenir d'accord — c'est ce que
+la valeur estimée d'un support refuse déjà. Les flottants restent à l'intérieur
+de la boucle et ne sont arrondis qu'au moment d'être posés dans la série :
+arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans,
+et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
+d'affichage. C'est le motif de `remainingPrincipal`.
+
+**Le simulateur n'écrit rien, et ne lit rien.** Aucune `Entry`, aucun support,
+aucun relevé n'entre dans `features/projection/` ; rien n'en ressort dans le
+document, donc rien dans les exports ni dans le schéma qu'on donne à un
+assistant. Une projection est une **question qu'on pose**, pas un fait du
+foyer — et un `expectedReturn` posé sur un support « au cas où » serait
+exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent en
+`localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
+lecture, comme un document importé l'est par `validate.ts`, parce que cette
+clé-là s'édite depuis la console du navigateur.
+
+**Les versements cumulés sont une aire, pas une quatrième courbe.** L'app n'a
+que trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les
+deux thèmes — `--accent-2`, `--text`, `--text-muted` —, mesure faite pour
+`charts/CumulativeLines.tsx`. C'est cette contrainte-là qui plafonne les
+scénarios à trois, et c'est elle qui a rendu l'aire nécessaire ; elle s'est
+avérée meilleure que le trait qu'elle remplace, puisqu'elle découpe le
+graphique en deux lectures qu'il n'y a plus à expliquer — ce qui vient de la
+poche, ce qui vient du taux. Son échelle part de zéro, contrairement à la courbe
+d'un support, qui part de son minimum relevé : une aire mesurée depuis une base
+flottante ne dit rien.
 
 **Prorata des revenus.** Le revenu d'un membre est *dérivé* de ses récurrences
 de nature `resource`, ramenées au mois — il n'est stocké nulle part. Le déclarer

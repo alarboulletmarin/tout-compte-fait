@@ -163,6 +163,28 @@ export const valuationNewPath = (supportId: string): string =>
 export const valuationEditPath = (supportId: string, valuationId: string): string =>
   `${SAVINGS_PATH}/${supportId}/valeur/${valuationId}`
 
+/**
+ * Le simulateur de projections — à la racine, et sous l'écran Épargne.
+ *
+ * **Il n'est pas un cinquième rang de « Gérer ».** C'est le raisonnement des
+ * avances, mot pour mot : elles vivent sous les récurrences, dont leur
+ * mensualité est une, et la liste des récurrences porte leur rangée plutôt que
+ * la navigation. Une projection vit sous l'épargne — c'est là qu'on se demande
+ * ce que deviendra ce qu'on place —, et l'écran Épargne porte sa rangée. Une
+ * porte de plus au même rang que les quatre autres défferait ce rangement pour
+ * ne rien raccourcir.
+ *
+ * **À la racine, et non sous `/epargne/`**, pour une raison qui n'est pas
+ * cosmétique : `isFocusScreen` compte comme fiche *tout* ce qui vit sous
+ * `/epargne/`, parce que tout ce qui y vit est un objet de l'épargne — un
+ * support, un relevé, un formulaire. Le simulateur n'en est pas un : c'est une
+ * destination pleine, qu'on ouvre pour elle-même et qu'on met en signet. La
+ * ranger sous ce préfixe aurait demandé une exception à une règle qui n'en a
+ * pas, ce qui coûte plus qu'un segment d'URL. `/avances` est déjà à la racine
+ * pour la même raison.
+ */
+export const PROJECTION_PATH = '/projections'
+
 /* Les avances ont leur écran, pour la raison qui donne le sien aux crédits :
    elles vivent sous les récurrences — leur mensualité en est une — mais ce
    qu'elles ajoutent est un suivi à part, qu'on ouvre quand on le cherche. En
@@ -337,6 +359,10 @@ const MORE_PREFIXES = [
   SPLIT_PATH,
   CREDITS_PATH,
   ADVANCES_PATH,
+  /* Comme les avances : la barre ne porte pas cet écran, mais elle doit dire
+     d'où l'on vient. Sans lui, ouvrir les projections éteindrait les quatre
+     onglets d'un coup. */
+  PROJECTION_PATH,
   ABOUT_PATH,
 ]
 

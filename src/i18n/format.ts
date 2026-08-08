@@ -80,6 +80,52 @@ export function formatSignedMoney(value: Money, currency: string): string {
   return prefix + formatMoney(value, currency)
 }
 
+/* Une décimale au plus, et jamais imposée : `formatDecimal` en force une pour
+   que « 4 mois » ne se lise pas comme un compte exact, mais ici le nombre est
+   déjà annoncé comme approché — « 7,0 k€ » posé sous « 14 k€ » sur un axe n'y
+   ajoute qu'un zéro à lire. */
+const compactFormatter = new Intl.NumberFormat('fr-FR', {
+  useGrouping: true,
+  maximumFractionDigits: 1,
+})
+
+/**
+ * Un montant qui sort d'un modèle, arrondi à ce que ce modèle sait dire :
+ * « 202 k€ », « 1,2 M€ », « 250 € ».
+ *
+ * Il existe pour les projections, et pour la règle qui les tient : **la
+ * précision affichée ne doit pas dépasser celle du calcul**. Une projection à
+ * taux constant sur vingt ans est juste à quelques milliers d'euros près — le
+ * taux réel varie tous les ans, l'inflation aussi —, et l'annoncer « 202 136,25 € »
+ * en ferait un relevé de compte. C'est le défaut central des simulateurs
+ * bancaires : le centime affiché est ce qui fait passer une hypothèse pour une
+ * mesure.
+ *
+ * L'échelle garde deux à trois chiffres significatifs à chaque palier, et
+ * jamais un centime. Sous cent euros, l'euro entier n'est pas une fausse
+ * précision — c'est déjà l'ordre de grandeur du bruit du modèle.
+ *
+ * Le signe « ≈ » n'est pas ici : il dit *ce qu'est* le nombre, pas comment il
+ * s'écrit, et il vit donc dans les gabarits de `i18n/projection.ts`, à côté des
+ * phrases qui le nomment.
+ */
+export function formatRoundedMoney(value: Money, currency: string): string {
+  const symbol = currencySymbol(currency)
+  const sign = value < 0 ? '−' : ''
+  const units = Math.abs(value) / 100
+  const write = (body: string, prefix = ''): string =>
+    `${sign}${body}${NBSP_NARROW}${prefix}${symbol}`
+
+  if (units >= 1_000_000) return write(compactFormatter.format(units / 1_000_000), 'M')
+  if (units >= 10_000) return write(groupFormatter.format(Math.round(units / 1000)), 'k')
+  if (units >= 1_000) return write(compactFormatter.format(units / 1000), 'k')
+  /* Le palier des centaines s'arrondit à la dizaine : personne ne programme un
+     virement mensuel à 254,37 €, et c'est précisément le chiffre que le mode
+     inverse produit. */
+  if (units >= 100) return write(groupFormatter.format(Math.round(units / 10) * 10))
+  return write(groupFormatter.format(Math.round(units)))
+}
+
 /** Pourcentage arrondi à l'entier : « 42 % ». */
 export function formatPercent(value: number, digits = 0): string {
   return `${(value * 100).toFixed(digits).replace('.', ',')}${NBSP_NARROW}%`
