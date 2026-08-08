@@ -92,7 +92,7 @@ joignable dans les deux états ; ce qu'elle propose, lui, en dépend — les por
 qui remplacent des données ne s'affichent que devant quelqu'un qui n'en a pas.
 
 Corollaire du même déplacement : `resetAll()` retombe sur elle. Le formulaire
-s'affichait jusqu'ici à l'URL de l'écran d'où l'on venait, `/reglages` comprise.
+s'affichait jusqu'ici à l'URL de l'écran d'où l'on venait, `/donnees` comprise.
 
 **Elle démontre le calcul, pas seulement la grille.** La bento montrait un seul
 écran — le mois —, et ce qui distingue vraiment l'app y était *raconté* :
@@ -307,21 +307,51 @@ sous laquelle elle est rangée, puis de les ouvrir une par une. Passé un
 certain volume, une section n'est plus une section — c'est un écran (voir
 ci-dessous).
 
-**Les réglages sont une section, pas un écran.** La page portait tout : les
-personnes, le catalogue entier, le thème, la devise, le stockage, l'export,
-l'import, le schéma, le jeu d'exemple, l'effacement total et « à propos », avec
-trois formulaires ouverts en permanence — **3 725 px à 390 px de large**, jeu
-d'exemple chargé. C'était une console d'administration, pas une page de réglages
-de téléphone : consulter, naviguer, créer et modifier s'y faisaient au même
-endroit et au même poids visuel, et changer de thème demandait de traverser
-quarante-sept catégories.
+**Les réglages étaient une section, puis ils ont cessé d'exister.** La page
+portait tout : les personnes, le catalogue entier, le thème, la devise, le
+stockage, l'export, l'import, le schéma, le jeu d'exemple, l'effacement total et
+« à propos », avec trois formulaires ouverts en permanence — **3 725 px à 390 px
+de large**, jeu d'exemple chargé. C'était une console d'administration, pas une
+page de réglages de téléphone : consulter, naviguer, créer et modifier s'y
+faisaient au même endroit et au même poids visuel, et changer de thème demandait
+de traverser quarante-sept catégories.
 
-Une entrée, donc — **952 px**, cinq groupes, sept rangées, chacune disant sa
-valeur — et neuf vues sous `/reglages/…` : l'apparence, les personnes, la fiche
-d'un membre, le catalogue, une famille, les deux formulaires de création, le
-stockage, les données. Chaque vue porte son URL, ce qui rend le retour du
-navigateur, le partage d'un lien et le bouton de l'écran identiques à ceux du
-reste de l'app — là où un état de composant n'aurait été connu d'aucun des trois.
+Premier temps : une entrée — **952 px**, cinq groupes, sept rangées, chacune
+disant sa valeur — et neuf vues sous `/reglages/…` : l'apparence, les personnes,
+la fiche d'un membre, le catalogue, une famille, les deux formulaires de
+création, le stockage, les données. Chaque vue porte son URL, ce qui rend le
+retour du navigateur, le partage d'un lien et le bouton de l'écran identiques à
+ceux du reste de l'app — là où un état de composant n'aurait été connu d'aucun
+des trois.
+
+**Second temps : le mot lui-même était le problème.** Réduire la page ne dit
+toujours pas pourquoi les personnes et les catégories sont rangées sous
+« Réglages ». Elles n'y règlent rien : qui compose le foyer et sous quelles
+étiquettes on classe sont **la structure du budget**, et on ne les touche pas
+pour changer l'allure de l'app mais parce qu'on a déménagé ou parce qu'une
+dépense n'a pas d'étiquette où aller. Les données non plus — sauvegarder n'est
+pas un goût. « Réglages » ne nommait donc pas une intention, il nommait ce qui
+restait, et l'écran « Plus » l'exposait comme une destination unique là où il y
+en avait sept.
+
+Le critère de rangement n'est plus « où peut-on techniquement ranger cette
+fonctionnalité ? » mais « avec quelle intention vient-on ? », et il en sort
+quatre — **Gérer** (ce qui décide de ce que le budget calcule), **Organiser**
+(qui y figure, sous quelles étiquettes), **Données** (où elles vivent, comment
+en sortir une copie), **Application** (ce qui ne touche qu'à la présentation).
+« Plus » porte les quatre, la page d'entrée disparaît, et les cinq vues
+remontent à la racine : `/personnes`, `/categories`, `/apparence`, `/stockage`,
+`/donnees`. Un écran rangé sous un parent qui n'existe plus n'aurait gardé de la
+hiérarchie que ce qu'elle avait de faux — et `legacySettingsTarget` rend les
+anciennes adresses à leurs écrans par simple retrait du préfixe, ce qui est
+exactement pourquoi aucun segment n'a été renommé au passage.
+
+Le gain se compte en crans : « Plus → Réglages → Catégories » devient « Plus →
+Catégories », et « Plus → Réglages → Données → Exporter/importer » devient
+« Plus → Exporter/importer ». L'écran est un peu plus long, et c'est le bon
+échange sur un téléphone — quatre groupes qu'on comprend en les balayant valent
+mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce qu'il
+contient.
 
 **Le thème est descendu dans une vue, et c'est un revirement.** Il restait
 réglable sur place, et l'argument tenait : trois positions, un geste, l'enfouir
@@ -338,14 +368,25 @@ le seul réglage qui se fasse encore sur place, et pour la raison inverse : six
 codes dans un sélecteur natif n'ont rien à montrer qu'une vue rendrait mieux.
 
 Deux conséquences, l'une et l'autre écrites une fois : `isFocusScreen` compte
-désormais `/reglages/…` mais pas `/reglages`, ce qui retire le bouton flottant
-des vues qui ont déjà leur propre action principale (« Ajouter un membre »,
-« Ajouter une famille ») ; et la barre d'onglets garde « Réglages » allumé sur
-`/a-propos`, qui vit à la racine — elle parle de l'app, pas d'un foyer — mais
-qu'on n'atteint, sous 1024px, que par les réglages.
+les cinq vues mais pas « Plus », ce qui retire le bouton flottant des écrans qui
+ont déjà leur propre action principale (« Ajouter un membre », « Ajouter une
+famille ») ; et la barre d'onglets garde « Plus » allumé sur `/a-propos`, qui vit
+à la racine — elle parle de l'app, pas d'un foyer — mais qu'on n'atteint, sous
+1024px, que par lui.
 
-Le groupe et la rangée sont deux primitives de vingt lignes
-(`features/settings/SettingsRow.tsx`), au-dessus de `Tile` et d'`Eyebrow` : la
+**La colonne latérale, elle, nomme « Plus » au lieu de le déplier**, et c'est un
+revirement. Elle le dépliait tant qu'il tenait en deux groupes ; il en porte
+quatre, les onze destinations doubleraient la colonne, et surtout l'un d'eux
+n'est pas fait que de liens — la devise se règle sur place, dans un sélecteur,
+et une colonne de navigation n'a pas à héberger un champ de formulaire. Aucune
+porte n'est perdue au change : ce qu'elle montrait d'un clic, elle le montre
+encore, et ce qui vivait derrière « Réglages » vit derrière « Plus », au même
+rang qu'avant. `isUnderMore` garde son lien allumé dans les cinq vues dont il
+est la seule porte — un prédicat plus étroit que celui des onglets, puisque la
+colonne déplie « Gérer » et porte son propre lien « À propos ».
+
+Le groupe et la rangée sont deux primitives de vingt lignes (`ui/RowGroup.tsx`),
+au-dessus de `Tile` et d'`Eyebrow` : la
 tuile redevient ce que le DS §6 en dit — un groupe logique —, et la hiérarchie
 passe à l'intérieur, en filets et en lettres, plutôt qu'en cartes empilées.
 
@@ -624,8 +665,8 @@ La barre porte **quatre** onglets — Le mois, Calendrier, Historique, Plus — 
 plus cinq. Ce n'est pas un choix de largeur mais d'architecture : cinq était le
 plafond à 320px, et ce plafond décidait qu'un écran de plus n'aurait aucune
 adresse. Quatre écrans réels vivaient dans ce cas. Le quatrième onglet range ce
-qui déborde ; la colonne latérale, qui a la place, déplie les mêmes groupes
-(`SIDEBAR_GROUPS` et `MORE_SECTIONS`, `app/routes.ts`). Voir le DS §6.
+qui déborde, en quatre groupes ; la colonne latérale déplie « Gérer » et nomme
+« Plus » pour le reste (`SIDEBAR_GROUPS`, `app/routes.ts`). Voir le DS §6.
 
 L'écran du mois porte **deux** grilles bento et non une, séparées par la section
 « À confirmer » : la grille sait ranger des tuiles côte à côte, elle ne sait pas

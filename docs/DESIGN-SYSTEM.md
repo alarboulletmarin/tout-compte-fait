@@ -392,15 +392,31 @@ Elle en portait cinq, ce qui était son plafond à 320px, et ce plafond décidai
 
 | | Barre d'onglets (< 1024px) | Colonne latérale (≥ 1024px) |
 |---|---|---|
-| Contenu | **quatre** destinations : les trois lectures qu'on ouvre pour regarder, puis « Plus » | les mêmes trois, puis les groupes que « Plus » range, dépliés |
-| Ce qui est rangé | un écran « Plus », qui liste les groupes en rangées | rien : la colonne a la place, et un lien vers une page qui la redirait serait un tour sur soi-même |
-| Groupes | — | sans titre, puis « Gérer », puis « Réglages » |
+| Contenu | **quatre** destinations : les trois lectures qu'on ouvre pour regarder, puis « Plus » | les mêmes quatre, dont « Gérer » déplié |
+| Ce qui est rangé | un écran « Plus », qui liste quatre groupes en rangées | ce que « Plus » range au-delà de « Gérer » : la colonne dépliait tout tant qu'il tenait en deux groupes, mais onze destinations la doubleraient et l'une d'elles est un sélecteur, pas un lien |
+| Groupes | — | sans titre, puis « Gérer », puis « Plus » seul |
+
+**« Plus » range par intention, pas par commodité.** Il a porté un groupe
+« Réglages » qui contenait les personnes, les catégories, l'apparence, la devise,
+les données et « à propos » — six natures de tâches derrière un mot qui n'en
+nomme aucune. Le critère n'est pas « où peut-on ranger cette fonctionnalité ? »
+mais « avec quelle intention vient-on ? », et il en sort quatre : **Gérer** (ce
+qui décide de ce que le budget calcule), **Organiser** (qui y figure, sous
+quelles étiquettes), **Données** (où elles vivent, comment en sortir une copie),
+**Application** (ce qui ne touche qu'à la présentation). Trois verbes et un nom,
+parce que le quatrième ne se fait pas.
+
+Une rangée dit **sa valeur** quand elle en a une — « Maison · 3 membres »,
+« 47 catégories · 12 familles », « Système · Classique » —, une phrase sinon.
+Jamais un chiffre du budget : chaque écran d'arrivée dit déjà le sien, et les
+répéter ici ferait un second tableau de bord, en retard d'une règle sur le
+premier.
 
 Un groupe se titre en `t-eyebrow` atténué, `aria-hidden` : ce n'est pas une région, c'est une suite de liens qu'une étiquette sépare à l'œil. **Le premier groupe n'a pas de titre** — la colonne doit s'ouvrir sur les destinations quotidiennes, pas sur un mot à lire avant elles.
 
 L'onglet « Plus » reste allumé dans tout ce qu'il range. `NavLink` n'apparie que son propre préfixe ; la table des préfixes vit dans `routes.ts`, et sans elle on quittait l'onglet dès le premier pas à l'intérieur — quatre onglets éteints, sans rien pour dire d'où l'on venait.
 
-Le prix est assumé et se dit : les récurrences et les réglages passent de un à deux appuis. Les premières restent à un appui depuis l'état vide du mois, qui est l'endroit où l'on va justement en poser une.
+Le prix est assumé et se dit : les récurrences passent de un à deux appuis, et elles restent à un appui depuis l'état vide du mois, qui est l'endroit où l'on va justement en poser une. Les réglages, eux, en gagnent un : « Plus → Catégories » remplace « Plus → Réglages → Catégories ».
 
 **Bouton de saisie flottant** — un disque de 56px en lime, au coin bas-droit, au-dessus de la barre d'onglets et sous les surcouches. Il n'existe que sous 1024px : au-delà, la rangée de boutons en tête de l'écran du mois est à l'écran et ne défile jamais hors de vue. Une porte par largeur et pas deux — les mêmes trois boutons deux fois sur un écran ne font pas deux occasions.
 

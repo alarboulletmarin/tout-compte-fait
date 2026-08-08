@@ -46,8 +46,17 @@ const DIST = 'dist'
    formulaire quotidien, et il faut donc qu'il soit là avec lui. Le reste est la
    prose : une trentaine de chaînes d'interface, que `fr.ts` porte avant le
    premier rendu. Quatre kibioctets de plus, dont on retrouve la marge d'usage —
-   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran. */
-const BUDGET_KIB = 214
+   de quoi ajouter une fonctionnalité, pas de quoi ramener un écran.
+
+   Relevé à 215 pour le **rangement de « Plus »**. L'écran a absorbé la page
+   d'entrée des réglages, qui se chargeait à la demande ; lui ne le peut pas —
+   c'est un onglet de la barre, et un aller-retour de réseau pour l'atteindre
+   coûterait plus que ce qu'il pèse. Ce qui remonte dans le graphe initial est
+   un demi-kibioctet : le sélecteur de devise, les noms des thèmes et des
+   palettes, et quatre groupes de rangées au lieu de deux. Le budget ne suit pas
+   la mesure au plus juste — il resterait alors un demi-kibioctet de marge, ce
+   qui n'est plus une marge mais un plafond. */
+const BUDGET_KIB = 215
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

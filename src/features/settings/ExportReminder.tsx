@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { SETTINGS_DATA_PATH } from '@/app/routes'
+import { DATA_PATH } from '@/app/routes'
 import { fr } from '@/i18n/fr'
 import { IconButton } from '@/ui/Button'
 import { Close } from '@/ui/Icons'
@@ -37,7 +37,7 @@ export function ExportReminder({ never, onDismiss }: { never: boolean; onDismiss
               celle-ci n'a plus de bouton d'export, et le rappel demandait de
               retrouver soi-même ce qu'il venait de réclamer. */}
           <Link
-            to={SETTINGS_DATA_PATH}
+            to={DATA_PATH}
             className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
           >
             {fr.settings.export}

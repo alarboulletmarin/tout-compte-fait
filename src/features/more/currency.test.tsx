@@ -11,7 +11,7 @@ import { closeDb } from '@/persistence/db'
 import { useStore } from '@/store/store'
 import { Amount } from '@/ui/Amount'
 import { CurrencyContext } from '@/ui/currency'
-import { SettingsPage } from './SettingsPage'
+import { MorePage } from './MorePage'
 
 /**
  * La devise était stockée, validée, migrée, exportée et lue par tous les
@@ -35,10 +35,14 @@ describe('la devise', () => {
     closeDb()
   })
 
-  it('se règle depuis les réglages, et l’écrit dans le document', async () => {
+  /* Elle se règle sur « Plus », et c'est le seul contrôle de l'écran : six
+     codes dans un sélecteur natif n'ont rien à montrer qu'une vue rendrait
+     mieux — l'argument inverse de celui qui a envoyé les palettes dans la
+     leur. */
+  it('se règle depuis « Plus », et l’écrit dans le document', async () => {
     render(
       <MemoryRouter>
-        <SettingsPage />
+        <MorePage />
       </MemoryRouter>,
     )
 

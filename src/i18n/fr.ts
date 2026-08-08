@@ -180,7 +180,6 @@ export const fr = {
     calendar: 'Calendrier',
     subscriptions: 'Récurrences',
     history: 'Historique',
-    settings: 'Réglages',
     styleguide: 'Styleguide',
     about: 'À propos',
     landing: 'La présentation',
@@ -189,19 +188,32 @@ export const fr = {
        une autre façon d'atteindre ce qui est déjà dans la barre. */
     more: 'Plus',
     moreHint: 'Le reste de tes écrans, et les réglages.',
-    /* Le titre du groupe qui rassemble ce qu'on tient, par opposition aux trois
-       lectures qu'on ouvre pour regarder. Un verbe, parce qu'on y va pour poser
-       une règle ou corriger un partage, pas pour lire un chiffre. */
+    /* Les quatre titres de groupe de l'écran « Plus ». Ils ne nomment pas des
+       écrans mais des **intentions** — ce pour quoi on vient —, et c'est ce qui
+       a permis de retirer « Réglages », qui n'en nommait aucune : il rangeait
+       les personnes, les catégories, l'apparence, la devise, les données et
+       « à propos » derrière un mot qui ne dit rien de ce qu'on y cherche.
+       Trois verbes et un nom, parce que le quatrième groupe ne se fait pas :
+       « Application » est ce dont on règle l'apparence, pas une action. */
     manage: 'Gérer',
+    /* Pas « Configuration », qui retomberait dans le générique de « Réglages »,
+       ni « Budget », que les quatre écrans de « Gérer » composent tout autant.
+       « Organiser » dit ce qu'on y fait : structurer les personnes et les
+       étiquettes dont le reste de l'app se sert. */
+    organise: 'Organiser',
+    data: 'Données',
+    application: 'Application',
     savings: 'Épargne',
     split: 'Répartition',
     /* Ce que chaque rangée de « Gérer » dit d'elle-même : sur un écran qui n'est
-       qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir. */
+       qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir.
+       Les rangées des trois autres groupes n'en ont pas besoin — elles disent
+       leur **valeur** (« Maison · 3 membres », « Système · Classique »), ce qui
+       renseigne mieux qu'une phrase et évite d'ouvrir. */
     subscriptionsHint: 'Ce qui revient chaque mois, écrit une fois.',
     savingsHint: 'Ce que tu peux mettre de côté, et où le placer.',
     splitHint: 'Qui verse quoi sur les charges communes.',
     creditsHint: 'Tes crédits en cours et ce qu’il reste à rendre.',
-    settingsHint: 'Personnes, catégories, apparence, données.',
     aboutHint: 'Ce que fait l’app, et ce qu’elle ne fait pas.',
   },
 
@@ -402,17 +414,10 @@ export const fr = {
   },
 
   settings: {
-    /* Les deux étiquettes de groupe de la page d'entrée. Elles ne nomment pas
-       un écran mais une intention — ce qu'on vient y régler —, et c'est ce qui
-       permet à « Thème » et « Devise » de tenir en deux rangées là où chacun
-       occupait une tuile entière. */
-    preferences: 'Préférences',
-    organisation: 'Organisation',
-
     /* L'apparence est une rangée qui dit sa valeur — « Système · Douce » — et
        mène à sa vue. Le thème y a suivi la palette : trois positions tenaient
-       sur la page d'entrée, six aperçus non, et les séparer aurait fait régler
-       les couleurs à deux endroits. */
+       sur une rangée, six aperçus non, et les séparer aurait fait régler les
+       couleurs à deux endroits. */
     appearanceSummary: '%s · %s',
 
     currency: 'Devise',
@@ -552,11 +557,11 @@ export const fr = {
     categorySearchPlaceholder: 'Carburant',
     categorySearchEmpty: 'Aucune catégorie ne correspond à « %s ».',
 
-    data: 'Données',
     /* Les deux vues que le groupe « Données » ouvre, et ce qu'elles contiennent
        — dit en une ligne chacune, à la place des deux tuiles pleines qu'elles
        étaient. « Sur cet appareil » porte son titre dans `storage`, avec le
-       reste de ce qui parle au navigateur. */
+       reste de ce qui parle au navigateur ; le titre du groupe, lui, est dans
+       `nav`, avec les trois autres intentions de l'écran « Plus ». */
     storageSummary: 'Données conservées localement',
     transfer: 'Exporter / importer',
     transferSummary: 'Sauvegarder ou restaurer les données',

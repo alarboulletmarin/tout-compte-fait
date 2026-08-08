@@ -12,6 +12,56 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — « Réglages » disparaît, et « Plus » range par intention
+
+« Réglages » ne nommait pas une intention, il nommait ce qui restait. Derrière
+ce mot vivaient les personnes, le catalogue des catégories, l'apparence, la
+devise, le stockage, l'export/import et « à propos » : sept destinations de six
+natures différentes, présentées par l'écran « Plus » comme une porte unique. Et
+le mot mentait sur trois d'entre elles au moins — qui compose le foyer et sous
+quelles étiquettes on classe sont **la structure du budget**, pas une préférence
+d'application, et sauvegarder ses données n'est pas un goût.
+
+- **Quatre groupes, sur le critère « avec quelle intention vient-on ? »** :
+  **Gérer** (récurrences, épargne, répartition, crédits), **Organiser**
+  (personnes, catégories), **Données** (sur cet appareil, exporter/importer),
+  **Application** (apparence, devise, à propos). Trois verbes et un nom, parce
+  que le quatrième ne se fait pas. « Organiser » plutôt que « Configuration »,
+  qui retomberait dans le générique de « Réglages », et plutôt que « Budget »,
+  que les quatre écrans de « Gérer » composent tout autant.
+- **La page d'entrée des réglages est supprimée**, et les cinq vues remontent
+  d'un cran : `/personnes`, `/categories`, `/apparence`, `/stockage`,
+  `/donnees`. « Plus → Réglages → Catégories » devient « Plus → Catégories », et
+  « Plus → Réglages → Données → Exporter/importer » devient
+  « Plus → Exporter/importer ». Un niveau de navigation pour quatre options
+  n'était plus un rangement, c'était un détour.
+- **Les anciennes adresses répondent encore.** `/reglages/…` redirige par simple
+  retrait du préfixe — aucun segment n'a été renommé au passage, exprès —, si
+  bien qu'un signet sur `/reglages/categories/fam-1/nouvelle` retrouve le
+  formulaire qu'il visait et pas seulement l'accueil de la section. Même filet
+  que `/abonnements`, et même motif.
+- **Chaque rangée dit sa valeur** — « Maison · 3 membres »,
+  « 47 catégories · 12 familles », « Système · Classique », « Version 1.0.0 » —
+  ou, quand elle n'en a pas, une phrase. Jamais un chiffre du budget : les
+  écrans qui les calculent les disent déjà, et un second tableau de bord serait
+  en retard d'une règle sur le premier. L'écran est un peu plus long qu'avant,
+  et c'est le bon échange sur un téléphone — quatre groupes qu'on comprend en
+  les balayant valent mieux qu'un écran court qui oblige à en ouvrir un autre
+  pour savoir ce qu'il contient.
+- **La colonne latérale nomme « Plus » au lieu de le déplier**, et c'est un
+  revirement assumé. Elle le dépliait tant qu'il tenait en deux groupes ; il en
+  porte quatre, les onze destinations la doubleraient, et l'un des groupes n'est
+  pas fait que de liens — la devise se règle dans un sélecteur, et une colonne
+  de navigation n'héberge pas un champ de formulaire. Aucune porte n'est perdue :
+  ce qu'elle montrait d'un clic, elle le montre encore, et ce qui vivait derrière
+  « Réglages » vit derrière « Plus », au même rang qu'avant.
+- **Rien du langage visuel ne change** : mêmes tuiles, mêmes filets, mêmes
+  étiquettes en capsule, même rangée à titre, description et chevron. Le défaut
+  n'était pas dans le dessin, il était dans le rangement.
+
+Le budget de taille passe de 214 à 215 Kio : « Plus » a absorbé une page qui se
+chargeait à la demande, et lui ne le peut pas — c'est un onglet de la barre.
+
 ### Ajouté : la promesse se lit avant la première saisie, pas dans les pages qu'on ne lit pas
 
 « Pas de compte, pas de serveur » était écrit quatre fois : sur la présentation,

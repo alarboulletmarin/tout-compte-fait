@@ -21,7 +21,7 @@ import { IconButton } from '@/ui/Button'
 import { Close } from '@/ui/Icons'
 import { SwipeAway } from '@/ui/SwipeAway'
 import { dataNoticeLevel } from './noticeLevel'
-import { SETTINGS_DATA_PATH } from './routes'
+import { DATA_PATH } from './routes'
 import { StorageAlert } from './StorageAlert'
 
 /**
@@ -54,7 +54,7 @@ function DurabilityNotice({ onDismiss }: { onDismiss: () => void }) {
               stockage depuis qu'elle le résume : le geste et sa raison au même
               endroit. */}
           <Link
-            to={SETTINGS_DATA_PATH}
+            to={DATA_PATH}
             className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
           >
             {fr.settings.export}
