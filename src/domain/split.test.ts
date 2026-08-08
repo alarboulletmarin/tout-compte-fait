@@ -641,6 +641,8 @@ describe('les charges d’un membre, les siennes et sa part du foyer', () => {
     expect(charges).toEqual({
       own: money(4_000),
       common: money(69_445),
+      commonCharge: money(52_778),
+      commonDebt: money(16_667),
       commonTotal: money(125_000),
       shareBp: 5556,
     })
@@ -671,6 +673,18 @@ describe('les charges d’un membre, les siennes et sa part du foyer', () => {
     expect(charges?.commonTotal).toBe(sharedTotal(july, '2026-07', kindOf))
   })
 
+  /* La cascade de la capacité d'épargne lit « charges » et « crédits »
+     séparément : elle ne peut retrancher du commun que ce qui vient de la même
+     nature qu'elle, sans quoi un crédit commun se déduirait des charges et les
+     deux lignes annonceraient chacune un chiffre faux dont la somme, elle,
+     tomberait juste. */
+  it('ventile la part du commun par nature, sans en perdre un centime', () => {
+    expect((charges?.commonCharge ?? 0) + (charges?.commonDebt ?? 0)).toBe(charges?.common)
+    // Le prêt auto est commun : sa part est un crédit, pas une charge.
+    expect(charges?.commonDebt).toBe(allocate(money(30_000), [250_000, 200_000])[0])
+    expect(charges?.commonCharge).toBe(allocate(money(95_000), [250_000, 200_000])[0])
+  })
+
   it('une dépense cochée « à partager » quitte ses charges pour le pot commun', () => {
     const avancee = july.map((e) => (e.id === 'sien' ? { ...e, shared: true } : e))
     const partagee = memberCharges(avancee, '2026-07', 'm-1', kindOf, foyer)
@@ -691,6 +705,8 @@ describe('les charges d’un membre, les siennes et sa part du foyer', () => {
     expect(seul).toEqual({
       own: money(4_000),
       common: money(0),
+      commonCharge: money(0),
+      commonDebt: money(0),
       commonTotal: money(0),
       shareBp: 5556,
     })
@@ -772,6 +788,8 @@ describe('un foyer d’une seule personne', () => {
     expect(charges).toEqual({
       own: money(6_500),
       common: money(95_000),
+      commonCharge: money(95_000),
+      commonDebt: money(0),
       commonTotal: money(95_000),
       shareBp: 10_000,
     })

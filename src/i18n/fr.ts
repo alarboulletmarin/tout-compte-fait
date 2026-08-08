@@ -844,7 +844,7 @@ export const fr = {
        contexte : ce nom-ci doit donc tenir tout seul, là où le chevron affiché
        se suffit du voisinage de l'eyebrow. */
     showSplit: 'Voir le détail de la répartition',
-    showMemberShare: 'Voir le détail du calcul de la part',
+    showMemberShare: 'Voir le détail de ce qu’il y a à verser',
 
     /* La contrepartie de la tuile Répartition, sous un filtre par membre :
        celle-ci montre les parts de tout le monde, celle-là ce que la personne
@@ -855,31 +855,47 @@ export const fr = {
        C'est le geste que la tuile sert : un virement sur le compte joint, dont
        la somme se recopie telle quelle. Le total des charges communes en est
        parti — c'est un chiffre qu'on ne doit pas, et il se lit encore sur
-       l'écran Répartition, qui est fait pour ça. */
+       l'écran Répartition, qui est fait pour ça.
+
+       **Et elle ne parle plus que du virement.** Elle portait sous ce même
+       titre « Charges perso » et « Total à payer », c'est-à-dire deux montants
+       qui ne sont pas un virement mais un coût : le report entre dans l'un et
+       pas dans les autres, si bien qu'un « Total à payer » s'affichait plus
+       petit que le « À verser » posé juste au-dessus. Le coût du mois a
+       maintenant sa tuile — voir `memberCharges` —, et celle-ci pose le calcul
+       de son propre chiffre, dans les mots de l'écran Répartition : sa part du
+       mois, plus la régularisation, égale ce qu'elle verse. */
     /* L'eyebrow nomme le chiffre plutôt que la tuile : un nom de tuile puis
        « À verser sur le commun » juste en dessous disaient deux fois la même
        chose, et cette redite valait les trente pixels qui débordaient. */
     memberShare: 'À verser sur le commun',
-    memberShareOwn: 'Charges perso',
-    memberShareTotal: 'Total à payer',
-    /* Le report a sa tuile, et non une cinquième ligne dans celle-ci : le DS §5
-       plafonne une tuile à un eyebrow, un chiffre, une lecture secondaire et une
-       visualisation, puis tranche — « si elle en demande un cinquième, c'est
-       deux tuiles ». La ligne qu'il portait ici passait à la ligne sur mobile,
-       dans une colonne de 222px, et se faisait couper par le bas. */
-    settlement: 'Régularisation',
-    /* Le mois sans son année, et la direction en deux mots : une 4×1 fait 88px
-       de haut dont 56 utiles, et sur un écran de 320 elle n'offre que 143px à
-       droite du montant. « de juillet 2026 · à verser en moins » y passait à la
-       ligne, et la seconde ligne se faisait couper par le bas. */
-    settlementLess: '%s · en moins',
-    settlementMore: '%s · en plus',
-    srSettlement: 'Régularisation %s : %s sur ce que %s verse au commun ce mois-ci.',
-    /* La lecture de la jauge, et elle seule : les trois montants qu'elle
-       accompagnait se lisent maintenant ligne à ligne dans la tuile, qui n'est
-       plus un bouton derrière lequel tout disparaissait. Le nom du membre y
-       reste, lui : rien dans le contenu ne le porte, il vient du filtre. */
+    /* La lecture de la jauge, et elle seule : les montants qu'elle accompagnait
+       se lisent ligne à ligne dans la tuile, qui n'est plus un bouton derrière
+       lequel tout disparaissait. Le nom du membre y reste, lui : rien dans le
+       contenu ne le porte, il vient du filtre. */
     srMemberShare: '%s porte %s des charges communes.',
+
+    /* Ce que le mois coûte à la personne filtrée, et la seule chose que ses
+       chiffres ne disent jamais : ce qui est à elle, et ce qui est le foyer.
+       `scopeToMember` fond les deux dans chaque total — sans quoi elle se
+       lirait comme si elle vivait sans loyer —, et une fois fondus plus rien ne
+       les sépare : la tuile Charges, « Où part l'argent » et la capacité
+       d'épargne annoncent toutes un montant dont on ne sait plus quelle part on
+       a choisie.
+
+       Elle ne dit pas un mot du virement, et c'est tout son propos : un coût
+       est arrêté au mois où la dépense a eu lieu, un virement se rattrape
+       (§4.7 ter). Les mêler dans une carte était l'erreur qu'elle répare. */
+    /* « Perso et commun » et non « Charges du mois » : la tuile de flux de la
+       même page s'appelle déjà « Charges », et deux étiquettes à un mot près
+       pour deux découpes du même montant se lisent comme deux chiffres
+       différents. L'eyebrow nomme donc la découpe, et les deux lignes en
+       dessous reprennent ses deux mots. Le plafond de 13 caractères ne vaut que
+       pour la `2×1`, seule à rester en demi-colonne sur mobile (DS §5). */
+    memberCharges: 'Perso et commun',
+    memberChargesOwn: 'Charges perso',
+    memberChargesCommon: 'Part du commun',
+    srMemberCharges: '%s de charges pour %s : %s en propre, %s de part du commun.',
 
     /* Quatre soldes qui se ressemblent à l'œil sans dire la même chose. Chacun
        dit son calcul, puis ce qui le sépare de son voisin — c'est la question
@@ -1721,6 +1737,16 @@ export const fr = {
     flowIncome: 'Revenus',
     flowCharges: 'Charges',
     flowDebts: 'Crédits',
+    /* Les mêmes termes, quand le prorata se calcule : la cascade disait
+       « Charges » d'un bloc là où le montant mêlait ses lignes à elle et sa
+       part du pot commun, et c'est justement ce qu'on vient vérifier ici — un
+       loyer partagé pèse autant qu'un crédit, et ne se voyait nulle part. La
+       part du commun se retranche des deux natures à la fois, elle vient donc
+       après elles et non entre les deux. La somme des termes vaut toujours la
+       capacité au centime : ce sont les mêmes totaux, seulement séparés. */
+    flowOwnCharges: 'Charges perso',
+    flowOwnDebts: 'Crédits perso',
+    flowCommon: 'Part du commun',
     capacity: 'Capacité d’épargne',
     capacityHint: 'échéances prévues comprises',
     capacityNegative: 'Les charges dépassent les revenus : il n’y a rien à placer ce mois-ci.',
@@ -1762,7 +1788,7 @@ export const fr = {
     methodExcluded:
       'Un versement n’est pas une charge : il sort du compte, mais il reste à qui le fait. Il ne pèse donc ni dans les charges du mois, ni dans le partage.',
     methodShared:
-      'Sous un filtre, la capacité tient compte de la part des charges communes que la personne porte — au prorata des revenus, comme partout ailleurs.',
+      'La part des charges communes que la personne porte est comptée dans la capacité — au prorata des revenus, comme partout ailleurs. La cascade la pose sur sa propre ligne, crédits communs compris : ce qui reste au-dessus est à elle seule.',
     methodBalance:
       'Le solde du mois, lui, compte le versement comme une sortie : c’est exact en trésorerie, et c’est pour ça que les deux chiffres diffèrent.',
   },
