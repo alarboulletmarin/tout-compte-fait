@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { addMonthsToYm, today, ymOf } from '@/domain/date'
 import { fr } from '@/i18n/fr'
 import { formatYearMonth, tpl } from '@/i18n/format'
@@ -14,7 +15,9 @@ import {
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
+import { InfoIcon } from '@/ui/Icons'
 import { MonthNav } from '@/ui/MonthNav'
+import { Sheet } from '@/ui/Sheet'
 import { useHotkeys } from '@/ui/useHotkeys'
 
 /**
@@ -125,6 +128,53 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
 }
 
 /**
+ * Une phrase, et le reste dans une feuille.
+ *
+ * La règle de lecture tenait sur trois lignes de gris, en tête de chaque écran
+ * du mois, sous la rangée de pilules et avant le premier chiffre : c'est-à-dire
+ * qu'on la relisait tous les jours pour l'avoir comprise une fois. Ce qui doit
+ * rester à l'écran est ce qui change la lecture d'un chiffre — la part du commun
+ * est comprise —, et non la mécanique qui le produit.
+ *
+ * La phrase entière est la cible, et pas un glyphe posé à côté : une rangée de
+ * 44px se vise au pouce, un point d'interrogation de seize pixels non (DS §6,
+ * qui fait déjà de la tuile entière la cible des quatre soldes). Le glyphe reste
+ * au bout, `aria-hidden`, pour dire qu'il y a quelque chose à ouvrir.
+ */
+function ProrataSummary({ short, full, title }: { short: string; full: string; title: string }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true)
+        }}
+        className={cn(
+          '-mx-2 flex min-h-11 w-fit max-w-full items-center gap-2 rounded-inner px-2 text-left',
+          'transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2 active:bg-surface-2',
+        )}
+      >
+        <span className="t-label">{short}</span>
+        <InfoIcon size={16} className="shrink-0 text-muted" aria-hidden="true" />
+      </button>
+
+      <Sheet
+        open={open}
+        onClose={() => {
+          setOpen(false)
+        }}
+        title={title}
+        pullToClose
+      >
+        <p className="t-body">{full}</p>
+      </Sheet>
+    </>
+  )
+}
+
+/**
  * Comment se lisent les chiffres sous un filtre.
  *
  * Un mois filtré sur quelqu'un ne montre pas que ses lignes : il y ajoute sa
@@ -134,7 +184,9 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
  *
  * Quand le prorata ne se calcule pas, ce qui manque est nommé : on retombe sur
  * ses seules lignes, et un total qui ignore le loyer sans le dire vaut moins
- * qu'un total qui l'avoue.
+ * qu'un total qui l'avoue. Ces trois-là ne s'ouvrent pas : elles nomment déjà ce
+ * qui manque, et il n'y a rien de plus à en dire que le geste qu'elles
+ * appellent.
  */
 function ProrataNote() {
   const filter = useMonthFilter()
@@ -145,7 +197,15 @@ function ProrataNote() {
 
   // Le commun se lit à son montant plein, sans prorata : la note dit ce qui
   // entre dans le pot, puisque c'est la seule question qu'on se pose devant.
-  if (filter.kind === 'common') return <p className="t-label">{fr.shell.commonNote}</p>
+  if (filter.kind === 'common') {
+    return (
+      <ProrataSummary
+        short={fr.shell.commonShort}
+        full={fr.shell.commonNote}
+        title={fr.shell.common}
+      />
+    )
+  }
 
   if (active === undefined) return null
   const name = members.get(active)?.name ?? ''
@@ -154,10 +214,14 @@ function ProrataNote() {
     // Seul du foyer, « au prorata des revenus » serait un mensonge poli : la
     // part vaut 100 % et n'a demandé aucun revenu. La note dit ce qui se
     // passe vraiment — ses chiffres sont ceux du foyer entier.
-    if (members.size === 1) {
-      return <p className="t-label">{tpl(fr.shell.prorataSolo, name)}</p>
-    }
-    return <p className="t-label">{tpl(fr.shell.prorata, name)}</p>
+    const solo = members.size === 1
+    return (
+      <ProrataSummary
+        short={solo ? fr.shell.prorataSoloShort : fr.shell.prorataShort}
+        full={tpl(solo ? fr.shell.prorataSolo : fr.shell.prorata, name)}
+        title={fr.shell.prorataSheet}
+      />
+    )
   }
   if (!partial) return null
 

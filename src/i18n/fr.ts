@@ -224,6 +224,7 @@ export const fr = {
        et deux « Tout » sur un même écran ne filtrent pas la même chose. */
     all: 'Tout le monde',
     common: 'Commun',
+    commonShort: 'Le pot commun seul, à son montant plein.',
     commonNote:
       'Le pot commun seul, à son montant plein : les charges et les crédits que personne ne s’est attribués, plus ce qui est coché « à partager ». Aucune part n’est calculée ici — chacun verse la sienne sur l’écran Répartition.',
     /* Une ligne que personne ne porte est commune, par la règle même
@@ -235,13 +236,27 @@ export const fr = {
     /* Les chiffres d'un membre comprennent sa part des charges communes : sans
        elle, chacun se lirait comme s'il vivait sans loyer. La liste des
        échéances, elle, garde les lignes réelles — on confirme une échéance
-       entière, jamais une part. */
+       entière, jamais une part.
+
+       **Une phrase à l'écran, le reste dans une feuille.** La règle complète
+       tenait sur trois lignes de gris, en tête de chaque écran du mois, sous la
+       rangée de pilules et avant le premier chiffre : c'est-à-dire qu'on la
+       relisait tous les jours pour l'avoir comprise une fois. Ce qui doit
+       rester visible est ce qui change la lecture d'un chiffre — la part du
+       commun est comprise —, et pas la mécanique qui le produit. Celle-ci
+       s'ouvre, comme le calcul des quatre soldes (DS §6). */
+    prorataShort: 'Les chiffres incluent sa part des charges communes.',
     prorata: 'Chiffres à la part de %s : sa part des charges communes est comprise, au prorata des revenus. Les listes gardent les échéances entières.',
     /* Le membre seul porte 100 % sans qu'aucun revenu soit exigé : « au
        prorata des revenus » serait un mensonge poli, et la vraie information
        est ailleurs — ses chiffres sont ceux de l'ensemble. */
+    prorataSoloShort: 'Seule personne du foyer : ses chiffres sont ceux de l’ensemble.',
     prorataSolo:
       '%s est la seule personne ici : elle porte tout le commun, et ses chiffres sont ceux de l’ensemble. Les listes gardent les échéances entières.',
+    /* Le titre de la feuille. Les avertissements de prorata incomplet, eux, ne
+       s'ouvrent pas : ils nomment déjà ce qui manque, et il n'y a rien de plus
+       à en dire que le geste qu'ils appellent. */
+    prorataSheet: 'Comment ces chiffres sont calculés',
     prorataMissingOne:
       'Charges communes non réparties, faute de connaître le revenu de %s : seules les lignes à son nom sont comptées.',
     prorataMissingMany:
@@ -1492,31 +1507,45 @@ export const fr = {
 
   savings: {
     title: 'Épargne',
-    subtitle: 'Ce que tu possèdes, où c’est placé, et ce que le mois y ajoute.',
 
     /* --- Le stock : ce que valent les supports ------------------------------
-       Deux lectures qui ne se confondent jamais. La valeur **renseignée** est
-       un fait, relevé à une date. La valeur **estimée** ajoute les mouvements
-       depuis ce relevé, et elle est toujours nommée comme telle : sur un
-       placement, la valeur bouge aussi avec le marché. */
-    total: 'Épargne renseignée',
+       Deux lectures qui ne se confondent jamais. Le **relevé** est un fait, à
+       une date. La valeur **estimée** ajoute les mouvements depuis ce relevé, et
+       elle est toujours nommée comme telle : sur un placement, la valeur bouge
+       aussi avec le marché. */
+    /* « Capital » et non « Épargne » : le mot dit ce qu'on regarde — ce qu'on
+       possède —, là où « Épargne » nomme aussi bien le capital, le versement du
+       mois et la capacité que le budget dégage. Quatre notions sous un seul mot
+       ne s'apprennent pas ; c'est le vocabulaire qui les sépare, et non les
+       paragraphes qu'on ajouterait pour les rattraper. */
+    total: 'Capital d’épargne',
+    totalHint: 'Somme des derniers relevés',
     /* L'épargne est individuelle, et le total le dit : un chiffre de cette
        taille sans propriétaire à côté se lit comme une somme du foyer — celle
-       que cet écran existe précisément pour ne pas montrer.
+       que cet écran existe précisément pour ne pas montrer. Le nom vit sous le
+       chiffre et non dans l'étiquette : celle-ci porte la notion, qui ne change
+       pas d'une personne à l'autre.
        Le gabarit reçoit déjà « d'Andrea » ou « de Marie » : l'élision dépend du
        prénom, donc de `format.de`, et un gabarit ne peut pas la décider. */
-    totalOf: 'Épargne %s',
-    totalHint: 'somme des dernières valeurs relevées',
-    totalNone: 'Aucune valeur renseignée pour l’instant.',
+    totalHintOf: 'Somme des derniers relevés %s',
+    totalNone: 'Aucun relevé pour l’instant.',
     /* Une inconnue n'est pas un zéro : le total ne peut pas se présenter comme
        exact tant qu'un support n'a jamais été relevé. */
-    totalMissingOne: '1 support sans valeur renseignée',
-    totalMissing: '%s supports sans valeur renseignée',
-    netMonth: 'Mouvements nets ce mois-ci',
+    totalMissingOne: '1 support sans relevé',
+    totalMissing: '%s supports sans relevé',
+    /* Le flux, posé sous le stock et jamais dedans. « Mouvements du mois » et
+       non « Ce mois-ci » : c'est déjà le nom de la section d'en dessous, et deux
+       étiquettes identiques à un écran d'intervalle ne désignent pas la même
+       chose ici. */
+    netMonth: 'Mouvements du mois',
 
-    supports: 'Où c’est placé',
+    /* « Mes supports », et plus « Où c'est placé » : la ventilation du mois
+       s'appelait « Où ça se place », à trois blocs de distance. Deux étiquettes
+       à un mot près pour le stock et pour le flux — c'est-à-dire pour les deux
+       notions que cet écran existe pour séparer. */
+    supports: 'Mes supports',
     supportsEmpty:
-      'Aucun support d’épargne. Ajoute ton livret ou ton plan pour suivre ce que tu possèdes.',
+      'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
       'Ajoute une personne pour suivre ton épargne : un support est toujours à quelqu’un.',
     supportAdd: 'Ajouter un support',
@@ -1527,68 +1556,109 @@ export const fr = {
     supportRemoved: 'Support supprimé',
     supportArchived: 'Support archivé',
     supportUnarchived: 'Support rouvert',
-    supportOpen: 'Ouvrir le support %s',
 
-    /* Le formulaire. Le nom et le propriétaire sont les deux seules réponses
+    /* Le formulaire. Le nom et le titulaire sont les deux seules réponses
        exigées : la valeur peut très bien n'être pas connue le jour où l'on
        crée le compte, et l'inventer serait pire que de l'ignorer. */
     supportLabel: 'Nom du support',
     supportLabelPlaceholder: 'Livret A',
     supportLabelRequired: 'Donne un nom à ce support.',
-    supportOwner: 'À qui il est',
+    /* « Titulaire » et non « À qui il est » : c'est le mot d'un compte, et il
+       tient sur une ligne d'étiquette. */
+    supportOwner: 'Titulaire',
+    supportOwnerPlaceholder: 'Choisis une personne',
     supportOwnerRequired: 'Dis à qui est cette épargne : elle est toujours à quelqu’un.',
     supportKind: 'Type',
-    supportKindHint: 'Sert à ranger et à colorer, jamais à calculer.',
+    /* Ce que l'aide disait — « sert à ranger et à colorer, jamais à calculer » —
+       décrivait l'implémentation, pas le geste. Ce qui manque à qui remplit le
+       champ, c'est de savoir à quoi il sert, pas ce qu'il ne fait pas. */
+    supportKindHint: 'Sert à classer le support.',
     supportKindRequired: 'Choisis un type.',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
+    /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin
+       du formulaire de modification et non sur la fiche : ce sont des gestes
+       rares, dont l'un est destructif, et une tuile posée en permanence sous
+       l'historique leur donnait le poids d'une lecture quotidienne. */
+    manage: 'Gestion du support',
 
-    /* --- Les valorisations -------------------------------------------------*/
-    value: 'Valeur actuelle',
-    valueHint: 'Facultatif : laisse vide si tu ne la connais pas.',
-    valueDate: 'Date de cette valeur',
-    valueUnknown: 'Valeur non renseignée',
-    valueKnown: 'Valeur renseignée',
-    valueOn: 'relevée le %s',
-    valueUpdate: 'Mettre à jour la valeur',
-    valueEdit: 'Corriger cette valeur',
-    valueAdded: 'Valeur enregistrée',
-    valueUpdated: 'Valeur corrigée',
-    valueRemoved: 'Valeur supprimée',
-    valueRequired: 'Indique la valeur du support.',
+    /* --- Les relevés -------------------------------------------------------
+       Un **relevé** est une observation datée de ce que vaut le support ; un
+       **mouvement** est de l'argent qui passe. Tout le vocabulaire de ce bloc
+       tient à cette distinction, et c'est elle qui rend l'écran lisible sans
+       une phrase d'explication : « Ajouter un relevé » dit qu'on empile une
+       observation de plus, quand « Mettre à jour la valeur » laissait croire
+       qu'on écrasait la précédente. */
+    value: 'Valeur relevée',
+    /* Le placeholder d'un champ de relevé ne peut pas être « 0,00 » : posé sous
+       « Dernier relevé : 10 631,00 € », il se lit comme une valeur déjà
+       enregistrée — et un champ qu'on laisse tel quel n'écrirait alors pas
+       « rien » mais « ce livret est vide ». Il dit donc ce qu'on attend. */
+    valueNew: 'Nouvelle valeur',
+    valueInitial: 'Premier relevé',
+    valueHint: 'Facultatif : laisse vide si tu ne le connais pas.',
+    valueDate: 'Date du relevé',
+    valueKnown: 'Dernier relevé',
+    /* Sur la fiche et dans la liste : deux formulations pour deux contextes.
+       La première ouvre une tuile, la seconde tient sur une ligne de liste. */
+    valueNone: 'Aucun relevé pour l’instant.',
+    valueNever: 'aucun relevé',
+    valueOn: 'relevé le %s',
+    /* La fraîcheur, en trois paliers et sans une couleur (voir `valuationAge`).
+       Une date seule ne dit pas son âge : personne ne compte les mois de tête
+       devant un « 8 février » posé sous un chiffre. Et un relevé ancien n'est
+       pas une erreur — il attend une confirmation, d'où « à actualiser » et non
+       une alerte. */
+    valueAgeOne: 'relevé il y a 1 mois',
+    valueAge: 'relevé il y a %s mois',
+    valueStale: 'à actualiser · relevé il y a %s mois',
+    valueUpdate: 'Ajouter un relevé',
+    valueFirst: 'Ajouter un premier relevé',
+    valueEdit: 'Corriger le relevé',
+    valueAdded: 'Relevé enregistré',
+    valueUpdated: 'Relevé corrigé',
+    valueRemoved: 'Relevé supprimé',
+    valueRequired: 'Indique la valeur relevée.',
     valueRemove: 'Supprimer ce relevé',
     valueRemoveConfirm:
       'Ce relevé disparaît de l’historique. Les mouvements du support ne bougent pas. Supprimer ?',
     /* Un relevé n'est pas une opération, et l'écran doit le dire une fois :
-       sinon « 18 320 € le 8 août » se lit comme un virement de 18 320 €. */
+       sinon « 18 320 € le 8 août » se lit comme un virement de 18 320 €. La
+       phrase vit là où la confusion est possible — la légende du calcul et les
+       deux formulaires de relevé —, et nulle part ailleurs : sur le formulaire
+       d'un support, où l'on saisit un nom et un titulaire, elle ne répondait à
+       aucune question qu'on se pose. */
     valueMethod:
       'Un relevé de valeur n’est pas un mouvement d’argent : il ne compte ni dans le solde du mois, ni dans les versements, ni dans la capacité d’épargne.',
-    history: 'Historique de valeur',
-    historyEmpty: 'Aucune valeur relevée. Renseigne-la pour suivre son évolution.',
-    historyOne: 'Un seul relevé pour l’instant — la courbe démarre au deuxième.',
+    history: 'Historique des relevés',
+    historyEmpty: 'Aucun relevé. Ajoute le premier pour suivre l’évolution de sa valeur.',
+    historyOne: 'La courbe apparaîtra à partir du deuxième relevé.',
+    /* Une liste qui se coupe doit dire comment voir la suite. « et 12 de plus »
+       annonçait douze lignes sans donner le moyen de les atteindre : un compte
+       sans geste est une impasse. */
+    historyMore: 'Voir les %s autres relevés',
 
     /* --- Relever plusieurs supports d'un coup ------------------------------*/
     /* On ne relève pas ses comptes un par un : les chiffres arrivent ensemble,
        sur un relevé de fin de mois. D'où un écran qui les prend tous, et un
        vocabulaire au pluriel pour ne pas le confondre avec la fiche d'un
        support — où l'on ne parle que de lui. */
-    valuesUpdate: 'Mettre à jour les valeurs',
+    valuesUpdate: 'Mettre à jour les relevés',
     valuesHint:
-      'Reporte ce que disent tes comptes aujourd’hui. Laisse vide ce que tu ne sais pas : une case vide n’enregistre rien.',
-    valuesDateHint: 'La date du relevé que tu as sous les yeux — la même pour tous.',
-    valuesNone: 'Renseigne au moins une valeur, ou reviens en arrière.',
-    valuesAdded: '%s valeurs enregistrées',
+      'Saisis seulement les valeurs que tu as vérifiées. Un champ laissé vide ne change rien.',
+    valuesDateHint: 'Elle vaut pour tous les relevés saisis ci-dessous.',
+    valuesAdded: '%s relevés enregistrés',
+    valuesLast: 'Dernier relevé : %s · %s',
     /* Le chiffre que la banque va confirmer ou corriger : c'est lui qu'on
        compare au relevé, pas la dernière valeur connue. */
-    valuesDrift: 'estimée à %s',
+    valuesDrift: 'estimé à %s',
 
     /* --- La valeur estimée -------------------------------------------------*/
     estimated: 'Valeur estimée',
-    estimatedHint: 'dernière valeur renseignée + mouvements depuis',
     /* Jamais « valeur actuelle » tout court : ce calcul ignore les variations
        de marché, et le présenter comme un fait serait une fausse précision. */
     estimatedWarning:
-      'Estimation : elle ne tient pas compte de ce que le marché a pu faire depuis. Mets la valeur à jour pour la remplacer par un chiffre relevé.',
+      'Estimation : elle ne tient pas compte de ce que le marché a pu faire depuis. Ajoute un relevé pour la remplacer par un chiffre observé.',
     movedSince: 'Mouvements depuis',
     /* Le même chiffre, mais au pluriel des supports : sur un total, « depuis »
        ne désigne pas un relevé mais autant qu'il y a de comptes. */
@@ -1601,7 +1671,7 @@ export const fr = {
     net: 'Net',
     movements: 'Mouvements',
     movementsEmpty: 'Aucun mouvement sur ce support.',
-    movementsMore: 'et %s de plus',
+    movementsMore: 'Voir les %s autres mouvements',
     archived: 'Archivé',
     archivedHint:
       'Un support archivé ne s’affiche plus dans les formulaires. Ses relevés et ses mouvements restent.',
@@ -1637,14 +1707,15 @@ export const fr = {
     contributionHint: 'Facultatif : pose une récurrence mensuelle sur ce support.',
     contributionLabel: 'Versement %s',
 
-    srSupport: '%s, à %s : %s',
     srHistory: 'Évolution de la valeur, de %s le %s à %s le %s.',
 
     /* La cascade, terme par terme. Le résultat seul se croit sur parole ; les
        trois lignes qui le produisent se vérifient, et disent surtout *quoi
        changer* — un crédit qui mange la moitié de la capacité se voit ici, et
-       nulle part ailleurs. */
-    flow: 'Ce que le mois dégage',
+       nulle part ailleurs. Elle a quitté la tuile pour la légende repliée :
+       c'est une vérification, pas une lecture qu'on vient chercher, et posée en
+       permanence elle mettait trois chiffres de plus entre la capacité et le
+       geste qu'elle appelle. */
     flowIncome: 'Revenus',
     flowCharges: 'Charges',
     flowDebts: 'Crédits',
@@ -1652,9 +1723,12 @@ export const fr = {
     capacityHint: 'échéances prévues comprises',
     capacityNegative: 'Les charges dépassent les revenus : il n’y a rien à placer ce mois-ci.',
 
-    placed: 'Où ça se place',
+    /* « Répartition des versements » et non « Où ça se place » : voir
+       `supports`. Les deux étiquettes se répondaient à un mot près pour dire
+       l'une le capital, l'autre le mois. */
+    placed: 'Répartition des versements',
     placedTotal: 'Versé ce mois',
-    placedEmpty: 'Aucun versement ce mois-ci.',
+    placedEmpty: 'Aucun versement enregistré ce mois-ci.',
     /* Un versement que personne ne porte n'est à personne, et l'épargne ne se
        partage pas : il ne compte donc dans la capacité de personne. C'est le
        pendant exact du salaire resté « en commun » sur la répartition. */
@@ -1675,7 +1749,11 @@ export const fr = {
        négatif au-dessus se lit comme une erreur. */
     withdrawn: 'Plus repris que placé ce mois-ci — une avance est passée par là.',
 
-    method: 'Comment c’est calculé',
+    /* Une légende, et non une tuile de plus. Elle porte la même chose qu'avant —
+       la cascade, puis quatre paragraphes — mais repliée : c'est une pédagogie
+       qu'on ouvre une fois, pas une lecture qu'on refait chaque mois, et posée
+       à plat elle occupait le dernier tiers de l'écran. */
+    method: 'Comprendre le calcul',
     methodFormula: 'Capacité = revenus − charges − crédits.',
     methodExcluded:
       'Un versement n’est pas une charge : il sort du compte, mais il reste à qui le fait. Il ne pèse donc ni dans les charges du mois, ni dans le partage.',
@@ -1683,8 +1761,6 @@ export const fr = {
       'Sous un filtre, la capacité tient compte de la part des charges communes que la personne porte — au prorata des revenus, comme partout ailleurs.',
     methodBalance:
       'Le solde du mois, lui, compte le versement comme une sortie : c’est exact en trésorerie, et c’est pour ça que les deux chiffres diffèrent.',
-
-    empty: 'Rien à placer tant que le mois n’a ni revenu ni charge.',
   },
 
   credits: {

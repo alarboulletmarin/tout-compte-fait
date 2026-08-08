@@ -175,7 +175,7 @@ describe('les trois étapes du premier lancement', () => {
       screen.getByLabelText(new RegExp(fr.savings.supportKind)),
       'passbook',
     )
-    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.value)), '10000')
+    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.valueInitial)), '10000')
     await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.contribution)), '200')
     await userEvent.click(screen.getByRole('button', { name: fr.savings.supportAdd }))
 

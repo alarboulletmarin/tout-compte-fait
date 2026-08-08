@@ -158,12 +158,14 @@ function ValuationsForm({
         </Tile>
       </form>
 
-      {showErrors && filled.length === 0 && (
-        <p className="t-label text-danger-text">{fr.savings.valuesNone}</p>
-      )}
-
+      {/* Désactivé plutôt qu'un message d'erreur après coup : il n'y a rien à
+          enregistrer tant qu'aucun chiffre n'est saisi, et un bouton qui accepte
+          le clic pour répondre « non » fait faire le geste pour rien.
+          La raison ne peut pas vivre sur lui — un `disabled` ne prend pas le
+          focus, donc son nom accessible n'est jamais lu (DS §6) : elle est dans
+          l'aide au-dessus, qui reste affichée une fois le bouton débloqué. */}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" form="valuations-form">
+        <Button type="submit" form="valuations-form" disabled={filled.length === 0}>
           {fr.common.save}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
@@ -206,8 +208,12 @@ function SupportField({
 
   const last =
     known?.known === null || known === null
-      ? fr.savings.valueUnknown
-      : `${fr.savings.valueKnown} · ${formatMoney(known.known, currency)} · ${formatDate(known.knownOn ?? '')}`
+      ? fr.savings.valueNever
+      : tpl(
+          fr.savings.valuesLast,
+          formatMoney(known.known, currency),
+          formatDate(known.knownOn ?? ''),
+        )
   const drift =
     known !== null && known.movedSince !== ZERO && known.estimated !== null
       ? tpl(fr.savings.valuesDrift, formatMoney(known.estimated, currency))
@@ -220,13 +226,18 @@ function SupportField({
       hint={drift === undefined ? last : `${last} — ${drift}`}
       {...(error ? { error: fr.savings.valueRequired } : {})}
     >
+      {/* « Nouvelle valeur » et non « 0,00 » : sous « Dernier relevé :
+          10 631,00 € », un placeholder chiffré se lit comme une valeur déjà
+          enregistrée, et un champ laissé tel quel promettrait alors d'écrire
+          zéro plutôt que rien. C'est la confusion la plus coûteuse de cet écran,
+          puisqu'elle porte sur tous les comptes à la fois. */}
       {(id, describedBy) => (
         <AmountInput
           id={id}
           aria-describedby={describedBy}
           value={value}
           invalid={error}
-          placeholder="0,00"
+          placeholder={fr.savings.valueNew}
           autoFocus={autoFocus}
           onChange={(event) => {
             onChange(event.target.value)

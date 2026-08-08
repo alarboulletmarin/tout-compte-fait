@@ -684,11 +684,14 @@ const VALUATIONS: { supportId: string; at: number; amount: number }[] = [
 
   /* Sans versement, et pourtant en mouvement : le seul support dont la valeur
      ne s'explique que par le marché. Il recule une fois — une courbe qui ne
-     ferait que monter ne dirait pas ce qu'est un placement. */
+     ferait que monter ne dirait pas ce qu'est un placement.
+     Et il n'a pas de relevé du mois : on ne regarde pas une assurance-vie
+     toutes les quatre semaines, et le jeu d'exemple doit montrer ce que valent
+     des relevés d'âges différents — un total daté du jour serait une facilité
+     que personne n'a dans la vraie vie. */
   { supportId: ASSURANCE_VIE, at: -9, amount: 960000 },
   { supportId: ASSURANCE_VIE, at: -6, amount: 1005000 },
   { supportId: ASSURANCE_VIE, at: -3, amount: 988000 },
-  { supportId: ASSURANCE_VIE, at: 0, amount: 1020000 },
 ]
 
 function withValuations(data: Data, anchor: YearMonth, ids: () => string): Data {

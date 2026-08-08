@@ -1,12 +1,22 @@
+import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SAVINGS_PATH, SETTINGS_PEOPLE_PATH, supportPath } from '@/app/routes'
 import type { SavingSupport } from '@/domain/types'
 import { fr } from '@/i18n/fr'
-import { addSavingSupport, replaceSavingSupport } from '@/store/actions'
-import { useMembers, useSavingSupport } from '@/store/selectors'
+import { tpl } from '@/i18n/format'
+import {
+  addSavingSupport,
+  archiveSavingSupport,
+  removeSavingSupport,
+  replaceSavingSupport,
+  unarchiveSavingSupport,
+  undoable,
+} from '@/store/actions'
+import { isSupportEmpty, useMembers, useSavingSupport, useSupportUsage } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { EmptyState } from '@/ui/EmptyState'
+import { Eyebrow } from '@/ui/Eyebrow'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { toast } from '@/ui/toast'
@@ -23,8 +33,14 @@ import { emptySupportDraft, supportDraftFrom, useSupportDraft } from './supportD
  *
  * Ce que la reprise n'a pas, c'est le champ de valeur : un relevé s'**empile**,
  * il ne se réécrit pas depuis la fiche du compte. Le corriger a son propre
- * écran, et « mettre à jour » en pose un nouveau — sans quoi l'historique
+ * écran, et « ajouter un relevé » en pose un nouveau — sans quoi l'historique
  * s'effacerait à chaque changement de nom.
+ *
+ * **C'est aussi ici que le support se gère**, en fin d'écran : archiver, rouvrir,
+ * supprimer. Ces gestes tenaient une tuile permanente sur la fiche, sous
+ * l'historique — donc le même poids qu'une lecture qu'on ouvre tous les mois,
+ * pour deux boutons qu'on touche une fois dans la vie du compte. Ils sont
+ * derrière « Modifier le support », qui est exactement l'intention qui y mène.
  */
 export function SupportFormPage() {
   const { id } = useParams()
@@ -61,7 +77,7 @@ function SupportForm({ support }: { support?: SavingSupport }) {
       /* L'état complet de ce que l'écran montre, jamais un correctif : une note
          qu'on vient de vider doit disparaître du document. C'est la règle de
          `replaceRecurrence`, et elle vaut ici pour la même raison. L'archivage
-         ne se saisit pas sur ce formulaire — il a son geste, sur la fiche. */
+         ne se saisit pas sur ce formulaire — il a son geste, plus bas. */
       const { value: _ignored, note, ...rest } = input
       replaceSavingSupport(support.id, {
         ...rest,
@@ -129,11 +145,131 @@ function SupportForm({ support }: { support?: SavingSupport }) {
         </Button>
       </div>
 
-      {/* Dit une fois, à l'endroit où la confusion serait la plus coûteuse :
-          le chiffre saisi ici n'est pas une opération. */}
-      <p className="t-label">{fr.savings.valueMethod}</p>
+      {/* La phrase sur les relevés a quitté cet écran : on y saisit un nom, un
+          titulaire et un type, et aucun des trois ne prête à confondre un
+          relevé avec un mouvement. Elle vit là où la confusion est réelle — la
+          légende du calcul et les deux formulaires de relevé. */}
+
+      {editing && <SupportManagement support={support} />}
 
       <ConfirmDialog {...guard.dialog} />
     </div>
+  )
+}
+
+/**
+ * Ce qu'on fait d'un support dont on ne veut plus.
+ *
+ * À distance des boutons qui closent la saisie, comme partout : ce n'est pas une
+ * façon de sortir de l'écran. Le geste de suppression n'existe que sur ce qui
+ * n'a pas d'histoire ; ailleurs c'est l'archivage, et l'écran dit pourquoi
+ * plutôt que de laisser chercher un bouton qui n'est pas là.
+ */
+function SupportManagement({ support }: { support: SavingSupport }) {
+  const navigate = useNavigate()
+  const usage = useSupportUsage(support.id)
+  const [archiving, setArchiving] = useState(false)
+  const [removing, setRemoving] = useState(false)
+
+  const deletable = isSupportEmpty(usage)
+  const running = usage.runningRecurrences
+  const toSavings = (): void => {
+    void navigate(SAVINGS_PATH)
+  }
+
+  return (
+    <>
+      <Tile className="gap-3">
+        <Eyebrow>{fr.savings.manage}</Eyebrow>
+        <p className="t-label">{fr.savings.archivedHint}</p>
+        {/* Pourquoi le bouton « Supprimer » n'est pas là : la règle se lit, elle
+            ne se devine pas à l'absence d'un bouton. */}
+        {!support.archived && !deletable && <p className="t-label">{fr.savings.removeBlocked}</p>}
+        <div className="flex flex-wrap gap-2">
+          {support.archived ? (
+            <Button
+              variant="ghost"
+              className="w-fit"
+              onClick={() => {
+                undoable(fr.savings.supportUnarchived, () => {
+                  unarchiveSavingSupport(support.id)
+                })
+              }}
+            >
+              {fr.savings.unarchive}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              className="w-fit"
+              onClick={() => {
+                setArchiving(true)
+              }}
+            >
+              {fr.savings.archive}
+            </Button>
+          )}
+          {deletable && (
+            <Button
+              variant="ghost"
+              className="w-fit"
+              onClick={() => {
+                setRemoving(true)
+              }}
+            >
+              {fr.savings.remove}
+            </Button>
+          )}
+        </div>
+      </Tile>
+
+      {/* Un support archivé qui continue de recevoir 300 € par mois serait un
+          compte invisible qui grossit tout seul : la question le dit, et le
+          bouton fait les deux gestes d'un coup. */}
+      <ConfirmDialog
+        open={archiving}
+        title={fr.savings.archive}
+        steps={[
+          {
+            question:
+              running === 0
+                ? fr.savings.archiveConfirm
+                : `${running === 1 ? fr.savings.archiveRunningOne : tpl(fr.savings.archiveRunning, running)} ${fr.savings.archiveConfirm}`,
+            action:
+              running === 0
+                ? fr.savings.archive
+                : running === 1
+                  ? fr.savings.archiveAndStop
+                  : fr.savings.archiveAndStopMany,
+          },
+        ]}
+        onCancel={() => {
+          setArchiving(false)
+        }}
+        onConfirm={() => {
+          setArchiving(false)
+          undoable(fr.savings.supportArchived, () => {
+            archiveSavingSupport(support.id, { stopRecurrences: running > 0 })
+          })
+          toSavings()
+        }}
+      />
+
+      <ConfirmDialog
+        open={removing}
+        title={fr.savings.remove}
+        steps={[{ question: fr.savings.removeConfirm, action: fr.common.delete }]}
+        onCancel={() => {
+          setRemoving(false)
+        }}
+        onConfirm={() => {
+          setRemoving(false)
+          undoable(fr.savings.supportRemoved, () => {
+            removeSavingSupport(support.id)
+          })
+          toSavings()
+        }}
+      />
+    </>
   )
 }
