@@ -166,6 +166,19 @@ export function unarchiveSavingSupport(id: string): void {
   mutate((data) => updates.archiveSavingSupport(data, id, false))
 }
 
+/**
+ * Arrête les règles qui alimentent encore un support, sans l'archiver.
+ *
+ * Le geste de l'archivage existait déjà, mais lié à lui, et le cas le plus
+ * courant n'est pas là : un livret **plein** n'est pas un compte fermé — il
+ * continue de rapporter, on peut encore y reprendre —, et la règle qui le
+ * remplissait n'a pourtant plus rien à y verser. La proposer à l'arrêt depuis
+ * la fiche évite d'avoir à ouvrir chaque règle une par une pour la même raison.
+ */
+export function stopSupportRecurrences(id: string): void {
+  mutate((data) => updates.stopSupportRecurrences(data, id, today()))
+}
+
 /** Supprime un support pour de bon. Réservé à ce qui n'a pas d'histoire. */
 export function removeSavingSupport(id: string): void {
   mutate((data) => updates.removeSavingSupport(data, id))

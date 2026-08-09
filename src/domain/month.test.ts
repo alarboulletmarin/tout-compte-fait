@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { addMonthsToYm } from './date'
-import { eur, makeEntry, makeRecurrence, sequentialIds } from './fixtures'
+import {
+  eur,
+  makeAdvance,
+  makeEntry,
+  makeRecurrence,
+  makeSavingSupport,
+  makeSavingValuation,
+  sequentialIds,
+} from './fixtures'
 import { coveredMonths, isMonthOpened, monthHorizon, navigationBounds, planMonth } from './month'
 
 const loyer = makeRecurrence({
@@ -218,5 +226,126 @@ describe('les bornes de la navigation', () => {
 
   it('nomme le mois le plus lointain qu’on ouvre', () => {
     expect(monthHorizon(on)).toBe('2027-07')
+  })
+})
+
+/* --- Le plafond d'un support ----------------------------------------------
+   Une règle qui verse sur un livret plafonné ne peut pas continuer d'y poser
+   des échéances au-delà de ce que le contrat autorise : le prévisionnel
+   annoncerait un capital que la banque aurait refusé de recevoir. La dernière
+   qui tient est écrêtée, les suivantes ne se posent plus. */
+
+const SUPPORT = 's-livret'
+const ON = '2026-06-15'
+
+const versement = makeRecurrence({
+  id: 'versement',
+  label: 'Versement Livret A',
+  amount: eur(20000),
+  savingSupportId: SUPPORT,
+  direction: 'out',
+  period: { unit: 'month', every: 1, anchorDay: 5 },
+})
+
+/** Un livret dont il reste `room` centimes de place au 1er juin. */
+const capped = (room: number, over: Partial<Parameters<typeof planMonth>[0]> = {}) => ({
+  recurrences: [versement],
+  entries: [],
+  savingSupports: [makeSavingSupport({ id: SUPPORT, depositCap: eur(2295000) })],
+  savingValuations: [
+    makeSavingValuation({
+      id: 'v1',
+      supportId: SUPPORT,
+      amount: eur(2295000 - room),
+      date: '2026-05-31',
+    }),
+  ],
+  ...over,
+})
+
+describe('le plafond d’un support', () => {
+  it('laisse passer un versement qui tient sous le plafond', () => {
+    const plan = planMonth(capped(50000), '2026-07', sequentialIds(), ON)
+    expect(plan.created).toHaveLength(1)
+    expect(plan.created[0]?.amount).toBe(eur(20000))
+  })
+
+  it('écrête la dernière échéance qui tient plutôt que de la refuser en entier', () => {
+    const plan = planMonth(capped(12000), '2026-07', sequentialIds(), ON)
+    expect(plan.created[0]?.amount).toBe(eur(12000))
+  })
+
+  it('ne pose plus rien une fois la place épuisée', () => {
+    const plan = planMonth(capped(0), '2026-07', sequentialIds(), ON)
+    expect(plan.created).toEqual([])
+  })
+
+  it('épuise la place de mois en mois plutôt que de la relire à neuf', () => {
+    // 50 000 de place, 20 000 par mois : juillet et août pleins, septembre
+    // écrêté à 10 000, octobre vide.
+    let entries: ReturnType<typeof planMonth>['created'] = []
+    const amounts: (number | undefined)[] = []
+    for (const month of ['2026-07', '2026-08', '2026-09', '2026-10']) {
+      const plan = planMonth(capped(50000, { entries }), month, sequentialIds(month), ON)
+      entries = [...entries, ...plan.created]
+      amounts.push(plan.created[0]?.amount)
+    }
+    expect(amounts).toEqual([eur(20000), eur(20000), eur(10000), undefined])
+  })
+
+  it('partage la place entre deux règles, dans l’ordre du calendrier', () => {
+    const tardif = makeRecurrence({
+      ...versement,
+      id: 'tardif',
+      period: { unit: 'month', every: 1, anchorDay: 20 },
+    })
+    const plan = planMonth(
+      capped(25000, { recurrences: [tardif, versement] }),
+      '2026-07',
+      sequentialIds(),
+      ON,
+    )
+    expect(plan.created.map((e) => [e.date, e.amount])).toEqual([
+      ['2026-07-05', eur(20000)],
+      ['2026-07-20', eur(5000)],
+    ])
+  })
+
+  it('ne touche ni le jour même ni le passé : ce n’est plus une prévision à corriger', () => {
+    const plan = planMonth(capped(0), '2026-06', sequentialIds(), ON)
+    expect(plan.created.map((e) => e.date)).toEqual(['2026-06-05'])
+    expect(plan.created[0]?.amount).toBe(eur(20000))
+  })
+
+  it('ne borne pas une reprise : elle rend de la place', () => {
+    const reprise = makeRecurrence({ ...versement, id: 'reprise', direction: 'in' })
+    const plan = planMonth(
+      capped(0, { recurrences: [reprise] }),
+      '2026-07',
+      sequentialIds(),
+      ON,
+    )
+    expect(plan.created[0]?.amount).toBe(eur(20000))
+  })
+
+  it('ne borne pas la reconstitution d’une avance : elle rend ce que le support a avancé', () => {
+    const plan = planMonth(
+      capped(0, {
+        advances: [makeAdvance({ id: 'a1', recurrenceId: 'versement', savingSupportId: SUPPORT })],
+      }),
+      '2026-07',
+      sequentialIds(),
+      ON,
+    )
+    expect(plan.created[0]?.amount).toBe(eur(20000))
+  })
+
+  it('ignore un support sans plafond, et un document qui n’en porte aucun', () => {
+    const sansPlafond = capped(0)
+    sansPlafond.savingSupports = [makeSavingSupport({ id: SUPPORT })]
+    expect(planMonth(sansPlafond, '2026-07', sequentialIds(), ON).created).toHaveLength(1)
+    expect(
+      planMonth({ recurrences: [versement], entries: [] }, '2026-07', sequentialIds(), ON).created,
+    ).toHaveLength(1)
   })
 })

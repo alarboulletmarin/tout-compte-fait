@@ -1305,6 +1305,7 @@ export const fr = {
        lise en cherchant où aller. */
     creditsHint: 'Suivre le capital qu’il reste à devoir',
     stoppedBadge: 'Arrêtée',
+    cappedBadge: 'Plafond atteint · en attente de place',
     nextDue: 'Prochaine échéance',
     noNextDue: 'Plus d’échéance',
     monthlyCost: 'Par mois',
@@ -1734,6 +1735,45 @@ export const fr = {
     supportCapHint:
       'Facultatif. Ce que le contrat autorise à verser en tout — 22 950 € sur un Livret A, par exemple. Les intérêts, eux, peuvent passer au-dessus. À toi de le poser : l’app ne connaît aucun produit.',
     capInvalid: 'Indique un plafond supérieur à zéro, ou laisse vide.',
+    /* Le résumé d'une section repliée : ce qu'elle contient, jamais un compte
+       de champs. « Plafond 22 950 € » se lit sans rien déplier. */
+    capSummary: 'plafond %s',
+    /* --- Les sections du formulaire ---------------------------------------
+       Trois questions debout — nom, titulaire, type —, le reste replié. Voir
+       `SupportFields` : des étapes auraient remplacé le défilement par des
+       taps et fait passer cinq champs facultatifs pour des passages obligés. */
+    sectionContract: 'Le contrat',
+    sectionValue: 'Le premier relevé',
+    sectionValueEmpty: 'Facultatif',
+    /* --- Ce que le plafond dit à la saisie ---------------------------------
+       Le plafond se saisissait et ne retenait rien : verser 50 € sur un livret
+       plein passait sans un mot. Il arrête désormais la main — et il laisse
+       trancher, parce que la place qu'il calcule est sous-estimée par
+       construction (voir `domain/savingCap`). Ces mots portent donc les deux
+       moitiés du geste : ce qui est dépassé, et les deux façons d'y aller. */
+    capOver: 'Plafond dépassé de %s',
+    capReached: 'Plafond de %s déjà atteint',
+    capRoomBody: 'Il reste %s à verser sous le plafond de %s.',
+    capNoRoomBody: 'Ce versement passerait %s au-dessus.',
+    capApproximate:
+      'La place se calcule sur ton dernier relevé, intérêts compris : elle est un peu sous-estimée. Si ta banque a accepté, verse quand même.',
+    capClip: 'Verser %s',
+    capAnyway: 'Verser quand même',
+    capAccepted: 'Dépassement assumé : %s au-dessus du plafond.',
+    /* La date de remplissage — une annonce, pas un refus : poser un versement
+       mensuel qui finira par remplir un livret est le geste normal, et la seule
+       chose qui manquait à l'écran était de dire quand. */
+    capFillOne: 'Le plafond de %s est atteint dès la première échéance, le %s.',
+    capFillMany: 'À ce rythme, le plafond de %s est atteint le %s, au %se versement.',
+    capFillClipped: 'Ce dernier sera ramené à ce qui reste sous le plafond.',
+    capFillNone: 'Plafond de %s déjà atteint : cette règle ne posera aucun versement.',
+    /* Sur la fiche d'un support plein : les règles qui continuaient de le
+       viser ne posent plus rien, et l'écran le dit plutôt que de laisser
+       chercher pourquoi le prévisionnel s'est arrêté. */
+    capRunningOne: 'Une règle verse encore ici : elle ne posera plus d’échéance.',
+    capRunning: '%s règles versent encore ici : elles ne poseront plus d’échéance.',
+    capStopRules: 'Arrêter ces règles',
+    capRulesStopped: 'Règles arrêtées',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
     /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin

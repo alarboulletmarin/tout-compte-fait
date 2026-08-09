@@ -173,6 +173,12 @@ export type SavingSupport = {
    * pas 22 950 € sous « Livret A », parce qu'un barème figé dans le code est
    * faux dès qu'il change — le plafond du Livret A est passé de 15 300 € à
    * 22 950 € —, et qu'un plafond périmé se lit comme un calcul faux.
+   *
+   * **Il retient l'écriture, il ne l'interdit pas.** La saisie d'un versement
+   * qui le dépasse s'arrête et demande à être tranchée, et une règle cesse de
+   * poser des échéances sur un compte plein — voir `domain/savingCap.ts`, qui
+   * tient la règle une seule fois, et dit pourquoi le dernier mot reste à celui
+   * qui saisit.
    */
   depositCap?: Money
   note?: string

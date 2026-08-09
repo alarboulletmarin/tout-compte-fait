@@ -14,9 +14,10 @@ import {
   today,
   ymOf,
 } from './date'
-import { ZERO } from './money'
+import { type Money, ZERO } from './money'
 import { amountOn } from './priceHistory'
 import { occurrencesInMonth } from './recurrence'
+import { capStateOf, clipToCap } from './savingCap'
 import type { Data, Entry, MonthState, Recurrence } from './types'
 
 export type MonthPlan = {
@@ -43,13 +44,41 @@ function existingOccurrences(entries: readonly Entry[], month: YearMonth): Set<s
 }
 
 /**
+ * De quoi planifier un mois : les règles, ce qui est déjà posé, et — pour le
+ * plafond des supports — de quoi savoir ce qu'un compte vaut.
+ *
+ * Les deux derniers sont facultatifs : un document sans support n'a aucun
+ * plafond à faire respecter, et la planification s'y comporte exactement comme
+ * avant qu'il existe.
+ */
+export type PlanSource = Pick<Data, 'recurrences' | 'entries'> &
+  Partial<Pick<Data, 'savingSupports' | 'savingValuations' | 'advances'>>
+
+/**
  * Calcule ce que produirait l'ouverture d'un mois, sans rien muter.
  * `makeId` est injecté pour que la fonction reste pure et testable.
+ *
+ * **Le plafond d'un support arrête les versements à venir.** Une règle qui
+ * verse 200 € par mois sur un livret plafonné continuait d'en poser jusqu'à
+ * faire monter le compte bien au-dessus de ce que le contrat autorise : le
+ * prévisionnel annonçait alors un capital que la banque aurait refusé de
+ * recevoir. La dernière échéance qui tient est **écrêtée** plutôt que refusée en
+ * entier — il reste 120 € de place et la règle verse 200, on pose les 120 —,
+ * c'est déjà la règle du simulateur (cahier §4.6 ter), et les suivantes ne se
+ * posent plus tant que la place ne revient pas.
+ *
+ * **Seulement l'avenir, jamais le jour même ni ce qui précède.** Une échéance
+ * datée d'aujourd'hui ou d'hier n'est plus une prévision qu'on corrige : c'est
+ * un fait en attente de confirmation, souvent celui qu'on vient de déclarer
+ * payé en créant la règle. L'écrêter reviendrait à refuser un versement que
+ * quelqu'un affirme avoir fait, ce qu'aucune approximation de place restante
+ * n'autorise (voir `savingCap`).
  */
 export function planMonth(
-  data: Pick<Data, 'recurrences' | 'entries'>,
+  data: PlanSource,
   month: YearMonth,
   makeId: () => string,
+  on: ISODate = today(),
 ): MonthPlan {
   const from = startOfMonth(month)
   const to = endOfMonth(month)
@@ -57,19 +86,82 @@ export function planMonth(
   const created: Entry[] = []
   const variable: Entry[] = []
 
+  const candidates: { recurrence: Recurrence; date: ISODate }[] = []
   for (const recurrence of data.recurrences) {
     for (const occurrence of occurrencesInMonth(recurrence, month)) {
       if (occurrence.date < from || occurrence.date > to) continue
       if (seen.has(occurrenceKey(recurrence.id, occurrence.date))) continue
-
-      const entry = buildPlannedEntry(recurrence, occurrence.date, data.entries, makeId)
-      created.push(entry)
-      if (recurrence.amount === null) variable.push(entry)
+      candidates.push({ recurrence, date: occurrence.date })
     }
   }
 
-  created.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  /* Dans l'ordre du calendrier, et c'est le plafond qui l'exige : deux règles
+     qui versent sur le même compte le 5 et le 20 ne consomment pas la même
+     place, et les traiter règle par règle donnerait à la seconde une place que
+     la première a déjà prise. Le tri est stable, donc deux échéances du même
+     jour gardent l'ordre du document. */
+  candidates.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+
+  /* Ce que le document portera au fil de la planification : chaque échéance
+     posée compte pour la place qui reste à celles d'après. */
+  const running = [...data.entries]
+
+  for (const { recurrence, date } of candidates) {
+    const entry = buildPlannedEntry(recurrence, date, data.entries, makeId)
+    const room = date <= on ? entry.amount : cappedAmount(entry, data, running)
+    // Plus un centime de place : l'échéance ne se pose pas du tout. C'est la
+    // fiche du support qui dit pourquoi — « plafond atteint, 1 règle verse
+    // encore » —, et non une ligne à zéro dans le mois, qui ne dirait rien.
+    if (room <= ZERO && room !== entry.amount) continue
+
+    const posted = room === entry.amount ? entry : { ...entry, amount: room }
+    created.push(posted)
+    running.push(posted)
+    if (recurrence.amount === null) variable.push(posted)
+  }
+
   return { ym: month, created, variable }
+}
+
+/**
+ * Ce qu'une échéance de versement peut encore poser sous le plafond de son
+ * support — son montant tel quel partout ailleurs.
+ *
+ * La place se lit sur la **trajectoire** (`ahead`), échéances prévues
+ * comprises : sans cela, douze mois de versements à venir liraient tous la même
+ * place et aucun ne serait jamais écrêté.
+ */
+function cappedAmount(entry: Entry, data: PlanSource, entries: readonly Entry[]): Money {
+  if (entry.direction !== 'out' || entry.savingSupportId === undefined) return entry.amount
+  const support = data.savingSupports?.find((one) => one.id === entry.savingSupportId)
+  if (support?.depositCap === undefined) return entry.amount
+  if (restoresAdvance(entry, data)) return entry.amount
+  const state = capStateOf(support, data.savingValuations ?? [], entries, entry.date, true)
+  return clipToCap(state, entry.amount)
+}
+
+/**
+ * Vrai quand l'échéance **reconstitue une avance** — et le plafond ne la touche
+ * alors pas.
+ *
+ * Une mensualité d'avance n'est pas un versement de plus : c'est le retour de
+ * ce que ce support-là a avancé, quelques mois plus tôt, par une reprise qui a
+ * libéré exactement autant de place. Les écrêter reviendrait à compter la
+ * reprise une fois et le retour deux, et le compte s'en trouve arithmétiquement
+ * piégé : sur un livret dont les intérêts ont dépassé le plafond — l'état normal
+ * d'un livret plein, et le cas du jeu d'exemple —, la place vaut zéro en
+ * permanence, si bien qu'**aucune** mensualité ne se poserait jamais. L'avance
+ * ne se reconstituerait plus, son reste dû ne bougerait plus d'un centime, et
+ * l'écran des avances afficherait une dette envers soi-même sans fin ni cause
+ * visible.
+ *
+ * C'est la contrepartie exacte de ce que dit `savingCap` : la place que l'app
+ * calcule est sous-estimée, et on ne la laisse jamais refuser un mouvement dont
+ * on sait par ailleurs qu'il a sa place.
+ */
+function restoresAdvance(entry: Entry, data: PlanSource): boolean {
+  if (entry.recurrenceId === undefined) return false
+  return data.advances?.some((advance) => advance.recurrenceId === entry.recurrenceId) === true
 }
 
 /** Fabrique l'échéance d'une récurrence à une date. Exportée pour `updates`. */

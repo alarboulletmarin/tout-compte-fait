@@ -20,6 +20,10 @@ import { useCurrency } from '@/ui/currency'
  */
 function meta(row: Row, who: string | undefined): string {
   if (row.stopped) return t.recurrences.stoppedBadge
+  /* Un support plein retient les échéances de la règle sans l'arrêter : la
+     ligne le dit, sans quoi elle disparaîtrait du mois sans cause visible. La
+     place peut revenir d'une reprise, d'où « en attente » et non « arrêtée ». */
+  if (row.capped) return t.recurrences.cappedBadge
   const when =
     row.next === null
       ? t.recurrences.noNextDue

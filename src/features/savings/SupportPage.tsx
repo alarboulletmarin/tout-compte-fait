@@ -10,19 +10,23 @@ import {
   valuationNewPath,
 } from '@/app/routes'
 import { today } from '@/domain/date'
-import { type Money, ZERO, money } from '@/domain/money'
+import { type Money, ZERO } from '@/domain/money'
+import { isFull } from '@/domain/savingCap'
 import { isOrigin } from '@/domain/savingRate'
 import type { SavingSupport } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { supports } from '@/i18n/supports'
 import { formatDate, formatMoney, formatPercent, tpl } from '@/i18n/format'
+import { stopSupportRecurrences, undoable } from '@/store/actions'
 import {
+  useCapState,
   useCategoryMap,
   useMemberMap,
   useSavingSupport,
   useSupportEntries,
   useSupportMonthFlows,
   useSupportRates,
+  useSupportUsage,
   useSupportValuations,
   useSupportValue,
 } from '@/store/selectors'
@@ -81,6 +85,10 @@ function SupportView({ support }: { support: SavingSupport }) {
   const rates = useSupportRates(support.id)
   const flows = useSupportMonthFlows(support.id)
   const entries = useSupportEntries(support.id)
+  /* La même lecture que celle que la saisie oppose à un versement : la fiche
+     et le formulaire ne peuvent pas annoncer deux places différentes. */
+  const cap = useCapState(support.id)
+  const running = useSupportUsage(support.id).runningRecurrences
   const [allValuations, setAllValuations] = useState(false)
   const [allRates, setAllRates] = useState(false)
   const [allMovements, setAllMovements] = useState(false)
@@ -142,18 +150,39 @@ function SupportView({ support }: { support: SavingSupport }) {
             se lit, la place non.
             En mots et sans couleur : un livret plein n'est pas une erreur, et
             le DS §2.3 réserve l'alerte aux dépassements. */}
-        {support.depositCap !== undefined && (
-          <p className="t-label mt-2">
-            {known === null
-              ? tpl(supports.capUnknown, exact(support.depositCap))
-              : (value?.estimated ?? ZERO) >= support.depositCap
-                ? tpl(supports.capFull, exact(support.depositCap))
-                : tpl(
-                    supports.capLeft,
-                    exact(support.depositCap),
-                    exact(money(support.depositCap - (value?.estimated ?? ZERO))),
-                  )}
-          </p>
+        {cap.kind !== 'none' && (
+          <div className="mt-2 flex flex-col items-start gap-2">
+            <p className="t-label">
+              {cap.kind === 'unknown'
+                ? tpl(supports.capUnknown, exact(cap.cap))
+                : cap.room <= ZERO
+                  ? tpl(supports.capFull, exact(cap.cap))
+                  : tpl(supports.capLeft, exact(cap.cap), exact(cap.room))}
+            </p>
+            {/* Un compte plein que des règles continuent de viser : elles ne
+                posent plus rien (voir `planMonth`), et un prévisionnel qui
+                s'arrête sans explication se lit comme une panne. Le geste est
+                proposé, jamais fait d'office — un livret plein n'est pas un
+                compte fermé, et la règle peut très bien attendre janvier. */}
+            {isFull(cap) && running > 0 && (
+              <>
+                <p className="t-label">
+                  {running === 1 ? t.savings.capRunningOne : tpl(t.savings.capRunning, running)}
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    undoable(t.savings.capRulesStopped, () => {
+                      stopSupportRecurrences(support.id)
+                    })
+                  }}
+                >
+                  {t.savings.capStopRules}
+                </Button>
+              </>
+            )}
+          </div>
         )}
 
         <div className="mt-2 flex flex-wrap items-center gap-3">

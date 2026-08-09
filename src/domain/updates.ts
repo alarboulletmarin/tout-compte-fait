@@ -639,7 +639,10 @@ export function syncRecurrenceEntries(
     if (state.ym < fromMonth) continue
     // `planMonth` lit `next.entries`, qui s'enrichit à chaque tour : les mois
     // se plannifient en cascade sans se marcher dessus.
-    next = { ...next, entries: [...next.entries, ...planMonth(next, state.ym, makeId).created] }
+    next = {
+      ...next,
+      entries: [...next.entries, ...planMonth(next, state.ym, makeId, from).created],
+    }
   }
 
   // Le montant rendu à l'échéance qui le portait, une fois refaite. Après la
@@ -846,7 +849,7 @@ export function openMonth(
   makeId: () => string,
   on: ISODate = today(),
 ): OpenMonthResult {
-  const plan = planMonth(data, ym, makeId)
+  const plan = planMonth(data, ym, makeId, on)
   const months = data.months.some((m) => m.ym === ym)
     ? data.months
     : [...data.months, { ym, openedAt: on, closed: false }]

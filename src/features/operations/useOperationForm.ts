@@ -8,12 +8,13 @@
 
 import { useMemo, useState } from 'react'
 import { type ISODate, today } from '@/domain/date'
-import { type Money, parseAmount, toAmountInput } from '@/domain/money'
+import { type Money, ZERO, parseAmount, toAmountInput } from '@/domain/money'
+import { type CapExcess, type CapFill, type CapState, NO_CAP, capExcess, capFill } from '@/domain/savingCap'
 import { memberRequired } from '@/domain/split'
 import type { Direction, Entry, Recurrence } from '@/domain/types'
 import type { EntryNature } from '@/ui/categoryKinds'
 import { t } from '@/i18n/strings'
-import { useActiveSavingSupports, useKindOf, useMembers } from '@/store/selectors'
+import { useActiveSavingSupports, useCapState, useKindOf, useMembers } from '@/store/selectors'
 import { type PeriodDraft, defaultsFrom, kindOf, monthlyDraftFrom, periodOf } from '@/features/recurrences/period'
 
 /**
@@ -184,6 +185,38 @@ function draftFrom(
   }
 }
 
+/**
+ * Ce que le plafond du support a à dire sur ce qui est en train d'être saisi.
+ *
+ * Deux choses distinctes, et l'écran les traite différemment : un **dépassement**
+ * arrête la main — c'est ce que ce formulaire ne savait pas faire, et c'est tout
+ * le sujet —, quand une **date de remplissage** ne fait qu'annoncer. Poser une
+ * règle qui finira par remplir un livret n'a rien de fautif ; c'est même le
+ * geste normal, et l'app n'a qu'à dire quand ça arrivera.
+ */
+export type CapNotice = {
+  state: CapState
+  /** Le dépassement du montant saisi, ou `null` s'il tient sous le plafond. */
+  excess: CapExcess | null
+  /** Quand la règle remplira le support. `null` en ponctuel, ou si jamais. */
+  fill: CapFill | null
+  /**
+   * Vrai tant que le dépassement n'a pas été assumé : `build` rend alors `null`,
+   * exactement comme sur un champ obligatoire vide.
+   *
+   * Ce n'est **pas** une erreur de validation pour autant, et c'est pourquoi il
+   * ne vit pas dans `errors` : une erreur se corrige, celui-ci s'assume. Les
+   * deux sorties sont nommées à l'écran — verser la place restante, ou verser
+   * quand même —, parce que la place que l'app calcule est sous-estimée par
+   * construction et qu'un refus sec finirait par refuser un versement réel
+   * (voir `domain/savingCap`).
+   */
+  blocking: boolean
+}
+
+/** La clef de ce qui a été assumé : un support, un montant. Changer l'un rebloque. */
+const capKey = (supportId: string, amount: Money): string => `${supportId}@${amount}`
+
 export function useOperationForm(operation: Operation | null, defaults: OperationDefaults) {
   const members = useMembers()
   const kindOf = useKindOf()
@@ -192,6 +225,11 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
     draftFrom(operation, defaults, (id) => kindOf(id) === 'saving'),
   )
   const [showErrors, setShowErrors] = useState(false)
+  /* Ce que l'utilisateur a explicitement accepté de verser au-dessus du
+     plafond. La clef porte le support et le montant : corriger l'un ou l'autre
+     repose la question, sans quoi un « verser quand même » consenti pour 50 €
+     autoriserait ensuite 5 000 € sans un mot. */
+  const [capAccepted, setCapAccepted] = useState<string | null>(null)
 
   /**
    * La saisie d'épargne demande **le support**, pas la catégorie.
@@ -215,6 +253,58 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
   const optionalAmount = draft.recurring && draft.variable
   const amount: Money | null = useMemo(() => parseAmount(draft.amountText), [draft.amountText])
   const typedAmount = draft.amountText.trim() !== ''
+
+  /* La place restante se lit **au jour du mouvement**, pas au jour où l'on
+     saisit : dater un versement du mois dernier ne se compare pas au capital
+     d'aujourd'hui, qui le contient peut-être déjà. */
+  const capState = useCapState(
+    draft.nature === 'saving' && draft.savingSupportId !== '' ? draft.savingSupportId : undefined,
+    draft.startedOn,
+    operation?.kind === 'entry' ? operation.entry.id : undefined,
+  )
+
+  const cap: CapNotice = useMemo(() => {
+    if (draft.nature !== 'saving' || draft.savingSupportId === '') {
+      return { state: NO_CAP, excess: null, fill: null, blocking: false }
+    }
+    /* Une règle à montant variable n'oppose aucun chiffre au plafond : son
+       ordre de grandeur est une estimation, et bloquer sur une estimation
+       refuserait une règle sur une supposition. */
+    const typed = draft.recurring && draft.variable ? null : amount
+    const excess = typed === null ? null : capExcess(capState, typed, draft.direction)
+    const fill =
+      draft.recurring && typed !== null
+        ? capFill(
+            {
+              amount: typed,
+              direction: draft.direction,
+              period: periodOf(draft),
+              startedOn: draft.startedOn,
+              /* La date de fin d'une règle qu'on reprend : sans elle, l'annonce
+                 daterait le plafond d'après des échéances qui ne tomberont
+                 jamais. C'est le seul champ du brouillon que le formulaire ne
+                 porte pas — il se règle depuis la fiche de la règle. */
+              ...(operation?.kind === 'recurrence' && operation.recurrence.endedOn !== undefined
+                ? { endedOn: operation.recurrence.endedOn }
+                : {}),
+            },
+            capState,
+            draft.startedOn,
+          )
+        : null
+
+    return {
+      state: capState,
+      excess,
+      fill,
+      blocking:
+        excess !== null && capAccepted !== capKey(draft.savingSupportId, typed ?? ZERO),
+    }
+    /* Le brouillon entier plutôt que la liste de ses champs : `periodOf` lit
+       les six qui décrivent le rythme, et une liste tenue à la main en aurait
+       oublié un le jour où une septième unité arrive. Le brouillon change
+       d'identité à chaque frappe, donc le mémo ne se garde rien de faux. */
+  }, [capState, capAccepted, amount, draft, operation])
 
   const errors: DraftErrors = useMemo(() => {
     const found: DraftErrors = {}
@@ -300,9 +390,32 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
   const firstDuePaid =
     draft.recurring && operation === null && !draft.variable && draft.startedOn <= today()
 
+  /** Ramener le versement à la place restante — l'écrêtage, en un geste. */
+  const clipToRoom = (): void => {
+    if (cap.excess === null || cap.excess.room <= ZERO) return
+    patch({ amountText: toAmountInput(cap.excess.room) })
+  }
+
+  /**
+   * Assumer le dépassement. Le montant ne bouge pas : c'est le refus qui tombe.
+   *
+   * Le geste existe parce que la place calculée est **sous-estimée** — le
+   * plafond porte sur les versements cumulés, l'app ne connaît que le capital,
+   * intérêts compris. Un livret dont les intérêts pèsent 1 500 € a encore
+   * 1 500 € de place que l'app ne sait pas voir, et lui refuser un versement
+   * réel pousserait à effacer le plafond, c'est-à-dire à perdre l'information.
+   */
+  const acceptCap = (): void => {
+    if (cap.excess === null || amount === null) return
+    setCapAccepted(capKey(draft.savingSupportId, amount))
+  }
+
   const build = (): Built | null => {
     setShowErrors(true)
     if (Object.keys(errors).length > 0) return null
+    // Le dépassement retient l'enregistrement comme un champ obligatoire vide,
+    // mais il ne se corrige pas : il s'assume, d'où ses deux gestes à l'écran.
+    if (cap.blocking) return null
 
     const common = {
       label: draft.label.trim(),
@@ -364,6 +477,10 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
     /** La saisie demande un support plutôt qu'une catégorie et un membre. */
     supportMode,
     firstDuePaid,
+    /** Ce que le plafond du support a à dire — dépassement et date de remplissage. */
+    cap,
+    clipToRoom,
+    acceptCap,
     build,
   }
 }

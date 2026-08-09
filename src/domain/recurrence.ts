@@ -33,6 +33,22 @@ export type Occurrence = {
   date: ISODate
 }
 
+/**
+ * Ce qu'il faut d'une règle pour savoir **quand** elle tombe — son rythme et ses
+ * deux bornes, rien d'autre.
+ *
+ * Le type existe parce que le calendrier d'une règle se lit avant qu'elle soit
+ * enregistrée : le formulaire annonce à quelle date une règle remplira un
+ * support (`savingCap.capFill`) alors qu'il n'a encore qu'un brouillon, sans
+ * identifiant. Exiger une `Recurrence` entière obligerait à en fabriquer une
+ * fausse pour la question, ce qui est le genre de faux-semblant qui finit par
+ * être enregistré.
+ */
+export type Schedule = Pick<Recurrence, 'period' | 'startedOn' | 'endedOn'> & {
+  /** Absent sur un brouillon : les échéances rendues le portent alors vide. */
+  id?: string
+}
+
 /** Borne haute de sécurité : une expansion ne renvoie jamais plus que ça. */
 const MAX_OCCURRENCES = 2000
 
@@ -47,7 +63,7 @@ function normalizeEvery(every: number): number {
  * Le résultat est trié et ne contient que des dates où la récurrence est active.
  */
 export function expandRecurrence(
-  recurrence: Recurrence,
+  recurrence: Schedule,
   from: ISODate,
   to: ISODate,
 ): Occurrence[] {
@@ -61,10 +77,10 @@ export function expandRecurrence(
       ? weeklyDates(recurrence, lower, upper)
       : monthlyOrYearlyDates(recurrence, lower, upper)
 
-  return dates.map((date) => ({ recurrenceId: recurrence.id, date }))
+  return dates.map((date) => ({ recurrenceId: recurrence.id ?? '', date }))
 }
 
-function weeklyDates(recurrence: Recurrence, lower: ISODate, upper: ISODate): ISODate[] {
+function weeklyDates(recurrence: Schedule, lower: ISODate, upper: ISODate): ISODate[] {
   const every = normalizeEvery(recurrence.period.every)
   const step = 7 * every
   const anchor = firstWeekdayOnOrAfter(recurrence.startedOn, recurrence.period.anchorDay)
@@ -81,7 +97,7 @@ function weeklyDates(recurrence: Recurrence, lower: ISODate, upper: ISODate): IS
   return dates
 }
 
-function monthlyOrYearlyDates(recurrence: Recurrence, lower: ISODate, upper: ISODate): ISODate[] {
+function monthlyOrYearlyDates(recurrence: Schedule, lower: ISODate, upper: ISODate): ISODate[] {
   const every = normalizeEvery(recurrence.period.every)
   const yearly = recurrence.period.unit === 'year'
   const stepInMonths = yearly ? 12 * every : every
