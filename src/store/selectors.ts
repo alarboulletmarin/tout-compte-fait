@@ -69,6 +69,14 @@ import {
   supportsWithoutRole,
   valuationsOf,
 } from '@/domain/saving'
+import {
+  type GoalBasis,
+  type GoalRead,
+  activeGoals,
+  goalBasis,
+  goalsOfMember,
+  readGoal,
+} from '@/domain/goal'
 import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
 import { rateOn, ratesOf } from '@/domain/savingRate'
 import { convertsToSingleEntry } from '@/domain/updates'
@@ -107,6 +115,7 @@ import {
   type Family,
   type Member,
   type Recurrence,
+  type SavingGoal,
   type SavingSupport,
   type SavingRate,
   type SavingValuation,
@@ -972,6 +981,83 @@ export function useScopedSavingSupports(): SavingSupport[] {
     if (filter.kind === 'common') return []
     return supports.filter((support) => support.memberId === filter.memberId)
   }, [supports, filter])
+}
+
+/* --- Objectifs ------------------------------------------------------------*/
+
+/** Tous les objectifs du document, archivés compris. */
+export function useSavingGoals(): SavingGoal[] {
+  return useStore((s) => s.data.savingGoals)
+}
+
+/**
+ * Les objectifs de la lecture courante — ceux de la personne filtrée.
+ *
+ * La même règle que les supports : l'épargne est individuelle, et deux
+ * objectifs ne s'additionnent pas plus que deux livrets. « Commun » n'en montre
+ * aucun.
+ */
+export function useScopedSavingGoals(): SavingGoal[] {
+  const goals = useSavingGoals()
+  const filter = useMonthFilter()
+  return useMemo(() => {
+    if (filter.kind === 'all') return activeGoals(goals)
+    if (filter.kind === 'common') return []
+    return activeGoals(goalsOfMember(goals, filter.memberId))
+  }, [goals, filter])
+}
+
+/** Un objectif par son identifiant. `null` s'il n'existe pas (ou plus). */
+export function useSavingGoal(id: string | undefined): SavingGoal | null {
+  const goals = useSavingGoals()
+  return useMemo(
+    () => (id === undefined ? null : (goals.find((one) => one.id === id) ?? null)),
+    [goals, id],
+  )
+}
+
+/**
+ * Le verdict d'un objectif : où il en est, où il va, et de combien il dérive.
+ *
+ * Tout est **lu** sur ses comptes — capital, versements, taux datés, plafonds —
+ * par le même chemin que le simulateur (`goalBasis`). C'est ce qui garantit
+ * qu'un relevé saisi sur la fiche d'un compte met l'objectif à jour sans que
+ * personne ait à y toucher, et que la courbe de la fiche et le verdict de la
+ * liste ne peuvent pas diverger.
+ */
+export function useGoalRead(goal: SavingGoal | null): GoalRead | null {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const rates = useSavingRates()
+
+  return useMemo(() => {
+    if (goal === null) return null
+    const on = today()
+    const basis = goalBasis(goal, { supports, valuations, entries, recurrences, rates }, on)
+    return readGoal(goal, basis, on)
+  }, [goal, supports, valuations, entries, recurrences, rates])
+}
+
+/**
+ * Ce qu'un objectif lit sur ses comptes, avant verdict — pour la fiche, qui
+ * trace la trajectoire et a besoin des parts, pas seulement de la conclusion.
+ */
+export function useGoalBasis(goal: SavingGoal | null): GoalBasis | null {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const rates = useSavingRates()
+
+  return useMemo(
+    () =>
+      goal === null
+        ? null
+        : goalBasis(goal, { supports, valuations, entries, recurrences, rates }, today()),
+    [goal, supports, valuations, entries, recurrences, rates],
+  )
 }
 
 /**

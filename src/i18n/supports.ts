@@ -62,6 +62,59 @@ const fr = {
   evolutionMethod:
     'Estimation : les points sont tes relevés, le reste se dérive des mouvements confirmés et du taux en vigueur ce mois-là. Un support sans relevé n’y figure pas — sa valeur est inconnue, pas nulle.',
   srEvolution: 'Épargne estimée de %s en %s à %s en %s, relevés compris.',
+
+  /* --- Les objectifs, sous leur fiche et leur formulaire ------------------
+     Ce qui reste dans `fr.ts` est ce que la **section** de l'écran Épargne lit :
+     le titre, l'état vide, et les mots du verdict — cet écran-là est dans le
+     graphe initial. Tout ce qui suit ne se lit que sur la fiche d'un objectif
+     ou sur son formulaire, qui se chargent à la demande avec le reste de ce que
+     l'épargne ouvre sous elle. */
+  goalNew: 'Nouvel objectif',
+  goalEdit: 'Modifier l’objectif',
+  goalAdded: 'Objectif ajouté',
+  goalUpdated: 'Objectif modifié',
+  goalRemoved: 'Objectif supprimé',
+  goalArchived: 'Objectif rangé',
+  goalUnarchived: 'Objectif repris',
+  goalLabel: 'Ce que tu vises',
+  goalLabelPlaceholder: 'Apport appartement',
+  goalLabelRequired: 'Donne un nom à cet objectif.',
+  goalOwner: 'Titulaire',
+  goalTarget: 'Montant visé',
+  goalTargetRequired: 'Indique un montant supérieur à zéro.',
+  goalDate: 'Pour quand',
+  goalDateHint:
+    'Facultatif. Sans échéance, l’app dit quand tu y arriveras ; avec, elle dit si tu es à l’heure.',
+  goalSupports: 'Comptes qui y contribuent',
+  goalSupportsHint:
+    'C’est le lien au réel : le capital, les versements et les taux se lisent sur eux. Rien n’est à retaper ici.',
+  goalSupportsNone: 'Aucun compte rattaché : l’avancement ne peut pas se calculer.',
+  goalMonthly: 'Versement engagé',
+  goalMonthlyHint:
+    'Facultatif. Laissé vide, c’est la somme de tes règles d’épargne durables sur ces comptes qui compte — l’app la connaît déjà.',
+  goalMonthlyInvalid: 'Indique un versement supérieur à zéro, ou laisse vide.',
+  goalManage: 'Gestion de l’objectif',
+  goalArchive: 'Ranger cet objectif',
+  goalArchiveHint: 'Il sort des listes, son histoire reste.',
+  goalUnarchive: 'Reprendre cet objectif',
+  goalRemove: 'Supprimer cet objectif',
+  goalRemoveConfirm:
+    'Cet objectif disparaît. Tes comptes, tes relevés et tes versements ne bougent pas. Supprimer ?',
+  goalTargetOn: 'visé pour %s',
+  goalNeeded: '+%s/mois pour tenir la date',
+  goalCurrent: 'Versement',
+  goalCurrentFrom: 'Lu sur tes règles d’épargne.',
+  goalCurrentOwn: 'Engagé sur cet objectif.',
+  goalAccounts: 'Comptes',
+  goalRate: 'Hypothèse',
+  goalRateNone: 'aucun taux posé',
+  goalRateHint:
+    'Un compte sans taux est projeté à 0 % : l’app ne devine aucun rendement. La date annoncée est donc au plus tard, jamais au plus tôt.',
+  goalChart: 'Prévu et relevé',
+  goalChartLabel: 'Trajectoire de l’objectif jusqu’à %s',
+  goalChartEmpty:
+    'La courbe apparaîtra dès qu’un compte rattaché portera un relevé.',
+  goalSrChart: 'De %s aujourd’hui à %s en %s, sur %s relevés déjà posés.',
 } as const
 
 export type SupportStrings = Widen<typeof fr>

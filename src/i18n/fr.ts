@@ -694,6 +694,7 @@ export const fr = {
       savingSupports: 'Support d’épargne',
       savingValuations: 'Valorisation',
       savingRates: 'Taux d’épargne',
+      savingGoals: 'Objectifs',
       months: 'Mois',
     },
     reportReason: {
@@ -1844,6 +1845,52 @@ export const fr = {
        rares, dont l'un est destructif, et une tuile posée en permanence sous
        l'historique leur donnait le poids d'une lecture quotidienne. */
     manage: 'Gestion du support',
+
+    /* --- Les objectifs -----------------------------------------------------
+       Le seul bloc de l'épargne qui **conclut**. Le reste dit ce qu'on a, où
+       c'est placé et ce qu'on y verse — trois lectures qu'un relevé de banque
+       donne aussi, en mieux. Ce qu'aucun relevé ne donne, c'est l'écart entre
+       ce qu'on vise et ce qu'on tient : c'est le mot « en retard » ou « à
+       l'heure » qui fait revenir sur l'écran, pas le capital.
+
+       Le vocabulaire de l'état ne repose jamais sur la couleur (DS §2.3) : il
+       tient dans un **mot**, doublé d'une jauge et d'une icône. La teinte n'est
+       que le quatrième signal. */
+    goals: 'Objectifs',
+    goalsEmpty:
+      'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
+    goalAdd: 'Ajouter un objectif',
+    /* Le formulaire. Trois questions, et c'est tout ce qu'un objectif stocke :
+       le capital, le rendement et le versement se lisent sur les comptes. */
+    /* La gestion, en fin de formulaire comme pour un support : ranger, reprendre,
+       supprimer. Des gestes rares, dont l'un est destructif. */
+
+    /* --- Le verdict --------------------------------------------------------
+       Quatre états, et chacun se dit par un mot avant d'être une couleur.
+       « À l'heure » et « en retard » sont des conclusions ; « 68 % » n'en est
+       pas une, et c'est pourquoi la jauge ne suffit pas. */
+    goalOn: 'à l’heure',
+    goalAhead: '%s mois d’avance',
+    goalAheadOne: '1 mois d’avance',
+    goalLate: '%s mois de retard',
+    goalLateOne: '1 mois de retard',
+    goalReached: 'atteint',
+    /* Ce que l'app ne peut pas dire, et pourquoi : à versement nul et sans
+       rendement, il n'existe pas de date d'arrivée — en inventer une serait
+       pire que se taire. */
+    goalNoReach: 'pas à ce rythme',
+    goalNoCapital: 'aucun relevé sur ces comptes',
+    /* La date d'arrivée, sous l'état : « 42 000 € en mars 2028 ». */
+    goalReachOn: '%s en %s',
+    /* Le rattrapage : la seule chose actionnable de tout l'écran. Un écart sans
+       ce chiffre-là se contemple, avec lui il se décide. */
+    /* La fiche. « 28 400 € sur 42 000 € » : les deux montants ensemble, parce
+       qu'un pourcentage seul ne dit pas de quoi il est le pourcentage. */
+    goalProgress: '%s sur %s',
+    /* Pourquoi la date annoncée est prudente. Elle vit sur la fiche et pas
+       ailleurs : c'est là qu'on lit la date, donc là que la réserve sert. */
+    /* Le tracé : le prévu, et les relevés réels posés dessus. C'est ce qui fait
+       la différence entre une courbe décorative et un suivi. */
 
     /* --- Les relevés -------------------------------------------------------
        Un **relevé** est une observation datée de ce que vaut le support ; un

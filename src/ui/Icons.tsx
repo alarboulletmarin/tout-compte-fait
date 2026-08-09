@@ -28,7 +28,7 @@ import { ChartLineUp } from '@phosphor-icons/react/dist/csr/ChartLineUp'
 import { ChartPieSlice } from '@phosphor-icons/react/dist/csr/ChartPieSlice'
 import { Check as PhCheck } from '@phosphor-icons/react/dist/csr/Check'
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
-import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Clock as PhClock } from '@phosphor-icons/react/dist/csr/Clock'
 import { Bank } from '@phosphor-icons/react/dist/csr/Bank'
 import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Database } from '@phosphor-icons/react/dist/csr/Database'
@@ -142,7 +142,7 @@ export const RemainingIcon = adapt(HandCoins)
    voisins sur la grille, et deux mains de pièces s'y confondraient. */
 export const SavingsIcon = adapt(PiggyBank)
 export const BreakdownIcon = adapt(ChartPieSlice)
-export const UpcomingIcon = adapt(Clock)
+export const UpcomingIcon = adapt(PhClock)
 export const CreditsIcon = adapt(Bank)
 export const SplitIcon = adapt(UsersThree)
 export const ToConfirmIcon = adapt(CheckCircle)

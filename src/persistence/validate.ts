@@ -31,6 +31,7 @@ import type {
   Period,
   PeriodUnit,
   Recurrence,
+  SavingGoal,
   SavingRate,
   SavingSupport,
   SavingValuation,
@@ -62,6 +63,7 @@ export type ImportCollection =
   | 'savingSupports'
   | 'savingValuations'
   | 'savingRates'
+  | 'savingGoals'
   | 'months'
 
 /**
@@ -335,6 +337,45 @@ function savingRate(raw: unknown, index: number): Read<SavingRate> {
   }
 }
 
+/**
+ * Un objectif sans porteur ou sans cible n'est pas un objectif : c'est tout ce
+ * qu'il porte.
+ *
+ * La cible doit être **strictement positive** — « viser zéro euro » n'est pas un
+ * cap, et une jauge sans dénominateur ne veut rien dire, ce qui est la règle de
+ * `savingRate` et de `savingCoverage`. Le porteur suit celle d'un support et
+ * d'une avance : une épargne est toujours à quelqu'un, et lui en inventer un
+ * attribuerait à quelqu'un ce qu'il n'a pas décidé.
+ *
+ * Les comptes rattachés sont **filtrés à la réparation** et non ici : ce
+ * fichier lit une ligne à la fois, et savoir quels supports existent demande de
+ * les avoir tous lus.
+ */
+function savingGoal(raw: unknown, index: number): Read<SavingGoal> {
+  if (!isRecord(raw)) return 'shape'
+  const memberId = optionalStr(raw['memberId'])
+  if (memberId === undefined) return 'noMember'
+  if (!isMoney(raw['target']) || raw['target'] <= 0) return 'amount'
+  const targetOn = raw['targetOn']
+  const monthly = raw['monthly']
+  return {
+    id: str(raw['id'], `saving-goal-${String(index)}`),
+    label: str(raw['label'], '—'),
+    memberId,
+    supportIds: array(raw['supportIds']).flatMap((one) =>
+      typeof one === 'string' && one !== '' ? [one] : [],
+    ),
+    target: raw['target'],
+    ...(typeof targetOn === 'string' && isValidYm(targetOn) ? { targetOn } : {}),
+    /* Un versement engagé nul ou négatif est **retiré** plutôt que gardé :
+       « je verse 0 € » n'est pas un engagement, c'est l'absence d'engagement,
+       et c'est déjà ce que l'absence du champ veut dire. */
+    ...(isMoney(monthly) && monthly > 0 ? { monthly } : {}),
+    startedOn: isoDate(raw['startedOn'], today()),
+    archived: bool(raw['archived'], false),
+  }
+}
+
 function advance(raw: unknown, index: number): Read<Advance> {
   if (!isRecord(raw)) return 'shape'
   if (!isMoney(raw['amount'])) return 'amount'
@@ -552,6 +593,7 @@ export function normalizeDocument(raw: unknown): NormalizedDocument {
       notices,
     ),
     savingRates: compact(array(source['savingRates']), 'savingRates', savingRate, notices),
+    savingGoals: compact(array(source['savingGoals']), 'savingGoals', savingGoal, notices),
     months: compact(array(source['months']), 'months', monthState, notices),
     settings: settings(source['settings']),
   }
@@ -630,6 +672,7 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
   const supports = dedupeIds(data.savingSupports, 'savingSupports', notices)
   const valuations = dedupeIds(data.savingValuations, 'savingValuations', notices)
   const rates = dedupeIds(data.savingRates, 'savingRates', notices)
+  const goals = dedupeIds(data.savingGoals, 'savingGoals', notices)
 
   const memberIds = new Set(members.map((m) => m.id))
   const familyIds = new Set(families.map((f) => f.id))
@@ -746,6 +789,31 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
       index,
       reason: 'unknownSupport',
     })
+  })
+
+  /* Les objectifs. Un porteur inconnu **écarte** l'objectif — comme un support
+     et une avance, une épargne est toujours à quelqu'un. Un compte inconnu, lui,
+     se **coupe** : l'objectif reste, il vise toujours la même somme, et sa
+     lecture repart sur les comptes qui restent. C'est le geste le plus doux qui
+     règle le cas, et c'est la règle de tout lien facultatif — le taire ferait
+     chuter un avancement sans cause visible. */
+  const keptGoals: SavingGoal[] = []
+  goals.forEach((goal, index) => {
+    if (!memberIds.has(goal.memberId)) {
+      notices.push({
+        kind: 'discarded',
+        collection: 'savingGoals',
+        index,
+        reason: 'unknownMember',
+        label: goal.label,
+      })
+      return
+    }
+    const linked = goal.supportIds.filter((id) => supportIds.has(id))
+    if (linked.length !== goal.supportIds.length) {
+      note('savingGoals', index, 'unknownSupport', goal.label)
+    }
+    keptGoals.push({ ...goal, supportIds: linked })
   })
 
   /** Un lien de support mort se coupe, comme celui d'un membre ou d'une règle. */
@@ -870,6 +938,7 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
     savingSupports: keptSupports,
     savingValuations: keptValuations,
     savingRates: keptRates,
+    savingGoals: keptGoals,
     months,
   }
 }

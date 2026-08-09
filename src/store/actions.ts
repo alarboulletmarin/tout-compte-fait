@@ -8,7 +8,7 @@
 import { type ISODate, today } from '@/domain/date'
 import { makeId } from '@/domain/ids'
 import type { Money } from '@/domain/money'
-import { type Advance, type Category, type CategoryKind, type Debt, type Entry, type Family, type Member, type Recurrence, type SavingRate, type SavingSupport, type SavingValuation, type Settings, directionOfKind } from '@/domain/types'
+import { type Advance, type Category, type CategoryKind, type Debt, type Entry, type Family, type Member, type Recurrence, type SavingGoal, type SavingRate, type SavingSupport, type SavingValuation, type Settings, directionOfKind } from '@/domain/types'
 import * as updates from '@/domain/updates'
 import { t } from '@/i18n/strings'
 import { nextCategoryColor, nextMemberColor } from '@/persistence/defaults'
@@ -182,6 +182,29 @@ export function stopSupportRecurrences(id: string): void {
 /** Supprime un support pour de bon. Réservé à ce qui n'a pas d'histoire. */
 export function removeSavingSupport(id: string): void {
   mutate((data) => updates.removeSavingSupport(data, id))
+}
+
+/* --- Épargne : objectifs --------------------------------------------------*/
+
+export type { SavingGoalInput } from '@/domain/updates'
+
+/** Pose un objectif et rend ce qui a été créé, pour que l'écran sache où aller. */
+export function addSavingGoal(input: updates.SavingGoalInput): SavingGoal {
+  const created = updates.createSavingGoal(useStore.getState().data, input, makeId, today())
+  mutate(() => created.data)
+  return created.goal
+}
+
+export function replaceSavingGoal(id: string, next: Omit<SavingGoal, 'id'>): void {
+  mutate((data) => updates.replaceSavingGoal(data, id, next))
+}
+
+export function archiveSavingGoal(id: string, archived = true): void {
+  mutate((data) => updates.archiveSavingGoal(data, id, archived))
+}
+
+export function removeSavingGoal(id: string): void {
+  mutate((data) => updates.removeSavingGoal(data, id))
 }
 
 export function addSavingValuation(input: Omit<SavingValuation, 'id'>): SavingValuation {

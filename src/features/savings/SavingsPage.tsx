@@ -28,6 +28,7 @@ import { Row, RowGroup } from '@/ui/RowGroup'
 import { useCurrency } from '@/ui/currency'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
+import { GoalsSection } from './GoalsSection'
 import { MonthTile } from './MonthTile'
 import { PlacedSection } from './PlacedSection'
 import { SupportsOverview } from './SupportsSection'
@@ -172,6 +173,12 @@ export function SavingsPage() {
               le capital parce qu'elle en est la lecture : « combien j'ai » n'a
               d'intérêt que par « est-ce que ça tient ». */}
           <CoverageTile />
+          {/* Le seul bloc de l'écran qui conclut, et c'est pourquoi il passe
+              devant la liste des comptes : « à l'heure » ou « sept mois de
+              retard » est ce qu'aucun relevé de banque ne dit, quand « où
+              c'est placé » se lit ailleurs et en mieux. */}
+          <GoalsSection />
+
           {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
               fait sur l'écran dédié, vers lequel ce bloc renvoie. */}
           <SupportsOverview />

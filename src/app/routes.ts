@@ -169,6 +169,22 @@ export const SAVINGS_PATH = '/epargne'
    renvoie vers elles pour tout ce qui demande de s'y arrêter. Segments fixes,
    comme `/nouveau` : React Router les classe avant `:id`. */
 export const SAVINGS_SUPPORTS_PATH = `${SAVINGS_PATH}/supports`
+/**
+ * Les objectifs, et la fiche de chacun.
+ *
+ * Sous `/epargne/` parce qu'un objectif **est** un objet de l'épargne, au même
+ * titre qu'un support : on l'ouvre depuis la liste, on y revient, et
+ * `isFocusScreen` a raison de compter sa fiche comme une fiche. C'est
+ * exactement l'argument inverse de celui qui garde le simulateur à la racine —
+ * lui ne produit rien qui reste, et ne se range donc sous rien.
+ *
+ * Segments fixes avant `:id`, comme partout : React Router les classe d'abord,
+ * un objectif ne peut donc pas éclipser son formulaire de création.
+ */
+export const GOALS_PATH = `${SAVINGS_PATH}/objectifs`
+export const GOAL_NEW_PATH = `${GOALS_PATH}/nouveau`
+export const goalPath = (id: string): string => `${GOALS_PATH}/${id}`
+export const goalEditPath = (id: string): string => `${GOALS_PATH}/${id}/modifier`
 export const SAVINGS_ANALYSIS_PATH = `${SAVINGS_PATH}/analyse`
 /* Segment fixe avant `:id`, comme partout ailleurs : React Router le classe
    d'abord, un support ne peut donc pas éclipser le formulaire de création. */

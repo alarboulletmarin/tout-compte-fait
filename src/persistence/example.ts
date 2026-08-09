@@ -57,6 +57,7 @@ import type {
   Entry,
   Family,
   Recurrence,
+  SavingGoal,
   SavingSupport,
 } from '@/domain/types'
 import {
@@ -1257,6 +1258,7 @@ export function exampleData(on: ISODate = today()): Data {
 
   data = withCatalogue(data)
   data = withSupports(data)
+  data = withGoals(data, first)
   data = withRules(data, first)
   data = withDebts(data, first)
   data = withValuations(data, anchor, ids)
@@ -1460,6 +1462,70 @@ function withSupports(data: Data): Data {
      arrêtée par son `until` : archiver un support que rien n'arrête laisserait
      un compte invisible grossir tout seul. */
   return archiveSavingSupport(supports.reduce(addSavingSupport, data), PEE_CAMILLE)
+}
+
+/**
+ * Les trois objectifs — et ils sont là pour trois **verdicts**, pas pour trois
+ * montants.
+ *
+ * C'est le seul bloc de l'épargne qui conclue, et un jeu d'exemple où tout
+ * serait « à l'heure » laisserait croire à un écran qui approuve. Les trois
+ * états qui comptent y sont donc :
+ *
+ * - **à l'heure ou en avance** — le matelas de Camille, que son livret couvre
+ *   déjà largement : c'est un objectif **atteint**, ce qui est un état à part
+ *   entière et non un cas limite ;
+ * - **en retard** — l'apport d'Alix, dont la cible est haute et l'échéance
+ *   proche : c'est ce cas-là qui fait exister « +85 €/mois pour tenir la
+ *   date », la seule chose actionnable de tout l'écran ;
+ * - **sans échéance** — le long terme de Camille sur son assurance-vie : l'app
+ *   dit alors *quand*, jamais *si*, et c'est une lecture différente qu'aucun
+ *   objectif daté ne produirait.
+ *
+ * Sacha n'en porte aucun, et c'est voulu : un jeu où chaque personne aurait le
+ * sien ferait passer l'objectif pour un passage obligé, quand c'est une
+ * intention qu'on pose quand on en a une.
+ *
+ * Aucun capital, aucun taux, aucun versement n'est écrit ici : ils vivent sur
+ * les comptes rattachés, et c'est tout l'intérêt de l'objet.
+ */
+function withGoals(data: Data, first: YearMonth): Data {
+  const goals: SavingGoal[] = [
+    {
+      id: 'ex-g-apport',
+      label: 'Apport appartement',
+      memberId: ALIX,
+      supportIds: [LIVRET_ALIX, PEL_ALIX],
+      target: money(4_200_000),
+      /* Trois ans après le début du jeu : assez loin pour que la trajectoire
+         ait une forme, assez près pour que l'écart se voie. */
+      targetOn: addMonthsToYm(first, 36),
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+    {
+      id: 'ex-g-matelas',
+      label: 'Matelas de sécurité',
+      memberId: CAMILLE,
+      supportIds: [LIVRET_CAMILLE],
+      target: money(600_000),
+      targetOn: addMonthsToYm(first, 24),
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+    {
+      id: 'ex-g-long',
+      label: 'Long terme',
+      memberId: CAMILLE,
+      supportIds: [ASSURANCE_VIE],
+      target: money(5_000_000),
+      /* Aucune échéance : l'app dit quand on y arrive, jamais si l'on est à
+         l'heure — il n'y a pas d'heure. */
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+  ]
+  return { ...data, savingGoals: goals }
 }
 
 /**

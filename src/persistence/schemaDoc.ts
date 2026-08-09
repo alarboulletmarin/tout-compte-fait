@@ -77,6 +77,7 @@ const RULES = [
   '**Un taux ne fabrique aucun euro dans le document.** Il ne change ni le capital relevé, ni la valeur estimée d’un support, ni la couverture, ni un total du mois — un rendement n’est pas un mouvement. Il est lu par les projections et par la courbe d’évolution de l’épargne, qui annoncent toutes deux une **estimation**.',
   '**`SavingSupport.role` dit à quoi le compte sert**, et c’est le seul champ dont dépende un chiffre affiché : `"buffer"` — la précaution, mobilisable demain —, `"project"` — une somme à réunir — ou `"growth"` — le long terme. Seuls les `"buffer"` entrent dans « combien de temps je tiens » : un PEA ne se dénoue pas dans la semaine, et le compter promettrait une réserve qui n’existe pas. Le champ est **facultatif, et son absence n’a aucun défaut** — contrairement à `pace` : un compte sans rôle ne compte dans aucune autonomie, et l’écran pose la question plutôt que de la deviner. Ne le déduis pas de la catégorie : deux « Livret A » peuvent être l’un le matelas et l’autre l’apport d’un appartement.',
   '**`SavingSupport.pace` dit à quel rythme un relevé est attendu**, et rien d’autre : `"yearly"` — un livret réglementé, dont la valeur est déterministe entre deux relevés — ou `"quarterly"` — un PEA, un compte-titres, une assurance-vie en unités de compte. Ce n’est ni un rendement ni une projection : l’app s’en sert pour savoir **quand se taire**, pas pour calculer une valeur. Le champ est facultatif ; absent, l’app lit « annuel » sans l’écrire.',
+  '**`SavingGoal` est le seul objet du document qui soit une *intention*.** Il porte ce que tu vises — `label`, `target` en centimes, `targetOn` au format `"2028-03"` — et le lien vers les comptes qui y contribuent (`supportIds`). Il ne porte **ni capital, ni taux, ni versement obligatoire** : le capital vient des `savingValuations` de ses comptes, le rendement de leurs `savingRates`, et le versement des récurrences qui les alimentent. Les recopier ici en ferait autant de secondes vérités. `memberId` est obligatoire, comme sur un support : un cap que personne ne vise n’est le cap de personne. `monthly` n’existe que pour un engagement que les règles ne disent pas encore ; absent, c’est la somme des règles durables qui compte.',
   '**Un mouvement d’épargne désigne son support par identifiant** — `Entry.savingSupportId`, `Recurrence.savingSupportId`, `Advance.savingSupportId` — et jamais par libellé ni par catégorie. Le champ n’a de sens que sur une ligne de nature `saving` ; ailleurs, omets-le. Une échéance générée hérite du support de sa règle.',
   '**Les `id` sont des chaînes libres**, à toi de les choisir. Ils doivent être uniques dans leur tableau, et tout `categoryId`, `memberId`, `familyId` ou `recurrenceId` cité doit désigner quelque chose qui existe.',
   '**L’import ne refuse presque rien : il répare, ou il écarte.** Un lien mort ne fait pas rejeter le fichier — il fait garder un document qui n’est plus celui que tu as écrit. La section « Ce que l’import répare, et ce qu’il écarte » le dit cas par cas ; elle vaut la lecture avant de produire quoi que ce soit.',
@@ -117,7 +118,7 @@ const REPAIRS: Record<ImportReason, string> = {
   unknownRecurrence:
     '`recurrenceId` qui ne désigne rien. Le lien est **coupé** : l’échéance devient ponctuelle, et le crédit ou l’avance qui s’y adossait cesse de s’amortir.',
   unknownSupport:
-    '`savingSupportId` qui ne désigne rien. Sur une `Entry`, une `Recurrence` ou une `Advance`, le lien est **coupé**. Un `SavingValuation` est **écarté** — un relevé sans support ne vaut plus rien. Et un `SavingSupport` rangé sous une catégorie qui n’est pas d’épargne est **déplacé** sous la première qui l’est.',
+    '`savingSupportId` qui ne désigne rien. Sur une `Entry`, une `Recurrence` ou une `Advance`, le lien est **coupé**. Un `SavingValuation` est **écarté** — un relevé sans support ne vaut plus rien. Un `SavingSupport` rangé sous une catégorie qui n’est pas d’épargne est **déplacé** sous la première qui l’est. Et un `supportIds` d’objectif qui désigne un compte inexistant se **coupe** aussi : l’objectif reste, il vise toujours la même somme, et sa lecture repart sur les comptes qui restent.',
 }
 
 /**
@@ -465,6 +466,18 @@ const MINIMAL = `{
       "pace": "yearly",
       "role": "buffer",
       "depositCap": 2295000
+    }
+  ],
+  "savingGoals": [
+    {
+      "id": "g-apport",
+      "label": "Apport appartement",
+      "memberId": "m-alix",
+      "supportIds": ["s-livret-alix"],
+      "target": 4200000,
+      "targetOn": "2028-03",
+      "startedOn": "2026-01-05",
+      "archived": false
     }
   ],
   "savingValuations": [

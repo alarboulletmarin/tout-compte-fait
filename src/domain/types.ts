@@ -288,6 +288,66 @@ export type SavingValuation = {
   date: ISODate
 }
 
+/**
+ * Un cap, et ce qui y mène.
+ *
+ * C'est le seul objet de l'épargne qui soit une **intention** et non un fait —
+ * mais une intention adoptée est un fait du foyer, au même titre qu'un crédit
+ * souscrit ou une avance montée. Ce qui reste dehors, c'est l'hypothèse qu'on
+ * essaie : le taux d'une simulation vit toujours en `localStorage`, jamais ici.
+ *
+ * **Il ne portait rien du tout jusqu'ici, et c'est ce qui manquait au modèle.**
+ * L'app savait ce qu'on a, où c'est placé, ce qu'on y verse et ce que ça
+ * deviendrait — mais jamais ce qu'on **vise**. Sans cap, une projection est un
+ * gadget : on règle douze choses, on regarde une courbe, on part, et rien ne
+ * revient. Avec lui, la même courbe devient un suivi, parce que les relevés des
+ * comptes rattachés viennent s'y poser.
+ *
+ * **Trois champs tapés, tout le reste calculé.** C'est ce qui le rend tenable :
+ *
+ * - **Pas de taux.** Il vient des `SavingRate` de ses comptes, datés, qui sont
+ *   déjà la vérité. Un `expectedReturn` posé ici serait la promesse que le
+ *   cahier §2 refuse, et une seconde vérité à tenir d'accord avec la première.
+ * - **Pas de capital.** Il vient des `SavingValuation` de ses comptes.
+ * - **Pas de versement obligatoire.** Absent, il se lit sur les récurrences
+ *   d'épargne durables posées sur ses comptes — l'app le sait déjà
+ *   (`domain/projectionStart.ts`), et le retaper serait une seconde vérité de
+ *   plus.
+ */
+export type SavingGoal = {
+  id: string
+  /** Ce qu'on vise, en toutes lettres : « Apport appartement », « Matelas ». */
+  label: string
+  /**
+   * Jamais facultatif, comme sur un support : une épargne est toujours à
+   * quelqu'un, et deux objectifs ne s'additionnent pas plus que deux livrets.
+   */
+  memberId: string
+  /**
+   * Les comptes qui y contribuent. C'est le lien au réel, et le seul.
+   *
+   * Vide est permis — on peut poser un cap avant de savoir où l'argent ira —,
+   * et la lecture le dit alors plutôt que d'annoncer zéro : un objectif sans
+   * compte n'a pas un capital nul, il n'a pas de capital du tout.
+   */
+  supportIds: string[]
+  target: Money
+  /** Le mois visé. Absent = un cap sans échéance, qu'on atteint quand on l'atteint. */
+  targetOn?: YearMonth
+  /**
+   * Le versement engagé, s'il a été posé explicitement.
+   *
+   * Absent — le cas courant — il se **déduit** des récurrences d'épargne
+   * durables posées sur ses comptes. Le champ existe pour le cas inverse : « je
+   * m'engage à 380 € par mois » alors qu'aucune règle ne le pose encore, ou que
+   * celles qui existent ne disent pas ce qu'on a en tête.
+   */
+  monthly?: Money
+  startedOn: ISODate
+  /** Abandonné ou remplacé, mais conservé : son passé reste lisible. */
+  archived: boolean
+}
+
 export type Recurrence = {
   id: string
   label: string
@@ -563,6 +623,8 @@ export type Data = {
   savingValuations: SavingValuation[]
   /** Ce que chaque support sert, et depuis quand. */
   savingRates: SavingRate[]
+  /** Ce qu'on vise, et sur quels comptes. La seule intention du document. */
+  savingGoals: SavingGoal[]
   months: MonthState[]
   settings: Settings
 }

@@ -441,6 +441,7 @@ export const en: Strings = {
       savingSupports: 'Savings pot',
       savingValuations: 'Valuation',
       savingRates: 'Savings rate',
+      savingGoals: 'Goals',
       months: 'Month',
     },
     reportReason: {
@@ -1073,6 +1074,22 @@ export const en: Strings = {
     supportNote: 'Note',
     supportNotePlaceholder: 'Emergency fund, three months of costs',
     manage: 'Managing the pot',
+
+    goals: 'Goals',
+    goalsEmpty:
+      'No goal yet. Set a target — a deposit, a safety net — and the app will tell you whether you’re on track.',
+    goalAdd: 'Add a goal',
+
+    goalOn: 'on time',
+    goalAhead: '%s months early',
+    goalAheadOne: '1 month early',
+    goalLate: '%s months late',
+    goalLateOne: '1 month late',
+    goalReached: 'reached',
+    goalNoReach: 'not at this pace',
+    goalNoCapital: 'no valuation on these accounts',
+    goalReachOn: '%s in %s',
+    goalProgress: '%s of %s',
 
     value: 'Value recorded',
     valueNew: 'New value',

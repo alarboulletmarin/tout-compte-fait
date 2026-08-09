@@ -41,6 +41,8 @@ import {
   RECURRENCE_NEW_PATH,
   SAVINGS_ANALYSIS_PATH,
   SAVINGS_PATH,
+  GOALS_PATH,
+  GOAL_NEW_PATH,
   SAVINGS_SUPPORTS_PATH,
   STORAGE_PATH,
   SUPPORT_NEW_PATH,
@@ -114,6 +116,8 @@ const RateFormPage = lazy(async () => ({ default: (await savings()).RateFormPage
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
 const SupportsPage = lazy(async () => ({ default: (await savings()).SupportsPage }))
 const AnalysisPage = lazy(async () => ({ default: (await savings()).AnalysisPage }))
+const GoalPage = lazy(async () => ({ default: (await savings()).GoalPage }))
+const GoalFormPage = lazy(async () => ({ default: (await savings()).GoalFormPage }))
 
 /**
  * Le simulateur, à la demande.
@@ -222,6 +226,13 @@ export function AppRoutes() {
           />
           <Route path={`${SAVINGS_PATH}/:id/taux`} element={<RateFormPage />} />
           <Route path={`${SAVINGS_PATH}/:id/taux/:rateId`} element={<RateFormPage />} />
+          {/* Les objectifs. Sous `/epargne/` parce qu'un objectif est un objet
+              de l'épargne, et les segments fixes avant `:id` — React Router les
+              classe d'abord, un objectif ne peut donc pas éclipser son
+              formulaire de création. */}
+          <Route path={GOAL_NEW_PATH} element={<GoalFormPage />} />
+          <Route path={`${GOALS_PATH}/:id`} element={<GoalPage />} />
+          <Route path={`${GOALS_PATH}/:id/modifier`} element={<GoalFormPage />} />
           <Route path={ADVANCES_PATH} element={<AdvancesPage />} />
           <Route path={ADVANCE_NEW_PATH} element={<AdvanceFormPage />} />
           {/* Sous l'épargne par l'intention, à la racine par l'URL — voir

@@ -23,3 +23,8 @@ export { ValuationsFormPage } from './ValuationsFormPage'
    Capacité du mois — voir `SavingsPage`, qui n'en garde qu'un aperçu. */
 export { SupportsPage } from './SupportsPage'
 export { AnalysisPage } from './AnalysisPage'
+/* La fiche d'un objectif et son formulaire, dans le même morceau que le reste :
+   on ouvre l'une pour corriger l'autre, exactement comme un support et ses
+   deux saisies. */
+export { GoalPage } from './GoalPage'
+export { GoalFormPage } from './GoalFormPage'
