@@ -710,11 +710,16 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
   return useMemo(() => {
     const shared = sharedEntries(entries, month, kindOf)
     const amounts = shared.map((e) => e.amount)
+    /* Ce qui entre dans le pot sans se consommer : la mensualité d'une avance,
+       de nature épargne et pourtant « à partager » — le foyer rembourse qui a
+       réglé une dépense commune depuis son épargne. C'est le seul écart entre
+       ce qu'on verse et ce qu'on paie, et il n'avait pas de nom. */
+    const refunds = shared.filter((e) => !isSpending(kindOf(e.categoryId))).map((e) => e.amount)
     const missing = new Set(incomes.filter((i) => i.income === null).map((i) => i.memberId))
     return {
       total: sum(amounts),
       entries: shared,
-      shares: memberShares(incomes, amounts, adjustments(settlements)),
+      shares: memberShares(incomes, amounts, adjustments(settlements), refunds),
       unknown: members.filter((m) => missing.has(m.id)),
       previousYm,
       advanced: advancedEntries(entries, previousYm, kindOf),

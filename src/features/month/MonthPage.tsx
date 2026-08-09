@@ -206,7 +206,7 @@ export function MonthPage() {
             <SituationSection onExplain={setMetric} />
             <PendingSection focus={pendingFocus} />
           </div>
-          <AnalysisGrid onShowFamily={showFamily} />
+          <AnalysisGrid onShowFamily={showFamily} onExplain={setMetric} />
           <div className="flex max-w-3xl flex-col gap-4">
             <UpcomingSection />
             <EntriesSection

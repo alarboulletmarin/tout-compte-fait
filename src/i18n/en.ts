@@ -182,10 +182,13 @@ export const en: Strings = {
     moreHint: 'The rest of your screens, and the settings.',
     manage: 'Manage',
     organise: 'Organise',
+    simulate: 'Simulate',
     data: 'Data',
     application: 'Application',
     savings: 'Savings',
     split: 'Split',
+    projections: 'Projections',
+    projectionsHint: 'What a regular contribution becomes, under a rate you assume.',
     subscriptionsHint: 'What comes back every month, written once.',
     savingsHint: 'What you can set aside, and where to put it.',
     splitHint: 'Who pays what towards shared costs.',
@@ -548,11 +551,12 @@ export const en: Strings = {
     showMemberShare: 'See the detail of what there is to pay',
 
     memberShare: 'To pay into the pot',
-    srMemberShare: '%s carries %s of the shared costs.',
+    memberShareOf: 'To pay into the pot · %s',
 
     memberCharges: 'Own and shared',
     memberChargesOwn: 'Own costs',
     memberChargesCommon: 'Share of the pot',
+    memberChargesOfWhich: 'of which %s is the share of the pot',
     srMemberCharges: '%s of costs for %s: %s of their own, %s as their share of the pot.',
 
     explain: 'Understanding: %s',
@@ -577,6 +581,13 @@ export const en: Strings = {
         calculation: 'The forecast, stopped the day before the next money in.',
         apart:
           'It’s the forecast stopped earlier: that one runs to the end of the month, this one stops at the next pay. With no money in sight, the two meet — the horizon becomes the end of the month.',
+      },
+      memberCharges: {
+        lead: 'What the month actually cost you: your own spending, plus the share of the household your income makes you carry.',
+        calculation:
+          'Your costs and loans in your name, plus your share of the shared costs and loans — in proportion to income. It’s the figure on the Costs tile, to the penny: this one doesn’t contradict it, it breaks it apart.',
+        apart:
+          'It isn’t what you pay into the pot. The transfer also carries last month’s settlement, and the instalment of an advance — when someone settled a household expense out of their savings and the household pays them back. Those two are transferred without costing the month anything: a cost is settled in the month the spending happened.',
       },
     },
     srBreakdown: 'Breakdown of costs and loans: %s',
@@ -851,7 +862,8 @@ export const en: Strings = {
     expandAll: 'Expand all',
     advancedBy: 'paid up front by %s',
     settlement: 'Settlement %s',
-    settlementShare: 'Their share of the month',
+    settlementShare: 'Share of the pot',
+    settlementRefund: 'Advance repayment',
     settlementDetail: 'What was paid up front in %s',
     settlementHint:
       'These shared costs were settled by a single person. Everyone owed their share: the month catches up here, and the payments still add up to the total.',
@@ -867,6 +879,8 @@ export const en: Strings = {
     methodFlagged: 'The expenses ticked “to share”.',
     methodExcluded:
       'Savings aren’t shared: the money leaves the account, but it stays with whoever set it aside.',
+    methodAdvance:
+      'One exception: when someone has settled a household expense out of their savings, the instalment that pays them back is shared. It is transferred without costing the month anything — which is why a transfer can exceed what the month cost.',
     nothing: 'No shared cost this month.',
     /* Les six phrases qui suivent reçoivent `de(prénoms)`. Voir `format.de`. */
     missingOne: 'Add the income %s to split the costs.',

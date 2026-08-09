@@ -9,7 +9,7 @@
  * `src/charts`, dont aucun autre écran ne se sert : sa prose n'a pas plus de
  * raison qu'eux de voyager avec l'écran du mois.
  *
- * Rien d'autre que l'historique ne lit ce module — `fr.nav.history` reste dans
+ * Rien d'autre que l'historique ne lit ce module — `t.nav.history` reste dans
  * `fr.ts`, parce que la barre d'onglets nomme l'écran sans le charger.
  *
  * Le vocabulaire commun n'est pas ici : « Entrée », « Sortie », « Autres » se

@@ -3,7 +3,7 @@
  *
  * Ce qui est éprouvé ici n'est pas la mise en forme mais l'architecture : les
  * pas de navigation qui mènent à chaque vue, et le retour de chacune. Ce que
- * « Plus » montre de son côté — les quatre groupes, et le fait qu'aucun ne
+ * « Plus » montre de son côté — les cinq groupes, et le fait qu'aucun ne
  * s'appelle « Réglages » — est éprouvé avec lui, dans `features/more`.
  *
  * Ces vues vivaient sous `/reglages/…`, derrière une page d'entrée qui les

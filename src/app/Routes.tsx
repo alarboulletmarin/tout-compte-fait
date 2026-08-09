@@ -35,6 +35,7 @@ import {
   ONBOARDING_PATH,
   PEOPLE_PATH,
   PRIVACY_PATH,
+  PROJECTION_PATH,
   RECURRENCES_PATH,
   RECURRENCE_NEW_PATH,
   SAVINGS_PATH,
@@ -107,6 +108,19 @@ const SupportPage = lazy(async () => ({ default: (await savings()).SupportPage }
 const SupportFormPage = lazy(async () => ({ default: (await savings()).SupportFormPage }))
 const ValuationFormPage = lazy(async () => ({ default: (await savings()).ValuationFormPage }))
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
+
+/**
+ * Le simulateur de projections, à la demande.
+ *
+ * Il emporte son propre tracé SVG, sa prose — qui est longue, parce que ce
+ * qu'il refuse de calculer demande plus de mots que ce qu'il calcule — et son
+ * tableau de jalons, dont aucun autre écran ne se sert. Et il n'est sur le
+ * chemin de personne : on l'ouvre quand on se pose la question, pas tous les
+ * jours comme on ouvre son mois. C'est exactement le profil de l'historique.
+ */
+const ProjectionPage = lazy(async () => ({
+  default: (await import('@/features/projection/ProjectionPage')).ProjectionPage,
+}))
 
 /**
  * Les trois pages juridiques, dans un seul morceau.
@@ -198,6 +212,9 @@ export function AppRoutes() {
           />
           <Route path={ADVANCES_PATH} element={<AdvancesPage />} />
           <Route path={ADVANCE_NEW_PATH} element={<AdvanceFormPage />} />
+          {/* Sous l'épargne par l'intention, à la racine par l'URL — voir
+              `PROJECTION_PATH` dans `routes.ts`. */}
+          <Route path={PROJECTION_PATH} element={<ProjectionPage />} />
           <Route path="/historique" element={<HistoryPage />} />
           {/* Le quatrième onglet. Pas de découpage à la demande : l'écran n'est
               qu'une liste de rangées, et il est sur le chemin de la navigation

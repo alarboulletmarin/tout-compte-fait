@@ -407,14 +407,14 @@ Elle en portait cinq, ce qui était son plafond à 320px, et ce plafond décidai
 | | Barre d'onglets (< 1024px) | Colonne latérale (≥ 1024px) |
 |---|---|---|
 | Contenu | **quatre** destinations : les trois lectures qu'on ouvre pour regarder, puis « Plus » | les mêmes quatre, dont « Gérer » déplié |
-| Ce qui est rangé | un écran « Plus », qui liste quatre groupes en rangées | ce que « Plus » range au-delà de « Gérer » : la colonne dépliait tout tant qu'il tenait en deux groupes, mais onze destinations la doubleraient et l'une d'elles est un sélecteur, pas un lien |
+| Ce qui est rangé | un écran « Plus », qui liste cinq groupes en rangées | ce que « Plus » range au-delà de « Gérer » : la colonne dépliait tout tant qu'il tenait en deux groupes, mais douze destinations la doubleraient et l'une d'elles est un sélecteur, pas un lien |
 | Groupes | — | sans titre, puis « Gérer », puis « Plus » seul |
 
 **« Plus » range par intention, pas par commodité.** Il a porté un groupe
 « Réglages » qui contenait les personnes, les catégories, l'apparence, la devise,
 les données et « à propos » — six natures de tâches derrière un mot qui n'en
 nomme aucune. Le critère n'est pas « où peut-on ranger cette fonctionnalité ? »
-mais « avec quelle intention vient-on ? », et il en sort quatre : **Gérer** (ce
+mais « avec quelle intention vient-on ? », et il en sort cinq : **Gérer** (ce
 qui décide de ce que le budget calcule), **Organiser** (qui y figure, sous
 quelles étiquettes), **Données** (où elles vivent, comment en sortir une copie),
 **Application** (ce qui ne touche qu'à la présentation). Trois verbes et un nom,

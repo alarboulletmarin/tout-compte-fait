@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { CREDITS_PATH } from '@/app/routes'
 import { type ISODate, today } from '@/domain/date'
 import { parseAmount, toAmountInput } from '@/domain/money'
+import { parseRateBp, toRateInput } from '@/domain/rate'
 import type { Debt } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
@@ -30,27 +31,13 @@ type Draft = {
   note: string
 }
 
-/** Un taux se saisit en pourcent — « 4,5 » — et se stocke en points de base. */
-function parseRateBp(text: string): number | null {
-  const cleaned = text.trim().replace(',', '.')
-  if (cleaned === '') return 0
-  const value = Number(cleaned)
-  if (!Number.isFinite(value) || value < 0 || value > 100) return null
-  return Math.round(value * 100)
-}
-
-function rateToText(rateBp: number | undefined): string {
-  if (rateBp === undefined || rateBp === 0) return ''
-  return String(rateBp / 100).replace('.', ',')
-}
-
 function initial(debt: Debt | null): Draft {
   return {
     label: debt?.label ?? '',
     categoryId: debt?.categoryId ?? '',
     recurrenceId: debt?.recurrenceId ?? '',
     principalText: debt ? toAmountInput(debt.principal) : '',
-    rateText: rateToText(debt?.rateBp),
+    rateText: toRateInput(debt?.rateBp),
     startedOn: debt?.startedOn ?? today(),
     endsOn: debt?.endsOn ?? today(),
     note: debt?.note ?? '',

@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
+import { PROJECTION_PATH, SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
 import { ZERO, add } from '@/domain/money'
 import { savingCapacity, savingLeft, savingRate } from '@/domain/stats'
 import { t } from '@/i18n/strings'
@@ -13,7 +13,9 @@ import {
 } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
+import { ForecastIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
+import { Row, RowGroup } from '@/ui/RowGroup'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
 import { MonthTile } from './MonthTile'
@@ -159,6 +161,26 @@ export function SavingsPage() {
           <Suspense fallback={null}>
             <YearSection />
           </Suspense>
+
+          {/* Et après l'année, les années. Cette porte-ci est celle du
+              contexte — on est en train de regarder ce qu'on place, et la
+              question « ça donne quoi dans dix ans » se pose là. Elle n'est pas
+              la seule : « Plus » porte la même destination sous « Simuler »,
+              parce qu'un écran qu'on n'atteint qu'en descendant tout un autre
+              écran n'a pas d'adresse. Ce que le simulateur n'a toujours pas,
+              c'est un rang dans « Gérer » — il ne décide de rien (voir
+              `PROJECTION_PATH` dans `app/routes.ts`).
+              Elle ne dépend pas de la section d'année, qui arrive par le
+              réseau : une porte qui n'apparaîtrait qu'une fois le graphique
+              chargé serait une porte qu'on rate. */}
+          <RowGroup>
+            <Row
+              label={t.nav.projections}
+              description={t.nav.projectionsHint}
+              icon={ForecastIcon}
+              to={PROJECTION_PATH}
+            />
+          </RowGroup>
         </div>
       )}
     </>

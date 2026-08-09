@@ -137,6 +137,69 @@ export function formatSignedMoney(value: Money, currency: string): string {
   return prefix + formatMoney(value, currency)
 }
 
+/* Une décimale au plus, et jamais imposée : `formatDecimal` en force une pour
+   que « 4 mois » ne se lise pas comme un compte exact, mais ici le nombre est
+   déjà annoncé comme approché — « 7,0 k€ » posé sous « 14 k€ » sur un axe n'y
+   ajoute qu'un zéro à lire.
+   Par langue, comme les deux autres : un formateur français continuerait
+   d'écrire « 1,2 » là où l'anglais écrit « 1.2 ». */
+const compactFormatters = new Map<string, Intl.NumberFormat>()
+
+function compactFormatter(): Intl.NumberFormat {
+  const tag = intlTag()
+  const cached = compactFormatters.get(tag)
+  if (cached !== undefined) return cached
+  const made = new Intl.NumberFormat(tag, { useGrouping: true, maximumFractionDigits: 1 })
+  compactFormatters.set(tag, made)
+  return made
+}
+
+/**
+ * Un montant qui sort d'un modèle, arrondi à ce que ce modèle sait dire :
+ * « 202 k€ », « 1,2 M€ », « 250 € » — « €202k », « €1.2M », « €250 ».
+ *
+ * Il existe pour les projections, et pour la règle qui les tient : **la
+ * précision affichée ne doit pas dépasser celle du calcul**. Une projection à
+ * taux constant sur vingt ans est juste à quelques milliers d'euros près — le
+ * taux réel varie tous les ans, l'inflation aussi —, et l'annoncer « 202 136,25 € »
+ * en ferait un relevé de compte. C'est le défaut central des simulateurs
+ * bancaires : le centime affiché est ce qui fait passer une hypothèse pour une
+ * mesure.
+ *
+ * L'échelle garde deux à trois chiffres significatifs à chaque palier, et
+ * jamais un centime. Sous cent euros, l'euro entier n'est pas une fausse
+ * précision — c'est déjà l'ordre de grandeur du bruit du modèle.
+ *
+ * Les deux langues ne posent pas le multiplicateur au même endroit, et ce n'est
+ * pas un détail de ponctuation : le français écrit « 202 k€ », où le « k »
+ * multiplie l'**unité** — un kilo-euro — et se colle donc au symbole ; l'anglais
+ * écrit « €202k », où il multiplie le **nombre**. Les mettre du même côté
+ * donnerait « 202k € » ou « €202 k », qui ne se lisent ni dans une langue ni
+ * dans l'autre.
+ *
+ * Le signe « ≈ » n'est pas ici : il dit *ce qu'est* le nombre, pas comment il
+ * s'écrit, et il vit donc dans les gabarits de `i18n/projection.ts`, à côté des
+ * phrases qui le nomment.
+ */
+export function formatRoundedMoney(value: Money, currency: string): string {
+  const symbol = currencySymbol(currency)
+  const sign = value < 0 ? '−' : ''
+  const units = Math.abs(value) / 100
+  const write = (body: string, scale = ''): string =>
+    english()
+      ? `${sign}${symbol}${body}${scale}`
+      : `${sign}${body}${NBSP_NARROW}${scale}${symbol}`
+
+  if (units >= 1_000_000) return write(compactFormatter().format(units / 1_000_000), 'M')
+  if (units >= 10_000) return write(groupFormatter().format(Math.round(units / 1000)), 'k')
+  if (units >= 1_000) return write(compactFormatter().format(units / 1000), 'k')
+  /* Le palier des centaines s'arrondit à la dizaine : personne ne programme un
+     virement mensuel à 254,37 €, et c'est précisément le chiffre que le mode
+     inverse produit. */
+  if (units >= 100) return write(groupFormatter().format(Math.round(units / 10) * 10))
+  return write(groupFormatter().format(Math.round(units)))
+}
+
 /**
  * Le pourcent, avec l'espace que sa langue lui donne : « 42 % », « 42% ».
  *

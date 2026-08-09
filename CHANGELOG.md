@@ -12,6 +12,112 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Corrigé — deux libellés presque identiques sur deux montants différents
+
+« Sa part du mois » annonçait 1 659,83 € sur la tuile du virement, « Part du
+commun » 1 634,45 € sur celle du coût, à deux cases l'une de l'autre. Deux noms
+qui disent la même chose, deux nombres à vingt-cinq euros d'écart, et rien pour
+dire lequel était lequel ni pourquoi. La feuille d'explication le racontait en
+prose ; le montant qui les sépare, lui, ne s'affichait nulle part.
+
+- **Il a maintenant sa ligne, sur la tuile du virement et sur l'écran
+  Répartition** : « Remboursement d'avance ». Le calcul se lit donc en entier —
+  1 634,45 € de part du commun, plus 25,38 € de remboursement, plus 129,13 € de
+  régularisation, égale 1 788,96 € à verser.
+- **Les deux tuiles portent le même libellé sur le même montant** : « Part du
+  commun », 1 634,45 € des deux côtés. C'est ce qui les rend lisibles ensemble.
+- **Le domaine nomme ce qu'il calculait sans le dire.** Une part du pot se
+  décompose désormais en ce qui se consomme et ce qui se rembourse, découpé par
+  le même chemin entrée par entrée — allouer la somme plutôt que chaque ligne
+  ferait diverger les arrondis d'un centime, et ce centime se verrait.
+- **Les libellés de « Perso et commun » ne se tronquent plus.** Ils portaient
+  `truncate`, si bien que le retour à la ligne prévu ne se déclenchait jamais :
+  à 320px on lisait « Part du c… ». C'est le montant qui descend, comme le
+  commentaire de la tuile le décrivait déjà.
+
+### Ajouté — « Perso et commun » dit enfin ce que son chiffre représente
+
+C'était la seule tuile de la grille à porter deux montants sans mener nulle part
+et sans rien expliquer. Sa voisine « À verser sur le commun » ouvre l'écran
+Répartition, où son calcul est posé ligne à ligne ; celle-ci ne mène nulle part —
+ses deux moitiés viennent de deux endroits — et n'avait donc aucun endroit où
+s'expliquer. Devant deux chiffres voisins qui se ressemblent, la question « c'est
+quoi la différence ? » n'avait aucune réponse à l'écran.
+
+- **Elle ouvre une feuille**, celle-là même que les quatre soldes de la grille du
+  haut utilisent : ce que le chiffre est, **Le calcul**, et **Ce qui le
+  distingue**. Le glyphe d'information au coin, sans nom de destination, parce
+  qu'il n'y en a pas (DS §6).
+- **Elle nomme les deux causes de l'écart avec le virement** : la régularisation
+  du mois précédent, et la mensualité d'une avance. Les deux se virent sans rien
+  coûter au mois — un coût est arrêté au mois où la dépense a eu lieu.
+- **« Comment c'est calculé », sur l'écran Répartition, cesse de mentir par
+  omission.** Il disait « l'épargne n'est pas partagée » sans réserve, quand
+  l'app elle-même pose l'exception : la mensualité qui reconstitue un livret
+  après une avance est de nature épargne *et* partagée, puisque le foyer
+  rembourse celui qui a avancé. C'est la seule ligne du pot commun que rien
+  n'expliquait, et c'est elle qui fait qu'un virement peut dépasser ce que le
+  mois a coûté.
+
+### Corrigé — « Perso et commun » annonçait un coût plus grand que la tuile Charges
+
+Sur le jeu d'exemple, la tuile Charges disait 1 672,42 € et « Perso et commun »
+1 697,80 € pour le même mois de la même personne — 25,38 € d'écart, dans une
+tuile dont tout le propos est d'éclater le premier chiffre sans le contredire.
+
+L'écart vaut exactement la part d'une **mensualité d'avance**. Quelqu'un règle
+l'assurance auto du foyer depuis son livret ; l'app pose alors une récurrence qui
+le reconstitue — de nature « épargne », prise sur la catégorie du support — et la
+marque « à partager », puisque le foyer la lui rembourse. Cette mensualité est un
+**virement dû, pas un coût consommé** : elle entre à bon droit dans « À verser
+sur le commun », et la tuile Charges l'exclut à bon droit aussi, comme tout ce
+qui sort du compte sans quitter le foyer.
+
+- **La tuile du coût prend désormais la part des seules natures que la tuile
+  Charges compte** — charges et crédits —, là où elle prenait la part du pot
+  entier. Le domaine calculait déjà les deux et le disait ; c'est la tuile qui
+  lisait la mauvaise.
+- **Les deux « parts du commun » de l'écran ne sont donc pas le même montant, et
+  c'est correct** : celle du virement (1 659,83 €) comprend le remboursement de
+  l'avance, celle du coût (1 634,45 €) non. Elles portent déjà deux libellés
+  différents — « Sa part du mois » et « Part du commun ».
+- Vérifié sur les trois membres du jeu d'exemple : les deux tuiles tombent
+  maintenant au centime.
+
+### Modifié — un anneau sans son tout n'est plus qu'un pourcentage
+
+« À verser sur le commun » dessinait 45,3 % dans un anneau : la part du pot
+commun que le prorata des revenus met sur la personne filtrée. Or un anneau
+annonce *une fraction d'un tout*, et ce tout — le total des charges communes du
+foyer — n'est pas sur la tuile, délibérément : c'est un chiffre qu'on ne doit
+pas. Restait une jauge sans son tout, c'est-à-dire un pourcentage sans son « de
+quoi ». Sur l'écran de tout le monde la question ne se pose pas, la tuile
+Répartition découpe le pot entre les personnes et le tout est sous les yeux ;
+sous un filtre par membre, elle se posait et rien à l'écran n'y répondait.
+
+- **L'anneau est retiré, et le pourcentage avec lui** — pas remplacé par une
+  version « expliquée » posée à côté. Il sort du revenu de chacun rapporté à la
+  somme des revenus, et c'est cette division-là qu'il faut voir pour l'admettre.
+  L'écran Répartition la montre ligne à ligne, à un doigt d'ici, le prorata
+  contre le revenu dont il vient. Un pourcentage qu'on ne peut pas vérifier sur
+  l'écran où il s'affiche n'explique rien, quel que soit le mot qu'on lui
+  accroche.
+- **La règle vise cet anneau-ci, pas les anneaux.** « Perso et commun » en porte
+  un juste à côté sans rien enfreindre : le sien découpe un total qui est au
+  centre du cercle, et ses deux parts se lisent contre lui. Un anneau dont le
+  tout est à l'écran explique ; un anneau dont le tout est ailleurs décore.
+- **Le calcul prend la place qu'il libère.** Les deux lignes — sa part du mois,
+  la régularisation — disposaient d'une colonne de 152px à côté de l'anneau, où
+  chaque montant passait sous son libellé ; elles ont maintenant la largeur de
+  la tuile et tiennent chacune sur sa ligne, jusqu'à 320px.
+- **Sans régularisation, la tuile passe en `4x1`** : elle ne porte plus que son
+  chiffre, et deux rangées y laisseraient exactement les quarante pixels de vide
+  que le DS §5 reproche à une tuile sans visualisation. Le format suit le
+  contenu — deux rangées quand il y a une addition à montrer, une quand il n'y a
+  qu'un montant.
+- Le nom du membre vivait dans la lecture parlée de l'anneau : il passe dans le
+  nom de la région, que rien d'autre ne portait.
+
 ### Ajouté — l'app se dit en anglais, et une traduction ne s'arrête pas aux mots
 
 **Migration de schéma : v9 → v10.** Un champ `Settings.locale` s'ajoute —
@@ -52,14 +158,22 @@ et « English ».
   conditions restent soumises au droit français. Les références aux textes
   gardent leur nom d'origine — « article 1-1 of the LCEN » se retrouve, une
   traduction du nom de la loi ne se retrouve pas.
+- **Les cinq écrans qui portent leur propre catalogue** — la présentation, les
+  pages juridiques, l'historique et les projections — emportent chacun leurs
+  deux langues dans le même morceau : ils sont déjà chargés à la demande, et un
+  second aller-retour de réseau pour quelques kibioctets de prose coûterait plus
+  cher que de les emporter ensemble.
 - **L'anglais arrive par le réseau**, et c'est ce qui permet de l'ajouter sans le
   faire payer à tout le monde : le catalogue français reste dans le graphe
   initial — c'est la langue par défaut, et le repli si le morceau n'arrive pas —,
   l'anglais est un `import()` que le démarrage attend avant le premier rendu.
   Seize kibioctets qui ne pèsent que chez qui les lit. Le premier chargement
-  passe tout de même de 216,5 à 219,0 Kio compressés : la machinerie de langue,
-  le glyphe du réglage et les branchements de mise en forme, qui eux sont lus
-  avant le premier pixel.
+  passe tout de même de 217,6 à 220,2 Kio compressés, et **le budget de
+  `scripts/size.mjs` de 221 à 224** : la machinerie de langue, le glyphe du
+  réglage et les branchements de mise en forme sont lus avant le premier pixel.
+  Le chiffre est relevé pour la marge et non pour le poids — elle retombait à
+  huit dixièmes de kibioctet, ce que ce fichier appelle lui-même un plafond, et
+  une langue de plus ne doit pas se payer sur la place qui reste aux suivantes.
 
 ### Modifié
 
@@ -148,6 +262,126 @@ entre pour rien : sa section part à la demande, et les lignes cumulées qu'elle
 partage avec l'historique vivent dans un morceau à elles. Mesuré sans ce
 découpage, le premier chargement prenait quatre kibioctets de plus, pour un bloc
 qui vit sous le pli.
+
+### Modifié — le jeu d'exemple passe de quinze mois à cinq ans, et cesse d'être une capture
+
+Quinze mois montraient des lignes. Ils suffisaient à remplir les écrans, et
+c'était là toute leur ambition : une courbe qui ne soit pas plate, une
+répartition qui ne soit pas un miroir, un capital restant dû qui ne soit pas le
+capital emprunté. Mais un foyer ne se lit pas en quinze mois — il s'y répète.
+Tout ce que cette app peut apprendre sur une vie financière, elle l'apprend des
+**bascules**, et une bascule demande qu'il y ait un avant et un après.
+
+Le document couvre désormais **cinq années pleines**, mois courant compris, et
+son contenu a changé de nature avec sa durée.
+
+- **Un crédit auto va à son terme, un autre le remplace** le mois suivant, sans
+  qu'un seul mois porte les deux mensualités. C'est la forme qu'un poste de
+  dépense prend quand il dure plus longtemps qu'un crédit, et elle ne tenait pas
+  dans un an et demi.
+- **Le foyer est locataire, puis propriétaire.** Au dix-huitième mois, le loyer
+  cesse ; une mensualité, une taxe foncière, une redevance d'ordures et une
+  assurance habitation qui double le remplacent. Une reprise de vingt-quatre
+  mille euros sur le livret paie les frais de notaire, le déménagement et
+  l'installation, au centime — c'est le seul décrochement de cinq ans de courbe
+  d'épargne, et il est expliqué par les trois lignes qui le suivent.
+- **Un alternant est embauché** au vingt-quatrième mois : sa prime d'activité
+  s'éteint, son revenu triple, et le prorata des charges communes bascule sous
+  les yeux — de 9 % à 23 % de ce que le foyer partage.
+- **Un studio est mis en location** au trentième : un second crédit immobilier,
+  un loyer perçu qui n'est pas un salaire, une seconde taxe foncière, une
+  assurance qui n'est pas celle du logement habité, et des charges de
+  copropriété trimestrielles. C'est le premier emploi honnête de la catégorie
+  « Revenus fonciers », et l'occasion de montrer qu'un revenu locatif a quatre
+  lignes en face de lui qu'aucune vue ne rapproche.
+- **La crèche cède la place à l'école**, l'éveil musical au club de football, un
+  PEE fermé à celui de l'entreprise suivante. L'archivage cesse de se lire comme
+  une fin : les deux comptes coexistent dans le document, même personne, même
+  catégorie, un seul qui reçoit encore.
+- **Les prix ont cinq paliers, et non un changement isolé.** Le salaire connaît
+  quatre augmentations, la mutuelle quatre hausses, la pension alimentaire
+  quatre indexations, l'impôt quatre révisions. « Le prix a changé une fois » est
+  une anecdote ; cinq paliers disent si une charge dérive ou suit l'inflation, et
+  c'est la seule chose que la fiche d'une récurrence est seule à savoir.
+- **La même avance revient quatre années de suite** — la prime d'assurance auto,
+  réglée en une fois depuis le livret et remise mois par mois —, dont trois
+  entièrement reconstituées et une en cours. Une avance isolée ressemble à une
+  dépense compliquée ; quatre d'affilée montrent que c'est une **façon de
+  payer**. La récurrence mensualisée qui les précédait est restée dans le
+  document, arrêtée : les deux montages se lisent côte à côte, même catégorie et
+  même voiture.
+- **Trois crédits soldés, pour deux raisons différentes.** Les deux sans intérêt
+  retombent à zéro par soustraction — ce qu'on a versé est exactement ce qu'on
+  devait. Celui à taux a coûté treize mille euros pour douze mille prêtés, et
+  aucune soustraction ne pouvait le dire.
+
+Deux détails techniques valent d'être signalés parce qu'ils touchent ce que les
+écrans montrent. Les **montants variables se lisent désormais par mois
+calendaire** — douze valeurs saisonnières plus la dérive de l'année — là où ils
+suivaient le rang du mois dans le document : le comparatif d'années oppose enfin
+mars à mars, et non le quatrième mois au seizième. Et les tables des dépenses
+ponctuelles ont des longueurs premières entre elles, jamais douze, sans quoi cinq
+années auraient été rigoureusement identiques.
+
+Le catalogue par défaut est employé à quarante-quatre catégories sur quarante-six
+— restent l'aide au logement, que ces revenus interdisent, la taxe d'habitation,
+qui ne s'applique ni à la résidence principale ni à un bien loué, les pensions
+alimentaires reçues, qui raconteraient une histoire familiale qu'un exemple n'a
+pas à trancher, et la location longue durée, qui est justement celle qu'on
+archive. Le document pèse environ 2 500 échéances et 500 kio sérialisés, monté en
+une fraction de seconde à chaque chargement.
+
+### Ajouté — onze scénarios dans un vrai navigateur, que le jeu d'exemple rend possibles
+
+Le dépôt avait mille quatre cents tests et aucun ne lançait l'app. Ils montent
+des composants dans jsdom, avec `fake-indexeddb` là où le stockage compte : la
+bonne granularité pour presque tout, et un angle mort pour quatre choses qui ne
+cassent qu'en production — le **chargement paresseux** (l'exemple, le schéma, la
+présentation arrivent par `import()`, qu'un test jsdom court-circuite en
+important le module directement), la **mise en page** (jsdom rend tout à zéro
+pixel : « ça déborde » n'y veut rien dire), le **stockage réel** (`fake-indexeddb`
+est une réimplémentation) et la **taille du document**.
+
+Ce qui manquait pour les combler n'était pas un outil, c'était un **document**.
+Un scénario de bout en bout a besoin de données complètes, et il aurait fallu les
+saisir écran par écran — donc écrire, en préambule de chaque scénario, un second
+jeu de données à maintenir, qui aurait divergé du premier au premier changement
+de modèle. Le jeu d'exemple passé à cinq ans est ce préambule : un clic, un
+document déterministe, tous les états peuplés.
+
+`npm run e2e` joue donc onze scénarios dans Chromium, sur `dist/` — sur ce qui
+serait déployé, jamais sur ce qu'un serveur de développement assemble à la volée.
+
+- **Chaque écran s'ouvre sans une erreur** : console, exceptions et requêtes
+  échouées sont collectées du premier octet, et la liste doit être vide. Une
+  requête qui échoue est un bundle qu'on n'a pas su aller chercher, et c'est
+  exactement ce qu'aucun test jsdom ne peut voir puisqu'il n'en demande aucun.
+- **Le document survit à un rechargement, et à un second onglet.** C'est la
+  promesse de la première ligne du README, vérifiée contre IndexedDB plutôt que
+  contre sa réimplémentation. L'export produit un fichier qui pèse ce que pèsent
+  cinq ans.
+- **Aucun écran ne déborde à 320 points de large**, jeu d'exemple chargé — la
+  borne basse que le design system s'impose, et la vérification qu'aucune
+  relecture ne fait de façon fiable. Le document vide ne débordait jamais : ce
+  sont les montants à sept chiffres et les listes à quinze lignes qui poussent
+  les murs.
+- **Les états que seuls cinq ans produisent sont lus à l'écran** : trois crédits
+  soldés à zéro, la même avance répétée quatre années de suite, deux supports
+  d'épargne qui réclament un relevé pendant que six se taisent, trois parts
+  inégales dont la somme vaut le total.
+
+Deux décisions valent d'être dites. **Aucune assertion ne porte sur un calcul** :
+les chiffres sont vérifiés par les tests du domaine, qui le font mieux et mille
+fois plus vite ; ici on vérifie qu'ils arrivent jusqu'à l'écran. Et **rien n'est
+figé sur une valeur** — le jeu est ancré sur la date du jour, donc on lit des
+formes (un montant plutôt qu'un tiret, « n / m » avec n < m) et jamais des
+montants, sans quoi le test se périmerait au mois suivant.
+
+`e2e` reste **hors de `verify`** : c'est la seule vérification du dépôt qui exige
+un navigateur, et faire dépendre la porte de sortie d'un téléchargement de
+150 Mio la rendrait inutilisable là où elle sert le plus — sur une machine qui
+vient de cloner. La CI la joue dans un second travail, en parallèle, avec la même
+commande qu'en local ; aucune commande n'existe que dans le fichier de CI.
 
 ### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
 

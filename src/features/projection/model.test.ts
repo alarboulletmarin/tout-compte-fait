@@ -1,0 +1,221 @@
+import { afterEach, describe, expect, it } from 'vitest'
+import { tpl } from '@/i18n/format'
+import { projection } from '@/i18n/projection'
+import {
+  DEFAULT_DRAFT,
+  MAX_YEARS,
+  MIN_YEARS,
+  PROJECTION_STORAGE_KEY,
+  type ProjectionDraft,
+  analyse,
+  nextSlot,
+  readDraft,
+  writeDraft,
+} from './model'
+
+const draft = (patch: Partial<ProjectionDraft> = {}): ProjectionDraft => ({
+  ...DEFAULT_DRAFT,
+  ...patch,
+})
+
+afterEach(() => {
+  localStorage.clear()
+})
+
+describe('ce que la saisie donne', () => {
+  it('trace ce qu’un versement mensuel devient', () => {
+    const { result } = analyse(
+      draft({ monthlyText: '250', years: 20, scenarios: [{ id: 'a', rateText: '11', kind: 'assumed' }] }),
+    )
+    expect(result?.months).toBe(240)
+    expect(result?.scenarios[0]?.series.balance.at(-1)).toBeCloseTo(20_213_625, -1)
+  })
+
+  it('donne la même aire de versements à toutes les hypothèses', () => {
+    // Le versé ne dépend pas du taux : c'est ce qui rend l'écart entre l'aire
+    // et chaque courbe lisible comme « ce que le taux a produit ».
+    const { result } = analyse(
+      draft({
+        monthlyText: '100',
+        scenarios: [
+          { id: 'a', rateText: '2', kind: 'guaranteed' },
+          { id: 'b', rateText: '7', kind: 'assumed' },
+        ],
+      }),
+    )
+    expect(result?.contributed).toEqual(result?.scenarios[1]?.series.contributed)
+  })
+
+  it('retire l’hypothèse illisible sans effacer les autres', () => {
+    const { errors, result } = analyse(
+      draft({
+        scenarios: [
+          { id: 'a', rateText: '4', kind: 'assumed' },
+          { id: 'b', rateText: '450', kind: 'assumed' },
+        ],
+      }),
+    )
+    expect(errors.rates.b).toBe(tpl(projection.rateInvalid, 100))
+    expect(result?.scenarios).toHaveLength(1)
+    expect(result?.scenarios[0]?.id).toBe('a')
+  })
+
+  it('signale un montant illisible plutôt que de le lire comme zéro', () => {
+    expect(analyse(draft({ monthlyText: 'beaucoup' })).errors.monthly).toBe(
+      projection.amountInvalid,
+    )
+  })
+
+  it('lit un capital de départ vide comme zéro, pas comme une erreur', () => {
+    const { errors, result } = analyse(draft({ initialText: '', monthlyText: '100' }))
+    expect(errors.initial).toBeUndefined()
+    expect(result?.scenarios[0]?.series.balance[0]).toBe(0)
+  })
+
+  it('ne trace rien sans versement ni capital, et dit ce qui manque', () => {
+    const { result, missing } = analyse(draft({ monthlyText: '', initialText: '' }))
+    expect(result).toBe(null)
+    expect(missing).toBe(projection.nothingToPlot)
+  })
+
+  it('refuse une durée hors bornes', () => {
+    const bornes = tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS)
+    expect(analyse(draft({ years: 0 })).errors.years).toBe(bornes)
+    expect(analyse(draft({ years: 51 })).errors.years).toBe(bornes)
+    expect(analyse(draft({ years: 50 })).errors.years).toBeUndefined()
+  })
+})
+
+describe('mode inverse', () => {
+  it('rend le versement requis, hypothèse par hypothèse', () => {
+    const { result } = analyse(
+      draft({
+        mode: 'target',
+        targetText: '100000',
+        initialText: '',
+        years: 20,
+        scenarios: [
+          { id: 'a', rateText: '2', kind: 'guaranteed' },
+          { id: 'b', rateText: '6', kind: 'assumed' },
+        ],
+      }),
+    )
+    const prudent = result?.scenarios[0]?.monthly ?? 0
+    const optimiste = result?.scenarios[1]?.monthly ?? 0
+    // Plus le taux est haut, moins il faut verser — et les deux atteignent la
+    // même cible.
+    expect(prudent).toBeGreaterThan(optimiste)
+    expect(result?.scenarios[0]?.series.balance.at(-1)).toBeGreaterThanOrEqual(10_000_000)
+    expect(result?.scenarios[1]?.series.balance.at(-1)).toBeGreaterThanOrEqual(10_000_000)
+  })
+
+  it('n’a pas d’aire commune : chaque hypothèse a son propre versement', () => {
+    const { result } = analyse(draft({ mode: 'target', targetText: '50000' }))
+    expect(result?.contributed).toBe(null)
+  })
+
+  it('demande la cible plutôt que de tracer une courbe à zéro', () => {
+    const { result, missing } = analyse(draft({ mode: 'target', targetText: '' }))
+    expect(result).toBe(null)
+    expect(missing).toBe(projection.targetMissing)
+  })
+
+  it('dit qu’il n’y a rien à verser quand le capital de départ suffit', () => {
+    const { result } = analyse(
+      draft({ mode: 'target', targetText: '1000', initialText: '5000', years: 10 }),
+    )
+    expect(result?.targetReached).toBe(true)
+    expect(result?.scenarios[0]?.monthly).toBe(0)
+  })
+})
+
+describe('euros constants', () => {
+  it('ne change rien tant que la case est décochée', () => {
+    const courants = analyse(draft({ monthlyText: '100', inflationText: '2', constant: false }))
+    expect(courants.result?.inflationBp).toBe(0)
+  })
+
+  it('déflate l’arrivée une fois la case cochée', () => {
+    const courants = analyse(draft({ monthlyText: '100', constant: false }))
+    const constants = analyse(draft({ monthlyText: '100', constant: true, inflationText: '2' }))
+    const nominal = courants.result?.scenarios[0]?.series.balance.at(-1) ?? 0
+    const reel = constants.result?.scenarios[0]?.series.balance.at(-1) ?? 0
+    expect(reel).toBeLessThan(nominal)
+  })
+
+  it('fait arriver la courbe sur la cible tapée, et non dessous', () => {
+    // La cible est réinflatée avant le calcul : quelqu'un qui lit en euros
+    // d'aujourd'hui et tape « 100 000 € » parle du pouvoir d'achat qu'il
+    // connaît, pas d'un nombre affiché sur un relevé dans vingt ans.
+    const { result } = analyse(
+      draft({ mode: 'target', targetText: '100000', years: 20, constant: true, inflationText: '2' }),
+    )
+    expect(result?.scenarios[0]?.series.balance.at(-1)).toBeGreaterThanOrEqual(10_000_000)
+    expect((result?.scenarios[0]?.series.balance.at(-1) ?? 0) - 10_000_000).toBeLessThan(100_000)
+  })
+})
+
+describe('le confort local', () => {
+  it('retrouve les derniers réglages', () => {
+    const saved = draft({ years: 7, monthlyText: '325', constant: true })
+    writeDraft(saved)
+    expect(readDraft()).toEqual(saved)
+  })
+
+  it('retombe sur les valeurs par défaut quand rien n’a été gardé', () => {
+    expect(readDraft()).toEqual(DEFAULT_DRAFT)
+  })
+
+  it('revalide tout ce qui vient du stockage', () => {
+    // `localStorage` s'édite depuis la console : une durée absurde et quarante
+    // scénarios ne doivent pas casser l'écran.
+    localStorage.setItem(
+      PROJECTION_STORAGE_KEY,
+      JSON.stringify({
+        mode: 'ailleurs',
+        years: 900,
+        scenarios: Array.from({ length: 40 }, () => ({ rateText: '5', kind: 'assumed' })),
+        constant: 'oui',
+      }),
+    )
+    const read = readDraft()
+    expect(read.mode).toBe('forecast')
+    expect(read.years).toBe(DEFAULT_DRAFT.years)
+    expect(read.scenarios).toHaveLength(3)
+    expect(read.constant).toBe(false)
+  })
+
+  it('survit à un JSON abîmé', () => {
+    localStorage.setItem(PROJECTION_STORAGE_KEY, '{oups')
+    expect(readDraft()).toEqual(DEFAULT_DRAFT)
+  })
+
+  it('ne garde jamais un défaut prudent qui ressemblerait à un rendement promis', () => {
+    // 3 %, et une *hypothèse* : écrire un taux garanti reviendrait à annoncer
+    // celui d'un produit, révisé deux fois par an et donc faux dans six mois.
+    expect(DEFAULT_DRAFT.scenarios).toEqual([{ id: 'a', rateText: '3', kind: 'assumed' }])
+  })
+})
+
+describe('emplacements de scénario', () => {
+  it('en propose trois, puis plus aucun', () => {
+    expect(nextSlot([])).toBe('a')
+    expect(nextSlot([{ id: 'a', rateText: '', kind: 'assumed' }])).toBe('b')
+    expect(
+      nextSlot([
+        { id: 'a', rateText: '', kind: 'assumed' },
+        { id: 'b', rateText: '', kind: 'assumed' },
+        { id: 'c', rateText: '', kind: 'assumed' },
+      ]),
+    ).toBe(null)
+  })
+
+  it('reprend un emplacement libéré au milieu', () => {
+    expect(
+      nextSlot([
+        { id: 'a', rateText: '', kind: 'assumed' },
+        { id: 'c', rateText: '', kind: 'assumed' },
+      ]),
+    ).toBe('b')
+  })
+})

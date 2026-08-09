@@ -41,18 +41,26 @@ doit faire, et le [design system](DESIGN-SYSTEM.md) de quoi elle a l'air.
   traduction ne compile pas — et c'est lui qui sert de repli. L'anglais est un
   `import()` que `main.tsx` attend avant le premier rendu, pour que ses seize
   kibioctets ne pèsent pas dans le graphe initial de qui n'en lira jamais un mot.
-  Trois catalogues échappent aux deux fichiers, et pour la même raison de poids :
-  `src/i18n/legal.ts`, `src/i18n/landing.ts` et `src/i18n/history.ts`, rendus par
-  des écrans chargés à la demande, avec chacun leur `.en.ts` **dans le même
+  Quatre catalogues échappent à ces deux fichiers, et pour la même raison de
+  poids : `src/i18n/legal.ts`, `src/i18n/landing.ts`, `src/i18n/history.ts` et
+  `src/i18n/projection.ts`, rendus par des écrans chargés à la demande. Ils
+  voyagent avec eux, **et chacun emporte ses deux langues dans le même
   morceau** — un second aller-retour de réseau pour quelques kibioctets de prose
-  coûterait plus cher que de les emporter ensemble. Les noms de ces écrans, eux,
-  restent dans le catalogue principal : la barre d'onglets les dit sans charger
-  la page.
+  coûterait plus cher que de les emporter ensemble, ce qui est l'arbitrage
+  inverse de celui du catalogue principal, et pour la raison inverse. L'historique
+  emportait déjà ses trois graphiques, dont aucun autre écran ne se sert : sa
+  prose n'avait pas plus de raison qu'eux de peser sur l'écran du mois. Les
+  projections sont le même cas, en plus net encore — ce que cet écran refuse de
+  calculer demande plus de mots que ce qu'il calcule. Les noms de ces écrans,
+  eux, restent dans le catalogue principal : la barre d'onglets nomme
+  l'historique sans le charger, et « Plus » comme l'écran Épargne nomment les
+  projections sans les charger non plus — deux portes pour un écran, donc un
+  seul libellé, sans quoi elles finiraient par ne plus dire la même chose.
 - `src/i18n/format.ts` — les règles de langue qui ne sont pas des mots : le
   séparateur décimal, la place du symbole monétaire, l'espace fine devant le
-  pourcent, l'octet contre le byte, l'ordinal d'un jour, l'élision de « de ».
-  Une app dont on n'aurait traduit que les chaînes écrirait « 1 284,50 € » sous
-  une interface anglaise.
+  pourcent, l'octet contre le byte, l'ordinal d'un jour, le multiplicateur d'un
+  montant arrondi, l'élision de « de ». Une app dont on n'aurait traduit que les
+  chaînes écrirait « 1 284,50 € » sous une interface anglaise.
 - `src/i18n/locale.ts` — la langue du navigateur, le miroir localStorage et
   l'attribut `lang`. La préférence, elle, vit dans le document (`settings.locale`),
   comme le thème et la palette.
@@ -93,7 +101,22 @@ suffisait à le perdre. C'est le même défaut, du côté lecture, que celui que
 `period.ts` corrige du côté écriture.
 
 **Taux.** En points de base entiers — 450 = 4,50 %. Aucun flottant ne touche un
-calcul financier, pas plus un taux qu'un montant.
+calcul financier, pas plus un taux qu'un montant. La saisie qui y mène vit dans
+`domain/rate.ts`, en pendant exact de `parseAmount` : elle est née dans le
+formulaire des crédits, et les projections posaient exactement la même question
+— une primitive nommée d'après son premier appelant est une primitive qu'on
+recopie au deuxième.
+
+**Deux mensualisations d'un taux annuel coexistent, et c'est délibéré.**
+`domain/debt.ts` divise par douze, `domain/projection.ts` prend la racine
+douzième. Ce n'est pas une incohérence à réparer : un prêt immobilier français
+**est** contractuellement défini au taux nominal proportionnel, où `r/12` est la
+convention exacte et non une approximation. Une projection, elle, capitalise un
+rendement sans contrat, et la seule définition qui se tienne est celle qui,
+douze fois de suite, redonne le taux annoncé. Confondre les deux se paie : à
+11 %, `r/12` capitalisé rend 11,57 % par an, soit 216 k€ au lieu de 202 sur
+250 €/mois pendant vingt ans — et toujours dans le sens qui flatte. Chacun des
+deux modules dit pourquoi il fait ce qu'il fait, à l'endroit où il le fait.
 
 **La présentation avant la question.** L'écran d'arrivée était « Comment
 s'appelle ton foyer ? » : on demandait de répondre avant d'avoir dit ce que
@@ -266,6 +289,37 @@ serait faux dès qu'il y a des intérêts : sur 100 000 € à 4 % sur 20 ans, l
 première année amortit ~3 000 € pour ~7 300 € versés, et le raccourci
 annoncerait le prêt soldé des années trop tôt.
 
+**Projection.** Un seul moteur, `projectSeries`, et rien à côté. Le tracé, les
+jalons et le chiffre d'arrivée lisent la **même** série : il n'existe pas de
+formule fermée qui donnerait la valeur finale plus vite, parce que deux façons
+de calculer un capital donneraient deux vérités à tenir d'accord — c'est ce que
+la valeur estimée d'un support refuse déjà. Les flottants restent à l'intérieur
+de la boucle et ne sont arrondis qu'au moment d'être posés dans la série :
+arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans,
+et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
+d'affichage. C'est le motif de `remainingPrincipal`.
+
+**Le simulateur n'écrit rien, et ne lit rien.** Aucune `Entry`, aucun support,
+aucun relevé n'entre dans `features/projection/` ; rien n'en ressort dans le
+document, donc rien dans les exports ni dans le schéma qu'on donne à un
+assistant. Une projection est une **question qu'on pose**, pas un fait du
+foyer — et un `expectedReturn` posé sur un support « au cas où » serait
+exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent en
+`localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
+lecture, comme un document importé l'est par `validate.ts`, parce que cette
+clé-là s'édite depuis la console du navigateur.
+
+**Les versements cumulés sont une aire, pas une quatrième courbe.** L'app n'a
+que trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les
+deux thèmes — `--accent-2`, `--text`, `--text-muted` —, mesure faite pour
+`charts/CumulativeLines.tsx`. C'est cette contrainte-là qui plafonne les
+scénarios à trois, et c'est elle qui a rendu l'aire nécessaire ; elle s'est
+avérée meilleure que le trait qu'elle remplace, puisqu'elle découpe le
+graphique en deux lectures qu'il n'y a plus à expliquer — ce qui vient de la
+poche, ce qui vient du taux. Son échelle part de zéro, contrairement à la courbe
+d'un support, qui part de son minimum relevé : une aire mesurée depuis une base
+flottante ne dit rien.
+
 **Prorata des revenus.** Le revenu d'un membre est *dérivé* de ses récurrences
 de nature `resource`, ramenées au mois — il n'est stocké nulle part. Le déclarer
 à côté en ferait une seconde vérité, et la première augmentation les ferait
@@ -351,7 +405,7 @@ en avait sept.
 
 Le critère de rangement n'est plus « où peut-on techniquement ranger cette
 fonctionnalité ? » mais « avec quelle intention vient-on ? », et il en sort
-quatre — **Gérer** (ce qui décide de ce que le budget calcule), **Organiser**
+cinq — **Gérer** (ce qui décide de ce que le budget calcule), **Organiser**
 (qui y figure, sous quelles étiquettes), **Données** (où elles vivent, comment
 en sortir une copie), **Application** (ce qui ne touche qu'à la présentation).
 « Plus » porte les quatre, la page d'entrée disparaît, et les cinq vues
@@ -364,7 +418,7 @@ exactement pourquoi aucun segment n'a été renommé au passage.
 Le gain se compte en crans : « Plus → Réglages → Catégories » devient « Plus →
 Catégories », et « Plus → Réglages → Données → Exporter/importer » devient
 « Plus → Exporter/importer ». L'écran est un peu plus long, et c'est le bon
-échange sur un téléphone — quatre groupes qu'on comprend en les balayant valent
+échange sur un téléphone — des groupes qu'on comprend en les balayant valent
 mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce qu'il
 contient.
 
@@ -422,6 +476,15 @@ qui y vivait déjà. `en-GB` et non `en-US` — l'app écrit ses dates dans l'or
 jour-mois partout ailleurs, et c'est la seule des deux conventions qui puisse se
 lire de travers sans se voir.
 
+**Deux endroits fixent la langue des tests, et pour deux raisons opposées.**
+`src/test/setup.ts` remet le catalogue en français après chaque test, parce que
+le catalogue actif est un état de module : sans ça, un test qui bascule en
+anglais fait échouer les suivants loin de la ligne qui a changé la langue.
+`playwright.config.ts` pose `locale: 'fr-FR'` sur le navigateur, pour la raison
+inverse — là, rien n'est en mémoire : un profil neuf sans préférence suit la
+langue du navigateur, et un navigateur de CI parle anglais. Sans cette ligne les
+scénarios s'ouvriraient dans une langue qui dépend de la machine qui les joue.
+
 **La langue est un réglage du document, pas de l'appareil.** `settings.locale`,
 à côté du thème et de la palette, avec le même miroir en localStorage — celui-ci
 est le plus important des trois : le thème se rattrape en une frame, quand un
@@ -456,7 +519,7 @@ famille ») ; et la barre d'onglets garde « Plus » allumé sur `/a-propos`, qu
 
 **La colonne latérale, elle, nomme « Plus » au lieu de le déplier**, et c'est un
 revirement. Elle le dépliait tant qu'il tenait en deux groupes ; il en porte
-quatre, les onze destinations doubleraient la colonne, et surtout l'un d'eux
+cinq, les douze destinations doubleraient la colonne, et surtout l'un d'eux
 n'est pas fait que de liens — la devise se règle sur place, dans un sélecteur,
 et une colonne de navigation n'a pas à héberger un champ de formulaire. Aucune
 porte n'est perdue au change : ce qu'elle montrait d'un clic, elle le montre
@@ -613,7 +676,7 @@ lit désormais sur `emptyData()` : la liste des dix noms qu'il recopiait s'étai
 périmée en silence le jour où l'épargne en a ajouté deux.
 
 **L'exemple est construit, pas commité.** `exampleData(on)` bâtit un document de
-quinze mois à partir d'une date, en posant des récurrences puis en *ouvrant*
+**cinq ans** à partir d'une date, en posant des récurrences puis en *ouvrant*
 chaque mois par `openMonth` — jamais en écrivant une `Entry` à la main. Deux
 conséquences : le jeu est toujours à l'heure, là où un `.json` figé serait vide
 du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe pour
@@ -621,20 +684,82 @@ du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe p
 qui change le change avec elle. Les salaires y tombent en tête de mois, ce qui
 n'est pas cosmétique : chargé le 2, le jeu s'ouvrait sinon sur un solde à zéro.
 
+**Cinq ans, et non quinze mois, parce qu'une durée n'est pas une quantité.** Un
+an et demi montre des lignes ; cinq ans montrent des **bascules**, et ce sont
+elles qui font la différence entre un écran rempli et un écran qui raconte
+quelque chose. Un crédit auto va à son terme et un autre le remplace, sans qu'un
+seul mois porte les deux. Un foyer locataire achète : le loyer cesse, une
+mensualité, une taxe foncière et une assurance doublée le remplacent. Un
+alternant est embauché, son revenu triple, et le prorata des charges communes
+bascule sous les yeux. La crèche s'arrête, la cantine prend le relais. Une prime
+annuelle revient cinq fois, une assurance auto s'avance quatre fois depuis le
+livret. La fiche d'une récurrence n'affiche plus « le prix a changé une fois »
+mais cinq paliers, ce qui est la seule façon de distinguer une charge qui dérive
+d'une charge qui suit l'inflation. Coût : environ 2 500 `Entry` et 500 ko
+sérialisés, montés en une fraction de seconde.
+
 **Et ce qu'il contient est une liste d'états, pas une collection de lignes
-vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : un
-crédit soldé, une avance entièrement reconstituée, un support d'épargne archivé,
-un autre sans relevé — dont la valeur est donc *inconnue*, ce qui n'est pas zéro
-—, une règle qui s'arrêtera le mois prochain et une autre qui n'a pas encore
-commencé, un troisième membre au revenu très inférieur pour que le prorata cesse
-d'être un miroir. `persistence/example.test.ts` **est** cette liste, et le seul
-endroit où elle est vérifiée.
+vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : des
+crédits soldés — l'un par soustraction parce qu'il est sans intérêt, l'autre par
+sa date d'échéance parce qu'un taux ne retombe jamais à zéro pile —, des avances
+entièrement reconstituées et une en cours, un support d'épargne archivé à côté de
+celui qui l'a remplacé, un autre sans relevé — dont la valeur est donc
+*inconnue*, ce qui n'est pas zéro —, une règle qui s'arrêtera le mois prochain et
+une autre qui n'a pas encore commencé, un troisième membre au revenu très
+inférieur pour que le prorata cesse d'être un miroir.
+`persistence/example.test.ts` **est** cette liste, et le seul endroit où elle est
+vérifiée.
+
+**Les montants variables se lisent dans deux sortes de tables**, parce qu'il y a
+deux natures de variation. L'électricité, le carburant et les commissions d'un
+salaire dépendent du **mois calendaire** : elles se lisent dans douze valeurs
+indexées par le mois réel, plus la dérive de l'année — c'est ce qui permet au
+comparatif d'années d'opposer mars à mars, et non le quatrième mois du document
+au seizième. Les courses, elles, dépendent de la semaine écoulée et se lisent
+dans une table parcourue échéance après échéance, dont la longueur est première
+avec douze pour que deux années ne se ressemblent jamais tout à fait.
 
 Les deux modules valent une trentaine de kilo-octets pour des gestes qu'on fait
 une fois dans sa vie : ils sont chargés en `import()` dynamique, et le schéma
 est préparé à l'affichage de son contrôle — écrire dans le presse-papiers exige
 de rester dans la tâche du clic, qu'un `await` au milieu du gestionnaire perdrait
 sur Safari.
+
+**Et c'est lui qui a rendu les tests de bout en bout possibles.** Un scénario
+joué dans un vrai navigateur a besoin d'un document complet ; il n'existait
+jusqu'ici aucun moyen d'en obtenir un sans le saisir écran par écran,
+c'est-à-dire sans écrire en préambule de chaque scénario un second jeu de
+données à maintenir — qui aurait divergé du premier au premier changement de
+modèle. Le bouton « Charger l'exemple » est ce préambule, déjà écrit, déjà
+testé, déterministe. `e2e/` en tient onze, dans Chromium, sur `dist/` :
+
+- **Ce que jsdom ne peut pas voir.** Les 1 400 tests de `src/**` montent des
+  composants dans jsdom, avec `fake-indexeddb` là où le stockage compte. C'est
+  la bonne granularité pour presque tout, et elle ne dit rien de quatre choses :
+  le **chargement paresseux** — l'exemple, le schéma, la présentation et les
+  courbes cumulées arrivent tous par `import()`, qu'un test jsdom court-circuite
+  en important le module directement —, la **mise en page**, que jsdom rend à
+  zéro pixel, le **stockage réel**, dont `fake-indexeddb` est une
+  réimplémentation, et la **taille du document**, qui ne pèse que si on l'a
+  vraiment.
+- **Aucune assertion sur un calcul.** Les chiffres sont vérifiés par les tests
+  du domaine, qui le font mieux et mille fois plus vite. Les scénarios
+  vérifient qu'ils arrivent jusqu'à l'écran, et rien d'autre — un test de bout
+  en bout qui recalculerait un prorata serait un test lent et fragile pour une
+  réponse qu'on a déjà.
+- **Rien n'est figé sur une valeur.** Le jeu est ancré sur la date du jour :
+  fixer « 4 709,14 € » périmerait le test au mois suivant. On lit donc des
+  formes — un montant plutôt qu'un tiret, `n / m` avec `n < m`, trois crédits
+  soldés — et jamais des montants.
+- **Les animations sont éteintes.** `reducedMotion: 'reduce'`, la même décision
+  que `src/test/setup.ts` prend pour jsdom : les montants de l'app se comptent en
+  montant à l'écran, et deux lectures du même écran n'auraient sinon jamais le
+  même chiffre.
+- **Hors de `verify`, à dessein.** C'est la seule vérification du dépôt qui
+  exige un navigateur installé. La faire dépendre d'un téléchargement de 150 Mio
+  rendrait la porte de sortie inutilisable là où elle sert le plus — sur une
+  machine qui vient de cloner. La CI la joue dans un second travail, en
+  parallèle, avec la même commande qu'en local.
 
 **Graphiques.** Aucune librairie. L'anneau, les barres empilées et les courbes
 sont des composants SVG maison, dans `src/ui/Ring.tsx` et `src/charts/`.
@@ -745,7 +870,7 @@ La barre porte **quatre** onglets — Le mois, Calendrier, Historique, Plus — 
 plus cinq. Ce n'est pas un choix de largeur mais d'architecture : cinq était le
 plafond à 320px, et ce plafond décidait qu'un écran de plus n'aurait aucune
 adresse. Quatre écrans réels vivaient dans ce cas. Le quatrième onglet range ce
-qui déborde, en quatre groupes ; la colonne latérale déplie « Gérer » et nomme
+qui déborde, en cinq groupes ; la colonne latérale déplie « Gérer » et nomme
 « Plus » pour le reste (`SIDEBAR_GROUPS`, `app/routes.ts`). Voir le DS §6.
 
 L'écran du mois porte **deux** grilles bento et non une, séparées par la section

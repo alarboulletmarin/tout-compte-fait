@@ -164,3 +164,60 @@ describe('quand le catalogue n’arrive pas', () => {
     vi.resetModules()
   })
 })
+
+/**
+ * Les quatre catalogues chargés à la demande, éprouvés comme le principal.
+ *
+ * Leur forme est déjà tenue par le type — chaque `.en.ts` déclare le type dérivé
+ * de son français —, mais **pas leurs gabarits** : un « %s » perdu à la
+ * traduction compile parfaitement et rend une phrase amputée à l'écran. C'est le
+ * seul défaut de traduction que le compilateur ne peut pas voir, et il vaut pour
+ * les cinq catalogues.
+ */
+describe('les catalogues chargés à la demande', () => {
+  /* Le français de ces quatre-là n'est pas exporté : il est lu par la liaison
+     vivante, en français, avant toute bascule. */
+  const cases = async (): Promise<{ name: string; fr: unknown; en: unknown }[]> => [
+    { name: 'history', fr: (await import('./history')).history, en: (await import('./history.en')).en },
+    { name: 'landing', fr: (await import('./landing')).landing, en: (await import('./landing.en')).en },
+    {
+      name: 'projection',
+      fr: (await import('./projection')).projection,
+      en: (await import('./projection.en')).en,
+    },
+    {
+      name: 'legal',
+      fr: (await import('./legal')).privacyPolicy,
+      en: (await import('./legal.en')).privacyPolicy,
+    },
+  ]
+
+  it('portent les mêmes clés que leur français', async () => {
+    for (const { name, fr: french, en: english } of await cases()) {
+      expect(paths(english).sort(), name).toEqual(paths(french).sort())
+    }
+  })
+
+  it('n’en perdent aucun « %s »', async () => {
+    const holes = (value: unknown): number =>
+      typeof value === 'string' ? (value.match(/%s/g) ?? []).length : 0
+    for (const { name, fr: french, en: english } of await cases()) {
+      const flatten = (node: unknown, into: Map<string, unknown>, path = ''): void => {
+        if (typeof node === 'string') {
+          into.set(path, node)
+          return
+        }
+        if (typeof node !== 'object' || node === null) return
+        for (const [key, child] of Object.entries(node)) {
+          flatten(child, into, path === '' ? key : `${path}.${key}`)
+        }
+      }
+      const a = new Map<string, unknown>()
+      const b = new Map<string, unknown>()
+      flatten(french, a)
+      flatten(english, b)
+      const lost = [...a].filter(([key, value]) => holes(b.get(key)) !== holes(value)).map(([k]) => k)
+      expect(lost, name).toEqual([])
+    }
+  })
+})

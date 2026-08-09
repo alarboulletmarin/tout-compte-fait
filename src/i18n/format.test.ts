@@ -11,6 +11,7 @@ import {
   formatMonthDay,
   formatPercent,
   formatRelativeDays,
+  formatRoundedMoney,
   formatYearMonth,
   moneyParts,
   symbolFirst,
@@ -52,6 +53,44 @@ describe('mise en forme d’un montant', () => {
 
   it('n’arrondit pas l’unité tant que les centimes s’affichent', () => {
     expect(plain(formatMoney(money(5_669), 'EUR'))).toBe('56,69 €')
+  })
+})
+
+describe('montant sorti d’un modèle', () => {
+  /* La règle de l'écran des projections : la précision affichée ne dépasse pas
+     celle du calcul. « 202 136,25 € » ferait passer une hypothèse pour un
+     relevé de compte — c'est le défaut central des simulateurs de vente. */
+  it('arrondit au millier au-delà de dix mille euros', () => {
+    expect(plain(formatRoundedMoney(money(20_213_625), 'EUR'))).toBe('202 k€')
+    expect(plain(formatRoundedMoney(money(1_049_900), 'EUR'))).toBe('10 k€')
+  })
+
+  it('garde une décimale entre mille et dix mille, où l’entier serait trop grossier', () => {
+    expect(plain(formatRoundedMoney(money(840_000), 'EUR'))).toBe('8,4 k€')
+  })
+
+  it('passe au million sans jamais écrire sept chiffres', () => {
+    expect(plain(formatRoundedMoney(money(124_000_000), 'EUR'))).toBe('1,2 M€')
+  })
+
+  it('arrondit à la dizaine sous mille euros — un virement ne se programme pas au centime', () => {
+    expect(plain(formatRoundedMoney(money(25_437), 'EUR'))).toBe('250 €')
+  })
+
+  it('garde l’euro entier sous cent, où la dizaine cacherait le chiffre', () => {
+    expect(plain(formatRoundedMoney(money(3_449), 'EUR'))).toBe('34 €')
+    expect(plain(formatRoundedMoney(money(0), 'EUR'))).toBe('0 €')
+  })
+
+  it('n’écrit jamais de centimes, à aucun palier', () => {
+    for (const cents of [1, 999, 12_345, 987_654, 12_345_678, 1_234_567_890]) {
+      expect(formatRoundedMoney(money(cents), 'EUR')).not.toContain(',0')
+      expect(plain(formatRoundedMoney(money(cents), 'EUR'))).not.toMatch(/,\d\d/)
+    }
+  })
+
+  it('porte le signe négatif comme le reste de l’app', () => {
+    expect(plain(formatRoundedMoney(money(-20_213_625), 'EUR'))).toBe('−202 k€')
   })
 })
 
@@ -97,6 +136,16 @@ describe('mise en forme anglaise', () => {
     expect(parts.fraction).toBe('50')
     expect(decimalSeparator()).toBe('.')
     expect(symbolFirst()).toBe(true)
+  })
+
+  /* Le multiplicateur ne se pose pas du même côté dans les deux langues : le
+     français multiplie l'unité — un kilo-euro, « 202 k€ » —, l'anglais multiplie
+     le nombre, « €202k ». */
+  it('écrit les montants arrondis à l’anglaise, multiplicateur compris', () => {
+    expect(formatRoundedMoney(money(20_213_625), 'EUR')).toBe('€202k')
+    expect(formatRoundedMoney(money(124_000_000), 'EUR')).toBe('€1.2M')
+    expect(formatRoundedMoney(money(25_437), 'EUR')).toBe('€250')
+    expect(formatRoundedMoney(money(-840_000), 'EUR')).toBe('−€8.4k')
   })
 
   it('colle le pourcent au chiffre', () => {

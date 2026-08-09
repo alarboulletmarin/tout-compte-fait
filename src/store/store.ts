@@ -20,7 +20,7 @@ import { askDurability, noteWrite, noteWriteFailure, probeDurability } from '@/p
 import { type TabChannel, type TabMessage, openTabChannel } from '@/persistence/tabs'
 import { forgetExportMarks } from '@/persistence/transfer'
 import { WRITE_DELAY_MS, createWriter } from '@/persistence/writer'
-import { storeLocale } from '@/i18n/locale'
+import { readStoredLocale, storeLocale } from '@/i18n/locale'
 import { mirrorAppearance, readStoredPalette, storePalette } from '@/theme/palette'
 import { readStoredPreference, storePreference } from '@/theme/theme'
 import { toast, useToasts } from '@/ui/toast'
@@ -224,10 +224,20 @@ setDbEventHandler((event) => {
 export const HYDRATION_TIMEOUT_MS = 10_000
 
 /**
- * Document de départ. Le thème et la palette reprennent leur miroir localStorage
- * pour que rien ne clignote entre le premier rendu et la fin de l'hydratation :
- * ce sont les deux réglages qui décident des couleurs avant que le document ne
- * soit lu.
+ * Document de départ. Les trois réglages d'apparence reprennent leur miroir
+ * localStorage pour que rien ne clignote entre le premier rendu et la fin de
+ * l'hydratation : ce sont eux qui décident des couleurs et des mots avant que le
+ * document ne soit lu.
+ *
+ * **La langue en fait partie, et son absence était un bug.** Elle venait
+ * d'`emptyData`, qui lit la langue *affichée* — ce qui est juste pour un
+ * document créé en cours de route, et faux ici : ce module est évalué à
+ * l'importation, donc avant que `main.tsx` ait appliqué quoi que ce soit. Le
+ * document de départ naissait en français, et l'effet d'`App` réimposait ensuite
+ * cette valeur au catalogue que le démarrage venait de charger. Autrement dit la
+ * détection de la langue du navigateur était morte : l'app s'ouvrait en français
+ * chez tout le monde, y compris au tout premier lancement d'un appareil
+ * anglophone, qui est le seul moment où cette détection sert à quelque chose.
  */
 function initialData(): Data {
   const data = emptyData()
@@ -237,6 +247,7 @@ function initialData(): Data {
       ...data.settings,
       theme: readStoredPreference(),
       palette: readStoredPalette(),
+      locale: readStoredLocale(),
     },
   }
 }

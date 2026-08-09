@@ -11,7 +11,7 @@ import { toast } from '@/ui/toast'
  *
  * Une app neuve n'a rien à montrer : pas de courbe, pas de répartition, pas de
  * capital restant dû. Tout ce qui fait l'intérêt du produit demande des mois de
- * données, et personne n'en saisit quinze pour décider s'il va s'en servir.
+ * données, et personne n'en saisit cinq ans pour décider s'il va s'en servir.
  *
  * `confirm` dit d'où l'on vient, parce que la gravité n'est pas la même des deux
  * côtés. Dans les réglages, c'est un remplacement intégral, donc deux questions,

@@ -9,12 +9,12 @@
  * l'écran du mois. Elle pesait pourtant dans le budget de tout le monde, et
  * l'audit du 2026-08-06 en demande trois sections de plus.
  *
- * Rien d'autre que la présentation ne lit ce module : `fr.nav.landing` reste
+ * Rien d'autre que la présentation ne lit ce module : `t.nav.landing` reste
  * dans `fr.ts`, parce que « à propos » nomme le lien sans charger la page.
  *
  * **Le vocabulaire du produit n'est pas ici.** Les tuiles de démonstration
  * disent « Répartition », « Capacité d'épargne », « Total des parts » avec les
- * clés du vrai tableau de bord (`fr.dashboard`, `fr.split`, `fr.savings`) : une
+ * clés du vrai tableau de bord (`t.dashboard`, `t.split`, `t.savings`) : une
  * page qui prétend montrer l'app ne peut pas en réécrire les mots. Ce fichier
  * ne porte que ce qui n'existe qu'ici.
  * ==========================================================================*/
@@ -24,13 +24,13 @@ import { currentLocale, subscribeLocale } from './strings'
 import type { Widen } from './widen'
 
 const fr = {
-  /* La promesse est déjà `fr.app.tagline` — la répéter ici en ferait une
+  /* La promesse est déjà `t.app.tagline` — la répéter ici en ferait une
      seconde vérité. Ce qui suit dit le mécanisme, parce que « suivi des
      finances » ne distingue cette app d'aucune autre. */
   intro:
     'Tu écris une fois ce qui revient chaque mois — loyer, abonnements, salaires. Le mois suivant s’ouvre déjà rempli de ce qui est prévu, et tu confirmes au fil de l’eau ce qui est réellement tombé.',
   /* Pas « Commencer » : c'est déjà le libellé du dernier bouton de
-     l'onboarding (`fr.onboarding.start`). Le DS §7 veut qu'une action garde son
+     l'onboarding (`t.onboarding.start`). Le DS §7 veut qu'une action garde son
      nom dans le flux — donc que deux actions différentes ne le partagent pas.
      « Suivi » plutôt que « foyer » : le mot supposait qu'on tienne le sien, ce
      qui laisse dehors qui vit chez ses parents ou partage à distance. */
@@ -39,7 +39,7 @@ const fr = {
   /* Sous la rangée de boutons, et non à côté : la phrase explique le second,
      dont le libellé — « Charger l'exemple » — dit le geste sans dire pourquoi
      on le ferait. Elle était écrite depuis le début et branchée nulle part ;
-     seul `fr.settings.exampleHint`, qui dit autre chose, servait. */
+     seul `t.settings.exampleHint`, qui dit autre chose, servait. */
   exampleHint: 'Juste voir à quoi ça ressemble ? Un exemple complet, en un clic.',
   privacy: 'Pas de compte, pas de serveur. Deux questions, et l’app est utilisable.',
 
@@ -124,14 +124,14 @@ const fr = {
   proofBody:
     'Le même exemple, du côté du calcul. Un partage entre deux personnes ne se croit pas sur parole : il se vérifie ligne à ligne, et c’est l’écran qui doit le permettre.',
 
-  /* Le libellé de la ligne de report. `fr.split.settlement` attend un nom de
+  /* Le libellé de la ligne de report. `t.split.settlement` attend un nom de
      mois — la vraie tuile le tire du mois affiché —, et cette page n'en a
      aucun : inventer « juillet 2026 » sur une démonstration daterait la page au
      premier visiteur d'août. Le mot reste celui du produit. */
   settlement: 'Régularisation du mois dernier',
   /* Pourquoi il y a un report à lire. Sans cette phrase, les deux lignes qui
      s'annulent passent pour une correction inexpliquée. « Avancé » est le mot
-     du produit (`fr.split.advancedBy`), et il évite d'accorder un participe sur
+     du produit (`t.split.advancedBy`), et il évite d'accorder un participe sur
      un prénom dont on ne sait rien. */
   advanced:
     '%s a avancé %s de charges communes le mois dernier. Chacun en portait sa part : le mois suivant rattrape l’écart, sans changer ce que le mois a coûté à qui que ce soit.',

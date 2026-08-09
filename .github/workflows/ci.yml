@@ -1,9 +1,17 @@
 name: CI
 
-# La CI rejoue exactement `npm run verify`, la porte de sortie locale : ce qui
-# passe sur la machine passe ici, et l'inverse. Deux commandes différentes de
-# chaque côté finissent toujours par diverger, et c'est celle qu'on ne lit pas
-# qui reste fausse.
+# La CI ne lance que des commandes qui existent dans `package.json`, et elle les
+# lance telles quelles : `npm run verify` puis `npm run e2e`. Aucune n'est
+# inventée ici. Une commande qui n'existerait que dans ce fichier serait celle
+# que personne ne lit et que personne ne peut rejouer — donc celle qui reste
+# fausse le plus longtemps.
+#
+# Deux travaux et non un, parce que les deux vérifications n'ont pas le même
+# prix d'entrée : `verify` ne demande que Node, quand `e2e` télécharge un
+# navigateur. Les fondre ferait payer ce téléchargement à chaque exécution de la
+# porte de sortie, y compris là où elle sert le plus — sur une machine qui vient
+# de cloner. Ils sont indépendants, donc parallèles : le verdict arrive au plus
+# lent des deux, pas à leur somme.
 
 on:
   push:
@@ -43,3 +51,44 @@ jobs:
 
       - name: Typecheck, lint, tests et build
         run: npm run verify
+
+  e2e:
+    name: Bout en bout
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v7
+
+      - name: Installer Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Le navigateur, et ses dépendances système. La version téléchargée est
+      # celle que `@playwright/test` réclame, lue dans le verrou : il n'y a donc
+      # pas de numéro à tenir à jour ici.
+      - name: Installer Chromium
+        run: npm run e2e:install
+
+      # `playwright.config.ts` construit l'app et sert `dist/` lui-même : ce
+      # qu'on teste est ce qui serait déployé, pas ce qu'un serveur de
+      # développement assemble à la volée.
+      - name: Scénarios dans le navigateur
+        run: npm run e2e
+
+      # Le rapport ne monte qu'en cas d'échec : personne n'ouvre celui d'une
+      # exécution verte, et il pèse quelques mébioctets.
+      - name: Conserver le rapport d’échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-e2e
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
