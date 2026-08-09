@@ -51,6 +51,21 @@ deux écrans plus haut. Et il fallait traverser presque tout l'écran pour trouv
   épargne / Atteindre un objectif », et « Garanti / Hypothèse » devient « Taux
   garanti / Rendement hypothétique » — l'app ne sait pas ce que dit ton contrat,
   c'est toi qui l'affirmes.
+- **Chaque chiffre dit d'où il sort.** Sous « Épargne actuelle », de combien de
+  relevés il est la somme ; sous « Versements prévus », de combien de règles, et
+  que les versements ponctuels comptent dans le capital mais pas là. Dans le
+  résultat, « Versements ≈ 66 k€ » est suivi de « 550 €/mois pendant 10 ans » —
+  parce que le chiffre seul fait poser la question au lieu d'y répondre.
+- **Une règle qui s'arrête avant la fin de la durée simulée n'est plus comptée.**
+  Le moteur ne projette qu'un versement constant : une reconstitution d'avance
+  qui court six mois y était multipliée par cent vingt. Sur le jeu d'exemple,
+  66 €/mois ajoutaient huit mille euros à dix ans — de l'argent que personne
+  n'avait l'intention de verser, et qui n'est pas un effort d'épargne : on remet
+  de l'argent là où on l'a pris. Écartées et **comptées**, jamais silencieusement
+  absentes.
+- **La lecture en euros d'aujourd'hui se signale avec les chiffres qu'elle
+  change**, sous le résultat, et non trois cadres plus bas : 550 €/mois pendant
+  dix ans qui donnent 66 k€ et non 74 étaient inexplicables à cette distance.
 - **Sept paragraphes de pédagogie passent derrière une seule porte**,
   « Comprendre cette projection ». Chacun était juste ; ensemble ils faisaient
   une notice intercalée entre des champs, et personne ne lit une notice. La

@@ -41,9 +41,32 @@ export type ResultTileProps = {
   basis: string
   /** Vrai en mode inverse : la décomposition se lit alors sans part de rendement. */
   target: boolean
+  /**
+   * D'où sortent les deux lignes du milieu : « 616 €/mois pendant 10 ans » et
+   * « 3 %/an, composé chaque mois ». Elles répondent à la question que le
+   * chiffre seul fait poser — « les versements, c'est le total sur dix ans, ça ? »
+   */
+  paidFrom: string
+  interestFrom: string
+  /**
+   * La lecture en euros d'aujourd'hui, quand elle est active. Elle vit **ici**,
+   * avec les chiffres qu'elle change, et non plus sous le graphique : 616 €/mois
+   * pendant dix ans font 74 k€, l'écran en annonce 67, et sans cette phrase à
+   * côté l'écart est inexplicable.
+   */
+  deflated: string | null
 }
 
-export function ResultTile({ heading, hero, breakdown, basis, target }: ResultTileProps) {
+export function ResultTile({
+  heading,
+  hero,
+  breakdown,
+  basis,
+  target,
+  paidFrom,
+  interestFrom,
+  deflated,
+}: ResultTileProps) {
   const currency = useCurrency()
   const money = (value: Money): string => formatRoundedMoney(value, currency)
   const approx = (value: Money): string => tpl(projection.approx, money(value))
@@ -56,12 +79,25 @@ export function ResultTile({ heading, hero, breakdown, basis, target }: ResultTi
      un panneau qui vient d'annoncer « 23 600 € » donnerait deux réponses à la
      même question, à trois centimètres d'écart. Le « ≈ » commence là où le
      calcul commence — à la première capitalisation. */
-  const rows: { label: string; value: Money; exact?: boolean; strong?: boolean }[] = [
+  const rows: {
+    label: string
+    value: Money
+    from?: string
+    exact?: boolean
+    strong?: boolean
+  }[] = [
     ...(breakdown.initial === ZERO
       ? []
-      : [{ label: projection.breakdownInitial, value: breakdown.initial, exact: true }]),
-    { label: projection.breakdownPaid, value: breakdown.paid },
-    { label: projection.breakdownInterest, value: breakdown.interest },
+      : [
+          {
+            label: projection.breakdownInitial,
+            value: breakdown.initial,
+            from: projection.breakdownInitialFrom,
+            exact: true,
+          },
+        ]),
+    { label: projection.breakdownPaid, value: breakdown.paid, from: paidFrom },
+    { label: projection.breakdownInterest, value: breakdown.interest, from: interestFrom },
     { label: projection.breakdownTotal, value: breakdown.total, strong: true },
   ]
 
@@ -82,16 +118,26 @@ export function ResultTile({ heading, hero, breakdown, basis, target }: ResultTi
         )}
       </div>
 
-      <dl className="flex flex-col gap-2 border-t border-border pt-4">
+      <dl className="flex flex-col gap-3 border-t border-border pt-4">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-baseline justify-between gap-3">
-            <dt className={row.strong === true ? 't-body text-text' : 't-label'}>{row.label}</dt>
-            <dd className="t-num-body tnum shrink-0">
-              {row.exact === true ? formatMoney(row.value, currency, false) : approx(row.value)}
-            </dd>
+          <div key={row.label} className="flex flex-col gap-0.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className={row.strong === true ? 't-body text-text' : 't-body'}>{row.label}</dt>
+              <dd className="t-num-body tnum shrink-0">
+                {row.exact === true ? formatMoney(row.value, currency, false) : approx(row.value)}
+              </dd>
+            </div>
+            {/* D'où sort la ligne, sous la ligne. Le total n'en a pas : il est
+                la somme des trois au-dessus, et le dire serait le répéter. */}
+            {row.from !== undefined && <p className="t-label">{row.from}</p>}
           </div>
         ))}
       </dl>
+
+      {/* Avec les chiffres qu'elle change, et pas trois cadres plus bas : sans
+          elle, 616 €/mois pendant dix ans qui donnent 67 k€ et non 74 sont
+          inexplicables. */}
+      {deflated !== null && <p className="t-label">{deflated}</p>}
 
       {/* Ce que le rendement pèse dans l'arrivée — la lecture qui donne son sens
           au chiffre, et que rien d'autre ne donne. Muette quand il n'y a rien à

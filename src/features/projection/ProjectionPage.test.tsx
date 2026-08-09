@@ -16,6 +16,7 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
+import { addMonthsToYm, endOfMonth, today, ymOf } from '@/domain/date'
 import {
   eur,
   makeCategory,
@@ -198,8 +199,10 @@ describe('l’écran des projections', () => {
     expect(screen.getByText(projection.targetMissing)).toBeInTheDocument()
 
     await user.type(screen.getByLabelText(new RegExp(projection.target)), '100000')
-    // La réponse du mode inverse est un versement mensuel, pas un capital.
-    expect(screen.getByText(new RegExp(said(tpl(projection.perMonth, ''))))).toBeInTheDocument()
+    /* La réponse du mode inverse est un versement mensuel, pas un capital —
+       et c'est bien le chiffre héros qui le porte, pas une ligne de détail. */
+    const hero = document.querySelector('.t-hero-fit')
+    expect(hero?.textContent).toMatch(new RegExp(said(tpl(projection.perMonth, ''))))
     // Et l'objectif se relit tel qu'il a été tapé, pas arrondi par le modèle.
     expect(
       screen.getByText(
@@ -293,6 +296,77 @@ describe('quand la simulation part de l’épargne réelle', () => {
     const row = screen.getByText(projection.breakdownInitial).nextElementSibling
     expect(row).toHaveTextContent('8 450 €')
     expect(row?.textContent).not.toContain('≈')
+  })
+
+  it('dit d’où sortent les deux chiffres repris', async () => {
+    const user = userEvent.setup()
+    seed()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    // Un montant repris sans sa provenance est un montant qu'il faut croire.
+    expect(screen.getByText(projection.sourceFromOne)).toBeInTheDocument()
+    expect(screen.getByText(projection.sourceRulesOne)).toBeInTheDocument()
+    // Et la question qu'on se pose juste après : les virements ponctuels ?
+    expect(screen.getByText(projection.sourceOneOff)).toBeInTheDocument()
+  })
+
+  it('dit ce que « Versements » recouvre, plutôt que de laisser deviner', async () => {
+    const user = userEvent.setup()
+    seed()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    /* « Versements ≈ 42 k€ » ne répond pas à « c'est le total sur dix ans,
+       ça ? ». « 350 €/mois pendant 10 ans » y répond sans qu'on demande. */
+    expect(
+      screen.getByText(
+        tpl(
+          projection.breakdownPaidFrom,
+          tpl(projection.perMonth, '350 €'),
+          tpl(projection.years, 10),
+        ),
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('n’étale pas sur dix ans une règle qui s’arrête dans six mois', async () => {
+    const user = userEvent.setup()
+    seed()
+    /* Une reconstitution d'avance : elle court quelques mois, et le moteur ne
+       sait projeter qu'un versement constant. La compter la multiplierait par
+       cent vingt — et remettre de l'argent là où on l'a pris n'est de toute
+       façon pas un effort d'épargne. */
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        recurrences: [
+          ...data.recurrences,
+          makeRecurrence({
+            id: 'r-avance',
+            categoryId: 'passbook',
+            savingSupportId: 's-1',
+            memberId: 'm-1',
+            direction: 'out',
+            amount: eur(6_600),
+            period: { unit: 'month', every: 1, anchorDay: 5 },
+            /* Six mois d'ici, et non une date en dur : l'horizon se mesure
+               depuis aujourd'hui, donc une date écrite ici sortirait de la
+               fenêtre au bout d'un an et ferait tomber le test sans qu'une
+               ligne de code ait bougé. */
+            endedOn: endOfMonth(addMonthsToYm(ymOf(today()), 6)),
+          }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    expect(screen.getByText(projection.sourceMonthly).nextElementSibling).toHaveTextContent(
+      tpl(projection.perMonth, '350 €'),
+    )
+    expect(screen.getByText(projection.sourceEndingOne)).toBeInTheDocument()
   })
 
   it('ne prête aucun rendement au support, et le dit', async () => {

@@ -249,7 +249,10 @@ describe('quand l’origine est l’épargne réelle', () => {
   const start = (over: Partial<ProjectionStart> = {}): ProjectionStart => ({
     capital: eur(845_000),
     monthly: eur(35_000),
+    valued: 1,
     unvalued: 0,
+    rules: 1,
+    ending: 0,
     variable: false,
     ...over,
   })

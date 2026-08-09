@@ -67,8 +67,17 @@ export type ProjectionStart = {
   capital: Money | null
   /** Les versements récurrents nets, ramenés au mois. Zéro s'il n'y en a pas. */
   monthly: Money
+  /** Combien de supports relevés composent ce capital. Zéro : il n'y en a pas. */
+  valued: number
   /** Combien de supports comptés n'ont aucun relevé, et manquent donc au capital. */
   unvalued: number
+  /** Combien de règles récurrentes composent ce versement. */
+  rules: number
+  /**
+   * Combien de règles s'arrêtent avant la fin de l'horizon, et sont donc
+   * laissées de côté. Voir `recurringMonthly` — c'est le piège de ce module.
+   */
+  ending: number
   /**
    * Une règle d'épargne au montant variable a été laissée de côté : elle n'a
    * pas de mensualité à reprendre, et l'écran le dit plutôt que de compter
@@ -77,7 +86,15 @@ export type ProjectionStart = {
   variable: boolean
 }
 
-const EMPTY: ProjectionStart = { capital: null, monthly: ZERO, unvalued: 0, variable: false }
+const EMPTY: ProjectionStart = {
+  capital: null,
+  monthly: ZERO,
+  valued: 0,
+  unvalued: 0,
+  rules: 0,
+  ending: 0,
+  variable: false,
+}
 
 /**
  * Les versements récurrents nets d'un jeu de règles, au mois.
@@ -87,6 +104,19 @@ const EMPTY: ProjectionStart = { capital: null, monthly: ZERO, unvalued: 0, vari
  * arrêtée ne compte plus — elle ne posera plus d'échéance —, et une règle au
  * montant variable n'est pas comptée pour zéro : elle est **signalée**.
  *
+ * **Une règle qui s'arrête avant la fin de l'horizon n'est pas comptée non
+ * plus**, et c'est le piège de tout ce module. Le moteur ne sait projeter qu'un
+ * versement **constant** : une mensualité de reconstitution d'avance, qui court
+ * six mois, y serait multipliée par cent vingt. Sur le jeu d'exemple, 66 €/mois
+ * d'avance en cours ajoutaient huit mille euros à dix ans — de l'argent que
+ * personne n'a jamais eu l'intention de verser. Une reconstitution d'avance
+ * n'est d'ailleurs pas un effort d'épargne : c'est de l'argent qu'on remet là où
+ * on l'avait pris.
+ *
+ * Elles sont donc **écartées et comptées**, jamais silencieusement absentes :
+ * entre deux conventions défendables, l'app prend celle qui promet le moins, et
+ * elle dit ce qu'elle a laissé de côté.
+ *
  * `monthlyEquivalent` et non le montant brut : une prime versée une fois l'an
  * pèse un douzième de mois, et c'est la convention de tout le reste de l'app
  * (cahier §4.2). Deux amortissements différents feraient deux chiffres sous le
@@ -95,44 +125,64 @@ const EMPTY: ProjectionStart = { capital: null, monthly: ZERO, unvalued: 0, vari
 function recurringMonthly(
   recurrences: readonly Recurrence[],
   on: ISODate,
-): { monthly: Money; variable: boolean } {
+  until: ISODate,
+): { monthly: Money; rules: number; ending: number; variable: boolean } {
   let monthly = ZERO
+  let rules = 0
+  let ending = 0
   let variable = false
 
   for (const recurrence of recurrences) {
+    /* Déjà éteinte : elle ne posera plus rien, et il n'y a pas lieu de la
+       signaler — elle n'appartient plus au présent du foyer. */
     if (recurrence.endedOn !== undefined && recurrence.endedOn <= on) continue
+    if (recurrence.endedOn !== undefined && recurrence.endedOn < until) {
+      ending += 1
+      continue
+    }
     const each = monthlyEquivalent(recurrence)
     if (each === null) {
       variable = true
       continue
     }
+    rules += 1
     /* `out` : l'argent quitte le compte courant pour le support — c'est un
        versement. `in` : il en revient — c'est une reprise. Le même sens de
        lecture que `supportFlows`, et pour la même raison. */
     monthly = recurrence.direction === 'out' ? add(monthly, each) : sub(monthly, each)
   }
 
-  return { monthly, variable }
+  return { monthly, rules, ending, variable }
 }
 
-/** Ce que la projection reprend d'**un** support. */
+/**
+ * Ce que la projection reprend d'**un** support.
+ *
+ * `until` est le dernier jour de l'horizon simulé : c'est lui qui décide
+ * quelles règles sont assez durables pour entrer dans un versement constant.
+ */
 export function supportStart(
   supportId: string,
   valuations: readonly SavingValuation[],
   entries: readonly Entry[],
   recurrences: readonly Recurrence[],
   on: ISODate,
+  until: ISODate,
 ): ProjectionStart {
   const value = supportValue(supportId, valuations, entries, on)
-  const { monthly, variable } = recurringMonthly(
+  const { monthly, rules, ending, variable } = recurringMonthly(
     recurrences.filter((recurrence) => recurrence.savingSupportId === supportId),
     on,
+    until,
   )
 
   return {
     capital: value.estimated,
     monthly,
+    valued: value.estimated === null ? 0 : 1,
     unvalued: value.estimated === null ? 1 : 0,
+    rules,
+    ending,
     variable,
   }
 }
@@ -155,18 +205,20 @@ export function memberStart(
   recurrences: readonly Recurrence[],
   kindOf: KindOf,
   on: ISODate,
+  until: ISODate,
 ): ProjectionStart {
   const owned = supports.filter((support) => support.memberId === memberId && !support.archived)
   const total = savingTotal(owned, valuations, entries, on)
   const ownedIds = new Set(owned.map((support) => support.id))
 
-  const { monthly, variable } = recurringMonthly(
+  const { monthly, rules, ending, variable } = recurringMonthly(
     recurrences.filter((recurrence) => {
       if (kindOf(recurrence.categoryId) !== 'saving') return false
       if (recurrence.savingSupportId !== undefined) return ownedIds.has(recurrence.savingSupportId)
       return recurrence.memberId === memberId
     }),
     on,
+    until,
   )
 
   return {
@@ -175,7 +227,10 @@ export function memberStart(
        chaque mois même sans savoir ce qui est déjà là. */
     capital: total.valued === 0 ? null : total.estimated,
     monthly,
+    valued: total.valued,
     unvalued: total.unvalued,
+    rules,
+    ending,
     variable,
   }
 }

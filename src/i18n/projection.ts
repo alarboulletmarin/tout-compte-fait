@@ -58,6 +58,20 @@ const fr = {
   sourceMember: 'Toute l’épargne %s',
   sourceCapital: 'Épargne actuelle',
   sourceMonthly: 'Versements prévus',
+  /* D'où sort chaque chiffre, sous le chiffre. Un montant repris sans sa
+     provenance est un montant qu'il faut croire sur parole — et « 616 €/mois »
+     posé sans rien à côté n'apprend pas qu'il s'agit de la somme de trois
+     règles, ni lesquelles ont été laissées de côté. */
+  sourceFromOne: 'Dernier relevé, mouvements confirmés depuis compris.',
+  sourceFrom: 'Somme des derniers relevés de %s supports, mouvements confirmés depuis compris.',
+  sourceRulesOne: 'Une règle d’épargne récurrente, ramenée au mois.',
+  sourceRules: '%s règles d’épargne récurrentes, ramenées au mois.',
+  /* Le piège du module, dit à l'endroit où il se produit. Une reconstitution
+     d'avance qui court six mois, projetée sur dix ans, ajouterait des milliers
+     d'euros que personne n'a l'intention de verser. */
+  sourceEndingOne: 'Une règle s’arrête avant la fin de la durée simulée : elle n’est pas comptée.',
+  sourceEnding: '%s règles s’arrêtent avant la fin de la durée simulée : elles ne sont pas comptées.',
+  sourceOneOff: 'Les versements ponctuels comptent dans le capital, mais pas dans ce montant.',
   sourceNote: 'Repris de ton épargne. Rien de ce qui se simule ici ne la modifie.',
   sourceEdit: 'Modifier pour cette simulation',
   /* Ce que le capital repris ne dit pas. Un support sans relevé n'est pas un
@@ -149,9 +163,15 @@ const fr = {
   targetMissing: 'Indique un objectif pour savoir combien verser.',
   nothingToPlot: 'Indique un versement mensuel ou un capital actuel.',
 
+  /* Chaque ligne dit ce qu'elle est, et la suivante d'où elle sort. « Versements
+     ≈ 67 k€ » ne répond pas à « c'est le total sur dix ans, ça ? » — alors que
+     « 616 €/mois pendant 10 ans » y répond sans qu'on ait à poser la question. */
   breakdownInitial: 'Capital de départ',
+  breakdownInitialFrom: 'Ce que tu as déjà, aujourd’hui.',
   breakdownPaid: 'Versements',
+  breakdownPaidFrom: '%s pendant %s.',
   breakdownInterest: 'Rendement',
+  breakdownInterestFrom: '%s, composé chaque mois.',
   breakdownTotal: 'Capital projeté',
 
   /* --- Le tracé -----------------------------------------------------------*/

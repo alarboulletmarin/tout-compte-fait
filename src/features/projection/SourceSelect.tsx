@@ -133,42 +133,75 @@ export function SourceSelect({
       {source.kind !== 'free' && (
         <div className="flex flex-col gap-3 border-t border-border pt-3">
           {/* En lecture, jamais dans un champ : c'est ce qui dit qu'on regarde
-              l'épargne et qu'on ne l'édite pas. */}
-          <dl className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="t-label">{projection.sourceCapital}</dt>
-              <dd className="t-num-body tnum shrink-0">
-                {/* `NO_VALUE` et non un cadratin recopié : un support sans
-                    relevé n'a pas de valeur, et cette absence-là doit se lire
-                    du même signe que partout ailleurs dans l'app. Surtout pas
-                    un zéro — zéro est une information financière. */}
-                {start.capital === null ? NO_VALUE : money(start.capital)}
-              </dd>
-            </div>
-            {showMonthly && (
+              l'épargne et qu'on ne l'édite pas.
+              Chaque chiffre porte sa provenance juste en dessous. Un montant
+              repris sans elle est un montant qu'il faut croire sur parole —
+              « 616 €/mois » n'apprend pas qu'il est la somme de trois règles, ni
+              lesquelles ont été écartées. */}
+          <dl className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
               <div className="flex items-baseline justify-between gap-3">
-                <dt className="t-label">{projection.sourceMonthly}</dt>
+                <dt className="t-body">{projection.sourceCapital}</dt>
                 <dd className="t-num-body tnum shrink-0">
-                  {tpl(projection.perMonth, money(start.monthly))}
+                  {/* `NO_VALUE` et non un cadratin recopié : un support sans
+                      relevé n'a pas de valeur, et cette absence-là doit se lire
+                      du même signe que partout ailleurs dans l'app. Surtout pas
+                      un zéro — zéro est une information financière. */}
+                  {start.capital === null ? NO_VALUE : money(start.capital)}
                 </dd>
+              </div>
+              {/* Ce que le chiffre est, puis ce qui lui manque. Un support sans
+                  relevé n'est pas un support à zéro. */}
+              {start.capital === null ? (
+                <p className="t-label">{projection.sourceNoValue}</p>
+              ) : (
+                <p className="t-label">
+                  {start.valued === 1
+                    ? projection.sourceFromOne
+                    : tpl(projection.sourceFrom, start.valued)}
+                </p>
+              )}
+              {start.unvalued === 1 && start.capital !== null && (
+                <p className="t-label">{projection.sourceUnvaluedOne}</p>
+              )}
+              {start.unvalued > 1 && start.capital !== null && (
+                <p className="t-label">{tpl(projection.sourceUnvalued, start.unvalued)}</p>
+              )}
+            </div>
+
+            {showMonthly && (
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="t-body">{projection.sourceMonthly}</dt>
+                  <dd className="t-num-body tnum shrink-0">
+                    {tpl(projection.perMonth, money(start.monthly))}
+                  </dd>
+                </div>
+                {start.rules === 0 ? (
+                  <p className="t-label">{projection.sourceNoMonthly}</p>
+                ) : (
+                  <>
+                    <p className="t-label">
+                      {start.rules === 1
+                        ? projection.sourceRulesOne
+                        : tpl(projection.sourceRules, start.rules)}
+                    </p>
+                    {/* Les versements ponctuels sont la question qu'on se pose
+                        juste après avoir lu ce chiffre, et la réponse n'est pas
+                        celle qu'on attend : ils bougent le capital, pas la
+                        mensualité. Autant le dire à sa place. */}
+                    <p className="t-label">{projection.sourceOneOff}</p>
+                  </>
+                )}
+                {/* Le piège du module, dit là où il se produit. */}
+                {start.ending === 1 && <p className="t-label">{projection.sourceEndingOne}</p>}
+                {start.ending > 1 && (
+                  <p className="t-label">{tpl(projection.sourceEnding, start.ending)}</p>
+                )}
+                {start.variable && <p className="t-label">{projection.sourceVariable}</p>}
               </div>
             )}
           </dl>
-
-          {/* Ce que le chiffre repris ne dit pas — une seule de ces phrases à la
-              fois, dans l'ordre de ce qui manque le plus. Un support sans relevé
-              n'est pas un support à zéro. */}
-          {start.capital === null ? (
-            <p className="t-label">{projection.sourceNoValue}</p>
-          ) : start.unvalued === 1 ? (
-            <p className="t-label">{projection.sourceUnvaluedOne}</p>
-          ) : start.unvalued > 1 ? (
-            <p className="t-label">{tpl(projection.sourceUnvalued, start.unvalued)}</p>
-          ) : null}
-          {showMonthly && start.variable && <p className="t-label">{projection.sourceVariable}</p>}
-          {showMonthly && start.monthly === 0 && !start.variable && (
-            <p className="t-label">{projection.sourceNoMonthly}</p>
-          )}
 
           <p className="t-label">{projection.sourceNote}</p>
           <p className="t-label">{projection.sourceNoRate}</p>

@@ -120,7 +120,9 @@ export function ProjectionPage() {
   const members = useMembers()
   const supports = useActiveSavingSupports()
   const source = resolveSource(draft.source, members, supports)
-  const start = useProjectionStart(source)
+  /* L'horizon avant l'origine, et non l'inverse : c'est lui qui décide quelles
+     règles sont assez durables pour entrer dans un versement constant. */
+  const start = useProjectionStart(source, draft.years * 12)
 
   useEffect(() => {
     writeDraft(draft)
@@ -269,6 +271,23 @@ export function ProjectionPage() {
             )}
             basis={basis}
             target={draft.mode === 'target'}
+            paidFrom={tpl(
+              projection.breakdownPaidFrom,
+              tpl(
+                projection.perMonth,
+                money(result.monthly ?? first?.monthly ?? ZERO),
+              ),
+              formatDuration(result.months),
+            )}
+            interestFrom={tpl(
+              projection.breakdownInterestFrom,
+              tpl(projection.perYear, percent(first?.rateBp ?? 0)),
+            )}
+            deflated={
+              result.inflationBp > 0
+                ? tpl(projection.constantOn, percent(result.inflationBp))
+                : null
+            }
           />
         )}
 
@@ -469,13 +488,10 @@ export function ProjectionPage() {
           <>
             <Tile className="gap-3">
               <Eyebrow>{projection.chart}</Eyebrow>
-              {/* Signalée dès qu'elle est active, et pas seulement cochée dans
-                  un coin : tous les chiffres de l'écran changent de sens. */}
-              {result.inflationBp > 0 && (
-                <p className="t-label">
-                  {tpl(projection.constantOn, percent(result.inflationBp))}
-                </p>
-              )}
+              {/* La lecture en euros d'aujourd'hui se signale une seule fois, et
+                  c'est sous le résultat (`ResultTile`) : elle vaut pour tout
+                  l'écran, et la répéter au-dessus de chaque bloc en ferait un
+                  bandeau. */}
               {result.targetReached && <p className="t-label">{projection.targetReached}</p>}
 
               <ProjectionChart
