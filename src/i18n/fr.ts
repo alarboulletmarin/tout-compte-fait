@@ -1826,6 +1826,25 @@ export const fr = {
     rateMethod:
       'Un taux ne crée aucun euro dans le document : il ne compte ni dans ton capital relevé, ni dans les versements, ni dans un total du mois. Il sert aux projections et à la courbe d’évolution, qui annoncent toutes deux une estimation.',
 
+    /* --- L'évolution, support par support ----------------------------------
+       La seule lecture de l'écran qui capitalise, et elle le dit. Entre deux
+       relevés, personne ne sait ce que valait le PEA : ce qui est tracé se
+       dérive des mouvements confirmés et du taux en vigueur ce mois-là. Les
+       mois relevés portent un point — ce sont les faits. */
+    evolution: 'Évolution de l’épargne',
+    evolutionEmpty:
+      'Rien à tracer pour l’instant : la courbe démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
+    evolutionWindow: 'Période',
+    evolutionMonths: '%s mois',
+    evolutionYears: '%s ans',
+    evolutionTotal: 'Total',
+    evolutionWhen: 'Mois',
+    evolutionRest: '%s autres supports',
+    evolutionDetail: 'Voir le détail, mois par mois',
+    evolutionMethod:
+      'Estimation : les points sont tes relevés, le reste se dérive des mouvements confirmés et du taux en vigueur ce mois-là. Un support sans relevé n’y figure pas — sa valeur est inconnue, pas nulle.',
+    srEvolution: 'Épargne estimée de %s en %s à %s en %s, relevés compris.',
+
     /* --- Relever plusieurs supports d'un coup ------------------------------*/
     /* On ne relève pas ses comptes un par un : les chiffres arrivent ensemble,
        sur un relevé de fin de mois. D'où un écran qui les prend tous, et un

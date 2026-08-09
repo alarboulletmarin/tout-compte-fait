@@ -33,7 +33,7 @@ import { useState } from 'react'
 import type { Money } from '@/domain/money'
 import { formatRoundedMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
-import { polylinePath } from '@/charts/path'
+import { bandPath, polylinePath } from '@/charts/path'
 import { ChartAxis, type AxisTick } from '@/charts/ChartAxis'
 import { ChartCursor } from '@/charts/ChartCursor'
 import { useCurrency } from '@/ui/currency'
@@ -107,28 +107,6 @@ function stops(months: number): number[] {
     if (!marks.includes(mark)) marks.push(mark)
   }
   return marks
-}
-
-/**
- * Une aire, fermée sur une base qui peut elle-même être une ligne.
- *
- * Le contour du dessus est la polyligne du haut ; celui du dessous la remonte à
- * l'envers. Quand la base est plate, c'est l'aire simple d'un versé cumulé ;
- * quand elle suit une autre série, c'est la bande d'un empilement — le même code
- * pour les deux, parce que c'est la même figure.
- *
- * Écrit ici et non par `charts/path.ts`, qui ne connaît que des traits : une
- * aire n'a de sens que lorsqu'une base existe, et aucun autre graphique de
- * l'app n'en a une.
- */
-function bandPath(
-  top: readonly { x: number; y: number }[],
-  bottom: readonly { x: number; y: number }[],
-): string {
-  const first = bottom[0]
-  if (top.length === 0 || first === undefined) return ''
-  const back = [...bottom].reverse().map((point) => `L ${String(point.x)} ${String(point.y)}`)
-  return `${polylinePath(top)} ${back.join(' ')} Z`
 }
 
 export type ProjectionChartProps = {

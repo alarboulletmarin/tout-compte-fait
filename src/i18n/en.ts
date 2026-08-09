@@ -1072,6 +1072,20 @@ export const en: Strings = {
     rateMethod:
       'A rate creates no money in your document: it counts neither in your recorded capital, nor in contributions, nor in any monthly total. It feeds the projections and the growth curve, both of which state an estimate.',
 
+    evolution: 'Savings over time',
+    evolutionEmpty:
+      'Nothing to plot yet: the curve starts at your first valuation, and it takes two months before it says anything.',
+    evolutionWindow: 'Period',
+    evolutionMonths: '%s months',
+    evolutionYears: '%s years',
+    evolutionTotal: 'Total',
+    evolutionWhen: 'Month',
+    evolutionRest: '%s other pots',
+    evolutionDetail: 'See the month-by-month detail',
+    evolutionMethod:
+      'An estimate: the dots are your valuations, the rest is derived from confirmed movements and the rate in force that month. A pot with no valuation isn’t plotted — its value is unknown, not zero.',
+    srEvolution: 'Savings estimated from %s in %s to %s in %s, valuations included.',
+
     valuesUpdate: 'Update the valuations',
     valuesDueOne: '1 valuation to do',
     valuesDue: '%s valuations to do',

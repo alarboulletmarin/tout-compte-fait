@@ -952,6 +952,12 @@ export function useSupportValuations(supportId: string | undefined): SavingValua
   )
 }
 
+/* `useStockBands` — la trajectoire mois par mois — n'est **pas** ici, et c'est
+   délibéré : ce module est dans le graphe initial de tout le monde, et le
+   sélecteur y ferait entrer `domain/savingSeries.ts` et sa capitalisation pour
+   une lecture qui vit derrière un `lazy`. Il est donc dans
+   `features/savings/EvolutionSection.tsx`, avec le seul écran qui le lit. */
+
 /** Les paliers de taux d'un support, du plus récent au plus ancien. */
 export function useSupportRates(supportId: string | undefined): SavingRate[] {
   const rates = useSavingRates()

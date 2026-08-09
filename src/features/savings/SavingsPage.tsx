@@ -44,6 +44,15 @@ const YearSection = lazy(async () => ({
 }))
 
 /**
+ * L'évolution de l'épargne arrive à la demande, pour la raison qui vaut déjà
+ * pour le cumul de l'année : elle emporte un graphique entier — les aires
+ * empilées, l'axe, le curseur — et cet écran-ci est sur le chemin quotidien.
+ */
+const EvolutionSection = lazy(async () => ({
+  default: (await import('./EvolutionSection')).EvolutionSection,
+}))
+
+/**
  * L'écran de l'épargne — celui qu'ouvre la tuile Capacité du mois.
  *
  * **Une question, une zone, un chiffre, une action.** Les blocs se suivent dans
@@ -154,6 +163,13 @@ export function SavingsPage() {
           </div>
 
           <PlacedSection saved={totals.saving} />
+
+          {/* « Où c'est parti ce mois-ci » appelle immédiatement « et est-ce
+              que ça monte, au fond ? ». C'est la seule lecture de l'écran qui
+              capitalise, et elle le dit sous son tracé. */}
+          <Suspense fallback={null}>
+            <EvolutionSection />
+          </Suspense>
 
           {/* En dernier, et c'est sa place : le mois se décide en tête d'écran,
               l'année se contemple. C'est aussi la seule lecture d'ici qui ne
