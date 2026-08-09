@@ -415,6 +415,25 @@ export function ProjectionPage() {
 
   const rungs = result === null ? [] : effortLadder(result, first)
 
+  /**
+   * Essayer un barreau de l'échelle d'effort : le même geste que « Modifier
+   * pour cette simulation » (`SourceSelect`), déclenché depuis une ligne du
+   * tableau plutôt que depuis le panneau d'origine. Repartir de l'épargne
+   * réelle sans y toucher — le champ dit ensuite que le chiffre est à soi —
+   * puis poser le montant essayé à la place de celui qu'elle lisait.
+   */
+  const applyEffort = (monthly: Money): void => {
+    patch(
+      source.kind === 'free'
+        ? { monthlyText: toAmountInput(monthly) }
+        : {
+            source: { kind: 'free' },
+            initialText: toAmountInput(start.capital ?? ZERO),
+            monthlyText: toAmountInput(monthly),
+          },
+    )
+  }
+
   return (
     <>
       <PageTitle title={projection.title} />
@@ -882,7 +901,7 @@ export function ProjectionPage() {
               <Tile className="gap-3">
                 <Eyebrow>{projection.effort}</Eyebrow>
                 <p className="t-label">{projection.effortHint}</p>
-                <EffortTable rungs={rungs} />
+                <EffortTable rungs={rungs} onApply={applyEffort} />
               </Tile>
             )}
 

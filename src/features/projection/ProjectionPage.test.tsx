@@ -259,6 +259,30 @@ describe('l’écran des projections', () => {
     // Rien de ce qu'on tape ici n'est un fait du foyer : le document ne bouge pas.
     expect(useStore.getState().data).toBe(before)
   })
+
+  it('applique un barreau de l’échelle d’effort au versement simulé', async () => {
+    const user = userEvent.setup()
+    show()
+    // 100 €/mois par défaut, pas à 10 € : le barreau ×2 vaut donc 200 €/mois.
+    // L'espace est fine (`NBSP_NARROW`, `i18n/format.ts`), comme partout ailleurs
+    // dans un montant.
+    await user.click(
+      screen.getByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '200 €')),
+      }),
+    )
+    expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('200,00')
+  })
+
+  it('ne rend pas cliquable le barreau déjà simulé', () => {
+    show()
+    expect(
+      screen.queryByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '100 €')),
+      }),
+    ).toBeNull()
+    expect(screen.getByText(projection.effortCurrent)).toBeInTheDocument()
+  })
 })
 
 describe('quand la simulation part de l’épargne réelle', () => {
@@ -399,6 +423,28 @@ describe('quand la simulation part de l’épargne réelle', () => {
     expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('350,00')
     expect(screen.getByLabelText(new RegExp(projection.initial))).toHaveValue('8450,00')
     expect(screen.getByLabelText(projection.source)).toHaveValue('free')
+  })
+
+  it('coupe le lien en appliquant un barreau, comme « Modifier pour cette simulation »', async () => {
+    const user = userEvent.setup()
+    seed()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    // 350 €/mois repris de l'épargne réelle, pas de 50 € : le barreau ×1,5
+    // vaut donc 550 €/mois.
+    await user.click(
+      screen.getByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '550 €')),
+      }),
+    )
+
+    // Le lien se coupe en recopiant ce qu'il apportait — même geste que
+    // « Modifier pour cette simulation » — puis le versement essayé remplace
+    // celui que l'épargne lisait.
+    expect(screen.getByLabelText(projection.source)).toHaveValue('free')
+    expect(screen.getByLabelText(new RegExp(projection.initial))).toHaveValue('8450,00')
+    expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('550,00')
   })
 
   it('n’écrit rien dans le document en lisant l’épargne', async () => {

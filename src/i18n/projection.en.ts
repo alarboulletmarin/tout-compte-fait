@@ -152,6 +152,7 @@ export const en: ProjectionStrings = {
   effortHint: 'At the first assumption, over the same term.',
   effortCurrent: 'Current simulation',
   effortParts: 'Of which: %s',
+  effortApply: 'Simulate with %s',
 
   constant: 'Account for inflation',
   constantHint: 'Shows the equivalent purchasing power, in today’s money.',

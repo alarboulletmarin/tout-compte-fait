@@ -268,6 +268,12 @@ const fr = {
   /* Sur un portefeuille décomposé, l'effort se répartit au prorata : sans le
      détail, on saurait combien verser sans savoir où. */
   effortParts: 'Dont : %s',
+  /* Un barreau se clique pour l'essayer, jamais pour l'adopter : c'est la même
+     bascule que « Modifier pour cette simulation » (`source`), déclenchée
+     depuis une ligne plutôt que depuis le panneau d'origine. L'échelle ne
+     recommande toujours rien — cliquer n'est pas plus une préconisation que la
+     lire ne l'était. */
+  effortApply: 'Simuler avec %s',
 
   /* --- Euros constants ----------------------------------------------------*/
   constant: 'Tenir compte de l’inflation',
