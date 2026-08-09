@@ -1,5 +1,5 @@
 /* ============================================================================
- * Projection d'épargne à taux constant.
+ * Projection d'épargne à taux constant par palier.
  *
  * Ce module ne sait faire qu'une chose : dire ce que devient un capital qu'on
  * alimente tous les mois, sous une hypothèse de taux qu'on lui donne. Il ne
@@ -47,8 +47,20 @@ export type ProjectionInput = {
   monthly: Money
   /** L'horizon, en mois. La série porte `months + 1` points, le départ compris. */
   months: number
-  /** Taux annuel **net**, en points de base. 600 = 6,00 %. */
-  rateBp: number
+  /**
+   * Taux annuel **net**, en points de base. 600 = 6,00 %.
+   *
+   * Un **tableau** quand le taux change en cours de route : `rateBp[k]` est
+   * celui du passage du rang `k` au rang `k+1`, et le dernier terme tient
+   * jusqu'à l'horizon. Un livret révisé au 1er janvier prochain se projette
+   * ainsi à son taux d'aujourd'hui jusqu'au rang qui lui revient, et au
+   * suivant après — sans que rien avant ce rang ne bouge.
+   *
+   * Un scalaire est le cas particulier d'un barème plat. Il n'y a **pas deux
+   * moteurs** : il y en a un, dont l'un des arguments peut varier (cahier
+   * §4.6 ter).
+   */
+  rateBp: number | readonly number[]
   /**
    * Inflation annuelle en points de base, pour la lecture en euros constants.
    * Zéro — le défaut — laisse les montants en euros courants.
@@ -126,7 +138,18 @@ export function projectSeries({
   inflationBp = 0,
 }: ProjectionInput): ProjectionSeries {
   const horizon = Math.max(0, Math.trunc(months))
-  const growth = 1 + monthlyRate(rateBp)
+  /* Le facteur de croissance du mois `k`. Un barème plat n'appelle `Math.pow`
+     qu'une fois — le cache le retient par taux, pas par rang —, si bien que le
+     vecteur de référence du cahier reste bit à bit celui d'avant le barème. */
+  const factors = new Map<number, number>()
+  const growthAt = (month: number): number => {
+    const annual = typeof rateBp === 'number' ? rateBp : (rateBp[month] ?? rateBp.at(-1) ?? 0)
+    const known = factors.get(annual)
+    if (known !== undefined) return known
+    const factor = 1 + monthlyRate(annual)
+    factors.set(annual, factor)
+    return factor
+  }
   const erosion = 1 + monthlyRate(inflationBp)
 
   let capital: number = initial
@@ -142,7 +165,7 @@ export function projectSeries({
   const contributed: Money[] = [money(Math.round(paid))]
 
   for (let month = 1; month <= horizon; month += 1) {
-    capital = capital * growth + monthly
+    capital = capital * growthAt(month - 1) + monthly
     discount /= erosion
     paid += monthly * discount
     balance.push(money(Math.round(capital * discount)))
@@ -161,6 +184,13 @@ export function projectSeries({
  * `projectSeries`, résolue en `P` :
  * `P = (cible − initial·(1+i)ⁿ) · i / ((1+i)ⁿ − 1)`, et `(cible − initial)/n`
  * à taux nul, où la limite existe mais pas le quotient.
+ *
+ * **Un scalaire, et pas un barème**, à la différence de `projectSeries`. Le mode
+ * inverse cherche un versement, donc il ne décompose rien : `analyse` y rend une
+ * `split` vide, et aucun barème de support n'arrive jusqu'ici. S'il en arrivait
+ * un un jour, ce serait par **dichotomie sur `projectSeries`** et non par une
+ * seconde forme fermée — deux façons de calculer un capital donneraient deux
+ * vérités à tenir d'accord.
  *
  * **Arrondi au centime supérieur**, seul de tout le module. Un versement requis
  * arrondi par le bas rate sa cible — de peu, mais toujours du même côté, et

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { currentYm } from '@/domain/date'
 import { eur } from '@/domain/fixtures'
 import type { ProjectionPart, ProjectionStart } from '@/domain/projectionStart'
 import { tpl } from '@/i18n/format'
@@ -413,9 +414,9 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
       portfolio([part({ rateBp: null, rateKind: null })]),
     )
     expect(result?.split[0]?.rateBp).toBe(700)
-    // `own` dit que le taux est emprunté : la colonne ne le fera pas passer
-    // pour celui du support.
-    expect(result?.split[0]?.own).toBe(false)
+    // `origin` dit d'où le taux vient : la colonne ne fera pas passer celui de
+    // l'écran pour celui du support.
+    expect(result?.split[0]?.origin).toBe('screen')
   })
 
   it('renonce à décomposer dès qu’on compare deux hypothèses', () => {
@@ -457,3 +458,137 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
     }
   })
 })
+
+/* ============================================================================
+ * Le rendement essayé sur un support.
+ *
+ * Trois règles, et la troisième est celle qui tient tout l'écran : **rien ne
+ * redescend dans le document**. Ce qui se tape ici vit dans le brouillon, et la
+ * fiche du support reste le seul endroit où un taux s'enregistre — daté.
+ * ==========================================================================*/
+
+describe('un taux essayé sur un support', () => {
+  const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Livret A',
+    capital: eur(100_000),
+    monthly: eur(10_000),
+    rateBp: 200,
+    rateKind: 'assumed',
+    steps: [{ rateBp: 200, kind: 'assumed', from: '2020-01-01', to: null }],
+    ...over,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' } })
+
+  it('l’emporte sur le taux du support, qui l’emporte sur celui de l’écran', () => {
+    const tried = analyse(
+      {
+        ...linked,
+        scenarios: [{ id: 'a', rateText: '7', kind: 'assumed' }],
+        supportRates: [{ supportId: 's-1', rateText: '4', kind: 'guaranteed' }],
+      },
+      portfolio([part()]),
+    )
+    expect(tried.result?.split[0]?.rateBp).toBe(400)
+    expect(tried.result?.split[0]?.kind).toBe('guaranteed')
+    expect(tried.result?.split[0]?.origin).toBe('simulated')
+  })
+
+  it('ne touche pas un support qu’il ne désigne pas', () => {
+    const { result } = analyse(
+      { ...linked, supportRates: [{ supportId: 's-2', rateText: '9', kind: 'assumed' }] },
+      portfolio([part()]),
+    )
+    expect(result?.split[0]?.rateBp).toBe(200)
+    expect(result?.split[0]?.origin).toBe('own')
+  })
+
+  it('retombe sur le taux du support quand le champ est vide ou illisible', () => {
+    /* Un champ vidé est un essai retiré, pas un taux nul ; une faute de frappe
+       ne doit pas projeter un compte à plat. */
+    for (const rateText of ['', '450']) {
+      const { result } = analyse(
+        { ...linked, supportRates: [{ supportId: 's-1', rateText, kind: 'assumed' }] },
+        portfolio([part()]),
+      )
+      expect(result?.split[0]?.rateBp).toBe(200)
+      expect(result?.split[0]?.origin).toBe('own')
+    }
+  })
+
+  it('remplace le barème entier, sans laisser une révision le contredire', () => {
+    const dated = part({
+      steps: [
+        { rateBp: 200, kind: 'assumed', from: '2020-01-01', to: '2099-01-01' },
+        { rateBp: 900, kind: 'assumed', from: '2099-01-01', to: null },
+      ],
+    })
+    const { result } = analyse(
+      { ...linked, supportRates: [{ supportId: 's-1', rateText: '4', kind: 'assumed' }] },
+      portfolio([dated]),
+    )
+    expect(result?.split[0]?.dated).toBe(false)
+    expect(result?.split[0]?.schedule).toBe(400)
+  })
+})
+
+describe('un support dont le taux change en route', () => {
+  const dated = (from: string): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Assurance-vie',
+    capital: eur(1_000_000),
+    monthly: eur(10_000),
+    rateBp: 400,
+    rateKind: 'assumed',
+    steps: [
+      { rateBp: 400, kind: 'assumed', from: '2020-01-01', to: from },
+      { rateBp: 100, kind: 'assumed', from, to: null },
+    ],
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' }, years: 10 })
+
+  it('applique la révision, et le signale', () => {
+    const soon = analyse(linked, portfolio([dated(nextYearStart())]))
+    const never = analyse(linked, portfolio([dated('2099-01-01')]))
+
+    expect(soon.result?.split[0]?.dated).toBe(true)
+    // Le taux du **départ** reste celui d'aujourd'hui : c'est celui qu'on lit.
+    expect(soon.result?.split[0]?.rateBp).toBe(400)
+    // Et la baisse se voit à l'arrivée.
+    expect(soon.result?.split[0]?.series.balance.at(-1) ?? 0).toBeLessThan(
+      never.result?.split[0]?.series.balance.at(-1) ?? 0,
+    )
+  })
+
+  it('ne signale rien quand la révision tombe hors de l’horizon', () => {
+    /* Un changement au-delà de la durée simulée ne se voit pas sur la courbe :
+       l'annoncer ferait chercher un coude qui n'y est pas. */
+    expect(analyse(linked, portfolio([dated('2099-01-01')])).result?.split[0]?.dated).toBe(false)
+  })
+})
+
+/** Le 1er janvier de l'an prochain — une révision qui tombe dans l'horizon. */
+function nextYearStart(): string {
+  const year = Number(currentYm().slice(0, 4)) + 1
+  return `${String(year)}-01-01`
+}

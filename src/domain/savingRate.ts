@@ -146,20 +146,19 @@ export function rateSchedule(rates: readonly SavingRate[], supportId: string): R
  * rang *k+1*, donc un de moins que les points de la série.
  */
 export function monthlyRateBps(
-  rates: readonly SavingRate[],
-  supportId: string,
+  steps: readonly RateStep[],
   from: YearMonth,
   months: number,
   fallbackBp: number,
 ): number[] {
   const horizon = Math.max(0, Math.trunc(months))
-  const stack = ratesOf(rates, supportId)
   /* Sans aucun palier, le barème est plat : un seul tableau, pas de cas
-     particulier chez l'appelant. */
-  if (stack.length === 0) return Array.from({ length: horizon }, () => fallbackBp)
+     particulier chez l'appelant. Du plus récent au plus ancien pour que le
+     premier qui a commencé soit celui qui court. */
+  const stack = [...steps].reverse()
 
   return Array.from({ length: horizon }, (_, index) => {
     const on = startOfMonth(addMonthsToYm(from, index))
-    return stack.find((rate) => rate.from <= on)?.rateBp ?? fallbackBp
+    return stack.find((step) => step.from <= on)?.rateBp ?? fallbackBp
   })
 }

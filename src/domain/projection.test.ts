@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { eur } from './fixtures'
+import { ZERO } from './money'
 import { inflate, milestoneMonths, monthlyRate, projectSeries, requiredMonthly } from './projection'
 
 /** Le dernier point d'une série — ce que l'écran appelle « à l'arrivée ». */
@@ -272,5 +273,62 @@ describe('jalons', () => {
     expect(milestoneMonths(2)).toEqual([1, 2])
     expect(milestoneMonths(1)).toEqual([1])
     expect(milestoneMonths(0)).toEqual([])
+  })
+})
+
+/* ============================================================================
+ * Le barème — un taux par mois, quand il change en cours de route.
+ *
+ * Un scalaire est le cas particulier d'un barème plat, et c'est ce que ces
+ * tests protègent : il n'y a pas deux moteurs, il y en a un dont l'un des
+ * arguments peut varier (cahier §4.6 ter).
+ * ==========================================================================*/
+
+describe('un taux qui change en cours de route', () => {
+  const base = { initial: eur(1_000_000), monthly: eur(20_000), months: 24 }
+
+  it('rend exactement la série du scalaire quand le barème est plat', () => {
+    const flat = Array.from({ length: base.months }, () => 400)
+    expect(projectSeries({ ...base, rateBp: flat })).toEqual(
+      projectSeries({ ...base, rateBp: 400 }),
+    )
+  })
+
+  it('ne touche aucun point avant le rang où le taux change', () => {
+    /* La propriété qui a fait exister le taux daté : poser un palier pour
+       l'an prochain ne réécrit pas l'année en cours. */
+    const changing = Array.from({ length: base.months }, (_, month) => (month < 12 ? 400 : 100))
+    const constant = projectSeries({ ...base, rateBp: 400 })
+    const stepped = projectSeries({ ...base, rateBp: changing })
+
+    expect(stepped.balance.slice(0, 13)).toEqual(constant.balance.slice(0, 13))
+    expect(stepped.balance[24]).toBeLessThan(constant.balance[24] ?? 0)
+  })
+
+  it('équivaut à deux projections enchaînées', () => {
+    const first = projectSeries({ ...base, months: 12, rateBp: 400 })
+    const second = projectSeries({
+      initial: first.balance[12] ?? ZERO,
+      monthly: base.monthly,
+      months: 12,
+      rateBp: 100,
+    })
+    const stepped = projectSeries({
+      ...base,
+      rateBp: Array.from({ length: 24 }, (_, month) => (month < 12 ? 400 : 100)),
+    })
+    /* À l'euro près : la chaîne arrondit une fois de plus que le barème, qui
+       garde ses flottants d'un bout à l'autre. */
+    expect(Math.abs((stepped.balance[24] ?? 0) - (second.balance[12] ?? 0))).toBeLessThanOrEqual(1)
+  })
+
+  it('tient son dernier terme jusqu’au bout de l’horizon', () => {
+    const short = projectSeries({ ...base, rateBp: [400] })
+    expect(short).toEqual(projectSeries({ ...base, rateBp: 400 }))
+  })
+
+  it('lit un barème vide comme un taux nul, sans casser la série', () => {
+    const empty = projectSeries({ ...base, rateBp: [] })
+    expect(empty).toEqual(projectSeries({ ...base, rateBp: 0 }))
   })
 })

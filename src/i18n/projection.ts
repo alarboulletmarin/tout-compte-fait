@@ -84,7 +84,12 @@ const fr = {
   sourceVariable: 'Une règle au montant variable n’a pas de mensualité à reprendre.',
   /* Le taux, lui, ne se reprend jamais — c'est la règle qui tient tout le
      branchement sur l'épargne réelle. */
-  sourceNoRate: 'Le rendement, lui, reste une hypothèse : l’app n’en prête aucun à un support.',
+  /* Elle disait « l'app n'en prête aucun à un support », ce qui est devenu faux
+     le jour où un support a pu porter son taux. Ce que la phrase visait tient
+     toujours : l'app ne **devine** aucun rendement — elle relit celui que son
+     propriétaire a tapé, et signale ceux qu'elle a dû emprunter à l'écran. */
+  sourceNoRate:
+    'Le rendement reste une hypothèse : l’app n’en devine aucun — ceux qui sont repris sont ceux que tu as posés.',
 
   /* --- Les entrées --------------------------------------------------------*/
   params: 'Paramètres',
@@ -203,7 +208,39 @@ const fr = {
   /* Un support sans hypothèse emprunte celle de l'écran, et la colonne le dit :
      sans cette marque, il passerait pour un support renseigné. */
   splitBorrowed: '%s (hypothèse de l’écran)',
+  splitSimulated: '%s (simulé)',
+  splitDated: '%s (taux daté)',
   splitOwn: 'Chaque support à son hypothèse ; ceux qui n’en portent pas prennent celle de l’écran.',
+  /* Le tracé décomposé : une bande par compte, et le haut de la pile *est* le
+     total. On n'empile que ce qui s'additionne — deux supports, oui ; deux
+     hypothèses de rendement posées sur le même versé, jamais. */
+  chartStack: 'Capital par support',
+  chartTotal: 'Total',
+  srChartStack: 'De %s à %s en %s, réparti sur %s supports.',
+
+  /* --- Le rendement, support par support ----------------------------------
+     Projeter tout le portefeuille d'une personne sous un taux unique n'a aucun
+     sens : deux comptes ne suivent pas la même courbe, et leur somme n'est
+     celle d'aucun taux moyen. Ce qui se tape ici ne vaut que pour la
+     simulation — la fiche du support reste le seul endroit où un taux
+     s'enregistre, daté. */
+  supportRates: 'Rendement par support',
+  supportRatesHint:
+    'Chaque compte part du taux posé sur sa fiche. Ce que tu changes ici ne vaut que pour cette simulation, et ne modifie pas ton épargne.',
+  supportRateOwn: 'Posé sur ce support',
+  supportRateDated: 'Un changement de taux est prévu pendant la durée simulée.',
+  supportRateBorrowed: 'Aucun taux posé : l’hypothèse ci-dessous s’applique.',
+  supportRateSimulated: 'Modifié pour cette simulation',
+  supportRateReset: 'Reprendre le taux du support',
+  supportRateEmpty: 'Hypothèse de l’écran',
+  screenRate: 'Hypothèse de l’écran',
+  screenRateHint: 'Elle s’applique aux supports qui ne portent aucun taux.',
+
+  /* --- Le détail du point de départ ---------------------------------------*/
+  sourceParts: 'Compte par compte',
+  sourcePartCapital: 'Capital',
+  sourcePartMonthly: 'Versements',
+  sourcePartTotal: 'Total',
 
   /* --- L'effort d'épargne -------------------------------------------------
      La seule lecture actionnable du mode direct : « combien j'aurai » se
@@ -211,6 +248,9 @@ const fr = {
   effort: 'Et si je verse davantage ?',
   effortHint: 'À la première hypothèse, sur la même durée.',
   effortCurrent: 'Simulation en cours',
+  /* Sur un portefeuille décomposé, l'effort se répartit au prorata : sans le
+     détail, on saurait combien verser sans savoir où. */
+  effortParts: 'Dont : %s',
 
   /* --- Euros constants ----------------------------------------------------*/
   constant: 'Tenir compte de l’inflation',

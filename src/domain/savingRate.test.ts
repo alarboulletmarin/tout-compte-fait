@@ -101,27 +101,29 @@ describe('rateSchedule', () => {
 })
 
 describe('monthlyRateBps', () => {
+  const steps = rateSchedule(rates, 's1')
+
   it('porte un terme par mois, et pas un de plus', () => {
-    expect(monthlyRateBps(rates, 's1', '2025-01', 6, 0)).toHaveLength(6)
-    expect(monthlyRateBps(rates, 's1', '2025-01', 0, 0)).toEqual([])
-    expect(monthlyRateBps(rates, 's1', '2025-01', -3, 0)).toEqual([])
+    expect(monthlyRateBps(steps, '2025-01', 6, 0)).toHaveLength(6)
+    expect(monthlyRateBps(steps, '2025-01', 0, 0)).toEqual([])
+    expect(monthlyRateBps(steps, '2025-01', -3, 0)).toEqual([])
   })
 
   it('change de taux au mois du palier, et jamais avant', () => {
     /* Janvier 2025 court encore à 3 %, février prend les 2,40 %. */
-    expect(monthlyRateBps(rates, 's1', '2024-12', 4, 0)).toEqual([300, 300, 240, 240])
+    expect(monthlyRateBps(steps, '2024-12', 4, 0)).toEqual([300, 300, 240, 240])
   })
 
   it('comble les mois d’avant le premier palier par le repli', () => {
-    expect(monthlyRateBps(rates, 's1', '2023-12', 3, 500)).toEqual([500, 500, 300])
+    expect(monthlyRateBps(steps, '2023-12', 3, 500)).toEqual([500, 500, 300])
   })
 
   it('rend un barème plat quand le support n’a aucun palier', () => {
-    expect(monthlyRateBps(rates, 'inconnu', '2026-01', 3, 500)).toEqual([500, 500, 500])
+    expect(monthlyRateBps([], '2026-01', 3, 500)).toEqual([500, 500, 500])
   })
 
   it('tient le dernier palier jusqu’au bout de l’horizon', () => {
-    expect(monthlyRateBps(rates, 's1', '2030-01', 3, 0)).toEqual([240, 240, 240])
+    expect(monthlyRateBps(steps, '2030-01', 3, 0)).toEqual([240, 240, 240])
   })
 })
 

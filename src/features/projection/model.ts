@@ -33,8 +33,15 @@ import {
   projectSeries,
   requiredMonthly,
 } from '@/domain/projection'
-import { NO_START, type ProjectionSource, type ProjectionStart } from '@/domain/projectionStart'
+import { currentYm } from '@/domain/date'
+import {
+  NO_START,
+  type ProjectionPart,
+  type ProjectionSource,
+  type ProjectionStart,
+} from '@/domain/projectionStart'
 import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
+import { monthlyRateBps } from '@/domain/savingRate'
 import { tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 
@@ -45,6 +52,26 @@ export type ScenarioId = (typeof SCENARIO_SLOTS)[number]
 export type ProjectionMode = 'forecast' | 'target'
 
 export type ScenarioDraft = { id: ScenarioId; rateText: string; kind: RateKind }
+
+/**
+ * Un taux qu'on essaie sur un support — pour cet écran, et pour lui seul.
+ *
+ * Projeter tout le portefeuille d'une personne sous un taux unique n'a aucun
+ * sens : un Livret A et un PEA ne suivent pas la même courbe, et leur somme
+ * n'est celle d'aucun taux moyen. L'écran donne donc une ligne à chaque compte,
+ * préremplie avec ce que sa fiche porte — et modifiable, parce que « et si le
+ * PEA ne faisait que 4 % ? » est exactement la question qu'on vient poser.
+ *
+ * **Rien ne redescend dans le document.** C'est la règle qui tient tout l'écran
+ * (cahier §4.6 ter) : ce qui se tape ici vit dans `localStorage`, avec le reste
+ * du brouillon, et la fiche du support reste le seul endroit où un taux
+ * s'enregistre — daté.
+ *
+ * Un taux simulé **remplace le barème entier** du support. « Et si celui-ci
+ * rendait 4 % » ne peut pas cohabiter avec une révision datée qui viendrait
+ * contredire au rang 14 ce qu'on vient de taper.
+ */
+export type SupportRateDraft = { supportId: string; rateText: string; kind: RateKind }
 
 export type ProjectionDraft = {
   mode: ProjectionMode
@@ -72,6 +99,15 @@ export type ProjectionDraft = {
    */
   customYears: boolean
   scenarios: ScenarioDraft[]
+  /**
+   * Les taux essayés sur des supports, par identifiant. Vide par défaut : chaque
+   * compte part de ce que sa fiche porte, et de rien d'autre.
+   *
+   * Une entrée qui ne désigne plus un support n'est jamais lue — mais elle est
+   * gardée : changer d'origine et revenir doit retrouver ce qu'on avait tapé,
+   * exactement comme l'origine elle-même survit à une visite (`sourceFrom`).
+   */
+  supportRates: SupportRateDraft[]
   /** Lire en euros d'aujourd'hui. Éteint par défaut, et signalé quand il est allumé. */
   constant: boolean
   inflationText: string
@@ -121,6 +157,9 @@ export const DEFAULT_DRAFT: ProjectionDraft = {
   years: 10,
   customYears: false,
   scenarios: [{ id: 'a', rateText: '3', kind: 'assumed' }],
+  /* Aucun taux essayé d'avance : un compte part de ce que sa fiche porte, et
+     l'écran ne pose rien à la place de personne. */
+  supportRates: [],
   constant: false,
   inflationText: '2',
 }
@@ -151,6 +190,37 @@ function scenariosFrom(value: unknown): ScenarioDraft[] {
     })
     .filter((scenario): scenario is ScenarioDraft => scenario !== null)
   return kept.length === 0 ? DEFAULT_DRAFT.scenarios : kept
+}
+
+/**
+ * Le plafond des taux essayés, et il n'est pas une règle d'écran.
+ *
+ * Personne ne tient vingt-quatre comptes ; la borne est là parce que
+ * `localStorage` s'édite depuis la console du navigateur, et qu'un tableau de
+ * mille entrées relu à chaque rendu n'aurait aucune raison d'exister.
+ */
+const MAX_SUPPORT_RATES = 24
+
+/** Les taux essayés, relus du stockage — bornés comme le reste. */
+function supportRatesFrom(value: unknown): SupportRateDraft[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  return value
+    .slice(0, MAX_SUPPORT_RATES)
+    .flatMap((raw): SupportRateDraft[] => {
+      if (typeof raw !== 'object' || raw === null) return []
+      const { supportId, rateText, kind } = raw as Record<string, unknown>
+      if (typeof supportId !== 'string' || supportId === '' || supportId.length > 64) return []
+      if (seen.has(supportId)) return []
+      seen.add(supportId)
+      return [
+        {
+          supportId,
+          rateText: text(rateText, ''),
+          kind: kind === 'guaranteed' ? 'guaranteed' : 'assumed',
+        },
+      ]
+    })
 }
 
 /**
@@ -202,6 +272,7 @@ export function readDraft(): ProjectionDraft {
          une pilule l'écraserait sans qu'on ait pu voir ce qu'elle valait. */
       customYears: stored.customYears === true || !isPreset(kept),
       scenarios: scenariosFrom(stored.scenarios),
+      supportRates: supportRatesFrom(stored.supportRates),
       constant: stored.constant === true,
       inflationText: text(stored.inflationText, DEFAULT_DRAFT.inflationText),
     }
@@ -232,13 +303,38 @@ export type ScenarioResult = {
   series: ProjectionSeries
 }
 
+/**
+ * D'où vient le taux d'un support, et les trois réponses ne se valent pas.
+ *
+ * - `own` — il est **posé sur la fiche**, daté. C'est le seul qui engage le
+ *   document.
+ * - `screen` — le support n'en porte aucun, et l'écran comble avec son
+ *   hypothèse. La colonne le dit, pour qu'un compte muet ne passe pas pour un
+ *   compte renseigné.
+ * - `simulated` — quelqu'un l'a tapé **pour cette simulation**. Rien n'est
+ *   descendu dans le document, et la ligne le dit aussi.
+ */
+export type RateOrigin = 'own' | 'screen' | 'simulated'
+
 /** La trajectoire d'un support, et le taux sous lequel elle a été calculée. */
 export type SupportSeries = {
   supportId: string
   label: string
+  /** Le taux du **départ**. Le barème complet, lui, a servi au tracé. */
   rateBp: number
-  /** Le taux vient du support lui-même, et non de l'hypothèse de l'écran. */
-  own: boolean
+  kind: RateKind
+  origin: RateOrigin
+  /** Vrai quand un changement de taux daté tombe dans l'horizon simulé. */
+  dated: boolean
+  /**
+   * Le barème qui a servi au tracé — scalaire, ou un taux par mois.
+   *
+   * Il est gardé et non recalculé : l'échelle des efforts reprojette chaque
+   * compte à un versement différent, et le faire à un autre taux que celui de la
+   * courbe donnerait une arrivée que la ligne « Simulation en cours » ne
+   * retrouverait même pas (cahier §4.6 ter, « un seul moteur »).
+   */
+  schedule: number | readonly number[]
   series: ProjectionSeries
 }
 
@@ -302,6 +398,69 @@ export type Analysis = {
 /** Un champ vide vaut zéro ; un champ illisible ne vaut rien. */
 function amount(value: string): Money | null {
   return value.trim() === '' ? ZERO : parseAmount(value)
+}
+
+/**
+ * Le taux d'un support, et les trois endroits d'où il peut venir.
+ *
+ * L'ordre est **simulé > posé > écran**, et il se lit de haut en bas comme une
+ * précédence de spécificité : ce qu'on vient de taper l'emporte sur ce que la
+ * fiche porte, qui l'emporte sur l'hypothèse générale de l'écran.
+ *
+ * Un taux **simulé remplace le barème entier** : « et si celui-ci rendait 4 % »
+ * ne peut pas cohabiter avec une révision datée qui viendrait contredire au
+ * rang 14 ce qu'on vient d'écrire. Un taux **posé** garde le sien : c'est tout
+ * l'intérêt d'un palier daté, et le rang où il change est celui qu'il porte.
+ *
+ * Un texte illisible ne vaut pas zéro : il **retire** l'essai plutôt que de
+ * projeter à plat un compte sur une faute de frappe — la règle des hypothèses
+ * de l'écran, appliquée un cran plus bas.
+ */
+type ResolvedRate = {
+  rateBp: number
+  kind: RateKind
+  origin: RateOrigin
+  dated: boolean
+  /** Ce que le moteur consomme : un scalaire, ou un taux par mois. */
+  schedule: number | readonly number[]
+}
+
+function rateOf(
+  part: ProjectionPart,
+  tried: readonly SupportRateDraft[],
+  screen: { rateBp: number; kind: RateKind },
+  months: number,
+): ResolvedRate {
+  const attempt = tried.find((one) => one.supportId === part.supportId)
+  const typed = attempt === undefined ? null : parseRateBp(attempt.rateText)
+  if (attempt !== undefined && attempt.rateText.trim() !== '' && typed !== null) {
+    return { rateBp: typed, kind: attempt.kind, origin: 'simulated', dated: false, schedule: typed }
+  }
+
+  if (part.rateBp === null) {
+    return { ...screen, origin: 'screen', dated: false, schedule: screen.rateBp }
+  }
+
+  /* Le barème mois par mois, à partir de celui qu'on vit : un palier daté du
+     1er janvier prochain s'applique au rang qui lui revient, et pas avant.
+     `part.rateBp` comble les mois d'avant le premier palier — il n'y en a pas,
+     puisqu'on part d'aujourd'hui et qu'un taux court déjà. */
+  const schedule =
+    part.steps.length > 1
+      ? monthlyRateBps(part.steps, currentYm(), months, part.rateBp)
+      : part.rateBp
+
+  return {
+    rateBp: part.rateBp,
+    kind: part.rateKind ?? 'assumed',
+    origin: 'own',
+    /* Un seul palier ne « date » rien à annoncer : le taux vaut pour tout
+       l'horizon, et le signaler ferait chercher un changement qui n'existe pas.
+       C'est à partir du second que la colonne doit le dire — et encore
+       faut-il qu'il tombe **dans** l'horizon, sinon la courbe ne le voit pas. */
+    dated: Array.isArray(schedule) && new Set(schedule).size > 1,
+    schedule,
+  }
 }
 
 /* Les deux messages qui annoncent une borne la lisent sur la constante qui la
@@ -424,22 +583,24 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
      posée. Deux hypothèses veulent dire qu'on compare des portefeuilles
      entiers ; les mélanger avec une décomposition par compte donnerait un
      tableau à six colonnes dont trois ne se somment pas. */
+  const screenBp = scenarios[0]?.rateBp ?? 0
+  const screenKind = scenarios[0]?.kind ?? 'assumed'
   const split =
     scenarios.length === 1 && start.parts.length > 0
-      ? start.parts.map((part) => ({
-          part,
-          /* Le taux du support, ou celui de l'écran quand il n'en porte pas :
-             c'est la seule chose que l'hypothèse comble, et elle ne s'écrit
-             jamais sur le support. */
-          rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
-          series: projectSeries({
-            initial: part.capital ?? ZERO,
-            monthly: part.monthly,
-            months,
-            rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
-            inflationBp: erosion,
-          }),
-        }))
+      ? start.parts.map((part) => {
+          const rate = rateOf(part, draft.supportRates, { rateBp: screenBp, kind: screenKind }, months)
+          return {
+            part,
+            rate,
+            series: projectSeries({
+              initial: part.capital ?? ZERO,
+              monthly: part.monthly,
+              months,
+              rateBp: rate.schedule,
+              inflationBp: erosion,
+            }),
+          }
+        })
       : []
 
   const computed = scenarios.map((scenario, index) => ({
@@ -474,11 +635,15 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
       split: split.map((one) => ({
         supportId: one.part.supportId,
         label: one.part.label,
-        rateBp: one.rateBp,
-        /* `null` quand le support ne portait pas de taux : la colonne dit alors
-           qu'elle emprunte celui de l'écran, au lieu de le faire passer pour le
-           sien. */
-        own: one.part.rateBp !== null,
+        rateBp: one.rate.rateBp,
+        kind: one.rate.kind,
+        /* La colonne dit d'où vient son taux : emprunté à l'écran, posé sur la
+           fiche, ou tapé pour la simulation. Sans quoi un compte muet passerait
+           pour un compte renseigné, et un chiffre essayé pour un chiffre
+           enregistré. */
+        origin: one.rate.origin,
+        dated: one.rate.dated,
+        schedule: one.rate.schedule,
         series: one.series,
       })),
       /* Le versé ne dépend pas du taux : les trois hypothèses partagent la même
@@ -584,11 +749,28 @@ export function breakdownOf(series: ProjectionSeries, at: number): Breakdown {
  */
 export const EFFORT_FACTORS = [0.5, 1, 1.5, 2] as const
 
+/** Ce qu'un support reçoit et rend, à un barreau donné de l'échelle. */
+export type EffortPart = {
+  supportId: string
+  label: string
+  monthly: Money
+  arrival: Money
+}
+
 export type EffortRung = {
   monthly: Money
   arrival: Money
   /** Le barreau qui correspond au versement simulé. */
   current: boolean
+  /**
+   * Le détail du barreau, compte par compte. Vide hors portefeuille décomposé.
+   *
+   * Il est **relu sur les mêmes séries** que l'arrivée : `arrival` en est la
+   * somme, au centime. Verser 50 % de plus, c'est verser 50 % de plus partout,
+   * et sans le détail on ne saurait pas sur quel compte l'effort tombe — ce qui
+   * est pourtant la seule chose à faire de cette lecture.
+   */
+  parts: EffortPart[]
 }
 
 /**
@@ -633,23 +815,32 @@ export function effortLadder(
    * le tout à un taux unique donnerait un chiffre que la ligne « Simulation en
    * cours » ne retrouverait même pas.
    */
-  const arrivalAt = (value: Money): Money => {
-    if (result.split.length > 0) {
-      const ratio = value / base
-      return money(
-        result.split.reduce(
-          (total, part) =>
-            total +
-            (projectSeries({
-              initial: part.series.contributed[0] ?? ZERO,
-              monthly: money(Math.round(partMonthly(part) * ratio)),
-              months: result.months,
-              rateBp: part.rateBp,
-              inflationBp: result.inflationBp,
-            }).balance.at(-1) ?? ZERO),
-          0,
-        ),
-      )
+  const partsAt = (value: Money): EffortPart[] => {
+    const ratio = value / base
+    return result.split.map((part) => {
+      const monthly = money(Math.round(partMonthly(part) * ratio))
+      return {
+        supportId: part.supportId,
+        label: part.label,
+        monthly,
+        arrival:
+          projectSeries({
+            initial: part.series.contributed[0] ?? ZERO,
+            monthly,
+            months: result.months,
+            /* Le **barème** du compte, et non son taux de départ : reprojeter à
+               taux constant un support dont le taux change au rang 14 donnerait
+               une arrivée que la courbe ne connaît pas. */
+            rateBp: part.schedule,
+            inflationBp: result.inflationBp,
+          }).balance.at(-1) ?? ZERO,
+      }
+    })
+  }
+
+  const arrivalAt = (value: Money, parts: readonly EffortPart[]): Money => {
+    if (parts.length > 0) {
+      return money(parts.reduce((total, part) => total + part.arrival, 0))
     }
     return (
       projectSeries({
@@ -669,7 +860,8 @@ export function effortLadder(
     const value = factor === 1 ? base : money(Math.round((base * factor) / step) * step)
     if (value <= 0 || seen.has(value)) continue
     seen.add(value)
-    rungs.push({ monthly: value, arrival: arrivalAt(value), current: factor === 1 })
+    const parts = partsAt(value)
+    rungs.push({ monthly: value, arrival: arrivalAt(value, parts), current: factor === 1, parts })
   }
 
   return rungs.sort((a, b) => a.monthly - b.monthly)

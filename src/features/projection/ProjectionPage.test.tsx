@@ -7,9 +7,9 @@
  * avant les paramètres, et rien de ce qu'on tape ne touche au document.
  *
  * **Le dernier point a changé de forme, pas de fond.** L'écran lit désormais
- * l'épargne — un capital relevé, des versements récurrents — mais la lecture est
- * à sens unique : le document ne bouge pas d'un octet, et aucun rendement n'est
- * jamais repris d'un support. Ce fichier tient les deux bouts.
+ * l'épargne — un capital relevé, des versements récurrents, et le taux posé sur
+ * la fiche d'un compte —, mais la lecture est à sens unique : le document ne
+ * bouge pas d'un octet, quoi qu'on tape ici. Ce fichier tient les deux bouts.
  * ==========================================================================*/
 
 import { cleanup, render, screen, within } from '@testing-library/react'
@@ -501,8 +501,11 @@ describe('un portefeuille support par support', () => {
     show()
     await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
 
-    // « 3 %/an » sous le rendement serait faux, et faux dans le sens qui rassure.
-    expect(screen.getAllByText(projection.splitRates).length).toBeGreaterThan(0)
+    // « 3 %/an » sous le rendement serait faux, et faux dans le sens qui
+    // rassure. La mention vit dans une phrase — d'où la recherche par contenu.
+    expect(
+      screen.getAllByText((text) => said(text).includes(said(projection.splitRates))).length,
+    ).toBeGreaterThan(0)
   })
 
   it('renonce à la décomposition dès qu’on compare deux hypothèses', async () => {
@@ -518,5 +521,161 @@ describe('un portefeuille support par support', () => {
         .getAllByRole('columnheader')
         .map((cell) => said(cell.textContent ?? '')),
     ).not.toContain(projection.splitTotal)
+  })
+})
+
+/* ============================================================================
+ * Le rendement, compte par compte.
+ *
+ * Trois choses à tenir. Chaque compte a **sa ligne**, préremplie de ce que sa
+ * fiche porte — projeter un Livret A et un PEA sous un taux unique n'a aucun
+ * sens. Ce qu'on y tape ne vaut que pour la **simulation** : rien ne redescend
+ * dans le document, et c'est la règle qui tient tout l'écran (cahier §4.6 ter).
+ * Et la provenance de chaque taux se **dit** — un compte muet ne doit pas
+ * passer pour un compte renseigné.
+ * ==========================================================================*/
+
+describe('le rendement par support', () => {
+  const rateField = (label: string) => screen.getByLabelText(label, { exact: false })
+
+  /** Deux comptes, dont un seul porte un taux : c'est le cas courant. */
+  function seedTwo() {
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
+          makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: '2020-01-01' }),
+        ],
+        savingValuations: [
+          ...data.savingValuations,
+          makeSavingValuation({
+            id: 'v-2',
+            supportId: 's-2',
+            amount: eur(300_000),
+            date: '2020-01-01',
+          }),
+        ],
+      },
+    })
+  }
+
+  async function portfolio() {
+    const user = userEvent.setup()
+    seedTwo()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('donne une ligne à chaque compte, préremplie de ce que sa fiche porte', async () => {
+    await portfolio()
+    // Le placeholder porte le taux repris : le champ reste vide, parce qu'un
+    // champ prérempli laisserait croire qu'on édite le support.
+    expect(rateField('Livret A')).toHaveValue('')
+    expect(rateField('Livret A')).toHaveAttribute('placeholder', expect.stringContaining('2,5'))
+    expect(screen.getByText(projection.supportRateOwn)).toBeInTheDocument()
+  })
+
+  it('dit qu’un compte sans taux emprunte l’hypothèse de l’écran', async () => {
+    await portfolio()
+    expect(screen.getByText(projection.supportRateBorrowed)).toBeInTheDocument()
+    expect(rateField('PEL')).toHaveAttribute(
+      'placeholder',
+      projection.supportRateEmpty,
+    )
+  })
+
+  /** Le chiffre héros — celui qu'on vient chercher, et le seul en `t-hero-fit`. */
+  const hero = (): string =>
+    said(document.querySelector('.t-hero-fit')?.textContent ?? '')
+
+  it('change l’arrivée quand on essaie un autre taux', async () => {
+    const user = await portfolio()
+    const before = hero()
+    await user.type(rateField('Livret A'), '9')
+
+    expect(screen.getByText(projection.supportRateSimulated)).toBeInTheDocument()
+    expect(hero()).not.toBe(before)
+  })
+
+  it('n’écrit rien dans le document', async () => {
+    /* La règle qui tient l'écran : une simulation ne redescend jamais. Le
+       document doit être identique au caractère près après la saisie. */
+    const user = await portfolio()
+    const before = JSON.stringify(useStore.getState().data)
+    await user.type(rateField('Livret A'), '9')
+    expect(JSON.stringify(useStore.getState().data)).toBe(before)
+  })
+
+  it('rend le taux du support quand on retire l’essai', async () => {
+    const user = await portfolio()
+    await user.type(rateField('Livret A'), '9')
+    await user.click(screen.getByRole('button', { name: projection.supportRateReset }))
+
+    expect(rateField('Livret A')).toHaveValue('')
+    expect(screen.queryByText(projection.supportRateSimulated)).not.toBeInTheDocument()
+  })
+
+  it('ne s’affiche pas en simulation libre — il n’y a aucun compte', () => {
+    seed()
+    show()
+    expect(screen.queryByText(projection.supportRates)).not.toBeInTheDocument()
+  })
+})
+
+describe('le tracé décomposé', () => {
+  async function portfolio() {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
+          makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingValuations: [
+          ...data.savingValuations,
+          makeSavingValuation({
+            id: 'v-2',
+            supportId: 's-2',
+            amount: eur(300_000),
+            date: '2020-01-01',
+          }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('empile une bande par compte, et nomme chacune', async () => {
+    await portfolio()
+    expect(screen.getByRole('img', { name: projection.chartStack })).toBeInTheDocument()
+    // La légende nomme chaque bande : la couleur ne dit jamais seule (DS §2.3).
+    expect(screen.getAllByText('Livret A').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('PEL').length).toBeGreaterThan(0)
+  })
+
+  it('revient au tracé habituel dès qu’on compare deux hypothèses', async () => {
+    /* Trois rendements posés sur le même versé ne s'additionnent pas : les
+       empiler tracerait un capital que personne n'a (cahier §4.6 ter). */
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.scenarioAdd }))
+    expect(screen.queryByRole('img', { name: projection.chartStack })).toBeNull()
+  })
+
+  it('revient au tracé habituel en simulation libre', () => {
+    seed()
+    show()
+    expect(screen.queryByRole('img', { name: projection.chartStack })).toBeNull()
   })
 })

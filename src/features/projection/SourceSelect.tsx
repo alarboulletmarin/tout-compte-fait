@@ -203,6 +203,69 @@ export function SourceSelect({
             )}
           </dl>
 
+          {/* Le détail, compte par compte : les deux chiffres au-dessus sont
+              des sommes, et « 616 €/mois » ne dit pas sur quels comptes ça
+              part. La dernière ligne les redonne exactement — `recomposes`
+              (`domain/projectionStart.ts`) le garantit, et vide `parts` quand ce
+              n'est pas le cas, si bien que le tableau disparaît plutôt que de
+              proposer des colonnes qui ne font pas le total.
+              Les montants s'écrivent **exacts** : ce sont des faits relevés et
+              des versements programmés, et le « ≈ » commence à la première
+              capitalisation. */}
+          {start.parts.length > 1 && (
+            <div className="overflow-x-auto border-t border-border pt-3">
+              <table className="w-full border-collapse text-left" aria-label={projection.sourceParts}>
+                <thead>
+                  <tr className="t-axis">
+                    <th scope="col" className="py-2 pr-3 font-normal">
+                      {projection.sourceParts}
+                    </th>
+                    <th scope="col" className="py-2 pr-3 text-right font-normal">
+                      {projection.sourcePartCapital}
+                    </th>
+                    {showMonthly && (
+                      <th scope="col" className="py-2 text-right font-normal">
+                        {projection.sourcePartMonthly}
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {start.parts.map((part) => (
+                    <tr key={part.supportId} className="border-t border-border">
+                      <th scope="row" className="t-body py-2 pr-3 font-normal">
+                        {part.label}
+                      </th>
+                      <td className="t-num-body tnum py-2 pr-3 text-right whitespace-nowrap">
+                        {/* Un support sans relevé n'a pas de capital, et ce
+                            n'est pas zéro : le tiret le dit, comme partout. */}
+                        {part.capital === null ? NO_VALUE : money(part.capital)}
+                      </td>
+                      {showMonthly && (
+                        <td className="t-num-body tnum py-2 text-right whitespace-nowrap">
+                          {tpl(projection.perMonth, money(part.monthly))}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                  <tr className="border-t border-border">
+                    <th scope="row" className="t-body py-2 pr-3 font-normal">
+                      {projection.sourcePartTotal}
+                    </th>
+                    <td className="t-num-body tnum py-2 pr-3 text-right whitespace-nowrap">
+                      {start.capital === null ? NO_VALUE : money(start.capital)}
+                    </td>
+                    {showMonthly && (
+                      <td className="t-num-body tnum py-2 text-right whitespace-nowrap">
+                        {tpl(projection.perMonth, money(start.monthly))}
+                      </td>
+                    )}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           <p className="t-label">{projection.sourceNote}</p>
           <p className="t-label">{projection.sourceNoRate}</p>
 
