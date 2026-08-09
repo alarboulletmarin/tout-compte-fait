@@ -902,6 +902,17 @@ export const fr = {
        pour la `2×1`, seule à rester en demi-colonne sur mobile (DS §5). */
     memberCharges: 'Perso et commun',
     memberChargesOwn: 'Charges perso',
+    /* Le **même libellé** que la ligne d'« À verser sur le commun », parce que
+       c'est le même montant au centime. Sa voisine disait « Sa part du mois » —
+       deux noms proches sur deux nombres à vingt-cinq euros l'un de l'autre, et
+       rien pour dire lequel était lequel ; elle dit maintenant celui-ci, et ce
+       qui les séparait a sa propre ligne.
+
+       Quinze caractères, et c'est un plafond mesuré : la colonne posée à côté
+       de l'anneau fait 152px, où « Part des charges communes » se faisait
+       tronquer — « Part des … », c'est-à-dire plus rien. Le DS §5 l'interdit, et
+       la précision perdue se rattrape sur la ligne d'en dessous et dans la
+       feuille, qui ont la place de la dire. */
     memberChargesCommon: 'Part du commun',
     /* La lecture que la feuille pose sous le chiffre : la moitié qui vient du
        foyer, c'est-à-dire celle des deux qu'on ne décide pas seul·e — donc
@@ -1420,7 +1431,18 @@ export const fr = {
        « de septembre » ne s'écrivent pas pareil — c'est `SplitPage` qui l'élide,
        comme il le fait déjà pour les prénoms. */
     settlement: 'Régularisation %s',
-    settlementShare: 'Sa part du mois',
+    /* « Sa part du mois » nommait la part du pot entier, et la tuile « Perso et
+       commun » nommait « Part du commun » la part qui coûte : deux libellés
+       presque identiques, deux montants à vingt-cinq euros l'un de l'autre, et
+       rien pour dire lequel était lequel. Celui-ci dit ce qu'il compte —
+       les charges communes —, et il porte le même nombre que la ligne de la
+       tuile Charges décomposée. Ce qui les séparait a maintenant sa ligne. */
+    settlementShare: 'Part du commun',
+    /* La mensualité d'une avance : la ligne qui expliquait l'écart sans jamais
+       s'afficher. Elle ne se lit qu'aux mois où elle existe — c'est-à-dire
+       presque jamais, ce qui est exactement pourquoi son absence coûtait si
+       cher à comprendre. */
+    settlementRefund: 'Remboursement d’avance',
     settlementDetail: 'Ce qui a été avancé en %s',
     settlementHint:
       'Ces charges communes ont été réglées par une seule personne. Chacun en portait sa part : le mois se rattrape ici, et la somme des versements vaut toujours le total.',

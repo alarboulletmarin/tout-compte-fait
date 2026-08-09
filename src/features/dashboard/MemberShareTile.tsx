@@ -1,6 +1,6 @@
 import { SPLIT_PATH } from '@/app/routes'
 import { addMonthsToYm } from '@/domain/date'
-import { add } from '@/domain/money'
+import { add, sub } from '@/domain/money'
 import { fr } from '@/i18n/fr'
 import { de, formatMoney, formatMonthName, formatSignedMoney, tpl } from '@/i18n/format'
 import { useCurrentYm, useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
@@ -83,9 +83,25 @@ export function MemberShareTile() {
   if (charges.commonTotal <= 0 && charges.adjustment === 0) return null
 
   const member = members.get(filter)
-  /* Le virement se rattrape : celui qui a trop avancé le mois passé verse moins
-     ce mois-ci, et l'autre un peu plus. */
-  const settled = charges.adjustment !== 0
+  /* Les trois termes du virement, et rien d'autre.
+
+     La part **qui coûte** en premier : c'est le montant que la tuile « Perso et
+     commun » annonce, au centime, et c'est ce qui les rend enfin lisibles
+     ensemble. Elles portaient jusqu'ici deux libellés presque identiques sur
+     deux montants à vingt-cinq euros l'un de l'autre — « Sa part du mois »
+     1 659,83 € ici, « Part du commun » 1 634,45 € à côté —, sans que rien à
+     l'écran ne dise lequel était lequel ni pourquoi.
+
+     Puis ce qui les séparait, qui a maintenant sa ligne : la mensualité d'une
+     avance, de nature épargne donc hors de tout total de charges, et pourtant
+     due — le foyer rembourse qui a réglé une dépense commune depuis son
+     épargne.
+
+     Puis le report, qui se rattrape : celui qui a trop avancé le mois passé
+     verse moins ce mois-ci, et l'autre un peu plus. */
+  const refund = sub(charges.common, add(charges.commonCharge, charges.commonDebt))
+  const spending = sub(charges.common, refund)
+  const settled = charges.adjustment !== 0 || refund !== 0
   const toPay = add(charges.common, charges.adjustment)
   const previous = de(formatMonthName(addMonthsToYm(month, -1)))
 
@@ -161,15 +177,28 @@ export function MemberShareTile() {
           <ul className="flex flex-col gap-1 border-t border-border pt-2">
             <li className="flex flex-wrap items-baseline justify-between gap-x-2">
               <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
-              <span className="t-axis tnum">{formatMoney(charges.common, currency)}</span>
+              <span className="t-axis tnum">{formatMoney(spending, currency)}</span>
             </li>
-            <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <span className="t-axis min-w-0">{tpl(fr.split.settlement, previous)}</span>
-              {/* Signé, et sans direction : ce n'est pas un flux dont on lirait
-                  la valeur absolue, c'est un écart dont le signe est toute la
-                  lecture. */}
-              <span className="t-axis tnum">{formatSignedMoney(charges.adjustment, currency)}</span>
-            </li>
+            {/* Presque jamais, et c'est bien pour ça qu'elle manquait tant : le
+                seul écart entre ce qu'on verse et ce que le mois coûte venait
+                d'elle, et aucun écran ne le nommait. */}
+            {refund !== 0 && (
+              <li className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="t-axis min-w-0">{fr.split.settlementRefund}</span>
+                <span className="t-axis tnum">{formatMoney(refund, currency)}</span>
+              </li>
+            )}
+            {charges.adjustment !== 0 && (
+              <li className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="t-axis min-w-0">{tpl(fr.split.settlement, previous)}</span>
+                {/* Signé, et sans direction : ce n'est pas un flux dont on
+                    lirait la valeur absolue, c'est un écart dont le signe est
+                    toute la lecture. */}
+                <span className="t-axis tnum">
+                  {formatSignedMoney(charges.adjustment, currency)}
+                </span>
+              </li>
+            )}
           </ul>
         </div>
       ) : (

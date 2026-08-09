@@ -129,7 +129,14 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
     mount({ filterOn: 'm-1' })
 
     expect(screen.queryByText(fr.dashboard.memberShare)).not.toBeInTheDocument()
-    expect(screen.queryByText(fr.split.settlementShare)).not.toBeInTheDocument()
+    /* Le report et le remboursement d'avance sont les deux termes qui
+       n'appartiennent qu'au virement. La part des charges communes, elle, est
+       bien ici — et sous le libellé exact de la tuile voisine, puisque c'est le
+       même montant. */
+    expect(screen.queryByText(/Régularisation/)).not.toBeInTheDocument()
+    expect(screen.queryByText(fr.split.settlementRefund)).not.toBeInTheDocument()
+    expect(screen.getByText(fr.dashboard.memberChargesCommon)).toBeInTheDocument()
+    expect(fr.split.settlementShare).toBe(fr.dashboard.memberChargesCommon)
   })
 
   /* Sans charge commune, « tout est à moi » reste une réponse — et c'est le

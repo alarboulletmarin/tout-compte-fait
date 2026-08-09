@@ -168,6 +168,13 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
             l'anneau permettent (voir `donut.ts`) — à condition qu'aucune
             lecture ne vienne se poser sous eux, et il n'y en a pas.
 
+            **Et le libellé ne se tronquait pas non plus, en principe.** Il
+            portait `truncate`, si bien que le `flex-wrap` ne se déclenchait
+            jamais : la ligne tenait toujours, le libellé se faisait couper au
+            milieu d'un mot, et l'on lisait « Part du c… » à 320px — c'est-à-dire
+            plus rien. C'est ce que le DS §5 interdit. Sans lui, le libellé prend
+            sa largeur et c'est le montant qui descend, comme écrit ici.
+
             Avec leurs centimes : les deux moitiés doivent redonner le total de
             la tuile Charges de la même page, et arrondies elles ne le
             redonnent plus (cahier §4.6). */}
@@ -175,14 +182,14 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={color} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesOwn}</span>
+              <span className="t-label min-w-0">{fr.dashboard.memberChargesOwn}</span>
             </span>
             <Amount value={charges.own} size="label" direction="out" />
           </p>
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={COMMON_COLOR} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesCommon}</span>
+              <span className="t-label min-w-0">{fr.dashboard.memberChargesCommon}</span>
             </span>
             <Amount value={common} size="label" direction="out" />
           </p>

@@ -12,6 +12,29 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Corrigé — deux libellés presque identiques sur deux montants différents
+
+« Sa part du mois » annonçait 1 659,83 € sur la tuile du virement, « Part du
+commun » 1 634,45 € sur celle du coût, à deux cases l'une de l'autre. Deux noms
+qui disent la même chose, deux nombres à vingt-cinq euros d'écart, et rien pour
+dire lequel était lequel ni pourquoi. La feuille d'explication le racontait en
+prose ; le montant qui les sépare, lui, ne s'affichait nulle part.
+
+- **Il a maintenant sa ligne, sur la tuile du virement et sur l'écran
+  Répartition** : « Remboursement d'avance ». Le calcul se lit donc en entier —
+  1 634,45 € de part du commun, plus 25,38 € de remboursement, plus 129,13 € de
+  régularisation, égale 1 788,96 € à verser.
+- **Les deux tuiles portent le même libellé sur le même montant** : « Part du
+  commun », 1 634,45 € des deux côtés. C'est ce qui les rend lisibles ensemble.
+- **Le domaine nomme ce qu'il calculait sans le dire.** Une part du pot se
+  décompose désormais en ce qui se consomme et ce qui se rembourse, découpé par
+  le même chemin entrée par entrée — allouer la somme plutôt que chaque ligne
+  ferait diverger les arrondis d'un centime, et ce centime se verrait.
+- **Les libellés de « Perso et commun » ne se tronquent plus.** Ils portaient
+  `truncate`, si bien que le retour à la ligne prévu ne se déclenchait jamais :
+  à 320px on lisait « Part du c… ». C'est le montant qui descend, comme le
+  commentaire de la tuile le décrivait déjà.
+
 ### Ajouté — « Perso et commun » dit enfin ce que son chiffre représente
 
 C'était la seule tuile de la grille à porter deux montants sans mener nulle part

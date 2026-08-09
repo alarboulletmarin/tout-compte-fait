@@ -325,6 +325,35 @@ describe('parts au prorata des revenus', () => {
     expect(shares?.map((s) => s.shareBp)).toEqual([5556, 4444])
   })
 
+  /* Ce qui entre dans le pot sans se consommer : la mensualité d'une avance,
+     que le foyer rembourse à qui a réglé une dépense commune depuis son
+     épargne. Elle est due — donc dans `due` et dans `toPay` — et elle ne coûte
+     rien au mois : `due − refund` est le seul montant que la tuile Charges
+     compte, et c'est lui que les deux écrans doivent annoncer. */
+  it('nomme la part du pot qui ne se consomme pas', () => {
+    const refund = eur(5_600)
+    const shares = memberShares(foyer, [eur(200_000), refund], null, [refund])
+
+    expect(shares?.map((s) => s.due)).toEqual([money(114_222), money(91_378)])
+    expect(shares?.map((s) => s.refund)).toEqual([money(3_111), money(2_489)])
+    // Ce que le mois coûte, terme à terme : le pot moins ce qui s'y rembourse,
+    // et c'est exactement la part des 2 000 € de charges communes.
+    expect(shares?.map((s) => s.due - s.refund)).toEqual([111_111, 88_889])
+  })
+
+  /* Découpé par le même chemin que le reste, entrée par entrée : allouer la
+     somme des remboursements plutôt que chacun ferait diverger les arrondis, et
+     ce centime-là se verrait — les deux moitiés doivent redonner le pot. */
+  it('ne perd pas un centime entre le pot et ce qui s’y rembourse', () => {
+    const refunds = [eur(3_333), eur(1_667), eur(9_999)]
+    const shares = memberShares(foyer, [eur(200_000), ...refunds], null, refunds)
+
+    expect(shares?.reduce((acc, s) => acc + s.refund, 0)).toBe(3_333 + 1_667 + 9_999)
+    expect(shares?.reduce((acc, s) => acc + s.due, 0)).toBe(200_000 + 3_333 + 1_667 + 9_999)
+    // Aucune part ne dépasse ce dont elle est tirée.
+    expect(shares?.every((s) => s.refund <= s.due)).toBe(true)
+  })
+
   it('répartit les charges au centime près', () => {
     const shares = memberShares(foyer, [eur(200_000)])
     expect(shares?.map((s) => s.due)).toEqual([money(111_111), money(88_889)])
@@ -349,6 +378,9 @@ describe('parts au prorata des revenus', () => {
         income: money(250_000),
         shareBp: 10_000,
         due: money(200_000),
+        // Rien qui ne se consomme pas dans ce pot-ci : aucune mensualité
+        // d'avance n'y a été passée.
+        refund: money(0),
         adjustment: money(0),
         toPay: money(200_000),
       },
