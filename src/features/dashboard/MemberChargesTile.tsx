@@ -39,6 +39,22 @@ const COMMON_COLOR = 'var(--cat-rest)'
  * le contredit pas, elle l'éclate. C'est ce qui interdit d'arrondir ici — deux
  * moitiés arrondies ne redonnent plus le tout annoncé trois cases plus haut.
  *
+ * **Et c'est ce qui décide de quelle part du commun elle prend.** `common` est
+ * la part du *pot*, celle qu'on verse ; `commonCharge + commonDebt` est la part
+ * des seules natures que `spendingFlow` compte, celle que le mois coûte. Les
+ * deux diffèrent dès qu'une ligne « à partager » n'est pas une dépense, et ce
+ * n'est pas un document tordu à la main : une **avance** en produit une à chaque
+ * mensualité. Quelqu'un règle l'assurance auto du foyer depuis son livret,
+ * l'app pose une récurrence qui le reconstitue — nature « épargne », prise sur
+ * la catégorie du support — et la marque « à partager », puisque le foyer la lui
+ * rembourse. Cette mensualité est un virement dû, pas un coût consommé : elle
+ * entre dans « À verser sur le commun » et pas dans la tuile Charges.
+ *
+ * Prendre `common` ici faisait donc annoncer un coût **supérieur** à la tuile
+ * Charges de la même page — 1 697,80 € contre 1 672,42 € sur le jeu d'exemple,
+ * soit les 25,38 € de part d'une mensualité de 56 € —, dans une tuile dont tout
+ * le propos est d'éclater ce chiffre-là sans le contredire.
+ *
  * `2×2` et l'anneau de `BreakdownTile`, dont elle est l'autre découpe du même
  * montant : par famille chez l'une, par ce qui se décide seul·e ou à deux chez
  * l'autre. Elle s'efface sans filtre, sans prorata calculable — l'en-tête du
@@ -53,7 +69,11 @@ export function MemberChargesTile() {
 
   if (filter === undefined || charges === null) return null
 
-  const total = add(charges.own, charges.common)
+  /* La part des seules natures que compte la tuile Charges — voir plus haut :
+     `common` y ajouterait la mensualité d'une avance partagée, qui est un
+     virement dû et non un coût du mois. */
+  const common = add(charges.commonCharge, charges.commonDebt)
+  const total = add(charges.own, common)
   if (total <= ZERO) return null
 
   const member = members.get(filter)
@@ -73,7 +93,7 @@ export function MemberChargesTile() {
     },
     {
       id: 'common',
-      value: shareOf(charges.common),
+      value: shareOf(common),
       color: COMMON_COLOR,
       label: fr.dashboard.memberChargesCommon,
     },
@@ -84,7 +104,7 @@ export function MemberChargesTile() {
     formatMoney(total, currency),
     member?.name ?? '',
     formatMoney(charges.own, currency),
-    formatMoney(charges.common, currency),
+    formatMoney(common, currency),
   )
 
   return (
@@ -132,7 +152,7 @@ export function MemberChargesTile() {
               <Dot color={COMMON_COLOR} />
               <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesCommon}</span>
             </span>
-            <Amount value={charges.common} size="label" direction="out" />
+            <Amount value={common} size="label" direction="out" />
           </li>
         </ul>
       </div>

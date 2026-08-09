@@ -12,6 +12,31 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Corrigé — « Perso et commun » annonçait un coût plus grand que la tuile Charges
+
+Sur le jeu d'exemple, la tuile Charges disait 1 672,42 € et « Perso et commun »
+1 697,80 € pour le même mois de la même personne — 25,38 € d'écart, dans une
+tuile dont tout le propos est d'éclater le premier chiffre sans le contredire.
+
+L'écart vaut exactement la part d'une **mensualité d'avance**. Quelqu'un règle
+l'assurance auto du foyer depuis son livret ; l'app pose alors une récurrence qui
+le reconstitue — de nature « épargne », prise sur la catégorie du support — et la
+marque « à partager », puisque le foyer la lui rembourse. Cette mensualité est un
+**virement dû, pas un coût consommé** : elle entre à bon droit dans « À verser
+sur le commun », et la tuile Charges l'exclut à bon droit aussi, comme tout ce
+qui sort du compte sans quitter le foyer.
+
+- **La tuile du coût prend désormais la part des seules natures que la tuile
+  Charges compte** — charges et crédits —, là où elle prenait la part du pot
+  entier. Le domaine calculait déjà les deux et le disait ; c'est la tuile qui
+  lisait la mauvaise.
+- **Les deux « parts du commun » de l'écran ne sont donc pas le même montant, et
+  c'est correct** : celle du virement (1 659,83 €) comprend le remboursement de
+  l'avance, celle du coût (1 634,45 €) non. Elles portent déjà deux libellés
+  différents — « Sa part du mois » et « Part du commun ».
+- Vérifié sur les trois membres du jeu d'exemple : les deux tuiles tombent
+  maintenant au centime.
+
 ### Modifié — un anneau sans son tout n'est plus qu'un pourcentage
 
 « À verser sur le commun » dessinait 45,3 % dans un anneau : la part du pot

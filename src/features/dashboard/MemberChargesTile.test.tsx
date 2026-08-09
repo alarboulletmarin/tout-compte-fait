@@ -18,12 +18,16 @@ const out = (value: Money): string =>
 const FAMILIES = [
   makeFamily({ id: 'fam-charges', label: 'Logement', kind: 'charge' }),
   makeFamily({ id: 'fam-res', label: 'Ressources', kind: 'resource' }),
+  // La famille où vit la catégorie d'un support : c'est elle que porte la
+  // mensualité d'une avance, prise sur le support qui l'a financée.
+  makeFamily({ id: 'fam-epargne', label: 'Épargne', kind: 'saving' }),
 ]
 
 const CATEGORIES = [
   makeCategory({ id: 'loyer', label: 'Loyer', familyId: 'fam-charges' }),
   makeCategory({ id: 'courses', label: 'Courses', familyId: 'fam-charges' }),
   makeCategory({ id: 'salaire', label: 'Salaire', familyId: 'fam-res', direction: 'in' }),
+  makeCategory({ id: 'livret', label: 'Livret', familyId: 'fam-epargne' }),
 ]
 
 const ALIX = makeMember({ id: 'm-1', name: 'Alix' })
@@ -126,6 +130,39 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
 
     expect(screen.getByText(fr.dashboard.memberCharges)).toBeInTheDocument()
     expect(screen.getByText(out(eur(5_000)))).toBeInTheDocument()
+  })
+
+  /* La mensualité d'une avance partagée est « à partager » et de nature
+     épargne : quelqu'un a réglé l'assurance du foyer depuis son livret, et le
+     foyer le lui rembourse. C'est un virement dû, pas un coût consommé — la
+     tuile Charges l'exclut, celle-ci doit l'exclure aussi. Prise sur `common`,
+     la part y ajoutait 40 € et cette tuile annonçait un coût *supérieur* au
+     chiffre qu'elle prétend éclater. */
+  it('exclut la part d’une ligne partagée qui n’est pas une dépense', () => {
+    mount({
+      filterOn: 'm-1',
+      entries: [
+        RENT,
+        GROCERIES,
+        makeEntry({
+          date: '2026-08-14',
+          label: 'Assurance auto',
+          categoryId: 'livret',
+          amount: eur(6_000),
+          memberId: 'm-1',
+          shared: true,
+        }),
+      ],
+    })
+
+    // 600 € de loyer et non 640 : les 60 € de mensualité restent dehors.
+    expect(screen.getByText(out(eur(60_000)))).toBeInTheDocument()
+    expect(screen.queryByText(out(eur(64_000)))).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(65_000), 'EUR', false)}`),
+      ),
+    ).toBeInTheDocument()
   })
 
   /* Une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va (cahier §4.6). */
