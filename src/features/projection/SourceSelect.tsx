@@ -30,7 +30,7 @@
 import type { Money } from '@/domain/money'
 import type { ProjectionSource, ProjectionStart } from '@/domain/projectionStart'
 import type { Member, SavingSupport } from '@/domain/types'
-import { de, formatMoney, tpl } from '@/i18n/format'
+import { NO_VALUE, de, formatMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import { Button } from '@/ui/Button'
 import { Field, Select } from '@/ui/Field'
@@ -138,7 +138,11 @@ export function SourceSelect({
             <div className="flex items-baseline justify-between gap-3">
               <dt className="t-label">{projection.sourceCapital}</dt>
               <dd className="t-num-body tnum shrink-0">
-                {start.capital === null ? '—' : money(start.capital)}
+                {/* `NO_VALUE` et non un cadratin recopié : un support sans
+                    relevé n'a pas de valeur, et cette absence-là doit se lire
+                    du même signe que partout ailleurs dans l'app. Surtout pas
+                    un zéro — zéro est une information financière. */}
+                {start.capital === null ? NO_VALUE : money(start.capital)}
               </dd>
             </div>
             {showMonthly && (
