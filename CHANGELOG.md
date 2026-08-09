@@ -12,6 +12,107 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Ajouté — l'épargne dit si ça va, et pas seulement combien il y a
+
+*Migration de schéma : version 14.* Rien à convertir, et surtout rien à deviner :
+la collection des objectifs part vide. Aucun document antérieur ne dit ce que
+quelqu'un vise — ni un support, ni un plafond, ni une récurrence n'en tiennent
+lieu —, et poser un objectif à partir d'un plafond attribuerait à quelqu'un une
+intention qu'il n'a jamais formulée.
+
+- **Un objectif est un cap, et ce qui y mène.** Il porte trois choses tapées —
+  ce qu'on vise, pour quand, sur quels comptes — et **rien de ce qui se
+  calcule** : pas de taux, il vient des paliers posés sur ces comptes ; pas de
+  capital, il vient de leurs relevés ; pas de versement obligatoire, il vient
+  des règles que l'app connaît déjà. C'est ce qui le rend tenable, et ce qui
+  fait qu'un relevé saisi sur la fiche d'un compte le met à jour sans que
+  personne y touche.
+- **Le verdict est le chiffre de tout ça.** « Sept mois de retard, il faudrait
+  85 € de plus par mois » demande de croiser un capital, des versements, un
+  rendement et une date : c'est ce qu'aucun relevé de banque ne produit, et la
+  seule raison de rouvrir l'écran quand le capital n'a pas bougé. Il se dit par
+  un **mot** avant d'être une jauge, et par une jauge avant d'être une teinte —
+  une conclusion qui ne survit pas au niveau de gris n'en est pas une.
+- **Aucun rendement n'est deviné.** Un compte qui porte son taux le garde,
+  daté ; un compte muet est projeté à **0 %**. La date annoncée est donc au plus
+  tard et jamais au plus tôt : un verdict qui flatterait ferait rater une
+  échéance à quelqu'un qui l'avait crue tenue.
+- **La fiche d'un objectif pose le réel sur le prévu.** Les relevés des comptes
+  rattachés deviennent des points sur la courbe. Aucune donnée nouvelle n'est
+  nécessaire — tout était déjà dans le document —, et c'est ce qui distingue un
+  suivi d'une courbe décorative.
+
+### Ajouté — le simulateur produit quelque chose
+
+- **« En faire un objectif »**, et la simulation cesse d'être un cul-de-sac. Ce
+  qui sort n'est pas la simulation — un taux essayé reste en `localStorage` —
+  mais l'intention qu'on en tire, ce qui est un fait du foyer comme un crédit
+  souscrit. Elle passe par le formulaire d'un objectif, préréglé : rien ne
+  s'écrit sans qu'on ait vu ce qu'on écrit.
+- **« Simuler autrement », et « Adopter ce rythme ».** La fiche d'un objectif
+  ouvre le simulateur sur *sa* question — cette cible, cette échéance, ces
+  comptes — et lui dit d'où l'on vient ; la sortie de l'écran devient alors
+  reposer le versement sur cet objectif-là.
+
+### Modifié — le simulateur ne demande plus quelle courbe croire
+
+- **Une fourchette, et non trois hypothèses.** L'écran en comparait trois,
+  plus trois présélections, plus un second taux par compte : quatre mécanismes
+  pour poser une seule chose, l'incertitude. Un placement n'a pas trois
+  rendements, il a une fourchette — et trois courbes obligent à trancher une
+  question qu'aucune donnée ne tranche.
+- **Elle ne s'applique qu'aux comptes muets.** Un compte dont le rendement est
+  posé sur sa fiche vaut la même chose des deux côtés : quelqu'un a dit ce qu'il
+  en attend. La fourchette se referme donc d'elle-même sur un portefeuille
+  entièrement renseigné, et la ligne « Rendement » affiche les taux qui
+  **courent** — « 2,40 % – 7 % » pour un livret posé et un plan muet —, jamais
+  les deux champs saisis.
+- **Douze contrôles tombent à quatre** : d'où l'on part, combien on verse, sur
+  combien de temps, à quel rendement. Le détail par compte et les euros
+  constants descendent dans la feuille qu'ouvre la ligne du rendement ; le
+  tableau d'effort et son curseur, qui répondaient deux fois à la même question,
+  deviennent deux boutons et un écart.
+- **La réponse ne quitte plus l'écran** pendant qu'on règle : régler sans voir
+  ce qu'on change revient à jouer à un jeu dont le score est derrière soi.
+- **`/projections` devient `/simulation`**, au singulier — le pluriel nommait
+  une section, c'est-à-dire un endroit où l'on rangerait des projections, ce que
+  cet écran ne fait pas. L'ancienne adresse se redirige.
+
+### Modifié — l'autonomie ne compte plus que ce qui est mobilisable
+
+*Aucune migration.* Le champ `role` est facultatif, et son absence est une
+réponse : aucun document existant n'en reçoit.
+
+- **« Combien de temps je tiens » divisait tout le capital** par les charges
+  d'un mois — livrets, PEA, assurance-vie en unités de compte confondus. C'était
+  le seul chiffre franchement trompeur de l'app, et il l'était toujours dans le
+  sens qui flatte. Les comptes disent désormais **à quoi ils servent** —
+  précaution, projet, long terme —, et seule la précaution entre dans
+  l'autonomie.
+- **Un rôle absent le reste.** Aucune migration ne devine, aucune lecture ne
+  retombe sur un défaut : la tuile pose la question plutôt que d'y répondre à la
+  place de quelqu'un. Le sous-compte se répare d'un geste ; le sur-compte est un
+  chiffre faux qui a l'air d'un résultat.
+- **Les comptes se rangent par ce qu'ils demandent**, et non par ce qu'ils
+  pèsent : un relevé attendu remonte. C'est la seule notification que l'app
+  puisse honnêtement produire.
+
+### Modifié — l'épargne cesse d'alterner le patrimoine et le mois
+
+- **Le flux du mois a son écran** (`/epargne/mois`) : capacité, versé, reste,
+  ventilation et les deux boutons de versement. Ils vivaient au milieu de la vue
+  d'ensemble, c'est-à-dire quatre blocs qui dépendent du mois affiché au milieu
+  de trois qui n'en dépendent pas — le patrimoine est ancré sur *aujourd'hui*.
+  La vue d'ensemble n'en garde qu'une tuile et sa porte, et **perd son
+  navigateur de mois**, comme les crédits avant elle.
+- **Les objectifs sont au centre optique** : c'est le seul bloc qui conclut, et
+  une section qui conclut ne se descend pas.
+- **La rangée de personnes s'efface en solo.** Un contrôle à une seule valeur
+  n'est pas un contrôle — c'était un bruit permanent. Le filtre reste posé dans
+  tous les cas : sans lui, l'écran lirait la somme du foyer, celle qu'il existe
+  précisément pour ne pas montrer.
+
+
 ### Modifié — l'épargne se lit d'abord, se gère ensuite ; les projections répondent avant de demander
 
 *Aucune migration.* Rien ne change dans le modèle de données — seulement dans
@@ -29,16 +130,11 @@ geste.
   l'épargne comme sur la tuile du tableau de bord. Le terme voisinait de trop
   près « Reste à vivre », qui mesure autre chose — un solde de trésorerie, pas
   une part de capacité d'épargne pas encore versée.
-- **Un barreau de l'échelle d'effort s'essaie d'un tap.** « Et si je verse
-  davantage ? » n'était qu'une lecture ; cliquer un barreau non courant
-  applique désormais ce versement à la simulation, en coupant le lien vers
-  l'épargne réelle si elle en dépendait — le geste de « Modifier pour cette
-  simulation », déclenché depuis une ligne du tableau.
-- **La première hypothèse a trois points de départ** — prudent, central,
-  dynamique — au-dessus des champs de taux libres, qui restent l'échappatoire :
-  un chiffre retapé n'en coche simplement plus aucun.
-- **Le rendement par compte se replie** derrière « Personnaliser les
-  hypothèses » : la ligne par compte reste disponible dès qu'un portefeuille
+- **Le montant qu'on essaie se reprend d'un geste.** « Et si je versais… »
+  n'était qu'une lecture ; le montant réglé s'applique désormais à la
+  simulation, en coupant le lien vers l'épargne réelle si elle en dépendait —
+  le geste de « Modifier pour cette simulation », déclenché depuis le réglage.
+- **Le rendement par compte se replie** derrière la ligne « Rendement » : la ligne par compte reste disponible dès qu'un portefeuille
   est décomposé, mais n'occupe plus l'écran en permanence.
 - **Le versement libre peut reprendre la capacité d'épargne restante** du
   mois — la même donnée que l'écran Épargne et le tableau de bord, sous le même
@@ -101,16 +197,12 @@ ton contrat.
   n'est pas un mouvement. Laissée vide, le simulateur applique l'hypothèse de
   son propre écran ; posée à 0 %, elle dit que ce capital ne bouge pas — les
   deux ne veulent pas dire la même chose.
-- **Le tableau du détail donne une colonne à chaque support, plus le total.**
-  Un Livret A à 2,5 % et un PEL garanti à 1,75 % qui partent de capitaux
-  différents ne suivent pas la même courbe, et leur somme n'est celle d'aucun
-  taux moyen : le portefeuille est projeté compte par compte, et le total est
-  l'addition des colonnes. Une colonne qui emprunte l'hypothèse de l'écran le
-  dit, pour ne pas passer pour un support renseigné.
-- La décomposition se retire quand ses colonnes ne feraient pas le total : en
-  simulation libre, dès qu'on compare deux hypothèses, et quand des versements
-  ne se rattachent à aucun compte. Un tableau dont les colonnes ne somment pas
-  est pire qu'un tableau absent — on y cherche une erreur qui n'existe pas.
+- **Le portefeuille est projeté compte par compte.** Un Livret A à 2,5 % et un
+  PEL garanti à 1,75 % qui partent de capitaux différents ne suivent pas la même
+  courbe, et leur somme n'est celle d'aucun taux moyen : la trajectoire de
+  l'écran est l'addition des leurs, et il n'existe pas de troisième calcul posé
+  à côté. Chaque compte affiche ce qu'il donne, et dit d'où son taux vient — un
+  compte muet ne doit pas passer pour un compte renseigné.
 
 ### Modifié — les projections partent de ton épargne, et répondent avant de demander
 
@@ -142,12 +234,12 @@ deux écrans plus haut. Et il fallait traverser presque tout l'écran pour trouv
   n'importe quel rang de l'horizon, et non plus aux seuls quatre jalons — qui
   passent derrière un repli, et portent désormais le versé, le rendement et le
   total plutôt qu'une colonne de totaux.
-- **« Et si je verse davantage ? »** — quatre versements autour de celui qu'on
-  simule, et ce qu'ils donnent au même horizon. Des multiples du montant réel,
-  jamais des paliers que l'app jugerait raisonnables.
+- **« Et si je versais… »** — moins, plus, et ce que ça change à l'arrivée. Le
+  pas suit l'ordre de grandeur du versement réel, jamais des paliers que l'app
+  jugerait raisonnables.
 - **Le formulaire a fondu.** Le champ de durée ne s'affiche plus à côté des
-  raccourcis qui font la même chose : il se demande. Chaque champ porte son
-  unité. « Ce que ça donne / Ce qu'il faut verser » devient « Projeter mon
+  raccourcis qui font la même chose : c'est un cinquième segment qui l'ouvre.
+  Chaque champ porte son unité. « Ce que ça donne / Ce qu'il faut verser » devient « Projeter mon
   épargne / Atteindre un objectif », et « Garanti / Hypothèse » devient « Taux
   garanti / Rendement hypothétique » — l'app ne sait pas ce que dit ton contrat,
   c'est toi qui l'affirmes.
