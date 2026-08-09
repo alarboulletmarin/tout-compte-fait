@@ -187,8 +187,8 @@ export const en: Strings = {
     application: 'Application',
     savings: 'Savings',
     split: 'Split',
-    projections: 'Projections',
-    projectionsHint: 'What a regular contribution becomes, under a rate you assume.',
+    projections: 'Simulation',
+    projectionsHint: 'What a regular contribution becomes, under a return range you assume.',
     subscriptionsHint: 'What comes back every month, written once.',
     savingsHint: 'What you can set aside, and where to put it.',
     splitHint: 'Who pays what towards shared costs.',
@@ -441,6 +441,7 @@ export const en: Strings = {
       savingSupports: 'Savings pot',
       savingValuations: 'Valuation',
       savingRates: 'Savings rate',
+      savingGoals: 'Goals',
       months: 'Month',
     },
     reportReason: {
@@ -993,8 +994,8 @@ export const en: Strings = {
     supports: 'My pots',
     analysis: 'Analysis',
     analysisHint: 'See the analysis',
-    analysisPreview: '%s in %s · %s vs %s',
-    analysisPreviewOnly: '%s in %s',
+    analysisPreview:
+      'Where your capital comes from: your starting point, your contributions, and what the accounts earned.',
     supportsEmpty:
       'No savings pot. Add an account, a plan or any other pot to track its value and your contributions.',
     supportsNoMember: 'Add a person to track your savings: a pot always belongs to someone.',
@@ -1016,6 +1017,20 @@ export const en: Strings = {
     supportKind: 'Type',
     supportKindHint: 'Used to classify the pot.',
     supportKindRequired: 'Choose a type.',
+    supportRole: 'What it’s for',
+    supportRoleHint:
+      'Only rainy-day savings count towards “how long I last”: a share plan doesn’t unwind within the week, and counting it would promise a buffer that isn’t there.',
+    supportRoleNone: 'I haven’t decided yet',
+    roleLabel: {
+      buffer: 'Rainy day',
+      project: 'Project',
+      growth: 'Long term',
+    },
+    roleHint: {
+      buffer: 'Available tomorrow, for the rough patches',
+      project: 'An amount to put together for something',
+      growth: 'Invested for the long run, not meant to be touched',
+    },
     supportPace: 'Valuation rhythm',
     supportPaceHint:
       'A savings account only moves with your contributions: one valuation a year is enough, and the app works out the rest. A share plan, a securities account or a unit-linked policy move on their own.',
@@ -1059,6 +1074,26 @@ export const en: Strings = {
     supportNote: 'Note',
     supportNotePlaceholder: 'Emergency fund, three months of costs',
     manage: 'Managing the pot',
+
+    goals: 'Goals',
+    goalsEmpty:
+      'No goal yet. Set a target — a deposit, a safety net — and the app will tell you whether you’re on track.',
+    goalAdd: 'Add a goal',
+    goalFromSimulation: 'Make it a goal',
+    goalSimulate: 'Simulate differently',
+    goalAdopt: 'Adopt this pace',
+    goalAdopted: 'Pace adopted',
+
+    goalOn: 'on time',
+    goalAhead: '%s months early',
+    goalAheadOne: '1 month early',
+    goalLate: '%s months late',
+    goalLateOne: '1 month late',
+    goalReached: 'reached',
+    goalNoReach: 'not at this pace',
+    goalNoCapital: 'no valuation on these accounts',
+    goalReachOn: '%s in %s',
+    goalProgress: '%s of %s',
 
     value: 'Value recorded',
     valueNew: 'New value',
@@ -1108,11 +1143,14 @@ export const en: Strings = {
 
     coverage: 'How long I last',
     coverageValue: '%s months',
-    coverageHint: 'with no income, at an average month’s costs',
+    coverageHint: 'with no income, on your rainy-day savings',
     coverageNoMonth: 'It will take a whole month to say: this one isn’t over.',
     coverageNoCharge: 'No cost over the period: there’s nothing to divide.',
+    coverageNoBuffer:
+      'Say which of your accounts is your rainy-day money: it’s the only cash that holds when the income stops.',
+    coverageSetRoles: 'Sort my accounts',
     coverageMethod: 'What this figure counts',
-    coverageCapital: 'Estimated capital',
+    coverageCapital: 'Rainy-day capital',
     coverageMonthly: 'An average month’s costs',
     coverageOverOne: 'average over 1 month',
     coverageOver: 'average over %s months',
@@ -1122,17 +1160,12 @@ export const en: Strings = {
       'The current month doesn’t count: it hasn’t spent everything yet, and it would make the costs look lighter than they are.',
     coverageMethodUnvalued:
       'A pot with no valuation doesn’t go into the capital: the app doesn’t know what it’s worth, and counting it as zero would be as wrong as inventing it.',
-
-    years: 'What you set aside',
-    year: 'Year',
-    yearsVersus: '%s against %s',
-    yearsDelta: 'Difference',
-    yearsCumulative: 'Contributions accumulated since January',
-    yearsEmpty: 'No year to read yet.',
-    yearsPartial: '%s stops at %s: both years are read at that month.',
-    yearsNoPrevious: 'Nothing paid in during %s: nothing to compare.',
-    srYears: 'Accumulated contributions %s against %s, stopped at %s: %s',
-    srYearsEmpty: 'Accumulated contributions %s: no data.',
+    coverageMethodBuffer:
+      'Only accounts marked “rainy day” count: a share plan takes days to unwind, is taxed before five years, and isn’t worth today what it will be worth the day you’d have to sell.',
+    coverageMethodUnroledOne:
+      'One account has no role yet: it doesn’t count here until someone says what it’s for.',
+    coverageMethodUnroled:
+      '%s accounts have no role yet: they don’t count here until someone says what they’re for.',
 
     monthFlows: 'This month',
     contributions: 'Contributions',
@@ -1188,6 +1221,7 @@ export const en: Strings = {
       'A contribution left “shared” goes into nobody’s savings. Attribute it so that it counts.',
 
     left: 'Still available',
+    month: 'This month',
     leftNone: 'The whole capacity is set aside.',
     over: 'Overshoot',
     overHint: 'contributions exceed the capacity by %s',

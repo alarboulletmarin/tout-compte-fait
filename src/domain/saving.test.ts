@@ -3,6 +3,7 @@ import { eur, makeEntry, makeRecurrence, makeSavingSupport, makeSavingValuation 
 import {
   UNLINKED_SUPPORT,
   activeSupports,
+  bufferSupports,
   isSupportEmpty,
   paceOf,
   savingCoverage,
@@ -15,8 +16,10 @@ import {
   supportMonthFlows,
   supportUsage,
   supportValue,
+  supportsByAttention,
   supportsDue,
   supportsOfMember,
+  supportsWithoutRole,
   valuationAge,
   valuationsOf,
 } from './saving'
@@ -199,6 +202,76 @@ describe('les supports dont le relevé est attendu', () => {
 
   it('se tait quand tout est à jour', () => {
     expect(supportsDue(supports, valuations, '2026-03-08')).toEqual([])
+  })
+})
+
+describe('les comptes rangés par ce qu’ils demandent', () => {
+  const supports = [
+    livret,
+    makeSavingSupport({ id: 's-pea', label: 'PEA', memberId: 'm1', pace: 'quarterly' }),
+    makeSavingSupport({ id: 's-per', label: 'PER', memberId: 'm1', pace: 'quarterly' }),
+  ]
+  const valuations = [
+    makeSavingValuation({ id: 'v1', supportId: 's-livret', amount: eur(1000000), date: '2026-07-08' }),
+    makeSavingValuation({ id: 'v2', supportId: 's-pea', amount: eur(1800000), date: '2026-02-08' }),
+    makeSavingValuation({ id: 'v3', supportId: 's-per', amount: eur(300000), date: '2026-07-08' }),
+  ]
+
+  /* Le seul tri qui apporte quelque chose : un tri par montant met en tête le
+     compte dont il n'y a rien à faire. */
+  it('remonte celui dont le relevé est attendu', () => {
+    expect(supportsByAttention(supports, valuations, '2026-08-08').map((s) => s.id)).toEqual([
+      's-pea',
+      's-livret',
+      's-per',
+    ])
+  })
+
+  /* Sans quoi les lignes bougeraient sous le doigt à chaque relevé, et l'ordre
+     de la liste ne serait plus celui qu'on a soi-même posé. */
+  it('garde l’ordre du document quand rien n’est dû', () => {
+    const fresh = valuations.map((valuation) => ({ ...valuation, date: '2026-07-08' }))
+    expect(supportsByAttention(supports, fresh, '2026-07-09').map((s) => s.id)).toEqual([
+      's-livret',
+      's-pea',
+      's-per',
+    ])
+  })
+
+  /* Deux comptes dus remontent tous les deux, et dans l'ordre où on les a
+     ouverts : le rang ne trie pas à l'intérieur de lui-même. */
+  it('garde l’ordre du document à l’intérieur d’un rang', () => {
+    const stale = valuations.filter((valuation) => valuation.supportId === 's-per')
+    expect(supportsByAttention(supports, stale, '2026-08-08').map((s) => s.id)).toEqual([
+      's-livret',
+      's-pea',
+      's-per',
+    ])
+  })
+})
+
+describe('à quoi un compte sert', () => {
+  const buffer = makeSavingSupport({ id: 's-a', memberId: 'm1', role: 'buffer' })
+  const growth = makeSavingSupport({ id: 's-b', memberId: 'm1', role: 'growth' })
+  const silent = makeSavingSupport({ id: 's-c', memberId: 'm1' })
+
+  /* Le seul filtre que le rôle décide, et il corrige le seul chiffre
+     franchement faux de l'app : un PEA n'est pas de la trésorerie. */
+  it('ne retient que la précaution', () => {
+    expect(bufferSupports([buffer, growth, silent]).map((s) => s.id)).toEqual(['s-a'])
+  })
+
+  /* Un silence n'est pas une réponse : le lire comme « précaution » referait le
+     chiffre faux dans l'autre sens. */
+  it('ne devine pas un rôle absent', () => {
+    expect(supportsWithoutRole([buffer, growth, silent]).map((s) => s.id)).toEqual(['s-c'])
+  })
+
+  /* À quoi servait un compte clôturé ne se décide plus : le lui demander
+     n'ouvrirait qu'une question sans conséquence. */
+  it('ne réclame pas de rôle à un compte archivé', () => {
+    const closed = makeSavingSupport({ id: 's-d', memberId: 'm1', archived: true })
+    expect(supportsWithoutRole([closed])).toEqual([])
   })
 })
 

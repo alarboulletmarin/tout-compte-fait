@@ -49,19 +49,93 @@ const fr = {
   capLeft: 'Plafond %s · reste %s à verser',
   capFull: 'Plafond %s · atteint',
   capUnknown: 'Plafond %s · sans relevé, la place restante est inconnue',
-  evolution: 'Évolution de l’épargne',
-  evolutionEmpty:
-    'Rien à tracer pour l’instant : la courbe démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
-  evolutionWindow: 'Période',
-  evolutionMonths: '%s mois',
-  evolutionYears: '%s ans',
-  evolutionTotal: 'Total',
-  evolutionWhen: 'Mois',
-  evolutionRest: '%s autres supports',
-  evolutionDetail: 'Voir le détail, mois par mois',
-  evolutionMethod:
-    'Estimation : les points sont tes relevés, le reste se dérive des mouvements confirmés et du taux en vigueur ce mois-là. Un support sans relevé n’y figure pas — sa valeur est inconnue, pas nulle.',
-  srEvolution: 'Épargne estimée de %s en %s à %s en %s, relevés compris.',
+  /* --- D'où vient ce que tu as ------------------------------------------
+     L'écran empilait les comptes les uns sur les autres et cumulait les
+     versements de l'année. Deux lectures qui ne concluaient rien : la première
+     répond à « où est l'argent », que la banque dit déjà et mieux ; la seconde
+     comptait ce qui sort du compte courant sans jamais dire ce que ça avait
+     produit. Ce qui les remplace est la seule lecture que l'app soit seule à
+     pouvoir faire, parce qu'elle seule connaît à la fois les relevés et les
+     mouvements : de quoi le capital est fait. */
+  growth: 'D’où vient ton épargne',
+  growthEmpty:
+    'Rien à décomposer pour l’instant : la lecture démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
+  growthWindow: 'Période',
+  growthMonths: '%s mois',
+  growthYears: '%s ans',
+  growthBase: 'Au départ',
+  growthPaid: 'Versements',
+  growthGain: 'Rendement',
+  growthTotal: 'Valeur',
+  growthShown: 'Somme affichée',
+  growthWhen: 'Mois',
+  growthDetail: 'Voir le détail, mois par mois',
+  /* Trois montants et un signe : la phrase se lit d'un trait, et le « produit »
+     porte le signe parce qu'il est le seul des trois qui puisse être négatif. */
+  growthLine: '%s au départ, %s versés, %s produits',
+  /* Le rendement rapporté à ce qu'on y a mis — pas au capital final : « 4 % de
+     ce que tu y as mis » est la question qu'on se pose, « 3,8 % du total »
+     n'est la réponse d'aucune. */
+  growthShare: 'soit %s de ce que tu y as mis',
+  growthAccounts: 'Compte par compte',
+  growthRest: '%s autres comptes, non tracés ici.',
+  growthChart: 'Décomposition de %s',
+  growthMethod:
+    'Estimation. Les points sont tes relevés ; entre eux, la valeur se dérive des mouvements confirmés et du taux en vigueur. Le rendement n’est pas recalculé d’un barème : c’est ce que la valeur a fait en plus de ce que tu y as mis, il attrape donc aussi ce qu’aucun taux ne modélise — et il peut être négatif. Tout se lit sur la période choisie : « au départ » est ce que le compte valait à son premier mois, pas le premier euro que tu y as posé.',
+  srGrowth: 'De %s en %s à %s en %s : %s versés, %s produits.',
+
+  /* --- Les objectifs, sous leur fiche et leur formulaire ------------------
+     Ce qui reste dans `fr.ts` est ce que la **section** de l'écran Épargne lit :
+     le titre, l'état vide, et les mots du verdict — cet écran-là est dans le
+     graphe initial. Tout ce qui suit ne se lit que sur la fiche d'un objectif
+     ou sur son formulaire, qui se chargent à la demande avec le reste de ce que
+     l'épargne ouvre sous elle. */
+  goalNew: 'Nouvel objectif',
+  goalEdit: 'Modifier l’objectif',
+  goalAdded: 'Objectif ajouté',
+  goalUpdated: 'Objectif modifié',
+  goalRemoved: 'Objectif supprimé',
+  goalArchived: 'Objectif rangé',
+  goalUnarchived: 'Objectif repris',
+  goalLabel: 'Ce que tu vises',
+  goalLabelPlaceholder: 'Apport appartement',
+  goalLabelRequired: 'Donne un nom à cet objectif.',
+  goalOwner: 'Titulaire',
+  goalTarget: 'Montant visé',
+  goalTargetRequired: 'Indique un montant supérieur à zéro.',
+  goalDate: 'Pour quand',
+  goalDateHint:
+    'Facultatif. Sans échéance, l’app dit quand tu y arriveras ; avec, elle dit si tu es à l’heure.',
+  goalSupports: 'Comptes qui y contribuent',
+  goalSupportsHint:
+    'C’est le lien au réel : le capital, les versements et les taux se lisent sur eux. Rien n’est à retaper ici.',
+  goalSupportsNone: 'Aucun compte rattaché : l’avancement ne peut pas se calculer.',
+  goalMonthly: 'Versement engagé',
+  goalMonthlyHint:
+    'Facultatif. Laissé vide, c’est la somme de tes règles d’épargne durables sur ces comptes qui compte — l’app la connaît déjà.',
+  goalMonthlyInvalid: 'Indique un versement supérieur à zéro, ou laisse vide.',
+  goalManage: 'Gestion de l’objectif',
+  goalArchive: 'Ranger cet objectif',
+  goalArchiveHint: 'Il sort des listes, son histoire reste.',
+  goalUnarchive: 'Reprendre cet objectif',
+  goalRemove: 'Supprimer cet objectif',
+  goalRemoveConfirm:
+    'Cet objectif disparaît. Tes comptes, tes relevés et tes versements ne bougent pas. Supprimer ?',
+  goalTargetOn: 'visé pour %s',
+  goalNeeded: '+%s/mois pour tenir la date',
+  goalCurrent: 'Versement',
+  goalCurrentFrom: 'Lu sur tes règles d’épargne.',
+  goalCurrentOwn: 'Engagé sur cet objectif.',
+  goalAccounts: 'Comptes',
+  goalRate: 'Hypothèse',
+  goalRateNone: 'aucun taux posé',
+  goalRateHint:
+    'Un compte sans taux est projeté à 0 % : l’app ne devine aucun rendement. La date annoncée est donc au plus tard, jamais au plus tôt.',
+  goalChart: 'Prévu et relevé',
+  goalChartLabel: 'Trajectoire de l’objectif jusqu’à %s',
+  goalChartEmpty:
+    'La courbe apparaîtra dès qu’un compte rattaché portera un relevé.',
+  goalSrChart: 'De %s aujourd’hui à %s en %s, sur %s relevés déjà posés.',
 } as const
 
 export type SupportStrings = Widen<typeof fr>

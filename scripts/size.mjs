@@ -122,8 +122,27 @@ const DIST = 'dist'
    c'est le seul endroit où elle sert.
 
    La marge était retombée à neuf dixièmes — le plafond que ce fichier refuse
-   deux fois plus haut. Elle revient à quatre. */
-const BUDGET_KIB = 229
+   deux fois plus haut. Elle revient à quatre.
+
+   Relevé à 233 pour les **objectifs d'épargne**, et un kibioctet et demi en est
+   la mesure : l'app pèse 227,8 avant, 229,3 après. C'est le seul bloc de
+   l'épargne qui **conclue** — « à l'heure », « sept mois de retard », « il
+   faudrait 85 € de plus par mois » —, et il ne peut pas se charger à la
+   demande : il vit sur `/epargne`, qui s'atteint d'un geste depuis la tuile
+   Capacité du mois et fait donc partie du graphe initial.
+
+   Ce qui remonte est réduit au minimum, et c'est ce qui rend la dépense
+   défendable. La fiche d'un objectif, son formulaire, sa courbe et leurs
+   quarante chaînes partent à la demande avec le reste de ce que l'épargne
+   ouvre sous elle (`i18n/supports.ts`, `features/savings/pages.ts`). Ne
+   restent ici que le verdict lui-même (`domain/goal.ts`, qui ne fait
+   qu'assembler `projectSeries` — déjà présent — et une dichotomie), la section
+   qui le rend, sa jauge segmentée, et la douzaine de mots que la liste lit.
+
+   La marge retombait à moins d'un dixième — et négative, ce qui est encore
+   pire que le plafond que ce fichier refuse deux fois plus haut. Elle revient
+   à près de quatre. */
+const BUDGET_KIB = 233
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

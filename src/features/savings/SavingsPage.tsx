@@ -1,88 +1,50 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MonthHeader } from '@/app/MonthHeader'
-import {
-  PROJECTION_PATH,
-  SAVINGS_ANALYSIS_PATH,
-  SUPPORT_NEW_PATH,
-  entryNewPath,
-} from '@/app/routes'
-import { coveredYears, yearHorizon } from '@/domain/history'
-import { ZERO, add, sub } from '@/domain/money'
-import { savingCapacity, savingLeft, savingRate } from '@/domain/stats'
+import { MonthFilterChips } from '@/app/MonthHeader'
+import { SAVINGS_ANALYSIS_PATH, SAVINGS_MONTH_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
+import { ZERO, add } from '@/domain/money'
+import { savingLeft } from '@/domain/stats'
 import { t } from '@/i18n/strings'
-import { formatSignedMoney, tpl } from '@/i18n/format'
+
 import {
-  useEntries,
   useKindTotals,
   useMemberMap,
   useMembers,
-  useSavingYearSeries,
   useScopedSavingSupports,
 } from '@/store/selectors'
-import { Button } from '@/ui/Button'
+import { Amount } from '@/ui/Amount'
 import { EmptyState } from '@/ui/EmptyState'
-import { ForecastIcon, YearsIcon } from '@/ui/Icons'
+import { Eyebrow } from '@/ui/Eyebrow'
+import { NavCalendar, YearsIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row, RowGroup } from '@/ui/RowGroup'
-import { useCurrency } from '@/ui/currency'
+import { Tile } from '@/ui/Tile'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
-import { MonthTile } from './MonthTile'
-import { PlacedSection } from './PlacedSection'
+import { GoalsSection } from './GoalsSection'
 import { SupportsOverview } from './SupportsSection'
 import { useIndividualScope } from './individualScope'
 
-/** L'année lue quand le document n'en couvre aucune — voir `YearSection`. */
-const EMPTY_YEAR = 1
-
 /**
- * Ce que l'année a accumulé, en deux chiffres et un lien — jamais le tracé.
+ * La porte de l'analyse — une rangée, et **aucun chiffre**.
  *
- * La trajectoire support par support et le cumul de l'année contre l'année
- * d'avant sont les deux seules lectures de cet écran qui **capitalisent**, et
- * elles ont longtemps vécu ici, en bas de page, avec leur graphique entier.
- * Elles n'y agissent jamais — on ne décide rien en les regardant, on regarde —
- * et c'est ce qui les envoie sur `/epargne/analyse` : la vue d'ensemble n'a
- * besoin que de leur réponse, pas de leur tracé.
+ * Elle en portait deux : le cumul des versements de l'année, et l'écart avec
+ * l'année d'avant. Ils sont partis avec la lecture qu'ils résumaient — du flux
+ * pur, qui comptait ce qui sort du compte courant sans jamais dire ce que ça
+ * avait produit. Ce que l'écran dédié dit maintenant est d'une autre nature : de
+ * quoi le capital est fait.
  *
- * Les deux chiffres sont ceux que `YearSection` calcule déjà, au même mois
- * d'arrêt qu'elle — un seul moteur, deux lectures.
+ * Ce chiffre-là ne peut pas remonter ici, et c'est un arbitrage d'octets assumé.
+ * Il se calcule mois par mois sur toute la fenêtre (`domain/savingSeries.ts`) ;
+ * en écrire un seul résultat sur cette page ferait entrer ce module dans le
+ * graphe initial que `scripts/size.mjs` plafonne — pour une ligne de teaser, sur
+ * un écran qui ne s'y arrête pas.
  */
 function AnalysisPreview() {
-  const entries = useEntries()
-  const currency = useCurrency()
-  const years = useMemo(() => coveredYears(entries), [entries])
-  const year = years.at(-1)
-
-  const current = useSavingYearSeries(year ?? EMPTY_YEAR)
-  const previous = useSavingYearSeries((year ?? EMPTY_YEAR) - 1)
-
-  if (year === undefined) return null
-
-  const horizon = yearHorizon(current)
-  if (horizon === -1) return null
-
-  const cumulated = current[horizon]?.cumulative ?? ZERO
-  const hasPrevious = previous.some((point) => point.hasData)
-  const before = hasPrevious ? previous[horizon]?.cumulative ?? null : null
-
-  const description =
-    before === null
-      ? tpl(t.savings.analysisPreviewOnly, formatSignedMoney(cumulated, currency), String(year))
-      : tpl(
-          t.savings.analysisPreview,
-          formatSignedMoney(cumulated, currency),
-          String(year),
-          formatSignedMoney(sub(cumulated, before), currency),
-          String(year - 1),
-        )
-
   return (
     <RowGroup>
       <Row
         label={t.savings.analysis}
-        description={description}
+        description={t.savings.analysisPreview}
         icon={YearsIcon}
         to={SAVINGS_ANALYSIS_PATH}
       />
@@ -91,22 +53,56 @@ function AnalysisPreview() {
 }
 
 /**
+ * Ce que le mois permet d'y mettre — **une tuile**, et un écran derrière elle.
+ *
+ * La page en portait quatre blocs : la capacité et sa cascade, les deux boutons
+ * de versement, la ventilation par compte. Quatre blocs de flux au milieu d'un
+ * écran de patrimoine, et surtout quatre blocs qui dépendent du mois affiché au
+ * milieu de trois qui n'en dépendent pas. Il n'en reste que le seul chiffre
+ * qu'on vient chercher en arrivant — ce qu'il reste à placer — et la porte de
+ * `/epargne/mois`, où la question se pose entière.
+ */
+function MonthPreview() {
+  const navigate = useNavigate()
+  const totals = useKindTotals(true)
+
+  return (
+    <Tile
+      onClick={() => {
+        void navigate(SAVINGS_MONTH_PATH)
+      }}
+    >
+      <Eyebrow icon={NavCalendar}>{t.savings.month}</Eyebrow>
+      <Amount value={savingLeft(totals)} size="tile-fit" />
+      <span className="t-label">{t.savings.left}</span>
+    </Tile>
+  )
+}
+
+/**
  * L'écran de l'épargne — celui qu'ouvre la tuile Capacité du mois.
  *
- * **Une vue d'ensemble, pas l'écran exhaustif de tout ce qui concerne
- * l'épargne.** Elle répond en quelques secondes à quatre questions — combien
- * j'ai, combien de temps ça tient, où c'est placé, ce que le mois me permet
- * d'y mettre — et renvoie le reste à deux sous-vues : la gestion complète des
- * supports (`/epargne/supports`) et l'analyse de leur évolution
- * (`/epargne/analyse`). Les deux vivaient ici, en pleine page, avec leurs
- * gestes de patrimoine et leur graphique : le stock s'y lisait bien, mais
- * l'écran ne savait plus dire *dans quel ordre* le lire, ni où s'arrêter.
+ * **Une vue d'ensemble, et elle conclut.** Elle empilait neuf blocs et ne disait
+ * jamais *si ça va* : on y lisait « 18 320 € », « 6,4 mois », « 320 € restants »,
+ * et rien n'en sortait. Une app de suivi d'épargne se juge exactement là-dessus —
+ * la banque affiche déjà le solde, ce qu'on lui demande en plus est un jugement.
+ * Les objectifs sont donc au centre optique, et non en bas de page : c'est le
+ * seul bloc qui rende un verdict.
+ *
+ * **Le patrimoine et le mois ne se lisent plus ensemble.** Le premier se
+ * consulte au trimestre et est ancré sur aujourd'hui ; le second se consulte à
+ * la semaine et dépend du mois affiché. Les alterner faisait changer l'œil trois
+ * fois de registre, et posait un navigateur de mois au-dessus d'une page dont la
+ * moitié ne le suivait pas. Le mois est passé derrière une tuile et son écran
+ * (`/epargne/mois`), et **l'en-tête de mois a disparu d'ici** — c'est la règle
+ * que `CreditsPage` applique déjà : un navigateur de mois qui ne change rien à
+ * l'écran vaut moins que son absence.
  *
  * **L'écran ne concourt pas sur « combien j'ai ».** La banque y répond mieux,
  * plus vite et sans qu'on recopie quoi que ce soit ; ce que l'app est seule à
- * savoir, c'est ce que ce capital tient face aux charges qu'elle connaît, et ce
- * qu'on a réussi à mettre de côté depuis janvier. Ce sont les deux lectures que
- * personne d'autre ne produit, et ce sont elles qui rendent un relevé utile.
+ * savoir, c'est ce que ce capital tient face aux charges qu'elle connaît, et où
+ * l'on en est de ce qu'on vise. Ce sont les deux lectures que personne d'autre
+ * ne produit, et ce sont elles qui rendent un relevé utile.
  *
  * Les deux lectures ne s'additionnent jamais. Une valorisation n'est pas une
  * opération — elle n'entre ni dans le solde du mois, ni dans la capacité, ni
@@ -115,17 +111,11 @@ function AnalysisPreview() {
  *
  * **La lecture est individuelle, et elle n'a pas d'autre forme.** L'épargne est
  * le seul chiffre de l'app qui n'a aucun sens au foyer : deux personnes qui ont
- * 12 000 € et 8 000 € de côté n'ont pas « 20 000 € », et deux qui dégagent 300 €
- * et 900 € n'ont pas « 1 200 € à placer » — elles ont deux comptes, deux
- * capacités et deux décisions, dont aucune ne se prend sur une somme. L'écran ne
- * propose donc ni « Tout le monde » ni « Commun », seulement les personnes, et
- * il s'assure qu'une est choisie (`useIndividualScope`). Le stock et le flux
- * suivent la même personne, par le même filtre.
- *
- * **Les gestes sont rangés par nature, pas alignés en tête d'écran.** Placer et
- * reprendre suivent le chiffre qui les appelle, sous « Encore disponible » ;
- * relever ses comptes et en ouvrir un vivent désormais sur l'écran dédié des
- * supports, dont ils sont la gestion.
+ * 12 000 € et 8 000 € de côté n'ont pas « 20 000 € ». L'écran ne propose donc ni
+ * « Tout le monde » ni « Commun », seulement les personnes, et il s'assure
+ * qu'une est choisie (`useIndividualScope`). Mais **un contrôle à une seule
+ * valeur n'est pas un contrôle** : la rangée de pilules s'efface en solo, où
+ * elle n'était qu'un bruit permanent.
  */
 export function SavingsPage() {
   const navigate = useNavigate()
@@ -133,20 +123,25 @@ export function SavingsPage() {
   const members = useMembers()
   const memberMap = useMemberMap()
   const supports = useScopedSavingSupports()
-  /* Pose une personne quand aucune ne l'est : une rangée de pilules dont aucune
-     n'est active laisserait croire à une lecture qui n'existe pas. */
+  /* Pose une personne quand aucune ne l'est. Le filtre est posé même quand la
+     rangée ne s'affiche pas : sans lui, l'écran lirait le foyer entier en solo,
+     c'est-à-dire la somme que cet écran existe pour ne pas montrer. */
   const owner = useIndividualScope()
 
-  const capacity = savingCapacity(totals)
-  const left = savingLeft(totals)
-  const rate = savingRate(totals)
   const noFlow = add(totals.resource, add(totals.charge, add(totals.debt, totals.saving))) === ZERO
   const nothing = noFlow && supports.length === 0
 
   return (
     <>
       <PageTitle title={t.savings.title} />
-      <MonthHeader prorataNote personsOnly />
+
+      {/* Un contrôle à une seule valeur n'est pas un contrôle : la rangée ne
+          s'affiche qu'à partir de deux personnes. */}
+      {members.length > 1 && (
+        <div className="mb-5">
+          <MonthFilterChips personsOnly />
+        </div>
+      )}
 
       {nothing ? (
         <EmptyState
@@ -162,69 +157,51 @@ export function SavingsPage() {
         />
       ) : (
         <div className="flex max-w-3xl flex-col gap-4">
-          {/* Le stock d'abord : c'est la question qu'on se pose en arrivant. */}
+          {/* Un seul chiffre héros : le capital. C'est la question qu'on se pose
+              en arrivant, et la seule qui mérite cette taille. */}
           <CapitalTile
             net={totals.saving}
             owner={owner === null ? null : (memberMap.get(owner)?.name ?? null)}
           />
-          {/* Puis ce que ce stock permet — la seule question de cet écran à
-              laquelle une banque ne sait pas répondre. Elle vient juste après
-              le capital parce qu'elle en est la lecture : « combien j'ai » n'a
-              d'intérêt que par « est-ce que ça tient ». */}
-          <CoverageTile />
-          {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
-              fait sur l'écran dédié, vers lequel ce bloc renvoie. */}
-          <SupportsOverview />
 
-          {/* Puis le mois : ce qu'il dégage, ce qu'on y a mis, ce qu'il reste. */}
-          <MonthTile capacity={capacity} saved={totals.saving} left={left} rate={rate} />
+          {/* Deux lectures de rang égal, côte à côte : ce que le capital tient,
+              et ce que le mois permet d'y mettre. L'autonomie **qualifie** le
+              chiffre du dessus, elle ne rivalise pas avec lui — et le mois n'est
+              plus qu'une porte.
 
-          {/* Les deux sens sont deux boutons, jamais un seul (DS §7), et ils
-              suivent le chiffre qui les appelle. Le bouton flottant ne porte
-              que la porte du versement : s'en remettre à lui rendrait la reprise
-              inatteignable au doigt. */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => {
-                void navigate(entryNewPath({ direction: 'out', saving: true }))
-              }}
-            >
-              {t.entry.savingIn}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                void navigate(entryNewPath({ direction: 'in', saving: true }))
-              }}
-            >
-              {t.entry.savingOut}
-            </Button>
+              **Une grille ordinaire, et non la bento du DS §5.** Celle-ci pose
+              des rangées d'une hauteur fixe — 88px sous 768 — pour des tuiles
+              qui déclarent leur format ; l'autonomie porte un repli
+              d'explication et ne rentre dans aucune. Mesuré : elle y était
+              coupée de 203px en hauteur. Ce qu'on veut ici n'est pas un format
+              de bento, c'est deux colonnes qui prennent la hauteur de ce
+              qu'elles portent.
+
+              **Et empilées sous 640px.** Deux colonnes y laissent ~140px
+              chacune, quand le DS lui-même plafonne l'eyebrow d'une tuile
+              étroite à treize caractères : « Combien de temps je tiens » en fait
+              vingt-cinq. Côte à côte à 320, la rangée ne dirait plus rien de ce
+              qu'elle nomme. */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CoverageTile />
+            <MonthPreview />
           </div>
 
-          <PlacedSection saved={totals.saving} />
+          {/* Le seul bloc qui conclut, et c'est pourquoi il passe devant la
+              liste des comptes : « à l'heure » ou « sept mois de retard » est ce
+              qu'aucun relevé de banque ne dit, quand « où c'est placé » se lit
+              ailleurs et en mieux. */}
+          <GoalsSection />
 
-          {/* « Où c'est parti ce mois-ci » appelle immédiatement « et est-ce
-              que ça monte, au fond ? » — mais la réponse s'y arrête, elle ne
-              s'y décide pas : un aperçu et un lien vers `/epargne/analyse`,
-              où vivent le tracé, sa fenêtre et le cumul de l'année. */}
+          {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
+              fait sur l'écran dédié, vers lequel ce bloc renvoie. Les comptes y
+              sont rangés par ce qu'ils demandent, pas par ce qu'ils pèsent. */}
+          <SupportsOverview />
+
+          {/* « Est-ce que ça monte, au fond ? » — la réponse s'y arrête, elle ne
+              s'y décide pas : un aperçu et un lien vers `/epargne/analyse`, où
+              vivent le tracé, sa fenêtre et le cumul de l'année. */}
           <AnalysisPreview />
-
-          {/* Et après l'année, les années. Cette porte-ci est celle du
-              contexte — on est en train de regarder ce qu'on place, et la
-              question « ça donne quoi dans dix ans » se pose là. Elle n'est pas
-              la seule : « Plus » porte la même destination sous « Simuler »,
-              parce qu'un écran qu'on n'atteint qu'en descendant tout un autre
-              écran n'a pas d'adresse. Ce que le simulateur n'a toujours pas,
-              c'est un rang dans « Gérer » — il ne décide de rien (voir
-              `PROJECTION_PATH` dans `app/routes.ts`). */}
-          <RowGroup>
-            <Row
-              label={t.nav.projections}
-              description={t.nav.projectionsHint}
-              icon={ForecastIcon}
-              to={PROJECTION_PATH}
-            />
-          </RowGroup>
         </div>
       )}
     </>

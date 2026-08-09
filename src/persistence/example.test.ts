@@ -738,6 +738,47 @@ describe('ce que le domaine sait en tirer', () => {
     expect(new Set(passbooks.map((s) => s.memberId)).size).toBe(3)
   })
 
+  /* Les trois verdicts qu'un objectif peut rendre : à l'heure ou atteint, en
+     retard, et sans échéance du tout. Un jeu où tout serait « à l'heure »
+     laisserait croire à un écran qui approuve, et le cas qui fait exister la
+     seule ligne actionnable de l'app — « +85 €/mois pour tenir la date » — ne
+     s'y produirait jamais. */
+  it('pose trois objectifs, dont un sans échéance', () => {
+    expect(data.savingGoals).toHaveLength(3)
+    expect(data.savingGoals.filter((goal) => goal.targetOn === undefined)).toHaveLength(1)
+    /* Chaque objectif est rattaché à des comptes qui existent, et à ceux de son
+       porteur : sans lien au réel, il n'a ni capital, ni versement, ni taux. */
+    for (const goal of data.savingGoals) {
+      expect(goal.supportIds.length).toBeGreaterThan(0)
+      for (const supportId of goal.supportIds) {
+        const support = data.savingSupports.find((one) => one.id === supportId)
+        expect(support?.memberId).toBe(goal.memberId)
+      }
+    }
+  })
+
+  /* Un objectif est une intention, pas un passage obligé : une personne du jeu
+     n'en porte aucun, et l'écran doit savoir le dire. */
+  it('laisse une personne sans aucun objectif', () => {
+    const owners = new Set(data.savingGoals.map((goal) => goal.memberId))
+    expect(owners.size).toBeLessThan(data.household.members.length)
+  })
+
+  /* Les quatre états du rôle, dont l'absence — sans elle, l'écran d'autonomie
+     n'aurait jamais à se taire, et le cas qu'il gère le plus mal passerait pour
+     impossible. Deux livrets de même catégorie et de même cadence portent des
+     rôles différents : c'est ce qu'aucun autre champ ne sait dire. */
+  it('sert les trois rôles, et un compte qui n’en porte aucun', () => {
+    const roles = data.savingSupports.map((support) => support.role)
+    for (const role of ['buffer', 'project', 'growth']) {
+      expect(roles).toContain(role)
+    }
+    expect(roles).toContain(undefined)
+
+    const passbooks = data.savingSupports.filter((s) => s.categoryId === 'passbook')
+    expect(new Set(passbooks.map((s) => s.role)).size).toBeGreaterThan(1)
+  })
+
   it('relie chaque mouvement d’épargne à un support existant', () => {
     const ids = new Set(data.savingSupports.map((support) => support.id))
     const savings = data.entries.filter((entry) => kindOf(entry.categoryId) === 'saving')

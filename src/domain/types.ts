@@ -114,6 +114,36 @@ export type Period = {
 export type SavingPace = 'yearly' | 'quarterly'
 
 /**
+ * Ce à quoi un compte **sert**, et non ce qu'il est.
+ *
+ * C'est le seul classement que ni la catégorie ni la cadence ne portent : la
+ * catégorie dit la nature — « Livrets » —, `pace` dit à quel rythme on le
+ * relève, le rôle dit ce qu'on attend de l'argent qui est dessus. Deux Livrets A
+ * identiques de catégorie et de cadence n'ont pas le même rôle si l'un est le
+ * matelas de secours et l'autre l'apport d'un appartement.
+ *
+ * - `buffer` — la précaution. C'est le seul argent **mobilisable demain**, donc
+ *   le seul que l'autonomie ait le droit de diviser (`domain/saving.ts`).
+ * - `project` — une somme qu'on constitue pour quelque chose de daté.
+ * - `growth` — le long terme, qu'on ne compte pas toucher.
+ *
+ * **Saisi, jamais déduit**, exactement pour la raison qui vaut déjà pour
+ * `pace` : le catalogue de catégories est libre, et un rôle déduit du classement
+ * se tromperait silencieusement. **Absent, il reste absent** : aucune migration
+ * ne le devine. Un support d'avant le champ n'a jamais répondu à la question, et
+ * lui prêter « précaution » gonflerait l'autonomie de tout ce qui n'en est pas —
+ * c'est-à-dire referait, dans l'autre sens, le chiffre faux qu'il corrige.
+ */
+export type SavingRole = 'buffer' | 'project' | 'growth'
+
+/** L'ordre fait foi : c'est celui du champ, et celui des groupes de comptes. */
+export const SAVING_ROLES: readonly SavingRole[] = ['buffer', 'project', 'growth']
+
+export function isSavingRole(value: unknown): value is SavingRole {
+  return SAVING_ROLES.includes(value as SavingRole)
+}
+
+/**
  * Un support d'épargne — le livret, le plan, le contrat : **où** l'argent est
  * placé, et **à qui** il est.
  *
@@ -154,6 +184,15 @@ export type SavingSupport = {
   archived: boolean
   /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
   pace?: SavingPace
+  /**
+   * Ce à quoi ce compte sert. Voir `SavingRole`.
+   *
+   * **Absent est une valeur**, et la seule honnête tant que personne n'a
+   * répondu : contrairement à `pace`, aucune lecture ne retombe sur un défaut.
+   * L'autonomie ne compte alors pas ce support, et l'écran demande — une fois,
+   * en douceur — plutôt que d'inventer.
+   */
+  role?: SavingRole
   /**
    * Le plafond de **versements cumulés** du contrat, en centimes. Absent tant
    * que personne ne l'a posé.
@@ -247,6 +286,66 @@ export type SavingValuation = {
   supportId: string
   amount: Money
   date: ISODate
+}
+
+/**
+ * Un cap, et ce qui y mène.
+ *
+ * C'est le seul objet de l'épargne qui soit une **intention** et non un fait —
+ * mais une intention adoptée est un fait du foyer, au même titre qu'un crédit
+ * souscrit ou une avance montée. Ce qui reste dehors, c'est l'hypothèse qu'on
+ * essaie : le taux d'une simulation vit toujours en `localStorage`, jamais ici.
+ *
+ * **Il ne portait rien du tout jusqu'ici, et c'est ce qui manquait au modèle.**
+ * L'app savait ce qu'on a, où c'est placé, ce qu'on y verse et ce que ça
+ * deviendrait — mais jamais ce qu'on **vise**. Sans cap, une projection est un
+ * gadget : on règle douze choses, on regarde une courbe, on part, et rien ne
+ * revient. Avec lui, la même courbe devient un suivi, parce que les relevés des
+ * comptes rattachés viennent s'y poser.
+ *
+ * **Trois champs tapés, tout le reste calculé.** C'est ce qui le rend tenable :
+ *
+ * - **Pas de taux.** Il vient des `SavingRate` de ses comptes, datés, qui sont
+ *   déjà la vérité. Un `expectedReturn` posé ici serait la promesse que le
+ *   cahier §2 refuse, et une seconde vérité à tenir d'accord avec la première.
+ * - **Pas de capital.** Il vient des `SavingValuation` de ses comptes.
+ * - **Pas de versement obligatoire.** Absent, il se lit sur les récurrences
+ *   d'épargne durables posées sur ses comptes — l'app le sait déjà
+ *   (`domain/projectionStart.ts`), et le retaper serait une seconde vérité de
+ *   plus.
+ */
+export type SavingGoal = {
+  id: string
+  /** Ce qu'on vise, en toutes lettres : « Apport appartement », « Matelas ». */
+  label: string
+  /**
+   * Jamais facultatif, comme sur un support : une épargne est toujours à
+   * quelqu'un, et deux objectifs ne s'additionnent pas plus que deux livrets.
+   */
+  memberId: string
+  /**
+   * Les comptes qui y contribuent. C'est le lien au réel, et le seul.
+   *
+   * Vide est permis — on peut poser un cap avant de savoir où l'argent ira —,
+   * et la lecture le dit alors plutôt que d'annoncer zéro : un objectif sans
+   * compte n'a pas un capital nul, il n'a pas de capital du tout.
+   */
+  supportIds: string[]
+  target: Money
+  /** Le mois visé. Absent = un cap sans échéance, qu'on atteint quand on l'atteint. */
+  targetOn?: YearMonth
+  /**
+   * Le versement engagé, s'il a été posé explicitement.
+   *
+   * Absent — le cas courant — il se **déduit** des récurrences d'épargne
+   * durables posées sur ses comptes. Le champ existe pour le cas inverse : « je
+   * m'engage à 380 € par mois » alors qu'aucune règle ne le pose encore, ou que
+   * celles qui existent ne disent pas ce qu'on a en tête.
+   */
+  monthly?: Money
+  startedOn: ISODate
+  /** Abandonné ou remplacé, mais conservé : son passé reste lisible. */
+  archived: boolean
 }
 
 export type Recurrence = {
@@ -524,6 +623,8 @@ export type Data = {
   savingValuations: SavingValuation[]
   /** Ce que chaque support sert, et depuis quand. */
   savingRates: SavingRate[]
+  /** Ce qu'on vise, et sur quels comptes. La seule intention du document. */
+  savingGoals: SavingGoal[]
   months: MonthState[]
   settings: Settings
 }

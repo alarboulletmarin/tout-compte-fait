@@ -51,7 +51,15 @@ export function UpcomingSection() {
   return (
     <Tile className="gap-1">
       <div className="flex items-center justify-between gap-2">
-        <Eyebrow icon={UpcomingIcon}>{t.dashboard.upcoming}</Eyebrow>
+        {/* L'étiquette ne prend pas toute la tuile : le lien lui en retire
+            soixante-dix pixels, et à 320 points « PROCHAINES ÉCHÉANCES » y
+            perdait ses cinq derniers. Les paliers de l'étiquette se règlent
+            sur leur conteneur, or la tuile entière fait 286px et n'en
+            déclenchait aucun. `eyebrow-room` pose le conteneur sur ce qui
+            reste réellement — voir `components.css`. */}
+        <span className="eyebrow-room min-w-0 flex-1">
+          <Eyebrow icon={UpcomingIcon}>{t.dashboard.upcoming}</Eyebrow>
+        </span>
         {/* Un vrai lien, et la seule tuile du tableau de bord qui en garde un :
             son contenu est une liste qu'on lit ligne à ligne, avec sa date
             dite au lecteur d'écran sur chacune. L'envelopper dans un bouton

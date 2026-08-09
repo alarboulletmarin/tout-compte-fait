@@ -28,6 +28,7 @@ import {
   DATA_PATH,
   FAMILY_NEW_PATH,
   LANDING_PATH,
+  LEGACY_PROJECTION_PATH,
   LEGACY_SETTINGS_PATH,
   LEGAL_NOTICE_PATH,
   MEMBER_NEW_PATH,
@@ -40,6 +41,9 @@ import {
   RECURRENCE_NEW_PATH,
   SAVINGS_ANALYSIS_PATH,
   SAVINGS_PATH,
+  GOALS_PATH,
+  GOAL_NEW_PATH,
+  SAVINGS_MONTH_PATH,
   SAVINGS_SUPPORTS_PATH,
   STORAGE_PATH,
   SUPPORT_NEW_PATH,
@@ -113,9 +117,12 @@ const RateFormPage = lazy(async () => ({ default: (await savings()).RateFormPage
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
 const SupportsPage = lazy(async () => ({ default: (await savings()).SupportsPage }))
 const AnalysisPage = lazy(async () => ({ default: (await savings()).AnalysisPage }))
+const SavingMonthPage = lazy(async () => ({ default: (await savings()).SavingMonthPage }))
+const GoalPage = lazy(async () => ({ default: (await savings()).GoalPage }))
+const GoalFormPage = lazy(async () => ({ default: (await savings()).GoalFormPage }))
 
 /**
- * Le simulateur de projections, à la demande.
+ * Le simulateur, à la demande.
  *
  * Il emporte son propre tracé SVG, sa prose — qui est longue, parce que ce
  * qu'il refuse de calculer demande plus de mots que ce qu'il calcule — et son
@@ -208,6 +215,7 @@ export function AppRoutes() {
               React Router — comme `/nouveau` juste dessous. */}
           <Route path={SAVINGS_SUPPORTS_PATH} element={<SupportsPage />} />
           <Route path={SAVINGS_ANALYSIS_PATH} element={<AnalysisPage />} />
+          <Route path={SAVINGS_MONTH_PATH} element={<SavingMonthPage />} />
           {/* Le segment fixe est classé avant `:id` par React Router : un
               support ne peut donc pas éclipser le formulaire de création. */}
           <Route path={SUPPORT_NEW_PATH} element={<SupportFormPage />} />
@@ -221,11 +229,24 @@ export function AppRoutes() {
           />
           <Route path={`${SAVINGS_PATH}/:id/taux`} element={<RateFormPage />} />
           <Route path={`${SAVINGS_PATH}/:id/taux/:rateId`} element={<RateFormPage />} />
+          {/* Les objectifs. Sous `/epargne/` parce qu'un objectif est un objet
+              de l'épargne, et les segments fixes avant `:id` — React Router les
+              classe d'abord, un objectif ne peut donc pas éclipser son
+              formulaire de création. */}
+          <Route path={GOAL_NEW_PATH} element={<GoalFormPage />} />
+          <Route path={`${GOALS_PATH}/:id`} element={<GoalPage />} />
+          <Route path={`${GOALS_PATH}/:id/modifier`} element={<GoalFormPage />} />
           <Route path={ADVANCES_PATH} element={<AdvancesPage />} />
           <Route path={ADVANCE_NEW_PATH} element={<AdvanceFormPage />} />
           {/* Sous l'épargne par l'intention, à la racine par l'URL — voir
-              `PROJECTION_PATH` dans `routes.ts`. */}
+              `PROJECTION_PATH` dans `routes.ts`. L'ancienne adresse, au pluriel,
+              se redirige plutôt que de disparaître : elle a pu être mise en
+              signet, exactement comme `/abonnements`. */}
           <Route path={PROJECTION_PATH} element={<ProjectionPage />} />
+          <Route
+            path={`${LEGACY_PROJECTION_PATH}/*`}
+            element={<Navigate to={PROJECTION_PATH} replace />}
+          />
           <Route path="/historique" element={<HistoryPage />} />
           {/* Le quatrième onglet. Pas de découpage à la demande : l'écran n'est
               qu'une liste de rangées, et il est sur le chemin de la navigation

@@ -298,7 +298,25 @@ arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans
 et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
 d'affichage. C'est le motif de `remainingPrincipal`.
 
-**Le simulateur n'écrit rien, et il lit dans un seul sens.** Rien n'en ressort
+**La boucle se referme, et c'est la règle qu'il a fallu reformuler.** « Rien
+n'entre dans le document » tenait toujours, mais elle était énoncée au mauvais
+niveau : ce qui doit rester dehors, c'est l'**hypothèse** — un taux essayé, un
+capital tapé pour voir. Ce qui entre est une **intention adoptée par un geste
+explicite**, ce qui est un fait du foyer exactement comme un crédit souscrit. Le
+simulateur a donc une sortie — « en faire un objectif » —, et elle passe par le
+formulaire d'un objectif plutôt que par une écriture directe : rien ne s'écrit
+sans qu'on ait vu ce qu'on écrit. Le taux, lui, n'entre toujours que par la fiche
+d'un compte, et daté.
+
+Le chemin de retour existe pour la même raison. La fiche d'un objectif ouvre le
+simulateur préréglé sur *sa* question — cette cible, cette échéance, ces
+comptes —, et lui passe son identifiant : la sortie de l'écran devient alors
+« adopter ce rythme », qui repose le versement sur l'objectif d'où l'on vient.
+Tout voyage en clair dans l'URL, comme le sens et la nature d'une saisie
+(`entryNewPath`), et tout est revalidé à l'arrivée — une URL vient du dehors,
+exactement comme `localStorage` et comme un document importé.
+
+**Le simulateur n'écrit rien de lui-même, et il lit dans un seul sens.** Rien n'en ressort
 dans le document, donc rien dans les exports ni dans le schéma qu'on donne à un
 assistant. Une projection est une **question qu'on pose**, pas un fait du
 foyer — et un `expectedReturn` posé sur un support « au cas où » serait
@@ -306,6 +324,27 @@ exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent e
 `localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
 lecture, comme un document importé l'est par `validate.ts`, parce que cette
 clé-là s'édite depuis la console du navigateur.
+
+**Une fourchette, et non trois hypothèses.** L'écran comparait jusqu'à trois
+taux, plus trois présélections, plus un second taux « comparé » par compte :
+quatre mécanismes pour poser une seule chose, l'incertitude, dont aucun ne
+disait lequel des autres il remplaçait. Un placement n'a pas trois rendements,
+il a une fourchette — et trois courbes obligent à choisir laquelle on croit,
+quand une aire montre l'écart sans rien promettre.
+
+Ce qui rend la fourchette juste et non décorative, c'est **où** elle s'applique :
+seulement aux comptes qui ne portent aucun taux. Un compte dont le rendement est
+posé sur sa fiche vaut la même chose dans les deux bornes — son propriétaire a
+dit ce qu'il en attend, l'app n'a pas d'incertitude à ajouter par-dessus. Deux
+conséquences se lisent à l'écran sans une ligne de prose : la fourchette **se
+referme d'elle-même** sur un portefeuille entièrement renseigné, et la ligne
+« Rendement » affiche l'étendue des taux qui *courent* — « 2,40 % – 7 % » pour
+un Livret A posé et un PEA muet —, jamais celle des deux champs saisis.
+
+Le corollaire mécanique est que chaque compte est projeté **deux fois**, une par
+borne, et que les deux séries sont littéralement la même référence quand il est
+fixé. La contrainte des trois couleurs de trait tombe avec les scénarios : il
+n'y a plus qu'une teinte, `--accent-2`, et deux tracés qui bornent une aire.
 
 Ce qu'il **lit** passe par un seul module, `domain/projectionStart.ts`, qui rend
 exactement deux nombres : le capital estimé d'un support ou de l'épargne d'une
@@ -318,27 +357,26 @@ d'écrire dessus. Refuser d'écrire protège le document ; refuser de *lire* ne
 protégeait rien — ça obligeait à retaper à la main un capital que l'écran
 Épargne affiche au centime deux écrans plus haut.
 
-**Les versements cumulés sont une aire, pas une quatrième courbe.** L'app n'a
-que trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les
-deux thèmes — `--accent-2`, `--text`, `--text-muted` —, mesure faite pour
-`charts/CumulativeLines.tsx`. C'est cette contrainte-là qui plafonne les
-scénarios à trois, et c'est elle qui a rendu l'aire nécessaire ; elle s'est
-avérée meilleure que le trait qu'elle remplace, puisqu'elle découpe le
-graphique en deux lectures qu'il n'y a plus à expliquer — ce qui vient de la
-poche, ce qui vient du taux. Son échelle part de zéro, contrairement à la courbe
-d'un support, qui part de son minimum relevé : une aire mesurée depuis une base
-flottante ne dit rien.
+**Les versements cumulés sont une aire, pas une courbe de plus.** L'app n'a que
+trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les deux
+thèmes — `--accent-2`, `--text`, `--text-muted` —, mesure faite pour
+`charts/CumulativeLines.tsx`. C'est cette contrainte-là qui a rendu l'aire
+nécessaire ; elle s'est avérée meilleure que le trait qu'elle remplace, puisqu'
+elle découpe le graphique en deux lectures qu'il n'y a plus à expliquer — ce qui
+vient de la poche, ce qui vient du taux. Son échelle part de zéro, contrairement
+à la courbe d'un support, qui part de son minimum relevé : une aire mesurée
+depuis une base flottante ne dit rien.
 
-À **une seule hypothèse**, les deux se lisent **empilées** : le versé en bas, le
-rendement au-dessus, le haut de la pile étant le capital. La hauteur d'une bande
-*est* alors la réponse, là où deux tracés superposés demandaient de mesurer
-l'écart entre eux — et `bandPath` sert les deux figures, parce qu'une aire posée
-sur zéro et une bande posée sur une autre série sont la même chose à la base
-près. Au-delà d'une hypothèse on n'empile plus : trois rendements assis sur le
-même versé ne s'additionnent pas, et les empiler tracerait un capital que
-personne n'a. La bande du rendement est teintée de l'accent à faible opacité et
-non d'une quatrième couleur — une aire n'a pas de contraste de trait à tenir,
-c'est le trait posé dessus qui porte la lecture.
+Les deux se lisent **empilées** : le versé en bas, le rendement au-dessus, le
+haut de la pile étant la borne basse du capital. La hauteur d'une bande *est*
+alors la réponse, là où deux tracés superposés demandaient de mesurer l'écart
+entre eux — et `bandPath` sert les trois figures, parce qu'une aire posée sur
+zéro, une bande posée sur une autre série et l'aire de la fourchette sont la
+même chose à la base près. La bande du rendement est teintée de l'accent à
+faible opacité et non d'une couleur de plus — une aire n'a pas de contraste de
+trait à tenir, c'est le trait posé dessus qui porte la lecture ; celle de la
+fourchette est plus claire encore, parce qu'elle dit exactement l'inverse de sa
+voisine : l'une est ce que le calcul produit, l'autre ce qu'il ne sait pas.
 
 **Prorata des revenus.** Le revenu d'un membre est *dérivé* de ses récurrences
 de nature `resource`, ramenées au mois — il n'est stocké nulle part. Le déclarer
@@ -784,6 +822,16 @@ testé, déterministe. `e2e/` en tient onze, dans Chromium, sur `dist/` :
 **Graphiques.** Aucune librairie. L'anneau, les barres empilées et les courbes
 sont des composants SVG maison, dans `src/ui/Ring.tsx` et `src/charts/`.
 
+La question s'est reposée quand l'épargne a demandé des figures plus denses —
+décomposition en couches, légende qu'on éteint, petits multiples par compte — et
+la réponse n'a pas changé, pour trois raisons mesurables. Le budget d'octets se
+compte en kilo-octets de marge, quand recharts en pèse quatre-vingt-dix ; les
+thèmes clair et sombre passent par des variables CSS qu'un tracé en canvas ne
+suit pas ; et le DS §8 exige de tout graphique un doublon lisible au lecteur
+d'écran et un curseur au clavier, que `ChartCursor` et les blocs `sr-only`
+donnent déjà à cinq figures. Ce qui manquait était deux cents lignes —
+`charts/GrowthAreas.tsx` —, pas une dépendance.
+
 **Icônes.** Phosphor, graisse `bold`, réexportée sous des noms à nous par
 `src/ui/Icons.tsx` — changer de bibliothèque ne doit toucher qu'un fichier.
 Import par chemin (`@phosphor-icons/react/dist/csr/<Nom>`) et non depuis l'index,
@@ -929,6 +977,15 @@ comme un mot qu'on n'a pas su lire, pas comme un défaut — c'est exactement ce
 qu'une relecture laisse passer. « Reste à vivre » débordait ainsi de 4px sur
 l'écran du mois ; c'est le troisième palier de dégradation qui l'a réglé.
 
+**Cette mesure est un test**, et elle ne l'a pas toujours été : elle était écrite
+ici, refaite à la main quand on y pensait, et `e2e/mise-en-page.spec.ts` ne
+vérifiait que le débordement horizontal de la **page**. Or une tuile qui rogne
+son contenu ne déborde rien du tout — elle garde sa boîte et jette ce qui n'y
+rentre pas —, si bien que la suite est restée verte pendant qu'une tuile
+d'autonomie perdait 203px de hauteur dans une rangée de bento. Les deux
+comparaisons ci-dessus tournent maintenant sur tous les écrans du jeu d'exemple,
+à 320 points, dans la même traversée que le test de débordement.
+
 **Ce qui se masque faute de place se décide sur la place, pas sur l'écran.** La
 seconde lecture d'une tuile plate — « reste 102 € à payer » — était en
 `max-lg:sr-only` : un seuil de viewport pour une question de largeur de tuile.
@@ -1015,6 +1072,26 @@ règle qui retire déjà cinq tuiles sous la lecture du commun.
 dérive le capital restant dû des échéances confirmées à la date du jour et ne
 lit jamais `ym`. Un navigateur de mois qui ne change rien à l'écran vaut moins
 que son absence.
+
+**L'épargne a poussé cette règle jusqu'à découper l'écran.** Elle mélangeait
+deux temporalités qui ne se lisent pas ensemble : le patrimoine — capital,
+autonomie, comptes, objectifs — se consulte au trimestre et est ancré sur
+*aujourd'hui* ; le flux — capacité, versé, reste à placer, ventilation — se
+consulte à la semaine et dépend entièrement du mois affiché. L'écran les
+alternait, si bien que l'œil changeait trois fois de registre en une page et
+qu'un navigateur de mois surplombait un contenu dont la moitié ne le suivait
+pas. Ce n'est pas un défaut de mise en forme, c'est un défaut de découpage : le
+flux est passé sur `/epargne/mois`, qui porte le `MonthHeader`, et `/epargne`
+n'en a plus du tout. Il n'en reste sur la vue d'ensemble qu'une tuile — ce qu'il
+reste à placer — et sa porte.
+
+La rangée de personnes, elle, survit à ce déménagement sans son en-tête :
+`MonthFilterChips` est exportée pour cela. L'épargne est la seule lecture de
+l'app qui n'a pas de version foyer, donc la personne compte même là où le mois
+ne compte pas — mais **un contrôle à une seule valeur n'est pas un contrôle**,
+et la rangée s'efface en solo. Le filtre, lui, est posé dans tous les cas
+(`useIndividualScope`) : sans lui, l'écran lirait le foyer entier, c'est-à-dire
+la somme qu'il existe pour ne pas montrer.
 
 ## PWA
 

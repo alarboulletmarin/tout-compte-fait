@@ -89,6 +89,20 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
   { path: '/historique', heading: /historique/i },
   { path: '/recurrences', heading: /récurrences/i },
   { path: '/epargne', heading: /épargne/i },
+  /* Le flux du mois a quitté la vue d'ensemble : c'est un écran, et il porte
+     ses propres gestes. Sans lui dans cette liste, la moitié de ce que l'épargne
+     savait faire ne serait plus ouverte par aucun scénario. */
+  { path: '/epargne/mois', heading: /ce mois/i },
+  { path: '/epargne/supports', heading: /supports/i },
+  /* La décomposition : trois couches, une légende qu'on peut éteindre, un tracé
+     par compte et un tableau à cinq colonnes. Rien de tout cela ne se mesure
+     dans jsdom, et c'est l'écran de l'épargne qui porte le plus de figures. */
+  { path: '/epargne/analyse', heading: /analyse/i },
+  /* La fiche d'un objectif, prise sur le jeu d'exemple : c'est le seul écran qui
+     porte un verdict, une jauge, une courbe et deux montants sur la même ligne
+     — « 28 400 € sur 42 000 € », la plus longue chaîne de l'app. Rien de tout
+     cela ne se mesure dans jsdom. */
+  { path: '/epargne/objectifs/ex-g-apport', heading: /apport appartement/i },
   { path: '/credits', heading: /crédits et dettes/i },
   { path: '/avances', heading: /avances/i },
   { path: '/repartition', heading: /répartition/i },
@@ -100,6 +114,6 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
      « ≈ 202 k€ » dès qu'on compare trois hypothèses — il défile dans son cadre,
      et c'est exactement le genre de chose qui pousse les murs quand le cadre
      manque. */
-  { path: '/projections', heading: /projections/i },
+  { path: '/simulation', heading: /simulation/i },
   { path: '/plus', heading: /plus/i },
 ]

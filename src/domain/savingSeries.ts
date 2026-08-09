@@ -210,3 +210,158 @@ export function stockRange(months: number, on: ISODate = today()): { from: YearM
   const to = ymOf(on)
   return { from: addMonthsToYm(to, -Math.max(0, months - 1)), to }
 }
+
+/* ============================================================================
+ * D'où vient ce que le compte vaut — la seule lecture que la banque ne fait pas.
+ *
+ * Un relevé dit **combien**. Il ne dit jamais **d'où ça vient**, et c'est
+ * pourtant la seule question à laquelle une app de suivi puisse répondre mieux
+ * qu'un relevé : sur ces douze mois, tu es parti de 18 000 €, tu as versé
+ * 3 600 €, et le compte a produit 410 €. Trois nombres qui s'additionnent
+ * exactement au quatrième, et dont aucun ne se lit ailleurs.
+ *
+ * **Le rendement se mesure par différence, il ne se recalcule pas.** On
+ * pourrait cumuler l'intérêt mois par mois de `StockPoint.interest` ; ce serait
+ * faux dès le premier relevé. Un mois relevé ne s'attribue aucun intérêt — le
+ * relevé *contient* déjà ce que le taux a produit —, si bien que la somme des
+ * intérêts saute précisément les mois où l'on sait le mieux ce qui s'est passé.
+ * Ce qui est écrit ici est donc `valeur − départ − versé` : par construction la
+ * décomposition se referme au centime, et elle attrape en plus ce qu'aucun taux
+ * ne modélise — un PEA qui monte de 9 % ou qui perd 4 %.
+ *
+ * **Elle peut donc être négative, et c'est une lecture, pas une erreur.** Le
+ * rouge est réservé aux dépassements et aux fautes (DS §2.3) : un placement qui
+ * baisse n'en est pas une, il est ce qu'un placement fait. Le signe est porté
+ * par le nombre et par la position de l'aire — sous le versé plutôt que
+ * dessus —, jamais par une couleur d'alerte.
+ *
+ * **Tout est relatif à la fenêtre lue**, et c'est ce qui la rend juste : « ton
+ * départ » n'est pas le premier euro jamais posé sur le compte — que le document
+ * ne connaît pas —, c'est ce qu'il valait au premier mois affiché. Changer de
+ * fenêtre change les trois nombres, ce qui est exactement ce qu'on lui demande.
+ * ==========================================================================*/
+
+export type GrowthPoint = {
+  month: YearMonth
+  /** Ce que le compte valait au premier mois de la fenêtre. Constant. */
+  base: Money
+  /** Versements − reprises cumulés depuis ce premier mois. Nul à son rang. */
+  paid: Money
+  /** Ce que le compte a produit : le reste. Négatif quand il a perdu. */
+  gain: Money
+  /** Ce qu'il vaut — `base + paid + gain`, au centime. */
+  value: Money
+  /** Le mois porte un vrai relevé : le point d'appui, et non l'estimation. */
+  known: boolean
+}
+
+/** Un compte et sa décomposition. */
+export type GrowthBand = {
+  supportId: string
+  label: string
+  points: GrowthPoint[]
+}
+
+/**
+ * La décomposition d'une trajectoire déjà calculée.
+ *
+ * Elle démarre au premier mois **connu** : avant le premier relevé, un mouvement
+ * ne fait pas une valeur, et il n'existe donc pas de départ d'où décompter. Elle
+ * s'arrête si la valeur redevenait inconnue — ce que `supportStockSeries` ne
+ * produit pas, une fois le report amorcé il ne se perd plus, mais une série
+ * trouée ferait des versements cumulés faux plutôt qu'absents, et c'est le genre
+ * de silence qu'on préfère à un chiffre.
+ */
+export function growthOf(points: readonly StockPoint[]): GrowthPoint[] {
+  const start = points.findIndex((point) => point.value !== null)
+  if (start === -1) return []
+  const base = points[start]?.value ?? ZERO
+
+  const growth: GrowthPoint[] = []
+  let paid = 0
+  for (let index = start; index < points.length; index += 1) {
+    const point = points[index]
+    if (point === undefined || point.value === null) break
+    if (index > start) paid += point.moved
+    growth.push({
+      month: point.month,
+      base,
+      paid: money(paid),
+      gain: money(point.value - base - paid),
+      value: point.value,
+      known: point.known !== null,
+    })
+  }
+  return growth
+}
+
+/** La décomposition de chaque compte, dans l'ordre où on les a donnés. */
+export function growthBands(
+  supports: readonly SavingSupport[],
+  source: StockSource,
+  from: YearMonth,
+  to: YearMonth,
+  on: ISODate = today(),
+): GrowthBand[] {
+  return supports
+    .map((support) => ({
+      supportId: support.id,
+      label: support.label,
+      points: growthOf(supportStockSeries(support.id, source, from, to, on)),
+    }))
+    .filter((band) => band.points.length > 0)
+}
+
+/**
+ * La décomposition de l'ensemble — et elle ne s'écrit que là où tout est là.
+ *
+ * Les comptes n'ont pas le même premier relevé : additionner un livret suivi
+ * depuis cinq ans et un PER ouvert en mars ferait, au mois de mars, un total qui
+ * bondit de dix mille euros sans qu'un centime ait été versé. Le total ne
+ * s'écrit donc que sur les mois où **tous** les comptes lus ont une valeur —
+ * c'est déjà la règle de la pile (`charts`), et c'est la seule qui ne fabrique
+ * pas de marche.
+ *
+ * Le départ et le versé sont recalés sur ce premier mois commun, et le rendement
+ * se déduit comme partout : par différence. Un compte ouvert plus tard entre
+ * donc dans le total en repoussant son début, jamais en creusant une marche.
+ */
+export function growthTotal(bands: readonly GrowthBand[]): GrowthPoint[] {
+  if (bands.length === 0) return []
+
+  const byMonth = bands.map((band) => new Map(band.points.map((point) => [point.month, point])))
+  const months = (bands[0]?.points ?? [])
+    .map((point) => point.month)
+    .filter((month) => byMonth.every((index) => index.has(month)))
+  const first = months[0]
+  if (first === undefined) return []
+
+  const sum = (pick: (point: GrowthPoint) => number, month: YearMonth): number =>
+    byMonth.reduce((total, index) => total + pick(index.get(month) ?? ZEROED), 0)
+
+  const base = money(sum((point) => point.value, first))
+  const paidAtFirst = sum((point) => point.paid, first)
+
+  return months.map((month) => {
+    const paid = money(sum((point) => point.paid, month) - paidAtFirst)
+    const value = money(sum((point) => point.value, month))
+    return {
+      month,
+      base,
+      paid,
+      gain: money(value - base - paid),
+      value,
+      known: byMonth.some((index) => index.get(month)?.known === true),
+    }
+  })
+}
+
+/** Le point neutre de la somme — jamais atteint, les mois sont filtrés avant. */
+const ZEROED: GrowthPoint = {
+  month: '0000-01',
+  base: ZERO,
+  paid: ZERO,
+  gain: ZERO,
+  value: ZERO,
+  known: false,
+}

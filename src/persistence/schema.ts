@@ -13,7 +13,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 13
+export const CURRENT_SCHEMA_VERSION = 14
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -421,6 +421,26 @@ function toVersion13(doc: RawDocument): RawDocument {
   return { ...doc, schemaVersion: 13 }
 }
 
+/**
+ * Les objectifs d'épargne (`savingGoals`).
+ *
+ * **Rien à convertir, et surtout rien à deviner.** Aucun document antérieur ne
+ * dit ce que quelqu'un vise : ni un support, ni un plafond, ni une récurrence
+ * n'en tiennent lieu. Poser un objectif à partir d'un `depositCap` — « tu vises
+ * 22 950 € sur ce livret » — attribuerait à quelqu'un une intention qu'il n'a
+ * jamais formulée, ce qui est exactement ce qu'un objectif ne peut pas être : il
+ * est le seul objet du document qui soit une intention, donc le seul qui ne
+ * puisse entrer que par un geste explicite.
+ *
+ * La collection part donc **vide**, et `normalizeDocument` la lit comme telle
+ * sur un fichier qui n'en porte pas. La marche existe pour la raison qui a fait
+ * exister la v7, la v9, la v11 et la v13 : le pipeline veut une étape par
+ * incrément.
+ */
+function toVersion14(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 14 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -435,6 +455,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 11, migrate: toVersion11 },
   { to: 12, migrate: toVersion12 },
   { to: 13, migrate: toVersion13 },
+  { to: 14, migrate: toVersion14 },
 ]
 
 export class ImportError extends Error {

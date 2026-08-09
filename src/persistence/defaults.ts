@@ -251,6 +251,7 @@ export function emptyData(): Data {
     savingSupports: [],
     savingValuations: [],
     savingRates: [],
+    savingGoals: [],
     months: [],
     settings: {
       theme: 'system',

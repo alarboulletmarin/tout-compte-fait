@@ -2,18 +2,23 @@ import { useNavigate } from 'react-router-dom'
 import { SAVINGS_PATH } from '@/app/routes'
 import { t } from '@/i18n/strings'
 import { PageTitle } from '@/ui/PageTitle'
-import { EvolutionSection } from './EvolutionSection'
-import { YearSection } from './YearSection'
+import { GrowthSection } from './GrowthSection'
 import { useIndividualScope } from './individualScope'
 
 /**
- * Ce que l'épargne d'une personne a fait, dans le temps.
+ * D'où vient l'épargne d'une personne — un seul bloc, et il conclut.
  *
- * Les deux seules lectures de l'écran qui **capitalisent** — la trajectoire
- * support par support, et le cumul de l'année contre l'année d'avant — vivaient
- * en bas de `/epargne`, après tout ce qui se décide ce mois-ci. Elles ne s'y
- * décident plus : on vient les *regarder*, pas y agir, et la vue d'ensemble
- * n'en garde qu'un chiffre et un lien.
+ * L'écran en portait deux : la pile des comptes dans le temps, et le cumul des
+ * versements de l'année contre l'année d'avant. Aucun des deux ne répondait à ce
+ * qu'on vient chercher ici. Le premier disait *où* l'argent est — la banque le
+ * dit déjà, mieux et sans recopie. Le second comptait ce qui sort du compte
+ * courant, du flux pur : il ne savait pas dire si ces versements avaient produit
+ * quatre euros ou quatre cents.
+ *
+ * Ce qui reste est la seule lecture que l'app soit **seule** à pouvoir faire,
+ * parce qu'elle seule tient à la fois les relevés et les mouvements : de quoi le
+ * capital est fait — un départ, des versements, et ce que les comptes ont produit
+ * par-dessus.
  */
 export function AnalysisPage() {
   const navigate = useNavigate()
@@ -27,8 +32,7 @@ export function AnalysisPage() {
           void navigate(SAVINGS_PATH)
         }}
       />
-      <EvolutionSection />
-      <YearSection />
+      <GrowthSection />
     </div>
   )
 }

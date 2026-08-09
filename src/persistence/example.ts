@@ -57,6 +57,7 @@ import type {
   Entry,
   Family,
   Recurrence,
+  SavingGoal,
   SavingSupport,
 } from '@/domain/types'
 import {
@@ -1257,6 +1258,7 @@ export function exampleData(on: ISODate = today()): Data {
 
   data = withCatalogue(data)
   data = withSupports(data)
+  data = withGoals(data, first)
   data = withRules(data, first)
   data = withDebts(data, first)
   data = withValuations(data, anchor, ids)
@@ -1349,6 +1351,14 @@ function withCatalogue(data: Data): Data {
  * avec les marchés, donc au trimestre. Le PEL, relevé il y a douze mois pile,
  * est celui que l'écran réclame ; les autres se taisent.
  *
+ * **Les trois rôles sont servis, et l'absence de rôle aussi** — c'est-à-dire les
+ * quatre états du champ. Deux Livrets A identiques de catégorie et de cadence
+ * portent des rôles différents (précaution pour Camille, précaution pour Alix,
+ * projet pour le livret jeune de Sacha) : c'est précisément ce qu'aucun autre
+ * champ ne savait dire. Le PEE en cours n'en porte aucun, et il est là pour ça :
+ * l'autonomie doit savoir se taire sur un compte dont personne n'a dit à quoi il
+ * sert, plutôt que de le compter comme une réserve mobilisable.
+ *
  * Aucun capital n'est écrit ici : il vit dans les valorisations, et nulle part
  * ailleurs.
  */
@@ -1361,6 +1371,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'buffer',
       /* Le plafond réel d'un Livret A, et le seul du jeu qui soit **atteint** :
          le capital d'Alix le dépasse, ce qui est exactement ce qui arrive dans
          la vraie vie — le plafond porte sur les versements, et les intérêts
@@ -1376,6 +1387,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'buffer',
       depositCap: money(2_295_000),
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
@@ -1386,6 +1398,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'project',
       /* 1 600 €, et le versement de Sacha le remplit pendant la durée simulée :
          c'est le compte sur lequel la projection montre une courbe qui cesse de
          recevoir sans cesser de monter. */
@@ -1398,6 +1411,7 @@ function withSupports(data: Data): Data {
       categoryId: 'plans',
       archived: false,
       pace: 'yearly',
+      role: 'project',
       depositCap: money(6_120_000),
     },
     {
@@ -1407,6 +1421,7 @@ function withSupports(data: Data): Data {
       categoryId: 'life-insurance',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
     {
@@ -1416,6 +1431,7 @@ function withSupports(data: Data): Data {
       categoryId: 'retirement',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Ouvert ce trimestre. Aucun relevé reçu : sa valeur est inconnue, pas nulle.',
     },
     {
@@ -1425,6 +1441,7 @@ function withSupports(data: Data): Data {
       categoryId: 'company-savings',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Entreprise quittée : le plan est fermé, l’épargne reste.',
     },
     {
@@ -1434,6 +1451,10 @@ function withSupports(data: Data): Data {
       categoryId: 'company-savings',
       archived: false,
       pace: 'quarterly',
+      /* Aucun rôle, et c'est l'état qu'il porte : le plan vient d'être ouvert
+         chez le nouvel employeur, et personne n'a encore dit ce qu'on en
+         attend. L'autonomie doit se taire dessus plutôt que de le compter — un
+         rôle deviné est exactement ce que ce champ existe pour empêcher. */
     },
   ]
   /* Archivé par la mutation, jamais par le littéral — comme `archiveCategory`
@@ -1441,6 +1462,70 @@ function withSupports(data: Data): Data {
      arrêtée par son `until` : archiver un support que rien n'arrête laisserait
      un compte invisible grossir tout seul. */
   return archiveSavingSupport(supports.reduce(addSavingSupport, data), PEE_CAMILLE)
+}
+
+/**
+ * Les trois objectifs — et ils sont là pour trois **verdicts**, pas pour trois
+ * montants.
+ *
+ * C'est le seul bloc de l'épargne qui conclue, et un jeu d'exemple où tout
+ * serait « à l'heure » laisserait croire à un écran qui approuve. Les trois
+ * états qui comptent y sont donc :
+ *
+ * - **à l'heure ou en avance** — le matelas de Camille, que son livret couvre
+ *   déjà largement : c'est un objectif **atteint**, ce qui est un état à part
+ *   entière et non un cas limite ;
+ * - **en retard** — l'apport d'Alix, dont la cible est haute et l'échéance
+ *   proche : c'est ce cas-là qui fait exister « +85 €/mois pour tenir la
+ *   date », la seule chose actionnable de tout l'écran ;
+ * - **sans échéance** — le long terme de Camille sur son assurance-vie : l'app
+ *   dit alors *quand*, jamais *si*, et c'est une lecture différente qu'aucun
+ *   objectif daté ne produirait.
+ *
+ * Sacha n'en porte aucun, et c'est voulu : un jeu où chaque personne aurait le
+ * sien ferait passer l'objectif pour un passage obligé, quand c'est une
+ * intention qu'on pose quand on en a une.
+ *
+ * Aucun capital, aucun taux, aucun versement n'est écrit ici : ils vivent sur
+ * les comptes rattachés, et c'est tout l'intérêt de l'objet.
+ */
+function withGoals(data: Data, first: YearMonth): Data {
+  const goals: SavingGoal[] = [
+    {
+      id: 'ex-g-apport',
+      label: 'Apport appartement',
+      memberId: ALIX,
+      supportIds: [LIVRET_ALIX, PEL_ALIX],
+      target: money(4_200_000),
+      /* Trois ans après le début du jeu : assez loin pour que la trajectoire
+         ait une forme, assez près pour que l'écart se voie. */
+      targetOn: addMonthsToYm(first, 36),
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+    {
+      id: 'ex-g-matelas',
+      label: 'Matelas de sécurité',
+      memberId: CAMILLE,
+      supportIds: [LIVRET_CAMILLE],
+      target: money(600_000),
+      targetOn: addMonthsToYm(first, 24),
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+    {
+      id: 'ex-g-long',
+      label: 'Long terme',
+      memberId: CAMILLE,
+      supportIds: [ASSURANCE_VIE],
+      target: money(5_000_000),
+      /* Aucune échéance : l'app dit quand on y arrive, jamais si l'on est à
+         l'heure — il n'y a pas d'heure. */
+      startedOn: startOfMonth(first),
+      archived: false,
+    },
+  ]
+  return { ...data, savingGoals: goals }
 }
 
 /**

@@ -215,6 +215,18 @@ function SupportView({ support }: { support: SavingSupport }) {
         </Button>
       </div>
 
+      {/* À quoi ce compte sert — une ligne, pas une section. C'est le seul
+          champ du support dont dépende un chiffre affiché ailleurs, et la fiche
+          doit pouvoir le rappeler sans qu'on ouvre le formulaire pour le
+          relire. Rien du tout quand personne n'a répondu : écrire « aucun rôle »
+          ferait d'un silence une catégorie, et la question se pose là où elle
+          change quelque chose — le formulaire, et la tuile d'autonomie. */}
+      {support.role !== undefined && (
+        <p className="t-label">
+          {`${t.savings.roleLabel[support.role]} · ${t.savings.roleHint[support.role]}`}
+        </p>
+      )}
+
       {support.note !== undefined && <p className="t-label">{support.note}</p>}
 
       {/* Le flux du mois, à côté du stock et jamais mêlé à lui : ce sont les

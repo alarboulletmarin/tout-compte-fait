@@ -75,7 +75,9 @@ const RULES = [
   '**Le taux non plus ne se pose jamais sur le support.** Il vit dans les `savingRates`, qui s’empilent comme les relevés : un `SavingRate` dit ce que le support sert **à partir de** `from`, et le taux courant est le plus récent dont la date est passée. Poser un palier au 1er janvier prochain ne change donc rien à ce qui précède — c’est toute la raison d’être de la collection. Il est **saisi, jamais déduit** : l’app ne connaît aucun produit et n’en pose aucun par défaut. Un support sans palier n’a **pas** de taux, ce qui n’est pas 0 % : l’écran des projections y met alors son hypothèse et le dit, quand un support à 0 % annonce que son capital ne bouge pas.',
   '**`SavingSupport.depositCap` plafonne les versements, jamais le solde.** C’est ce que le contrat autorise à verser **en tout** — 22 950 € sur un Livret A —, en centimes comme tout montant. Les intérêts, eux, passent au-dessus : un plafond de solde arrêterait la courbe à plat là où la réalité continue de monter. Facultatif, **saisi et jamais déduit** — l’app ne pose pas 22 950 € sous « Livret A », parce qu’un barème figé est faux dès qu’il change. Absent ≠ illimité : c’est une question à laquelle personne n’a répondu, et rien n’est alors borné. Posé, il **retient l’écriture** : une saisie qui le dépasse s’arrête et demande à être tranchée, et une récurrence cesse d’y poser des échéances. La place restante se calcule sur le capital, intérêts compris — donc sous-estimée, et jamais opposable sans recours. Un plafond nul ou négatif est **retiré** : « on ne peut plus rien verser » n’est pas un plafond, c’est un compte fermé, et `archived` le dit déjà.',
   '**Un taux ne fabrique aucun euro dans le document.** Il ne change ni le capital relevé, ni la valeur estimée d’un support, ni la couverture, ni un total du mois — un rendement n’est pas un mouvement. Il est lu par les projections et par la courbe d’évolution de l’épargne, qui annoncent toutes deux une **estimation**.',
+  '**`SavingSupport.role` dit à quoi le compte sert**, et c’est le seul champ dont dépende un chiffre affiché : `"buffer"` — la précaution, mobilisable demain —, `"project"` — une somme à réunir — ou `"growth"` — le long terme. Seuls les `"buffer"` entrent dans « combien de temps je tiens » : un PEA ne se dénoue pas dans la semaine, et le compter promettrait une réserve qui n’existe pas. Le champ est **facultatif, et son absence n’a aucun défaut** — contrairement à `pace` : un compte sans rôle ne compte dans aucune autonomie, et l’écran pose la question plutôt que de la deviner. Ne le déduis pas de la catégorie : deux « Livret A » peuvent être l’un le matelas et l’autre l’apport d’un appartement.',
   '**`SavingSupport.pace` dit à quel rythme un relevé est attendu**, et rien d’autre : `"yearly"` — un livret réglementé, dont la valeur est déterministe entre deux relevés — ou `"quarterly"` — un PEA, un compte-titres, une assurance-vie en unités de compte. Ce n’est ni un rendement ni une projection : l’app s’en sert pour savoir **quand se taire**, pas pour calculer une valeur. Le champ est facultatif ; absent, l’app lit « annuel » sans l’écrire.',
+  '**`SavingGoal` est le seul objet du document qui soit une *intention*.** Il porte ce que tu vises — `label`, `target` en centimes, `targetOn` au format `"2028-03"` — et le lien vers les comptes qui y contribuent (`supportIds`). Il ne porte **ni capital, ni taux, ni versement obligatoire** : le capital vient des `savingValuations` de ses comptes, le rendement de leurs `savingRates`, et le versement des récurrences qui les alimentent. Les recopier ici en ferait autant de secondes vérités. `memberId` est obligatoire, comme sur un support : un cap que personne ne vise n’est le cap de personne. `monthly` n’existe que pour un engagement que les règles ne disent pas encore ; absent, c’est la somme des règles durables qui compte.',
   '**Un mouvement d’épargne désigne son support par identifiant** — `Entry.savingSupportId`, `Recurrence.savingSupportId`, `Advance.savingSupportId` — et jamais par libellé ni par catégorie. Le champ n’a de sens que sur une ligne de nature `saving` ; ailleurs, omets-le. Une échéance générée hérite du support de sa règle.',
   '**Les `id` sont des chaînes libres**, à toi de les choisir. Ils doivent être uniques dans leur tableau, et tout `categoryId`, `memberId`, `familyId` ou `recurrenceId` cité doit désigner quelque chose qui existe.',
   '**L’import ne refuse presque rien : il répare, ou il écarte.** Un lien mort ne fait pas rejeter le fichier — il fait garder un document qui n’est plus celui que tu as écrit. La section « Ce que l’import répare, et ce qu’il écarte » le dit cas par cas ; elle vaut la lecture avant de produire quoi que ce soit.',
@@ -116,7 +118,7 @@ const REPAIRS: Record<ImportReason, string> = {
   unknownRecurrence:
     '`recurrenceId` qui ne désigne rien. Le lien est **coupé** : l’échéance devient ponctuelle, et le crédit ou l’avance qui s’y adossait cesse de s’amortir.',
   unknownSupport:
-    '`savingSupportId` qui ne désigne rien. Sur une `Entry`, une `Recurrence` ou une `Advance`, le lien est **coupé**. Un `SavingValuation` est **écarté** — un relevé sans support ne vaut plus rien. Et un `SavingSupport` rangé sous une catégorie qui n’est pas d’épargne est **déplacé** sous la première qui l’est.',
+    '`savingSupportId` qui ne désigne rien. Sur une `Entry`, une `Recurrence` ou une `Advance`, le lien est **coupé**. Un `SavingValuation` est **écarté** — un relevé sans support ne vaut plus rien. Un `SavingSupport` rangé sous une catégorie qui n’est pas d’épargne est **déplacé** sous la première qui l’est. Et un `supportIds` d’objectif qui désigne un compte inexistant se **coupe** aussi : l’objectif reste, il vise toujours la même somme, et sa lecture repart sur les comptes qui restent.',
 }
 
 /**
@@ -142,6 +144,7 @@ const SILENT = [
   '`families` vide ou illisible fait **substituer tout le catalogue par défaut** : sans premier niveau, aucune catégorie ne sait plus de quelle nature elle relève. Tes propres catégories se retrouvent alors orphelines de la famille que tu croyais poser.',
   'Un `theme`, une `palette`, une `currency` ou un `monthStartsOn` hors de leurs valeurs retombent sur les valeurs par défaut, sans que la ligne soit écartée.',
   'Un `pace` qui ne vaut ni `"yearly"` ni `"quarterly"` devient **absent**, ce qui n’est pas `"yearly"` : l’app lit alors « annuel » sans que le support porte ce choix, et le formulaire recueillera la vraie réponse.',
+  'Un `role` qui ne vaut ni `"buffer"`, ni `"project"`, ni `"growth"` devient **absent** — et l’absence, ici, n’a pas de valeur de repli : le compte ne pèsera dans aucune autonomie tant que personne n’aura répondu.',
   'Sur un `SavingRate`, `kind` : tout ce qui n’est pas exactement `"guaranteed"` vaut `"assumed"` — la lecture qui promet le moins.',
   '`rateBp` et `rateKind` posés **sur un `SavingSupport`** sont ignorés et **perdus sans un mot**. Ils y vivaient jusqu’au schéma 11 ; depuis le 12, le taux est daté et vit dans `savingRates`. Un document annoncé en version antérieure est converti à l’import — un palier par taux, à l’origine des temps —, mais un document qui se déclare à la version courante n’a plus rien à convertir : c’est à toi d’écrire ses paliers.',
 ]
@@ -461,7 +464,20 @@ const MINIMAL = `{
       "categoryId": "passbook",
       "archived": false,
       "pace": "yearly",
+      "role": "buffer",
       "depositCap": 2295000
+    }
+  ],
+  "savingGoals": [
+    {
+      "id": "g-apport",
+      "label": "Apport appartement",
+      "memberId": "m-alix",
+      "supportIds": ["s-livret-alix"],
+      "target": 4200000,
+      "targetOn": "2028-03",
+      "startedOn": "2026-01-05",
+      "archived": false
     }
   ],
   "savingValuations": [

@@ -36,8 +36,15 @@ import { useHotkeys } from '@/ui/useHotkeys'
  *
  * `personsOnly` retire les deux premières, et avec elles le filet qui les
  * séparait : voir `MonthHeaderProps.personsOnly`.
+ *
+ * **Exportée**, parce que l'écran d'épargne en a besoin **sans** l'en-tête qui
+ * la porte partout ailleurs : rien de ce qu'il affiche ne dépend du mois choisi
+ * — le patrimoine est ancré sur aujourd'hui —, et un navigateur de mois qui ne
+ * change rien à l'écran vaut moins que son absence (`CreditsPage` l'a établi le
+ * premier). Ce qui reste utile, c'est la personne : l'épargne est la seule
+ * lecture de l'app qui n'a pas de version foyer.
  */
-function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
+export function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
   const members = useMembers()
   const filter = useMonthFilter()
   const setFilter = useStore((s) => s.setFilter)

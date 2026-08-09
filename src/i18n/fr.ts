@@ -248,8 +248,11 @@ export const fr = {
        `i18n/projection.ts`, qui voyage avec lui.
        Le libellé ne promet aucun rendement, et la phrase dit exactement ce que
        l'écran fait : un calcul sous une hypothèse qu'on pose soi-même. */
-    projections: 'Projections',
-    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
+    /* Le singulier : c'est un outil qu'on ouvre pour essayer quelque chose,
+       pas une section où l'on rangerait des projections. Ce qui reste d'une
+       simulation adoptée est un objectif, et il vit sous l'épargne. */
+    projections: 'Simulation',
+    projectionsHint: 'Ce qu’un versement régulier devient, sous une fourchette de rendement.',
     /* Ce que chaque rangée de « Gérer » dit d'elle-même : sur un écran qui n'est
        qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir.
        Les rangées des trois autres groupes n'en ont pas besoin — elles disent
@@ -691,6 +694,7 @@ export const fr = {
       savingSupports: 'Support d’épargne',
       savingValuations: 'Valorisation',
       savingRates: 'Taux d’épargne',
+      savingGoals: 'Objectifs',
       months: 'Mois',
     },
     reportReason: {
@@ -1690,15 +1694,16 @@ export const fr = {
        à un mot près pour le stock et pour le flux — c'est-à-dire pour les deux
        notions que cet écran existe pour séparer. */
     supports: 'Mes supports',
-    /* Le titre de `/epargne/analyse`, distinct de « Ce que tu mets de côté »
-       (`years`) : celui-ci nomme l'écran entier — trajectoire et cumul —,
-       l'autre une seule de ses deux sections. */
     analysis: 'Analyse',
     analysisHint: 'Voir l’analyse',
-    /* L'aperçu de `/epargne` : deux chiffres, jamais le tracé — celui-ci vit
-       sur l'écran dédié, qu'on descend chercher pour s'y arrêter. */
-    analysisPreview: '%s en %s · %s vs %s',
-    analysisPreviewOnly: '%s en %s',
+    /* L'aperçu de `/epargne`, et il ne porte **aucun chiffre** — c'est un
+       arbitrage d'octets assumé. La décomposition se calcule mois par mois sur
+       cinq ans (`domain/savingSeries.ts`) ; en écrire ne serait-ce qu'un
+       résultat ici ferait entrer tout ce module dans le graphe initial, que
+       `scripts/size.mjs` plafonne, pour une ligne de teaser. La rangée dit donc
+       ce qu'on va trouver, et l'écran dédié le calcule. */
+    analysisPreview:
+      'D’où vient ton capital : ton point de départ, tes versements, et ce que les comptes ont produit.',
     supportsEmpty:
       'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
@@ -1729,6 +1734,38 @@ export const fr = {
        champ, c'est de savoir à quoi il sert, pas ce qu'il ne fait pas. */
     supportKindHint: 'Sert à classer le support.',
     supportKindRequired: 'Choisis un type.',
+    /* --- À quoi ce compte sert ---------------------------------------------
+       Le seul classement que ni le type ni la cadence ne portent : le type dit
+       la nature — « Livrets » —, la cadence dit à quel rythme on le relève, le
+       rôle dit ce qu'on attend de l'argent qui est dessus. Deux Livrets A
+       identiques n'ont pas le même rôle si l'un est le matelas et l'autre
+       l'apport d'un appartement.
+       Il change un chiffre, et un seul, ce que l'aide dit sans détour : ce
+       qu'on tient sans revenus ne se compte que sur ce qui est mobilisable
+       demain. Annoncer quatorze mois dont douze sont en unités de compte est la
+       seule chose franchement fausse que l'app savait dire. */
+    supportRole: 'À quoi il sert',
+    supportRoleHint:
+      'Seule l’épargne de précaution compte dans « combien de temps je tiens » : un plan d’actions ne se dénoue pas dans la semaine, et le compter promettrait une réserve qui n’existe pas.',
+    /* Vide n'est pas « aucun rôle » mais « je n'ai pas répondu », et le libellé
+       le dit : le compte ne pèse alors dans aucune autonomie, ce qui est la
+       lecture prudente — jamais un rôle deviné. */
+    supportRoleNone: 'Je ne l’ai pas encore décidé',
+    /* Les trois rôles, nommés par la question à laquelle chacun répond, et non
+       par un jargon de gestion de patrimoine. « Précaution » se comprend seul,
+       « allocation d'actifs » non. */
+    roleLabel: {
+      buffer: 'Précaution',
+      project: 'Projet',
+      growth: 'Long terme',
+    },
+    /* Ce que chacun promet, en une ligne — lu sous la rangée des comptes, où
+       le nom seul ne suffirait pas à décider. */
+    roleHint: {
+      buffer: 'Mobilisable demain, pour les coups durs',
+      project: 'Une somme à réunir pour quelque chose',
+      growth: 'Placé pour longtemps, qu’on ne compte pas toucher',
+    },
     /* La cadence des relevés — le seul champ du formulaire qui parle du temps,
        et il ne projette rien : il dit quand l'app réclamera un relevé, et
        surtout quand elle se taira. Deux réponses, parce qu'il n'en existe que
@@ -1809,6 +1846,63 @@ export const fr = {
        rares, dont l'un est destructif, et une tuile posée en permanence sous
        l'historique leur donnait le poids d'une lecture quotidienne. */
     manage: 'Gestion du support',
+
+    /* --- Les objectifs -----------------------------------------------------
+       Le seul bloc de l'épargne qui **conclut**. Le reste dit ce qu'on a, où
+       c'est placé et ce qu'on y verse — trois lectures qu'un relevé de banque
+       donne aussi, en mieux. Ce qu'aucun relevé ne donne, c'est l'écart entre
+       ce qu'on vise et ce qu'on tient : c'est le mot « en retard » ou « à
+       l'heure » qui fait revenir sur l'écran, pas le capital.
+
+       Le vocabulaire de l'état ne repose jamais sur la couleur (DS §2.3) : il
+       tient dans un **mot**, doublé d'une jauge et d'une icône. La teinte n'est
+       que le quatrième signal. */
+    goals: 'Objectifs',
+    goalsEmpty:
+      'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
+    goalAdd: 'Ajouter un objectif',
+    /* La sortie du simulateur, et la porte de retour vers lui. Ces deux mots
+       sont la boucle : ce qu'on essaie devient un cap, et un cap qu'on rouvre
+       repart en simulation. Sans eux, on règle quatre choses, on regarde une
+       courbe, on part — et rien n'est retenu.
+       « En faire un objectif » et non « Enregistrer » : ce qui entre dans le
+       document n'est pas la simulation mais l'intention qu'on en tire, et le
+       verbe doit dire lequel des deux. */
+    goalFromSimulation: 'En faire un objectif',
+    goalSimulate: 'Simuler autrement',
+    goalAdopt: 'Adopter ce rythme',
+    goalAdopted: 'Rythme adopté',
+    /* Le formulaire. Trois questions, et c'est tout ce qu'un objectif stocke :
+       le capital, le rendement et le versement se lisent sur les comptes. */
+    /* La gestion, en fin de formulaire comme pour un support : ranger, reprendre,
+       supprimer. Des gestes rares, dont l'un est destructif. */
+
+    /* --- Le verdict --------------------------------------------------------
+       Quatre états, et chacun se dit par un mot avant d'être une couleur.
+       « À l'heure » et « en retard » sont des conclusions ; « 68 % » n'en est
+       pas une, et c'est pourquoi la jauge ne suffit pas. */
+    goalOn: 'à l’heure',
+    goalAhead: '%s mois d’avance',
+    goalAheadOne: '1 mois d’avance',
+    goalLate: '%s mois de retard',
+    goalLateOne: '1 mois de retard',
+    goalReached: 'atteint',
+    /* Ce que l'app ne peut pas dire, et pourquoi : à versement nul et sans
+       rendement, il n'existe pas de date d'arrivée — en inventer une serait
+       pire que se taire. */
+    goalNoReach: 'pas à ce rythme',
+    goalNoCapital: 'aucun relevé sur ces comptes',
+    /* La date d'arrivée, sous l'état : « 42 000 € en mars 2028 ». */
+    goalReachOn: '%s en %s',
+    /* Le rattrapage : la seule chose actionnable de tout l'écran. Un écart sans
+       ce chiffre-là se contemple, avec lui il se décide. */
+    /* La fiche. « 28 400 € sur 42 000 € » : les deux montants ensemble, parce
+       qu'un pourcentage seul ne dit pas de quoi il est le pourcentage. */
+    goalProgress: '%s sur %s',
+    /* Pourquoi la date annoncée est prudente. Elle vit sur la fiche et pas
+       ailleurs : c'est là qu'on lit la date, donc là que la réserve sert. */
+    /* Le tracé : le prévu, et les relevés réels posés dessus. C'est ce qui fait
+       la différence entre une courbe décorative et un suivi. */
 
     /* --- Les relevés -------------------------------------------------------
        Un **relevé** est une observation datée de ce que vaut le support ; un
@@ -1929,12 +2023,22 @@ export const fr = {
     /* Le nombre porte son unité et rien d'autre : la condition se lit sous lui,
        où elle ne coupe pas le chiffre en deux. */
     coverageValue: '%s mois',
-    coverageHint: 'sans revenus, aux charges d’un mois moyen',
+    /* La condition dit désormais les **deux** bouts du quotient : sur quoi il
+       est calculé autant que ce qu'il suppose. Il ne disait que le second, et
+       laissait croire que tout le capital tenait la promesse — PEA compris. */
+    coverageHint: 'sans revenus, sur ton épargne de précaution',
     /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien dire.
        L'écran dit alors ce qui manque, plutôt qu'un chiffre qu'il faudrait
        corriger de tête. */
     coverageNoMonth: 'Il faudra un mois entier pour le dire : celui-ci n’est pas fini.',
     coverageNoCharge: 'Aucune charge sur la période : il n’y a rien à diviser.',
+    /* Le numérateur peut manquer lui aussi, et pour une raison qui se répare :
+       personne n'a encore dit lequel de ces comptes est le matelas. On demande
+       plutôt que de deviner — deviner rendrait le chiffre faux dans le sens qui
+       flatte, ce que ce champ existe précisément pour empêcher. */
+    coverageNoBuffer:
+      'Dis lequel de tes comptes est ton épargne de précaution : c’est le seul argent qui tient quand les revenus s’arrêtent.',
+    coverageSetRoles: 'Ranger mes comptes',
     /* La vérification, repliée comme celle de la capacité : c'est ce qu'on
        ouvre une fois pour comprendre d'où sort le chiffre, pas ce qu'on relit
        chaque mois.
@@ -1944,7 +2048,7 @@ export const fr = {
        d'ailleurs ce qu'on vient y chercher — quelles sorties entrent dans le
        dénominateur, question à laquelle aucun autre écran ne répond. */
     coverageMethod: 'Ce que ce chiffre compte',
-    coverageCapital: 'Capital estimé',
+    coverageCapital: 'Capital de précaution',
     coverageMonthly: 'Charges d’un mois moyen',
     coverageOverOne: 'moyenne sur 1 mois',
     coverageOver: 'moyenne sur %s mois',
@@ -1956,27 +2060,16 @@ export const fr = {
       'Le mois en cours ne compte pas : il n’a pas encore tout dépensé, et il ferait paraître les charges plus légères qu’elles ne sont.',
     coverageMethodUnvalued:
       'Un support sans relevé n’entre pas dans le capital : l’app ne sait pas ce qu’il vaut, et le compter à zéro serait aussi faux que l’inventer.',
-
-    /* --- L'accumulation, année après année ---------------------------------
-       « Combien j'ai versé cette année » est du flux pur : aucune donnée
-       nouvelle, aucun relevé, et ça répond à la question que l'app ne posait
-       nulle part — elle est une machine à mois, et l'épargne est la seule notion
-       qui n'ait aucun sens à l'intérieur d'un mois. */
-    years: 'Ce que tu mets de côté',
-    year: 'Année',
-    yearsVersus: '%s contre %s',
-    yearsDelta: 'Écart',
-    /* Ce que les chiffres mesurent, et non la forme du tracé : « mois après
-       mois » décrivait la courbe, quand ce qu'on ne sait pas est ce que vaut le
-       nombre lu à un mois donné — ce qui a été versé ce mois-là, ou tout ce qui
-       s'est accumulé depuis janvier. C'est le second. Même correction que sur le
-       cumul du solde de l'historique, et pour la même raison. */
-    yearsCumulative: 'Cumul des versements depuis janvier',
-    yearsEmpty: 'Pas encore d’année à lire.',
-    yearsPartial: '%s s’arrête à %s : les deux années se lisent à ce mois-là.',
-    yearsNoPrevious: 'Rien de versé en %s : rien à comparer.',
-    srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
-    srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
+    /* La quatrième décision, et la seule qui soit nouvelle : le numérateur ne
+       compte que ce qui est mobilisable. C'est le pendant exact de la phrase
+       sur le dénominateur — l'une écarte des sorties, l'autre écarte du
+       capital, et les deux le disent en toutes lettres. */
+    coverageMethodBuffer:
+      'Seuls les comptes marqués « précaution » comptent : un plan d’actions se dénoue en plusieurs jours, est fiscalisé avant cinq ans, et ne vaut pas aujourd’hui ce qu’il vaudra le jour où il faudrait le vendre.',
+    coverageMethodUnroledOne:
+      'Un compte n’a pas encore de rôle : il ne compte pas ici tant que personne n’a dit à quoi il sert.',
+    coverageMethodUnroled:
+      '%s comptes n’ont pas encore de rôle : ils ne comptent pas ici tant que personne n’a dit à quoi ils servent.',
 
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',
@@ -2065,6 +2158,12 @@ export const fr = {
        versée, l'autre le solde de trésorerie avant la prochaine rentrée
        d'argent. « Encore disponible » ne prête à aucune des deux confusions. */
     left: 'Encore disponible',
+    /* Le nom de l'écran qui porte le flux du mois, et de la tuile qui y mène.
+       « Ce mois » et non « Capacité d'épargne » : la tuile du tableau de bord
+       porte déjà ce second mot, et deux étiquettes identiques à deux écrans
+       d'écart ne désignent pas la même chose — l'une est un chiffre, l'autre
+       est une destination. */
+    month: 'Ce mois',
     /* « capacité − versements » ne se dit plus : les deux rangées au-dessus
        *sont* la soustraction, et l'écrire à côté la commente au lieu de
        l'expliquer. */

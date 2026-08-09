@@ -23,3 +23,12 @@ export { ValuationsFormPage } from './ValuationsFormPage'
    Capacité du mois — voir `SavingsPage`, qui n'en garde qu'un aperçu. */
 export { SupportsPage } from './SupportsPage'
 export { AnalysisPage } from './AnalysisPage'
+/* Ce que le mois permet d'épargner : il vivait dans la vue d'ensemble, qui est
+   chargée d'avance, et n'a plus de raison d'y peser — on l'ouvre quand on va
+   verser, pas à chaque fois qu'on regarde son capital. */
+export { SavingMonthPage } from './SavingMonthPage'
+/* La fiche d'un objectif et son formulaire, dans le même morceau que le reste :
+   on ouvre l'une pour corriger l'autre, exactement comme un support et ses
+   deux saisies. */
+export { GoalPage } from './GoalPage'
+export { GoalFormPage } from './GoalFormPage'

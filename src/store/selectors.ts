@@ -54,6 +54,7 @@ import {
   type SavingCoverage,
   type SavingYearPoint,
   activeSupports,
+  bufferSupports,
   isSupportEmpty,
   savingCoverage,
   savingTotal,
@@ -63,9 +64,19 @@ import {
   supportMonthFlows,
   supportUsage,
   supportValue,
+  supportsByAttention,
   supportsDue,
+  supportsWithoutRole,
   valuationsOf,
 } from '@/domain/saving'
+import {
+  type GoalBasis,
+  type GoalRead,
+  activeGoals,
+  goalBasis,
+  goalsOfMember,
+  readGoal,
+} from '@/domain/goal'
 import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
 import { rateOn, ratesOf } from '@/domain/savingRate'
 import { convertsToSingleEntry } from '@/domain/updates'
@@ -104,6 +115,7 @@ import {
   type Family,
   type Member,
   type Recurrence,
+  type SavingGoal,
   type SavingSupport,
   type SavingRate,
   type SavingValuation,
@@ -869,12 +881,48 @@ export function useSavingTotal(): SavingTotal {
 }
 
 /**
- * Combien de mois de charges le capital de la lecture courante couvre.
+ * Ce que valent les comptes de **précaution** de la lecture courante.
  *
- * Le capital vient de `useSavingTotal` — donc du même calcul que la tuile
- * Capital, au centime — et les charges de la portée du mois, celle qui
- * proratise le commun : sans elle, quelqu'un se lirait sans loyer et tiendrait
- * trois fois plus longtemps qu'il ne tient.
+ * Le même moteur que `useSavingTotal`, sur une liste plus courte : c'est ce qui
+ * garantit que le capital de l'autonomie et celui de la tuile Capital sont le
+ * même calcul, à la sélection près, et non deux additions à tenir d'accord.
+ */
+export function useBufferTotal(): SavingTotal {
+  const supports = useScopedSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  return useMemo(
+    () => savingTotal(bufferSupports(supports), valuations, entries),
+    [supports, valuations, entries],
+  )
+}
+
+/**
+ * Les comptes de la lecture courante dont personne n'a dit à quoi ils servent.
+ *
+ * Ils ne comptent nulle part, et c'est l'écran qui pose la question — une fois,
+ * là où elle change quelque chose. Voir `supportsWithoutRole`.
+ */
+export function useSupportsWithoutRole(): SavingSupport[] {
+  const supports = useScopedSavingSupports()
+  return useMemo(() => supportsWithoutRole(supports), [supports])
+}
+
+/**
+ * Combien de mois de charges l'épargne de précaution de la lecture courante
+ * couvre.
+ *
+ * **Le capital n'est plus celui de la tuile Capital**, et c'est la correction
+ * du seul chiffre franchement trompeur de l'app : il divisait tout — livrets,
+ * PEA, assurance-vie en unités de compte — par les charges d'un mois, et
+ * annonçait donc une réserve dont l'essentiel n'était mobilisable ni dans la
+ * semaine, ni à sa valeur du jour. Seuls les comptes de rôle `buffer` entrent
+ * ici (`useBufferTotal`), et un compte sans rôle n'y entre pas non plus : voir
+ * `SavingRole`.
+ *
+ * Les charges, elles, viennent de la portée du mois, celle qui proratise le
+ * commun : sans elle, quelqu'un se lirait sans loyer et tiendrait trois fois
+ * plus longtemps qu'il ne tient.
  *
  * `estimated` et non `known` : c'est la meilleure réponse que l'app ait à
  * « combien j'ai aujourd'hui », et diviser un chiffre volontairement périmé
@@ -885,12 +933,12 @@ export function useSavingTotal(): SavingTotal {
  * patrimoine ne change pas parce qu'on est allé regarder mars.
  */
 export function useSavingCoverage(): SavingCoverage {
-  const total = useSavingTotal()
+  const buffer = useBufferTotal()
   const { entries } = useMonthScope()
   const kindOf = useKindOf()
   return useMemo(
-    () => savingCoverage(total.estimated, entries, kindOf),
-    [total.estimated, entries, kindOf],
+    () => savingCoverage(buffer.estimated, entries, kindOf),
+    [buffer.estimated, entries, kindOf],
   )
 }
 
@@ -933,6 +981,96 @@ export function useScopedSavingSupports(): SavingSupport[] {
     if (filter.kind === 'common') return []
     return supports.filter((support) => support.memberId === filter.memberId)
   }, [supports, filter])
+}
+
+/* --- Objectifs ------------------------------------------------------------*/
+
+/** Tous les objectifs du document, archivés compris. */
+export function useSavingGoals(): SavingGoal[] {
+  return useStore((s) => s.data.savingGoals)
+}
+
+/**
+ * Les objectifs de la lecture courante — ceux de la personne filtrée.
+ *
+ * La même règle que les supports : l'épargne est individuelle, et deux
+ * objectifs ne s'additionnent pas plus que deux livrets. « Commun » n'en montre
+ * aucun.
+ */
+export function useScopedSavingGoals(): SavingGoal[] {
+  const goals = useSavingGoals()
+  const filter = useMonthFilter()
+  return useMemo(() => {
+    if (filter.kind === 'all') return activeGoals(goals)
+    if (filter.kind === 'common') return []
+    return activeGoals(goalsOfMember(goals, filter.memberId))
+  }, [goals, filter])
+}
+
+/** Un objectif par son identifiant. `null` s'il n'existe pas (ou plus). */
+export function useSavingGoal(id: string | undefined): SavingGoal | null {
+  const goals = useSavingGoals()
+  return useMemo(
+    () => (id === undefined ? null : (goals.find((one) => one.id === id) ?? null)),
+    [goals, id],
+  )
+}
+
+/**
+ * Le verdict d'un objectif : où il en est, où il va, et de combien il dérive.
+ *
+ * Tout est **lu** sur ses comptes — capital, versements, taux datés, plafonds —
+ * par le même chemin que le simulateur (`goalBasis`). C'est ce qui garantit
+ * qu'un relevé saisi sur la fiche d'un compte met l'objectif à jour sans que
+ * personne ait à y toucher, et que la courbe de la fiche et le verdict de la
+ * liste ne peuvent pas diverger.
+ */
+export function useGoalRead(goal: SavingGoal | null): GoalRead | null {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const rates = useSavingRates()
+
+  return useMemo(() => {
+    if (goal === null) return null
+    const on = today()
+    const basis = goalBasis(goal, { supports, valuations, entries, recurrences, rates }, on)
+    return readGoal(goal, basis, on)
+  }, [goal, supports, valuations, entries, recurrences, rates])
+}
+
+/**
+ * Ce qu'un objectif lit sur ses comptes, avant verdict — pour la fiche, qui
+ * trace la trajectoire et a besoin des parts, pas seulement de la conclusion.
+ */
+export function useGoalBasis(goal: SavingGoal | null): GoalBasis | null {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const rates = useSavingRates()
+
+  return useMemo(
+    () =>
+      goal === null
+        ? null
+        : goalBasis(goal, { supports, valuations, entries, recurrences, rates }, today()),
+    [goal, supports, valuations, entries, recurrences, rates],
+  )
+}
+
+/**
+ * Les comptes de la lecture courante, rangés par ce qu'ils demandent.
+ *
+ * Ceux dont le relevé est attendu remontent — c'est la seule notification que
+ * l'app puisse honnêtement produire, et la raison de rouvrir l'écran. Le reste
+ * garde l'ordre du document : voir `supportsByAttention`.
+ */
+export function useSupportsByAttention(): SavingSupport[] {
+  const supports = useScopedSavingSupports()
+  const valuations = useSavingValuations()
+  return useMemo(() => supportsByAttention(supports, valuations), [supports, valuations])
 }
 
 /** Ce qu'on sait du capital d'un support, et ce qu'on en déduit. */
@@ -995,11 +1133,12 @@ export function useSupportValuations(supportId: string | undefined): SavingValua
   )
 }
 
-/* `useStockBands` — la trajectoire mois par mois — n'est **pas** ici, et c'est
-   délibéré : ce module est dans le graphe initial de tout le monde, et le
+/* `useGrowthBands` — la décomposition mois par mois — n'est **pas** ici, et
+   c'est délibéré : ce module est dans le graphe initial de tout le monde, et le
    sélecteur y ferait entrer `domain/savingSeries.ts` et sa capitalisation pour
    une lecture qui vit derrière un `lazy`. Il est donc dans
-   `features/savings/EvolutionSection.tsx`, avec le seul écran qui le lit. */
+   `features/savings/GrowthSection.tsx`, avec le seul écran qui le lit. C'est la
+   même raison qui prive l'aperçu de `/epargne` de son chiffre. */
 
 /** Les paliers de taux d'un support, du plus récent au plus ancien. */
 export function useSupportRates(supportId: string | undefined): SavingRate[] {

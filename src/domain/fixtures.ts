@@ -12,6 +12,7 @@ import type {
   Member,
   Period,
   Recurrence,
+  SavingGoal,
   SavingRate,
   SavingSupport,
   SavingValuation,
@@ -111,6 +112,19 @@ export function makeSavingRate(
   return { rateBp: 250, kind: 'assumed', from: '2026-01-01', ...over }
 }
 
+export function makeSavingGoal(
+  over: Partial<SavingGoal> & { id: string; memberId: string },
+): SavingGoal {
+  return {
+    label: 'Apport',
+    supportIds: [],
+    target: money(4_200_000),
+    startedOn: '2026-01-01',
+    archived: false,
+    ...over,
+  }
+}
+
 export function makeData(over: Partial<Data> = {}): Data {
   return {
     /* La version courante du document : un aller-retour export / import doit
@@ -128,6 +142,7 @@ export function makeData(over: Partial<Data> = {}): Data {
     savingSupports: [],
     savingValuations: [],
     savingRates: [],
+    savingGoals: [],
     months: [],
     settings: {
       theme: 'system',

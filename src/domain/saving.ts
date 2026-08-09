@@ -47,6 +47,64 @@ export function activeSupports(supports: readonly SavingSupport[]): SavingSuppor
   return supports.filter((support) => !support.archived)
 }
 
+/**
+ * Les comptes dont l'argent est **mobilisable demain**, et eux seuls.
+ *
+ * C'est la seule lecture que le rôle change, et elle corrige le seul chiffre
+ * franchement trompeur que l'app produisait : l'autonomie divisait tout le
+ * capital d'une personne par ses charges, PEA compris. Un plan d'actions n'est
+ * pas de la trésorerie de précaution — il se dénoue en plusieurs jours, il est
+ * fiscalisé avant cinq ans, et sa valeur du jour n'est pas celle du jour où l'on
+ * en aurait besoin. Annoncer « 14 mois » quand douze d'entre eux sont en unités
+ * de compte, c'est promettre une réserve qui n'existe pas.
+ *
+ * **Un rôle absent ne compte pas non plus**, et c'est délibéré : le sous-compte
+ * est un défaut qu'un écran répare en posant la question, quand le sur-compte
+ * est un chiffre faux qui a l'air d'un résultat. Voir `SavingRole`.
+ */
+export function bufferSupports(supports: readonly SavingSupport[]): SavingSupport[] {
+  return supports.filter((support) => support.role === 'buffer')
+}
+
+/**
+ * Les comptes à qui personne n'a encore dit à quoi ils servent.
+ *
+ * Ils ne pèsent dans aucune autonomie — ce serait deviner —, et l'écran s'en
+ * sert pour poser la question une fois, là où elle change quelque chose. Les
+ * archivés en sortent : à quoi servait un compte clôturé ne se décide plus.
+ */
+export function supportsWithoutRole(supports: readonly SavingSupport[]): SavingSupport[] {
+  return activeSupports(supports).filter((support) => support.role === undefined)
+}
+
+/**
+ * Les comptes rangés par **ce qu'ils demandent**, et non par ce qu'ils pèsent.
+ *
+ * Un tri par montant met en tête le compte dont on n'a rien à faire : il est
+ * gros, il est relevé, il ne demande rien. Ce que la liste a à dire, c'est
+ * lequel attend un chiffre — c'est la seule notification que l'app puisse
+ * honnêtement produire, et c'est la raison de rouvrir l'écran.
+ *
+ * Deux rangs, pas plus : ce qui est dû, puis le reste. Un troisième — « bientôt
+ * dû » — ferait remonter un compte dont il n'y a rien à faire aujourd'hui, ce
+ * qui est exactement le défaut qu'on retire.
+ *
+ * À l'intérieur d'un rang, **l'ordre du document ne bouge pas** : `sort` est
+ * stable depuis ES2019, et la liste des comptes est celle qu'on a soi-même
+ * ouverte, dans l'ordre où on les a ouverts. La réordonner sous prétexte de
+ * fraîcheur ferait bouger les lignes sous le doigt à chaque relevé.
+ */
+export function supportsByAttention(
+  supports: readonly SavingSupport[],
+  valuations: readonly SavingValuation[],
+  on: ISODate = today(),
+): SavingSupport[] {
+  const due = new Set(supportsDue(supports, valuations, on).map((support) => support.id))
+  return [...supports].sort(
+    (a, b) => Number(due.has(b.id)) - Number(due.has(a.id)),
+  )
+}
+
 /** Les supports d'une personne, dans l'ordre du document. */
 export function supportsOfMember(
   supports: readonly SavingSupport[],
@@ -404,6 +462,13 @@ export function savingTotal(
  * qu'un relevé produit ici une décision plutôt qu'une transcription : « 10 450 € »
  * est une anecdote, « tu tiens 4,2 mois » n'en est pas une.
  *
+ * **Le numérateur ne compte que ce qui est mobilisable.** Il comptait tout, et
+ * c'était le seul chiffre franchement faux de l'app : un PEA ne se dénoue pas
+ * dans la semaine, il est fiscalisé avant cinq ans, et il vaut ce qu'il vaudra.
+ * Seuls les comptes de rôle `buffer` entrent ici — c'est l'appelant qui filtre,
+ * comme il filtre déjà par personne, parce que ce module ne connaît que des
+ * montants. Voir `bufferSupports`.
+ *
  * **Le dénominateur fait toute la justesse du chiffre**, et il se lit par
  * nature, jamais par sens de trésorerie :
  *
@@ -427,7 +492,7 @@ export function savingTotal(
  * neuf mois sans charges.
  */
 export type SavingCoverage = {
-  /** Le capital divisé — les supports relevés, mouvements depuis compris. */
+  /** Le capital divisé — les comptes de précaution relevés, mouvements compris. */
   capital: Money
   /** Ce que coûte un mois moyen : charges et crédits, jamais les versements. */
   monthly: Money

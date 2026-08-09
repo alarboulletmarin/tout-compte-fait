@@ -51,9 +51,12 @@ function DebtRow({ status }: { status: DebtStatus }) {
           color={category?.color ?? 'var(--cat-rest)'}
           className="shrink-0"
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        {/* `fit-box` : le montant se dimensionne sur **cette colonne**, et non
+            sur la tuile — l'anneau lui prend 88px, et sans ce second conteneur
+            un capital à six chiffres débordait par la droite, symbole coupé. */}
+        <div className="fit-box flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="t-body truncate font-medium">{debt.label}</span>
-          <Amount value={remaining} size="tile" />
+          <Amount value={remaining} size="tile-fit" />
           <span className="t-axis">
             {settled
               ? t.credits.settled
@@ -101,7 +104,7 @@ export function CreditsPage() {
         <div className="flex max-w-3xl flex-col gap-4">
           <Tile variant="accent">
             <Eyebrow icon={CreditsIcon}>{t.credits.total}</Eyebrow>
-            <Amount value={totalRemaining(statuses)} size="tile" className="mt-3" />
+            <Amount value={totalRemaining(statuses)} size="tile-fit" className="mt-3" />
           </Tile>
 
           <div className="flex flex-col gap-3">

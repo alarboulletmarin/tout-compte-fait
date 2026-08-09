@@ -28,7 +28,7 @@ import { ChartLineUp } from '@phosphor-icons/react/dist/csr/ChartLineUp'
 import { ChartPieSlice } from '@phosphor-icons/react/dist/csr/ChartPieSlice'
 import { Check as PhCheck } from '@phosphor-icons/react/dist/csr/Check'
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
-import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Clock as PhClock } from '@phosphor-icons/react/dist/csr/Clock'
 import { Bank } from '@phosphor-icons/react/dist/csr/Bank'
 import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Database } from '@phosphor-icons/react/dist/csr/Database'
@@ -42,6 +42,7 @@ import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
 import { PiggyBank } from '@phosphor-icons/react/dist/csr/PiggyBank'
 import { Plus as PhPlus } from '@phosphor-icons/react/dist/csr/Plus'
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { Minus as PhMinus } from '@phosphor-icons/react/dist/csr/Minus'
 import { Money } from '@phosphor-icons/react/dist/csr/Money'
 import { Receipt } from '@phosphor-icons/react/dist/csr/Receipt'
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
@@ -84,6 +85,11 @@ export const ChevronLeft = adapt(CaretLeft)
 export const ChevronRight = adapt(CaretRight)
 export const ChevronDown = adapt(CaretDown)
 export const Plus = adapt(PhPlus)
+/* Il n'existe que par paire avec `Plus`, sur le réglage d'effort du
+   simulateur : « les deux sens sont deux boutons, jamais un seul » (DS §7), et
+   un « − » typographique posé dans un bouton n'aurait ni la graisse ni la boîte
+   du glyphe d'en face. */
+export const Minus = adapt(PhMinus)
 export const Close = adapt(X)
 export const Check = adapt(PhCheck)
 export const Warning = adapt(WarningCircle)
@@ -136,7 +142,7 @@ export const RemainingIcon = adapt(HandCoins)
    voisins sur la grille, et deux mains de pièces s'y confondraient. */
 export const SavingsIcon = adapt(PiggyBank)
 export const BreakdownIcon = adapt(ChartPieSlice)
-export const UpcomingIcon = adapt(Clock)
+export const UpcomingIcon = adapt(PhClock)
 export const CreditsIcon = adapt(Bank)
 export const SplitIcon = adapt(UsersThree)
 export const ToConfirmIcon = adapt(CheckCircle)

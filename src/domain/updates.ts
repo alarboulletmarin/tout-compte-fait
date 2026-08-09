@@ -20,7 +20,9 @@ import type {
   Family,
   Member,
   Recurrence,
+  SavingGoal,
   SavingPace,
+  SavingRole,
   SavingRate,
   SavingSupport,
   SavingValuation,
@@ -58,7 +60,9 @@ export function renameMember(data: Data, id: string, name: string): Data {
  * cherchait un porteur qu'il ne trouvait plus.
  *
  * Les **valorisations** partent avec leurs supports : elles décrivent un compte
- * qui n'existe plus, et rien ne pourrait plus les rattacher.
+ * qui n'existe plus, et rien ne pourrait plus les rattacher. Les **objectifs**
+ * partent avec leur porteur, pour la raison qui emporte déjà ses avances et ses
+ * supports : un cap que personne ne vise n'est le cap de personne.
  *
  * L'**historique financier ne bouge pas**. Les `Entry` restent, à leur montant
  * et à leur date : elles perdent seulement leur lien vers le support disparu,
@@ -90,6 +94,12 @@ export function removeMember(data: Data, id: string): Data {
     advances: data.advances.filter((a) => a.memberId !== id),
     savingSupports: data.savingSupports.filter((s) => s.memberId !== id),
     savingValuations: data.savingValuations.filter((v) => !lost.has(v.supportId)),
+    savingGoals: data.savingGoals
+      .filter((goal) => goal.memberId !== id)
+      .map((goal) => ({
+        ...goal,
+        supportIds: goal.supportIds.filter((one) => !lost.has(one)),
+      })),
   }
 }
 
@@ -171,6 +181,15 @@ export type SavingSupportInput = {
   categoryId: string
   /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
   pace: SavingPace
+  /**
+   * Ce à quoi le compte sert. Voir `SavingRole`.
+   *
+   * Facultatif jusqu'ici — contrairement à `pace`, qui a une réponse par défaut.
+   * Un rôle qu'on ne pose pas reste absent du document, et le compte ne pèse
+   * alors dans aucune autonomie : c'est la seule lecture prudente, et l'écran a
+   * de quoi poser la question quand elle change quelque chose.
+   */
+  role?: SavingRole
   /**
    * Le plafond de versements du contrat. Voir `SavingSupport.depositCap` — il
    * se pose **sur le support** et non à côté, parce qu'il ne réécrit rien.
@@ -301,7 +320,77 @@ export function removeSavingSupport(data: Data, id: string): Data {
     entries: data.entries.map(unlink),
     recurrences: data.recurrences.map(unlink),
     advances: data.advances.map(unlink),
+    /* L'objectif qui visait ce compte reste, amputé du lien : il vise toujours
+       la même somme, et sa lecture repart sur les comptes qui restent. Le
+       supprimer avec le compte ferait disparaître une intention parce qu'un de
+       ses moyens a disparu — c'est la règle du lien coupé de `validate.ts`. */
+    savingGoals: data.savingGoals.map((goal) =>
+      goal.supportIds.includes(id)
+        ? { ...goal, supportIds: goal.supportIds.filter((one) => one !== id) }
+        : goal,
+    ),
   }
+}
+
+/* --- Objectifs ------------------------------------------------------------*/
+
+/**
+ * Ce qu'un écran a à dire pour poser un objectif — et c'est peu.
+ *
+ * Trois champs tapés, tout le reste calculé : c'est ce qui rend l'objet
+ * tenable, et c'est écrit une fois pour toutes sur `SavingGoal`. Ni taux, ni
+ * capital, ni versement obligatoire — ils vivent déjà ailleurs, datés, et les
+ * recopier ici ferait autant de secondes vérités.
+ */
+export type SavingGoalInput = {
+  label: string
+  memberId: string
+  supportIds: string[]
+  target: Money
+  targetOn?: YearMonth
+  monthly?: Money
+}
+
+/** Pose un objectif. Le jour d'aujourd'hui est son point de départ. */
+export function createSavingGoal(
+  data: Data,
+  input: SavingGoalInput,
+  makeId: () => string,
+  on: ISODate = today(),
+): { data: Data; goal: SavingGoal } {
+  const goal: SavingGoal = { ...input, id: makeId(), startedOn: on, archived: false }
+  return { data: { ...data, savingGoals: [...data.savingGoals, goal] }, goal }
+}
+
+/** Réécrit un objectif de bout en bout — même raison que `replaceRecurrence`. */
+export function replaceSavingGoal(
+  data: Data,
+  id: string,
+  next: Omit<SavingGoal, 'id'>,
+): Data {
+  return {
+    ...data,
+    savingGoals: data.savingGoals.map((goal) => (goal.id === id ? { ...next, id } : goal)),
+  }
+}
+
+/**
+ * Range un objectif sans l'effacer.
+ *
+ * Un cap abandonné ou remplacé garde son passé, comme un support clôturé : on
+ * ne supprime pas ce qui a été visé, on cesse de le poursuivre. La suppression
+ * existe quand même — un objectif créé par erreur il y a dix secondes n'a rien
+ * derrière lui —, et c'est l'écran qui choisit, comme pour un support.
+ */
+export function archiveSavingGoal(data: Data, id: string, archived = true): Data {
+  return {
+    ...data,
+    savingGoals: data.savingGoals.map((goal) => (goal.id === id ? { ...goal, archived } : goal)),
+  }
+}
+
+export function removeSavingGoal(data: Data, id: string): Data {
+  return { ...data, savingGoals: data.savingGoals.filter((goal) => goal.id !== id) }
 }
 
 /* --- Valorisations --------------------------------------------------------*/

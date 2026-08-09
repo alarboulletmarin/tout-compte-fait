@@ -169,7 +169,69 @@ export const SAVINGS_PATH = '/epargne'
    renvoie vers elles pour tout ce qui demande de s'y arrêter. Segments fixes,
    comme `/nouveau` : React Router les classe avant `:id`. */
 export const SAVINGS_SUPPORTS_PATH = `${SAVINGS_PATH}/supports`
+/**
+ * Les objectifs, et la fiche de chacun.
+ *
+ * Sous `/epargne/` parce qu'un objectif **est** un objet de l'épargne, au même
+ * titre qu'un support : on l'ouvre depuis la liste, on y revient, et
+ * `isFocusScreen` a raison de compter sa fiche comme une fiche. C'est
+ * exactement l'argument inverse de celui qui garde le simulateur à la racine —
+ * lui ne produit rien qui reste, et ne se range donc sous rien.
+ *
+ * Segments fixes avant `:id`, comme partout : React Router les classe d'abord,
+ * un objectif ne peut donc pas éclipser son formulaire de création.
+ */
+export const GOALS_PATH = `${SAVINGS_PATH}/objectifs`
+export const GOAL_NEW_PATH = `${GOALS_PATH}/nouveau`
+
+/**
+ * Le formulaire d'un objectif, préréglé par ce qui l'envoie.
+ *
+ * C'est la sortie du simulateur, et c'est ce qui le fait cesser d'être un
+ * cul-de-sac : on réglait quatre choses, on regardait une courbe, on partait, et
+ * rien n'était retenu. Ce qui voyage ici n'est **pas** une simulation — un taux
+ * essayé reste en `localStorage` — mais les trois chiffres qu'on vient de
+ * décider : ce qu'on vise, pour quand, à quel rythme.
+ *
+ * En clair dans l'URL, comme le sens et la nature d'une saisie
+ * (`entryNewPath`) : un lien qu'on peut lire est un lien qu'on peut corriger,
+ * et le formulaire revalide de toute façon tout ce qu'il en tire.
+ */
+export function goalNewPath(
+  seed: {
+    /** En centimes, comme partout. */
+    target?: number
+    targetOn?: string
+    monthly?: number
+    supportIds?: readonly string[]
+    memberId?: string
+  } = {},
+): string {
+  const params = new URLSearchParams()
+  if (seed.target !== undefined) params.set('cible', String(seed.target))
+  if (seed.targetOn !== undefined) params.set('echeance', seed.targetOn)
+  if (seed.monthly !== undefined) params.set('versement', String(seed.monthly))
+  if (seed.supportIds !== undefined && seed.supportIds.length > 0) {
+    params.set('comptes', seed.supportIds.join(','))
+  }
+  if (seed.memberId !== undefined) params.set('titulaire', seed.memberId)
+  const query = params.toString()
+  return query === '' ? GOAL_NEW_PATH : `${GOAL_NEW_PATH}?${query}`
+}
+export const goalPath = (id: string): string => `${GOALS_PATH}/${id}`
+export const goalEditPath = (id: string): string => `${GOALS_PATH}/${id}/modifier`
 export const SAVINGS_ANALYSIS_PATH = `${SAVINGS_PATH}/analyse`
+/**
+ * Ce que le mois permet d'épargner — la capacité, le versé, le reste, et la
+ * ventilation par compte.
+ *
+ * Il vivait en quatre blocs au milieu de `/epargne`, c'est-à-dire quatre blocs
+ * qui **dépendent du mois affiché** au milieu de trois qui n'en dépendent pas :
+ * le patrimoine est ancré sur aujourd'hui. C'est le même défaut que
+ * `CreditsPage` a réglé en retirant son en-tête de mois, à ceci près qu'ici le
+ * mois compte — pour une moitié de l'écran seulement, donc pour un écran à part.
+ */
+export const SAVINGS_MONTH_PATH = `${SAVINGS_PATH}/mois`
 /* Segment fixe avant `:id`, comme partout ailleurs : React Router le classe
    d'abord, un support ne peut donc pas éclipser le formulaire de création. */
 export const SUPPORT_NEW_PATH = `${SAVINGS_PATH}/nouveau`
@@ -196,7 +258,7 @@ export const rateEditPath = (supportId: string, rateId: string): string =>
   `${SAVINGS_PATH}/${supportId}/taux/${rateId}`
 
 /**
- * Le simulateur de projections — à la racine, et sous l'écran Épargne.
+ * Le simulateur — à la racine, et rangé sous « Simuler ».
  *
  * **Il n'est pas un cinquième rang de « Gérer », et il a deux portes.** « Gérer »
  * range ce qui *décide de ce que le budget calcule* ; un simulateur ne décide
@@ -222,7 +284,46 @@ export const rateEditPath = (supportId: string, rateId: string): string =>
  * pas, ce qui coûte plus qu'un segment d'URL. `/avances` est déjà à la racine
  * pour la même raison.
  */
-export const PROJECTION_PATH = '/projections'
+export const PROJECTION_PATH = '/simulation'
+
+/**
+ * L'ancienne adresse, gardée pour ce qui pointe encore dessus.
+ *
+ * Même filet que `/reglages` et `/abonnements`, et même motif : une URL qu'on a
+ * pu mettre en signet ne se supprime pas, elle se redirige. Le singulier est le
+ * changement de fond — « Projections » nommait une section, c'est-à-dire un
+ * endroit où l'on rangerait des projections, ce que cet écran ne fait pas : il
+ * ne produit rien qui reste. Ce qui reste, désormais, est un **objectif**, et il
+ * vit sous `/epargne`.
+ */
+export const LEGACY_PROJECTION_PATH = '/projections'
+
+/**
+ * Le simulateur, préréglé sur un objectif — et sachant à qui il doit revenir.
+ *
+ * C'est l'autre moitié de la boucle. « Simuler autrement » ouvre le simulateur
+ * sur la question de l'objectif — cette cible, cette échéance, ces comptes — et
+ * `objectif` dit d'où l'on vient : la sortie de l'écran cesse alors d'être
+ * « en faire un objectif » pour devenir « adopter ce rythme », qui repose le
+ * versement sur celui qu'on avait déjà.
+ *
+ * Sans lui, revenir d'une simulation demanderait de retrouver son objectif à la
+ * main et d'y retaper un chiffre qu'on vient de lire — c'est-à-dire exactement
+ * le cul-de-sac qu'on retire.
+ */
+export const GOAL_PARAM = 'objectif'
+
+export function projectionPath(
+  seed: { goalId?: string; target?: number; years?: number; source?: string } = {},
+): string {
+  const params = new URLSearchParams()
+  if (seed.goalId !== undefined) params.set(GOAL_PARAM, seed.goalId)
+  if (seed.target !== undefined) params.set('cible', String(seed.target))
+  if (seed.years !== undefined) params.set('duree', String(seed.years))
+  if (seed.source !== undefined) params.set('origine', seed.source)
+  const query = params.toString()
+  return query === '' ? PROJECTION_PATH : `${PROJECTION_PATH}?${query}`
+}
 
 /* Les avances ont leur écran, pour la raison qui donne le sien aux crédits :
    elles vivent sous les récurrences — leur mensualité en est une — mais ce

@@ -1,23 +1,22 @@
 /* ============================================================================
- * Le tracé d'une projection — et c'est la pièce maîtresse de l'écran, pas son
+ * Le tracé d'une simulation — et c'est la pièce maîtresse de l'écran, pas son
  * illustration.
  *
- * **Une hypothèse : deux aires empilées.** Les versements en bas, le rendement
- * par-dessus, et le haut de la pile *est* le capital projeté. C'est la seule
- * représentation qui réponde d'un coup d'œil à la question que l'écran existe
- * pour poser — quelle part vient de la poche, quelle part vient du taux — sans
- * qu'on ait à mesurer l'écart entre deux traits. Une courbe et une aire le
- * disaient déjà, mais il fallait lire l'espace *entre* elles ; ici la hauteur de
- * chaque bande est la réponse.
+ * **Une fourchette en aire, et non trois courbes.** L'écran superposait jusqu'à
+ * trois traits, un par hypothèse, ce qui posait à qui le lisait une question
+ * qu'aucune donnée ne tranche : laquelle croire. Une aire ne demande pas de
+ * choisir — elle montre l'écart, et l'écart *est* la réponse honnête. Elle se
+ * referme d'elle-même quand il n'y a plus d'incertitude à montrer, c'est-à-dire
+ * quand tous les comptes portent leur taux : il ne reste alors qu'un trait, ce
+ * qui est exact.
  *
- * **Deux ou trois hypothèses : des courbes, et l'aire du versé en dessous.** On
- * n'empile pas trois rendements — ils partent du même versé et ne s'additionnent
- * pas. La comparaison redevient alors le propos, et c'est un trait par
- * hypothèse. L'app n'a que trois couleurs de trait qui tiennent le contraste de
- * 3:1 dans les deux thèmes, ce qui est aussi pourquoi les scénarios sont
- * plafonnés à trois (cahier §4.6 ter).
+ * **Les versements restent une aire en dessous.** Le haut de la pile — versé,
+ * puis rendement — est la borne basse du capital ; la fourchette s'ouvre
+ * au-dessus. C'est la seule représentation qui réponde d'un coup d'œil aux deux
+ * questions que l'écran existe pour poser : quelle part vient de la poche, et
+ * quelle part dépend d'un taux que personne ne connaît.
  *
- * **Il se lit au doigt.** Le tableau des jalons donnait quatre rangs et rien
+ * **Il se lit au doigt.** Le tableau des paliers donnait quatre rangs et rien
  * entre eux ; le curseur donne n'importe quel rang, avec sa décomposition. C'est
  * le même `charts/ChartCursor` que l'historique — un seul arrêt de tabulation,
  * les flèches pour se déplacer, le survol qui lit sans voler le focus.
@@ -64,19 +63,9 @@ const MAX_POINTS = 120
  * l'écart est le même que celui, mesuré et inscrit à l'architecture, des douze
  * mois de l'historique. Cent vingt en donneraient deux, c'est-à-dire aucune.
  * L'écart est tenu ailleurs : la lecture existe au clavier, le tableau des
- * jalons porte les quatre rangs qui comptent, et le résumé porte l'arrivée.
+ * paliers porte les rangs qui comptent, et le résultat porte l'arrivée.
  */
 const MAX_STOPS = 24
-
-export type ProjectionSerie = {
-  id: string
-  /** Ce que la courbe est : « 5 % · Hypothèse ». */
-  label: string
-  color: string
-  /** Le trait d'une hypothèse est tireté, celui d'un taux garanti est plein. */
-  dashed: boolean
-  values: readonly Money[]
-}
 
 export type ProjectionArea = {
   label: string
@@ -111,23 +100,26 @@ function stops(months: number): number[] {
 
 export type ProjectionChartProps = {
   months: number
-  series: readonly ProjectionSerie[]
+  /** La borne basse — celle qui promet le moins, et le trait qu'on lit. */
+  low: readonly Money[]
+  /** La borne haute. Confondue avec la basse quand il n'y a rien d'incertain. */
+  high: readonly Money[]
+  /** Les deux bornes coïncident : un seul trait, et aucune aire de fourchette. */
+  single: boolean
+  /** Tout ce qui court est contractuel : le trait est plein, jamais tireté. */
+  guaranteed: boolean
   area?: ProjectionArea
-  /**
-   * Empile l'aire et la première série au lieu de les superposer. Réservé à
-   * l'hypothèse unique : trois rendements posés sur le même versé ne
-   * s'additionnent pas, et les empiler tracerait un capital que personne n'a.
-   */
-  stacked?: boolean
   label: string
   srText: string
 }
 
 export function ProjectionChart({
   months,
-  series,
+  low,
+  high,
+  single,
+  guaranteed,
   area,
-  stacked = false,
   label,
   srText,
 }: ProjectionChartProps) {
@@ -151,7 +143,7 @@ export function ProjectionChart({
   const shown = Math.min(read, marks.length - 1)
   const at = marks[shown] ?? months
 
-  const all = [...series.flatMap((serie) => [...serie.values]), ...(area?.values ?? [])]
+  const all = [...low, ...high, ...(area?.values ?? [])]
   /* Zéro est toujours dans l'échelle : c'est la base de l'aire. Le `|| 1` évite
      la division par zéro d'une projection entièrement nulle — la ligne se pose
      alors au bas du cadre, ce qu'elle est. */
@@ -170,13 +162,15 @@ export function ProjectionChart({
     tpl(projection.approx, formatRoundedMoney(value ?? (0 as Money), currency))
   const when = at === 0 ? projection.start : tpl(projection.chartAt, formatDuration(at))
 
-  const baseline = plot(series[0]?.values ?? []).map((point) => ({ x: point.x, y: yOf(0) }))
+  const lowPoints = plot(low)
+  const highPoints = plot(high)
+  const baseline = lowPoints.map((point) => ({ x: point.x, y: yOf(0) }))
   const areaTop = area === undefined ? [] : plot(area.values)
 
   return (
     <div className="flex flex-col gap-3">
       {/* La lecture au-dessus du tracé, qui tient lieu de légende — le motif des
-          deux autres graphiques de l'app. Chaque entrée porte son trait, son
+          deux autres graphiques de l'app. Chaque entrée porte sa marque, son
           libellé et son chiffre : la couleur ne désigne donc jamais seule.
           Elle suit le curseur, et c'est ce qui fait du graphique une lecture
           plutôt qu'une image : le même bloc dit l'arrivée à l'ouverture et
@@ -184,28 +178,33 @@ export function ProjectionChart({
       <div aria-hidden="true" className="flex flex-col gap-2">
         <span className="t-eyebrow text-text-muted">{when}</span>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {series.map((serie) => (
-            <div key={serie.id} className="flex min-w-0 flex-col gap-0.5">
-              <span className="flex min-w-0 items-center gap-1.5">
-                {/* Le tireté de la légende reprend celui du trait : c'est la
-                    forme, et non la teinte, qui dit garanti ou hypothèse — une
-                    distinction qui ne survit pas au niveau de gris n'en est pas
-                    une (DS §2.3). */}
-                <span
-                  className="h-0.5 w-4 shrink-0 rounded-chip"
-                  style={
-                    serie.dashed
-                      ? {
-                          backgroundImage: `repeating-linear-gradient(90deg, ${serie.color} 0 5px, transparent 5px 9px)`,
-                        }
-                      : { backgroundColor: serie.color }
-                  }
-                />
-                <span className="t-label tnum min-w-0 truncate">{serie.label}</span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="flex min-w-0 items-center gap-1.5">
+              {/* Le tireté de la légende reprend celui du trait : c'est la
+                  forme, et non la teinte, qui dit garanti ou hypothèse — une
+                  distinction qui ne survit pas au niveau de gris n'en est pas
+                  une (DS §2.3). */}
+              <span
+                className="h-0.5 w-4 shrink-0 rounded-chip"
+                style={
+                  guaranteed
+                    ? { backgroundColor: 'var(--accent-2)' }
+                    : {
+                        backgroundImage:
+                          'repeating-linear-gradient(90deg, var(--accent-2) 0 5px, transparent 5px 9px)',
+                      }
+                }
+              />
+              <span className="t-label min-w-0 truncate">
+                {single ? projection.chartCapital : projection.chartRange}
               </span>
-              <span className="t-num-body tnum">{money(serie.values[at])}</span>
-            </div>
-          ))}
+            </span>
+            <span className="t-num-body tnum">
+              {single
+                ? money(low[at])
+                : tpl(projection.rangeShort, money(low[at]), money(high[at]))}
+            </span>
+          </div>
           {area !== undefined && (
             <div className="flex min-w-0 flex-col gap-0.5 border-l border-border pl-3">
               <span className="flex min-w-0 items-center gap-1.5">
@@ -246,28 +245,39 @@ export function ProjectionChart({
 
               {area !== undefined && <path d={bandPath(areaTop, baseline)} fill="var(--surface-2)" />}
 
-              {/* La bande du rendement : entre le versé et le capital. Elle
-                  n'existe qu'à une hypothèse — voir `stacked`. Teintée de
-                  l'accent à faible opacité plutôt que d'une couleur de plus :
-                  la palette n'en a pas de quatrième qui tienne le contraste, et
-                  une aire n'a pas à en tenir un — c'est le trait posé dessus
-                  qui porte la lecture. */}
-              {stacked && area !== undefined && series[0] !== undefined && (
+              {/* La bande du rendement : entre le versé et la borne basse du
+                  capital. Teintée de l'accent à faible opacité plutôt que d'une
+                  couleur de plus : la palette n'en a pas de quatrième qui tienne
+                  le contraste, et une aire n'a pas à en tenir un — c'est le
+                  trait posé dessus qui porte la lecture. */}
+              {area !== undefined && (
+                <path d={bandPath(lowPoints, areaTop)} fill="var(--accent)" opacity={0.22} />
+              )}
+
+              {/* L'aire de la fourchette : entre les deux bornes, et c'est elle
+                  qui remplace les trois courbes d'avant. Plus claire que la
+                  bande du rendement, parce qu'elle dit exactement l'inverse —
+                  celle du dessous est ce que le calcul produit, celle-ci est ce
+                  qu'il ne sait pas. */}
+              {!single && (
                 <path
-                  d={bandPath(plot(series[0].values), areaTop)}
-                  fill={series[0].color}
-                  opacity={0.22}
+                  d={bandPath(highPoints, lowPoints)}
+                  fill="var(--accent-2)"
+                  opacity={0.16}
                 />
               )}
 
-              {series.map((serie) => (
+              {[
+                { id: 'low', points: lowPoints },
+                ...(single ? [] : [{ id: 'high', points: highPoints }]),
+              ].map((line) => (
                 <path
-                  key={serie.id}
-                  d={polylinePath(plot(serie.values))}
+                  key={line.id}
+                  d={polylinePath(line.points)}
                   fill="none"
-                  stroke={serie.color}
+                  stroke="var(--accent-2)"
                   strokeWidth={2}
-                  strokeDasharray={serie.dashed ? '5 4' : undefined}
+                  strokeDasharray={guaranteed ? undefined : '5 4'}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
@@ -275,8 +285,8 @@ export function ProjectionChart({
               ))}
 
               {/* Le repère de lecture, à l'aplomb du rang lu. Un trait et non un
-                  point par série : trois points sur une même verticale se
-                  chevauchent dès que deux hypothèses sont proches, alors que la
+                  point par borne : deux points sur une même verticale se
+                  chevauchent dès que la fourchette est étroite, alors que la
                   verticale dit exactement la même chose — *où* on lit. Les
                   montants, eux, sont écrits au-dessus. */}
               <line

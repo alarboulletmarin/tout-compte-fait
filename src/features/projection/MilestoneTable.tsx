@@ -31,10 +31,17 @@ export type MilestoneColumn = {
 export function MilestoneTable({
   marks,
   columns,
+  label = projection.milestones,
 }: {
   /** Les rangs, en mois. */
   marks: readonly number[]
   columns: readonly MilestoneColumn[]
+  /**
+   * Le nom du tableau. L'écran en porte maintenant trois — les jalons, les
+   * versements compte par compte, et l'échelle des efforts — et « tableau »
+   * annoncé trois fois de suite ne dit pas lequel on vient d'atteindre.
+   */
+  label?: string
 }) {
   const currency = useCurrency()
 
@@ -43,10 +50,7 @@ export function MilestoneTable({
        et « ≈ 202 k€ » ne tient pas quatre fois dans les 250px utiles d'un
        téléphone. Il défile dans son cadre — la page, elle, ne déborde jamais. */
     <div className="overflow-x-auto">
-      {/* Nommé : l'écran porte deux tableaux — les jalons et l'échelle des
-          efforts —, et « tableau » annoncé deux fois de suite ne dit pas lequel
-          on vient d'atteindre. */}
-      <table className="w-full border-collapse text-left" aria-label={projection.milestones}>
+      <table className="w-full border-collapse text-left" aria-label={label}>
         <thead>
           <tr className="t-axis">
             <th scope="col" className="py-2 pr-3 font-normal">

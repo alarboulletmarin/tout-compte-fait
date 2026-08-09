@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { eur, makeEntry, makeSavingRate, makeSavingSupport, makeSavingValuation } from './fixtures'
-import { type StockSource, stockBands, stockRange, supportStockSeries } from './savingSeries'
+import {
+  type StockSource,
+  growthBands,
+  growthOf,
+  growthTotal,
+  stockBands,
+  stockRange,
+  supportStockSeries,
+} from './savingSeries'
 
 const ON = '2026-06-15'
 
@@ -207,5 +215,135 @@ describe('stockRange', () => {
   it('compte le mois courant dans la fenêtre', () => {
     expect(stockRange(12, ON)).toEqual({ from: '2025-07', to: '2026-06' })
     expect(stockRange(1, ON)).toEqual({ from: '2026-06', to: '2026-06' })
+  })
+})
+
+/* ============================================================================
+ * D'où vient ce que le compte vaut.
+ *
+ * Trois nombres qui doivent s'additionner au quatrième, quoi qu'il arrive — un
+ * relevé qui reprend la main, une reprise qui vide le compte, un placement qui
+ * perd. C'est la seule propriété qui rende la lecture utilisable : un « rendement »
+ * qui ne se referme pas sur le capital n'est qu'un chiffre de plus.
+ * ==========================================================================*/
+
+describe('la décomposition d’un compte', () => {
+  const withRate = source({
+    savingValuations: [
+      makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(100_000), date: '2026-01-05' }),
+    ],
+    savingRates: [makeSavingRate({ id: 'r-1', supportId: 's-1', rateBp: 1_200, from: '2026-01-01' })],
+    entries: [pays('2026-02-10', 10_000), pays('2026-03-10', 10_000)],
+  })
+
+  it('part de ce que le compte valait au premier mois lu, et pas d’ailleurs', () => {
+    const split = growthOf(supportStockSeries('s-1', withRate, '2026-01', '2026-04', ON))
+    expect(split[0]?.base).toBe(100_000)
+    /* À son propre rang, rien n'a encore été versé ni produit : le départ *est*
+       la valeur, sans quoi le premier point mentirait sur les deux autres. */
+    expect(split[0]?.paid).toBe(0)
+    expect(split[0]?.gain).toBe(0)
+    expect(split.every((point) => point.base === 100_000)).toBe(true)
+  })
+
+  it('cumule les versements, et se referme au centime sur la valeur', () => {
+    const split = growthOf(supportStockSeries('s-1', withRate, '2026-01', '2026-04', ON))
+    expect(split.at(-1)?.paid).toBe(20_000)
+    for (const point of split) {
+      expect(point.base + point.paid + point.gain).toBe(point.value)
+    }
+  })
+
+  /* Le point de la refonte : sans taux posé, un compte ne « produit » rien tant
+     qu'aucun relevé ne dit le contraire — et dès qu'un relevé le dit, c'est lui
+     qui fait le rendement, pas un barème. */
+  it('lit le rendement sur les relevés, et non sur le taux', () => {
+    const jumped = source({
+      savingValuations: [
+        makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(100_000), date: '2026-01-05' }),
+        makeSavingValuation({ id: 'v-2', supportId: 's-1', amount: eur(140_000), date: '2026-03-20' }),
+      ],
+      entries: [pays('2026-02-10', 10_000)],
+    })
+    const split = growthOf(supportStockSeries('s-1', jumped, '2026-01', '2026-03', ON))
+    /* 140 000 relevés, 100 000 au départ, 10 000 versés : le compte a produit
+       30 000, qu'aucun taux du document n'aurait donnés — il n'y en a aucun. */
+    expect(split.at(-1)?.gain).toBe(30_000)
+    expect(split.at(-1)?.known).toBe(true)
+  })
+
+  it('dit la perte plutôt que de la taire', () => {
+    const fell = source({
+      savingValuations: [
+        makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(200_000), date: '2026-01-05' }),
+        makeSavingValuation({ id: 'v-2', supportId: 's-1', amount: eur(180_000), date: '2026-03-20' }),
+      ],
+    })
+    const split = growthOf(supportStockSeries('s-1', fell, '2026-01', '2026-03', ON))
+    expect(split.at(-1)?.gain).toBe(-20_000)
+  })
+
+  it('ne commence qu’au premier relevé — avant, il n’y a pas de départ', () => {
+    const late = source({
+      savingValuations: [
+        makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(50_000), date: '2026-03-10' }),
+      ],
+      entries: [pays('2026-02-10', 10_000)],
+    })
+    const split = growthOf(supportStockSeries('s-1', late, '2026-01', '2026-04', ON))
+    expect(split.map((point) => point.month)).toEqual(['2026-03', '2026-04'])
+    expect(split[0]?.base).toBe(50_000)
+  })
+})
+
+describe('la décomposition de l’ensemble', () => {
+  const supports = [
+    makeSavingSupport({ id: 's-1', label: 'Livret A', memberId: 'm-1' }),
+    makeSavingSupport({ id: 's-2', label: 'PEA', memberId: 'm-1' }),
+  ]
+
+  /* Un compte ouvert plus tard ne doit pas faire bondir le total : c'est la
+     marche qui rendrait toute la lecture fausse, et elle se voit tout de suite
+     sur un graphique. */
+  it('ne commence qu’au premier mois où tous les comptes sont chiffrés', () => {
+    const data = source({
+      savingValuations: [
+        makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(100_000), date: '2026-01-05' }),
+        makeSavingValuation({ id: 'v-2', supportId: 's-2', amount: eur(300_000), date: '2026-03-05' }),
+      ],
+    })
+    const total = growthTotal(growthBands(supports, data, '2026-01', '2026-04', ON))
+    expect(total.map((point) => point.month)).toEqual(['2026-03', '2026-04'])
+    expect(total[0]?.base).toBe(400_000)
+  })
+
+  it('somme les versements de tous les comptes, et se referme comme un seul', () => {
+    const data = source({
+      savingValuations: [
+        makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(100_000), date: '2026-01-05' }),
+        makeSavingValuation({ id: 'v-2', supportId: 's-2', amount: eur(300_000), date: '2026-01-05' }),
+      ],
+      entries: [
+        pays('2026-02-10', 10_000),
+        makeEntry({
+          date: '2026-02-10',
+          amount: eur(5_000),
+          direction: 'out',
+          categoryId: 'passbook',
+          savingSupportId: 's-2',
+          status: 'confirmed',
+        }),
+      ],
+    })
+    const total = growthTotal(growthBands(supports, data, '2026-01', '2026-03', ON))
+    expect(total.at(-1)?.paid).toBe(15_000)
+    for (const point of total) {
+      expect(point.base + point.paid + point.gain).toBe(point.value)
+    }
+  })
+
+  it('ne rend rien quand aucun compte n’est chiffré', () => {
+    expect(growthTotal([])).toEqual([])
+    expect(growthTotal(growthBands(supports, source(), '2026-01', '2026-03', ON))).toEqual([])
   })
 })

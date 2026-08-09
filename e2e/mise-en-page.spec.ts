@@ -1,5 +1,5 @@
 /* ============================================================================
- * Aucun écran ne déborde, sur le plus étroit des téléphones.
+ * Aucun écran ne déborde, et aucune tuile ne coupe ce qu'elle porte.
  *
  * C'est la vérification que jsdom ne peut littéralement pas faire : il rend
  * tous les éléments à zéro pixel, donc « ça déborde » n'y a aucun sens. Et
@@ -36,22 +36,78 @@ async function overflow(page: Page): Promise<number> {
   )
 }
 
+/**
+ * Ce qu'une tuile coupe de son propre contenu, en pixels et en clair.
+ *
+ * La mesure du dessus ne voit qu'une chose : la **page** dépasse-t-elle sa
+ * fenêtre. Une tuile qui rogne son contenu ne dépasse rien du tout — c'est
+ * précisément sa façon d'échouer, elle garde sa boîte et jette ce qui n'y
+ * rentre pas. La grille bento pose des rangées d'une hauteur fixe, l'étiquette
+ * d'une tuile étroite tient sur une ligne, et un chiffre se dimensionne sur la
+ * largeur de son conteneur : trois mécanismes qui, chacun, préfèrent couper
+ * plutôt que pousser. Aucun test ne les regardait, et c'est ce qui a laissé
+ * passer une tuile d'autonomie amputée de 203px de hauteur.
+ *
+ * Deux comparaisons suffisent, et ce sont celles que l'architecture décrit :
+ * le `scrollWidth` d'une étiquette contre sa boîte de contenu, le `scrollHeight`
+ * d'une tuile contre le sien. Un pixel de tolérance parce que les hauteurs de
+ * ligne tombent sur des fractions, et qu'un demi-pixel arrondi n'est pas une
+ * coupe.
+ */
+async function clipped(page: Page, path: string): Promise<string[]> {
+  return page.evaluate((where) => {
+    const found: string[] = []
+    const name = (el: Element): string =>
+      (el.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 40)
+
+    for (const pill of document.querySelectorAll('.eyebrow-pill')) {
+      const excess = pill.scrollWidth - pill.clientWidth
+      if (excess > 1) found.push(`${where} — l’étiquette « ${name(pill)} » perd ${excess} px`)
+    }
+    for (const tile of document.querySelectorAll('.tile')) {
+      const tall = tile.scrollHeight - tile.clientHeight
+      const wide = tile.scrollWidth - tile.clientWidth
+      if (tall > 1) found.push(`${where} — la tuile « ${name(tile)} » perd ${tall} px en hauteur`)
+      if (wide > 1) found.push(`${where} — la tuile « ${name(tile)} » perd ${wide} px en largeur`)
+    }
+    return found
+  }, path)
+}
+
 test.describe('sur un écran de 320 points', () => {
   test.use({ viewport: NARROW })
 
-  test('ne déborde sur aucun écran, jeu d’exemple chargé', async ({ page }) => {
+  /* Les deux mesures partagent une seule traversée : charger le jeu d'exemple
+     et ouvrir quinze écrans coûte une quinzaine de secondes, et les refaire pour
+     lire l'autre moitié du même DOM n'apprendrait rien de plus. */
+  test('ne déborde et ne coupe rien, jeu d’exemple chargé', async ({ page }) => {
     await openApp(page)
     await loadExample(page)
 
     const guilty: string[] = []
+    const cut: string[] = []
     for (const screen of [{ path: '/', heading: /./ }, ...SCREENS]) {
       await page.goto(screen.path)
       await page.waitForLoadState('networkidle')
       const excess = await overflow(page)
       if (excess > 0) guilty.push(`${screen.path} dépasse de ${String(excess)} px`)
+      cut.push(...(await clipped(page, screen.path)))
     }
 
+    /* La décomposition compte par compte ne s'affiche pas sur l'écran nu : elle
+       demande une origine qui porte au moins deux comptes, et la boucle
+       ci-dessus ouvre `/simulation` en simulation libre. Sans ce détour, la
+       moitié la plus dense de l'écran — trois figures, trois légendes de trois
+       entrées, un tableau à cinq colonnes — ne serait mesurée nulle part. */
+    await page.goto('/simulation')
+    await page.waitForLoadState('networkidle')
+    await page.locator('select').first().selectOption('member:ex-alix')
+    await page.getByText(/versements, année par année/i).click()
+    expect(await overflow(page)).toBe(0)
+    expect(await clipped(page, '/simulation (portefeuille)')).toEqual([])
+
     expect(guilty).toEqual([])
+    expect(cut).toEqual([])
   })
 
   /* Le bouton flottant a déjà volé les appuis d'un coin entier de l'écran une
