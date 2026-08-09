@@ -111,5 +111,10 @@ test('réclame un relevé là où il en manque un, et se tait ailleurs', async (
      taisent : un écran qui réclamerait tout le temps ne réclamerait rien. */
   await expect(page.getByText(/aucun relevé/i).first()).toBeVisible()
   await expect(page.getByText(/à actualiser/i).first()).toBeVisible()
+
+  /* Le geste — mettre à jour en bloc — vit sur l'écran dédié des supports,
+     pas sur la vue d'ensemble : `/epargne` ne fait plus que dire où l'argent
+     est et renvoie vers `/epargne/supports` pour le gérer. */
+  await page.goto('/epargne/supports')
   await expect(page.getByRole('button', { name: /mettre à jour les relevés/i })).toBeVisible()
 })
