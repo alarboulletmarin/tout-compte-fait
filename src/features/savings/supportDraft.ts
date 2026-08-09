@@ -17,7 +17,13 @@ import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import type { RateKind } from '@/domain/projection'
 import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
 import { DEFAULT_PACE, paceOf } from '@/domain/saving'
-import type { Recurrence, SavingPace, SavingSupport, SavingValuation } from '@/domain/types'
+import type {
+  Recurrence,
+  SavingPace,
+  SavingRate,
+  SavingSupport,
+  SavingValuation,
+} from '@/domain/types'
 import type { SavingSupportInput } from '@/domain/updates'
 import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
@@ -262,6 +268,40 @@ export function valuationError(draft: ValuationDraft): string | undefined {
   const amount = parseAmount(draft.amountText)
   if (draft.amountText.trim() === '' || amount === null || amount < 0) {
     return t.savings.valueRequired
+  }
+  return undefined
+}
+
+/* --- Le palier de taux ----------------------------------------------------*/
+
+export type RateDraft = { rateText: string; kind: RateKind; from: ISODate }
+
+export function rateDraftFrom(rate: SavingRate | null): RateDraft {
+  return rate === null
+    ? { rateText: '', kind: 'assumed', from: today() }
+    : {
+        /* `toRateInput` n'irait pas : il rend la chaîne vide pour zéro, ce qui
+           convient à un crédit sans intérêts mais pas ici — 0 % est un palier
+           qu'on peut poser (un compte courant), et le relire vide effacerait la
+           réponse à la première correction. */
+        rateText: String(rate.rateBp / 100).replace('.', ','),
+        kind: rate.kind,
+        from: rate.from,
+      }
+}
+
+/**
+ * Un palier se valide plus strictement que le champ de création d'un support :
+ * là-bas, vide veut dire « je ne pose aucune hypothèse » ; ici il n'y a rien
+ * d'autre à saisir — un palier sans taux ne dit rien.
+ *
+ * Zéro passe : c'est une réponse, et c'est la seule façon de dire « ce capital
+ * ne bouge pas ».
+ */
+export function rateError(draft: RateDraft): string | undefined {
+  const rateBp = parseRateBp(draft.rateText)
+  if (draft.rateText.trim() === '' || rateBp === null) {
+    return tpl(t.savings.rateInvalid, MAX_RATE_PERCENT)
   }
   return undefined
 }
