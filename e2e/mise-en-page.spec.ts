@@ -94,17 +94,20 @@ test.describe('sur un écran de 320 points', () => {
       cut.push(...(await clipped(page, screen.path)))
     }
 
-    /* La décomposition compte par compte ne s'affiche pas sur l'écran nu : elle
-       demande une origine qui porte au moins deux comptes, et la boucle
-       ci-dessus ouvre `/simulation` en simulation libre. Sans ce détour, la
-       moitié la plus dense de l'écran — trois figures, trois légendes de trois
-       entrées, un tableau à cinq colonnes — ne serait mesurée nulle part. */
+    /* La simulation a deux vues et cinq feuilles, et la boucle ci-dessus n'ouvre
+       que la première vue : le tableau — six colonnes de « ≈ 202 k€ » sur un
+       écran de 320 points — et la feuille des comptes — une case, un capital,
+       une arrivée et un plafond par compte du jeu d'exemple — ne seraient
+       mesurés nulle part. C'est la moitié la plus dense de l'écran. */
     await page.goto('/simulation')
     await page.waitForLoadState('networkidle')
-    await page.locator('select').first().selectOption('member:ex-alix')
-    await page.getByText(/versements, année par année/i).click()
+    await page.getByRole('radio', { name: 'Tableau' }).click()
     expect(await overflow(page)).toBe(0)
-    expect(await clipped(page, '/simulation (portefeuille)')).toEqual([])
+    expect(await clipped(page, '/simulation (tableau)')).toEqual([])
+
+    await page.getByRole('button', { name: /^Comptes simulés :/ }).click()
+    expect(await overflow(page)).toBe(0)
+    expect(await clipped(page, '/simulation (comptes)')).toEqual([])
 
     expect(guilty).toEqual([])
     expect(cut).toEqual([])

@@ -1,19 +1,17 @@
 /* ============================================================================
- * Toutes les chaînes des projections, et le seul endroit où elles s'écrivent.
+ * Toutes les chaînes de la simulation, et le seul endroit où elles s'écrivent.
  *
  * **Pourquoi pas dans `fr.ts`.** La même raison que `i18n/history.ts`,
  * `i18n/landing.ts` et `i18n/legal.ts` : `fr.ts` est importé par presque tous
  * les composants, donc il vit dans le graphe initial que `scripts/size.mjs`
- * plafonne. L'écran des projections, lui, se charge à la demande
- * (`app/Routes.tsx`) et emporte son propre tracé SVG.
+ * plafonne. L'écran de simulation, lui, se charge à la demande
+ * (`app/Routes.tsx`) et emporte sa bibliothèque de graphique.
  *
- * **La prose a beaucoup maigri à l'écran, pas dans le fichier.** Elle était dans
- * le flux — sept paragraphes entre les champs, chacun juste, l'ensemble
- * illisible : une documentation financière intercalée dans une interface. Elle
- * est passée derrière « Comprendre cette projection », d'un seul tenant, là où
- * on la lit une fois. Ce qui reste dans le flux tient en deux phrases : la
- * réserve, qui ne se replie jamais, et la nature du taux, qui change ce que le
- * chiffre engage.
+ * **La prose a beaucoup maigri à l'écran, pas dans le fichier.** L'écran tient
+ * en une page qui ne défile pas : ce qui explique vit donc dans les feuilles de
+ * réglage, là où le réglage se fait, et le raisonnement complet est derrière
+ * « Comprendre cette simulation ». Ce qui reste dans le flux tient en une
+ * phrase — la réserve, qui ne se replie jamais.
  *
  * Deux chaînes restent dans `t.savings` : le nom de l'écran et sa phrase de
  * rangée. C'est l'écran Épargne qui porte la porte, et il est chargé d'avance —
@@ -27,279 +25,214 @@ import type { Widen } from './widen'
 const fr = {
   /* « Simulation » et non « Projections » : le mot dit un outil qu'on ouvre pour
      essayer quelque chose, quand le pluriel nommait une section — c'est-à-dire
-     un endroit où l'on rangerait des projections, ce que cet écran ne fait pas.
-     Le jour où l'app garde une trajectoire, elle la garde sur un objectif. */
+     un endroit où l'on rangerait des projections, ce que cet écran ne fait pas. */
   title: 'Simulation',
 
   /* --- La réserve ---------------------------------------------------------
      Elle ne s'écarte pas et ne se replie pas : c'est la seule chose de cet
-     écran qui soit vraie quels que soient les chiffres saisis (cahier §4.6
-     ter). Elle a raccourci en passant sous le résultat — le raisonnement
-     complet est dans la feuille — mais elle dit toujours les trois mêmes
-     choses : taux constant, indicatif, ni promesse ni conseil. */
+     écran qui soit vraie quels que soient les chiffres réglés (cahier §4.6
+     ter). Elle est courte parce qu'elle vit dans une page qui ne défile pas —
+     le raisonnement complet est dans la feuille d'explication — mais elle dit
+     toujours les trois mêmes choses : taux constant, indicatif, ni promesse ni
+     conseil. */
   caveat:
-    'Simulation à taux constant. Ce résultat est indicatif : ce n’est ni une promesse, ni un conseil de placement.',
+    'Simulation à taux constant, indicative : ni une promesse, ni un conseil de placement.',
 
-  /* --- Ce qu'on cherche ---------------------------------------------------
-     Deux problèmes inverses, et les libellés le disent maintenant par le
-     verbe : « Ce que ça donne » et « Ce qu'il faut verser » décrivaient la
-     sortie, ce qui oblige à la deviner avant de choisir. Un mode se choisit
-     sur l'intention — je projette, ou je vise. */
-  modeAxis: 'Ce qu’on cherche',
-  modeForecast: 'Projeter mon épargne',
-  modeTarget: 'Atteindre un objectif',
+  /* --- Les deux lectures --------------------------------------------------
+     La figure répond à « où ça va », le tableau à « combien, en telle année ».
+     Ce sont deux questions et non deux styles, d'où une bascule plutôt qu'un
+     repli : le cahier §5 demande de toute façon que tout graphique soit doublé
+     d'une lecture textuelle, et celle-ci est à un appui. */
+  viewAxis: 'Lecture',
+  viewChart: 'Graphique',
+  viewTable: 'Tableau',
 
-  /* --- Le point de départ -------------------------------------------------
-     L'écran ne lisait rien du document, et repartait donc de zéro à chaque
-     visite pendant que l'écran Épargne affichait le capital deux écrans plus
-     haut. Il lit désormais — dans un seul sens. */
-  source: 'Point de départ',
-  sourceFree: 'Simulation libre',
-  /* « Toute l'épargne de Camille », jamais « toute l'épargne du foyer » : deux
-     personnes qui ont 12 000 € et 8 000 € de côté n'ont pas 20 000 €, elles ont
-     deux comptes et deux décisions (cahier §4.6 bis). */
-  sourceMine: 'Toute mon épargne',
-  sourceMember: 'Toute l’épargne %s',
-  sourceCapital: 'Épargne actuelle',
-  sourceMonthly: 'Versements prévus',
-  /* D'où sort chaque chiffre, sous le chiffre. Un montant repris sans sa
-     provenance est un montant qu'il faut croire sur parole — et « 616 €/mois »
-     posé sans rien à côté n'apprend pas qu'il s'agit de la somme de trois
-     règles, ni lesquelles ont été laissées de côté. */
-  sourceFromOne: 'Dernier relevé, mouvements confirmés depuis compris.',
-  sourceFrom: 'Somme des derniers relevés de %s supports, mouvements confirmés depuis compris.',
-  sourceRulesOne: 'Une règle d’épargne récurrente, ramenée au mois.',
-  sourceRules: '%s règles d’épargne récurrentes, ramenées au mois.',
-  /* Le piège du module, dit à l'endroit où il se produit. Une reconstitution
-     d'avance qui court six mois, projetée sur dix ans, ajouterait des milliers
-     d'euros que personne n'a l'intention de verser. */
-  sourceEndingOne: 'Une règle s’arrête avant la fin de la durée simulée : elle n’est pas comptée.',
-  sourceEnding: '%s règles s’arrêtent avant la fin de la durée simulée : elles ne sont pas comptées.',
-  sourceOneOff: 'Les versements ponctuels comptent dans le capital, mais pas dans ce montant.',
-  sourceNote: 'Repris de ton épargne. Rien de ce qui se simule ici ne la modifie.',
-  sourceEdit: 'Modifier pour cette simulation',
-  /* Ce que le capital repris ne dit pas. Un support sans relevé n'est pas un
-     support à zéro : le taire donnerait un patrimoine faux présenté comme
-     exact, ce qui est pire que pas de chiffre du tout. */
-  sourceNoValue: 'Aucun relevé sur ce support : la simulation part d’un capital nul.',
-  sourceUnvaluedOne: 'Un support sans relevé ne compte pas dans ce capital.',
-  sourceUnvalued: '%s supports sans relevé ne comptent pas dans ce capital.',
-  sourceNoMonthly: 'Aucun versement récurrent n’est déclaré : la simulation n’en ajoute aucun.',
-  sourceVariable: 'Une règle au montant variable n’a pas de mensualité à reprendre.',
-  /* Elle disait « l'app n'en prête aucun à un support », ce qui est devenu faux
-     le jour où un support a pu porter son taux. Ce que la phrase visait tient
-     toujours : l'app ne **devine** aucun rendement — elle relit celui que son
-     propriétaire a tapé, et signale ceux qu'elle a dû emprunter à l'écran. */
-  sourceNoRate:
-    'Le rendement reste une hypothèse : l’app n’en devine aucun — ceux qui sont repris sont ceux que tu as posés.',
-
-  /* --- Les entrées --------------------------------------------------------*/
-  params: 'Paramètres',
-  initial: 'Capital actuel',
-  monthly: 'Versement mensuel',
-  target: 'Objectif',
-  targetHint: 'Ce qu’on veut avoir au bout de la durée, capital actuel compris.',
-  duration: 'Durée',
-  durationYears: 'Durée personnalisée',
-  durationOther: 'Autre durée',
-  /* Les quatre raccourcis du cahier. Le champ reste la vérité — sans lui, un
-     horizon de sept ans serait inatteignable — mais il ne s'affiche plus en
-     permanence : deux contrôles pour une seule donnée en font un de trop. */
-  durationPreset: '%s ans',
-  /* Les bornes viennent des constantes qui les font respecter, jamais d'un
-     nombre recopié dans la phrase : un message qui annonce une limite que le
-     code n'applique plus est pire qu'un message absent. */
-  durationInvalid: 'Entre %s et %s ans.',
-  amountInvalid: 'Montant illisible.',
-  rateInvalid: 'Entre 0 et %s %.',
-  /* L'unité se lit au bord du champ, pas seulement dans son libellé : « 100 »
-     et « 3 » posés l'un sous l'autre ne disent pas lequel est un montant et
-     lequel est un pourcentage. Celle des montants se compose à partir du symbole
-     de la devise (`perMonth`) — l'app ne convertit rien, mais elle n'écrit pas
-     « € » en dur non plus. */
-  unitYear: '%/an',
-  /* Le pont vers la capacité d'épargne réelle : la même donnée que l'écran
-     Épargne et le tableau de bord, sous le même filtre — reprise, jamais
-     recalculée. Elle ne dit rien que ces deux écrans ne disent déjà ; elle
-     évite seulement de retaper un chiffre qu'on vient de vérifier là-bas. */
-  capacityLeft: 'Capacité d’épargne restante ce mois-ci : %s',
-  capacityUse: 'Utiliser %s',
-
-  /* --- La fourchette de rendement ----------------------------------------
-     Un seul mécanisme, là où il y en avait quatre : trois hypothèses libres,
-     trois présélections, un taux par compte et un second taux « comparé » par
-     compte. Un placement n'a pas trois rendements, il a une fourchette — et
-     trois courbes obligent à choisir laquelle on croit, quand une aire montre
-     l'écart sans rien promettre.
-     Elle ne s'applique qu'aux comptes muets : celui dont le taux est posé sur
-     sa fiche vaut la même chose dans les deux bornes, parce que son
-     propriétaire a dit ce qu'il en attend. */
-  /* « Taux de rendement » et non « Rendement » tout court : depuis que chaque
-     compte porte sa décomposition, le mot « Rendement » nomme aussi une aire du
-     graphique — ce que le taux a **produit**, en euros. Deux boutons du même
-     nom sur un écran, dont l'un ouvre un réglage et l'autre éteint une teinte,
-     s'annoncent à l'identique au lecteur d'écran. C'est la ligne du réglage qui
-     précise, parce que c'est elle qui parle d'un pourcentage. */
-  rate: 'Taux de rendement',
-  rangeAxis: 'Fourchette de rendement',
-  rangeLow: 'Au plus bas',
-  rangeHigh: 'Au plus haut',
-  rangeHint:
-    'Deux hypothèses, et l’écart entre elles est la réponse honnête : personne ne connaît le rendement des années à venir.',
-  rangeHintSplit:
-    'Elle ne s’applique qu’aux comptes sans taux. Un compte dont le taux est posé sur sa fiche vaut la même chose des deux côtés — c’est toi qui l’as dit.',
-  /* Le gabarit d'une fourchette, partout où elle s'écrit : le résultat, la
-     légende du tracé, la ligne d'un compte, l'écart d'un effort. Un seul
-     endroit, parce que quatre tirets différents à quatre endroits se lisent
-     comme quatre notions. */
-  rangeShort: '%s – %s',
-  rangeGap: '%s d’écart entre les deux hypothèses.',
-  /* Tant que rien ne se calcule, la rangée ne peut pas dire quels taux courent :
-     elle dit qu'elle ne le sait pas encore, plutôt qu'un « 0 % » qui serait une
-     réponse. */
-  rangeUnknown: 'À régler',
-  rangeLowColumn: 'Au plus bas',
-  rangeHighColumn: 'Au plus haut',
-  /* La nature du taux : une distinction de sens, pas de calcul. Elle se lit
-     dans le mot et dans la forme du trait, jamais dans la seule couleur.
-     « Garanti / Hypothèse » laissait entendre que l'app savait lequel des deux
-     était vrai — elle ne sait rien du contrat, et c'est celui qui coche qui
-     l'affirme. Le libellé le dit donc au lieu de le suggérer. */
-  kindAxis: 'Type de taux',
-  kindGuaranteed: 'Taux garanti',
-  kindAssumed: 'Rendement hypothétique',
+  /* --- Les réglages, en pilules -------------------------------------------
+     Quatre pilules, et chacune **dit sa valeur** plutôt que son nom : « 3
+     comptes », « 2,40 % – 5 % », « 10 ans », « Inflation 2 % ». Un écran de
+     réglages dont les boutons annoncent « Rendement » et « Durée » oblige à
+     ouvrir chaque feuille pour savoir ce qu'on regarde. Le nom, lui, est dans
+     l'étiquette accessible : ce qui se lit à l'œil se lit à l'oreille. */
+  pillAccounts: 'Comptes simulés',
+  accountsOne: '1 compte',
+  accountsMany: '%s comptes',
+  pillRate: 'Rendement',
+  pillAmount: 'Versement',
+  pillDuration: 'Durée et cadence',
+  pillInflation: 'Inflation',
+  inflationOff: 'Sans inflation',
+  inflationOn: 'Inflation %s',
 
   /* --- Le résultat --------------------------------------------------------
-     Il est en tête d'écran, avant les paramètres, et c'est le seul changement
-     de cet écran qui compte vraiment : on ouvre /projections pour savoir où
-     l'on arrive, pas pour remplir un formulaire. */
+     Il est en tête d'écran, avant les réglages, et il ne le quitte pas : on
+     vient ici pour tourner des boutons, et régler sans voir ce qu'on change
+     revient à jouer à un jeu dont le score est derrière soi. */
   /* « ≈ » sur chaque montant d'arrivée : c'est lui qui dit que le nombre sort
      d'un modèle. Il vit dans les gabarits et non dans le formateur — le
      formateur dit comment un nombre s'écrit, pas ce qu'il vaut. */
   approx: '≈ %s',
   resultIn: 'Dans %s',
-  /* La décomposition sous le chiffre : un capital projeté est trois choses, et
-     un nombre seul les confond. */
-  resultSplit: '%s versés · %s de rendement',
-  perMonth: '%s/mois',
-  perYear: '%s/an',
-  /* Le mode inverse répond par un versement, pas par un capital : c'est lui le
-     chiffre héros, et la cible passe en surtitre. */
-  targetHeading: 'Pour atteindre %s dans %s',
-  targetReached: 'Le capital actuel suffit déjà : il n’y a rien à verser.',
-  targetMissing: 'Indique un objectif pour savoir combien verser.',
-  nothingToPlot: 'Indique un versement mensuel ou un capital actuel.',
+  /* La décomposition sous le chiffre : un capital projeté est **trois** choses,
+     et un nombre seul les confond. Deux gabarits, parce qu'un compte sans
+     capital de départ n'a pas de « 0 € au départ » à annoncer. */
+  splitFull: '%s au départ · %s versés · %s de rendement',
+  splitPaid: '%s versés · %s de rendement',
+  rangeShort: '%s – %s',
+  /* Tant que rien ne se calcule, la pilule ne peut pas dire quels taux
+     courent : elle dit qu'elle ne le sait pas encore, plutôt qu'un « 0 % » qui
+     serait une réponse. */
+  rangeUnknown: 'À régler',
 
-  /* Ce qui reste de la décomposition en quatre lignes : le nom du total, que le
-     tableau des paliers porte en tête de colonne. Les trois autres lignes
-     vivaient dans une tuile sous le résultat ; la décomposition tient
-     désormais en une phrase — « ≈ 12 000 € versés · ≈ 1 900 € de rendement » —
-     posée sous le chiffre, là où elle se lit en trois secondes. */
-  breakdownTotal: 'Capital projeté',
+  /* --- Quand il n'y a rien à tracer ---------------------------------------
+     Deux absences, et elles n'appellent pas le même geste : sans aucun compte
+     d'épargne, il faut en créer un — la simulation part du document, pas d'une
+     page blanche ; avec des comptes tous décochés, il faut en cocher un. */
+  noSupports:
+    'La simulation part de tes comptes d’épargne : il en faut au moins un, avec ou sans relevé.',
+  newSupport: 'Créer un compte d’épargne',
+  pickSupports: 'Coche un compte pour voir sa trajectoire.',
 
-  /* --- Le tracé -----------------------------------------------------------*/
+  /* --- Le tracé -----------------------------------------------------------
+     Trois aires empilées, et le sommet de la pile est le capital : au départ,
+     versé, rendement. C'est ce qui rend visible d'un coup d'œil quelle part
+     vient de la poche et quelle part vient du taux — la seule pédagogie que cet
+     écran ait à donner. La borne haute passe par-dessus en trait tireté, et dit
+     ce que le calcul ne sait pas. */
   chartLabel: 'Projection du capital sur %s',
-  chartAt: 'Dans %s',
-  chartCursor: 'Lecture de la projection',
-  /* Les deux aires empilées : le versé en bas, le rendement au-dessus, et le
-     haut de la pile est la borne basse du capital. C'est ce qui rend visible
-     d'un coup d'œil quelle part vient de la poche et quelle part vient du taux
-     — la seule pédagogie que cet écran ait à donner. La fourchette s'ouvre
-     par-dessus, et dit ce que le calcul ne sait pas. */
-  contributedArea: 'Versements',
-  chartCapital: 'Capital projeté',
-  chartRange: 'Fourchette',
+  layerInitial: 'Au départ',
+  layerPaid: 'Versements',
+  layerGain: 'Rendement',
+  layerHigh: 'Au plus haut',
   start: 'Aujourd’hui',
+  chartAt: 'Dans %s',
 
-  /* --- Le détail ----------------------------------------------------------
-     Le tableau doit exister : une courbe ne se lit pas au chiffre près, et le
-     cahier §5 demande que tout graphique soit doublé d'une lecture textuelle.
-     Il passe derrière un repli parce que le curseur du tracé répond désormais à
-     la même question au doigt — mais il reste, et il s'ouvre. */
-  milestones: 'Voir le détail dans le temps',
-  milestonesHint: 'Montants arrondis : la précision affichée ne dépasse pas celle du calcul.',
-  milestoneWhen: 'Durée',
+  /* --- Le tableau ---------------------------------------------------------
+     Une ligne par année, et non par quart d'horizon : « dans 7 ans » est une
+     question qu'on se pose, « au troisième quart de mon horizon » n'en est pas
+     une. */
+  tableCaption: 'Le capital, année par année',
+  colWhen: 'Durée',
+  colPaid: 'Versés',
+  colGain: 'Rendement',
+  colTotal: 'Capital',
+  colHigh: 'Au plus haut',
+  tableInitial: 'Capital de départ : %s, le même à tous les rangs.',
+  tableHint: 'Montants arrondis : la précision affichée ne dépasse pas celle du calcul.',
 
-  /* --- Compte par compte --------------------------------------------------
-     Le tracé du haut somme les comptes, et c'est la bonne réponse à « combien
-     j'aurai ». Ce n'est pas la réponse à « lequel travaille » : un Livret A
-     plafonné et un PEA muet arrivent au même total par deux chemins qui n'ont
-     rien à voir, et c'est le chemin qu'on vient regarder ici. Chaque compte a
-     donc sa figure, décomposée comme l'écran d'analyse décompose le passé — de
-     sorte que la même question se lise du même œil des deux côtés. */
-  accounts: 'Ce que fait chaque compte',
+  /* --- Les comptes --------------------------------------------------------
+     Une carte par compte, et tout ce qui le concerne dedans : la case, son
+     versement, son rendement. C'est le cœur de l'écran — un Livret A plafonné
+     et un PEA muet n'ont ni la même courbe ni la même incertitude, et les
+     régler d'un seul jeu de champs n'aurait décrit ni l'un ni l'autre. */
+  /* « Livret A · Alix » : dans un foyer d'une seule personne, le complément ne
+     lèverait aucune ambiguïté et ne s'affiche pas. */
+  accountOwner: '%s · %s',
+  accounts: 'Comptes simulés',
   accountsHint:
-    'Chaque compte court à son propre rendement, et la somme de ces trajectoires est exactement la courbe du haut : il n’y a pas de second calcul.',
-  accountBase: 'Au départ',
-  accountGain: 'Rendement',
-  accountShown: 'Somme affichée',
-  accountLine: '%s au départ, %s versés, %s de rendement',
-  accountRange: 'Entre %s et %s à l’arrivée, selon le rendement',
-  accountChart: 'Trajectoire de %s',
-  accountCapped: 'Le plafond du contrat arrête les versements avant la fin.',
-  accountPaidTable: 'Voir les versements, année par année',
-  accountPaidHint:
-    'Ce que chaque compte reçoit, cumulé depuis aujourd’hui. Le rendement n’y est pas : c’est ce qui sort de la poche.',
-  srAccount: 'De %s à %s en %s : %s versés, %s de rendement.',
-  /* --- Le rendement, compte par compte ------------------------------------
-     Projeter tout le portefeuille d'une personne sous un taux unique n'a aucun
-     sens : deux comptes ne suivent pas la même courbe, et leur somme n'est
-     celle d'aucun taux moyen. Ce qui se tape ici ne vaut que pour la
-     simulation — la fiche du support reste le seul endroit où un taux
-     s'enregistre, daté. */
-  supportRates: 'Compte par compte',
-  supportRatesHint:
-    'Chaque compte part du taux posé sur sa fiche, et la fourchette ne s’applique qu’à ceux qui n’en portent pas. Ce que tu changes ici ne vaut que pour cette simulation, et ne modifie pas ton épargne.',
-  supportRateOwn: 'Posé sur ce support : la fourchette ne s’y applique pas.',
-  supportRateDated: 'Un changement de taux est prévu pendant la durée simulée.',
-  supportRateBorrowed: 'Aucun taux posé : c’est la fourchette qui s’applique.',
-  supportRateSimulated: 'Modifié pour cette simulation',
-  supportRateReset: 'Reprendre le taux du support',
+    'Chaque compte court à son propre rendement, et la courbe est la somme de leurs trajectoires : il n’y a pas de second calcul. Rien de ce que tu règles ici ne modifie ton épargne.',
+  accountAll: 'Tout cocher',
+  accountNone: 'Tout décocher',
+  accountArrival: '≈ %s à l’arrivée',
+  accountArrivalRange: '≈ %s à %s à l’arrivée',
+  /* Ce que le capital repris ne dit pas. Un compte sans relevé n'est pas un
+     compte à zéro : le taire donnerait un patrimoine faux présenté comme exact,
+     ce qui est pire que pas de chiffre du tout. */
+  accountNoValue: 'Aucun relevé : la simulation part d’un capital nul.',
+  accountFrom: 'Les capitaux sont les derniers relevés, mouvements confirmés depuis compris.',
+  accountRulesOne: 'Une règle d’épargne récurrente, ramenée à la cadence choisie.',
+  accountRules: '%s règles d’épargne récurrentes, ramenées à la cadence choisie.',
+  /* Le piège du domaine, dit à l'endroit où il se produit. Une reconstitution
+     d'avance qui court six mois, projetée sur dix ans, ajouterait des milliers
+     d'euros que personne n'a l'intention de verser. */
+  accountEndingOne: 'Une règle s’arrête avant la fin de la durée simulée : elle n’est pas comptée.',
+  accountEnding: '%s règles s’arrêtent avant la fin de la durée simulée : elles ne sont pas comptées.',
+  accountVariable: 'Une règle au montant variable n’a pas de mensualité à reprendre.',
+  accountNoRule: 'Aucune règle récurrente sur ce compte : à toi de dire ce que tu y verses.',
   /* Le plafond : sur ce qui est versé, jamais sur le solde. Un livret plein
      rapporte encore, et une courbe qui s'arrêterait à plat dirait l'inverse. */
-  supportCap: 'Plafond %s · reste %s à verser',
-  supportCapFull: 'Plafond %s · déjà atteint',
-  supportCapped:
+  accountCap: 'Plafond %s · reste %s à verser',
+  accountCapFull: 'Plafond %s · déjà atteint',
+  accountCapped:
     'Les versements s’arrêtent au plafond pendant la durée simulée ; le capital, lui, continue de croître.',
   capNote:
     'La place restante est calculée sur le capital d’aujourd’hui : les intérêts déjà acquis y sont comptés comme des versements, donc elle est un peu sous-estimée.',
 
-  /* --- Le détail du point de départ ---------------------------------------*/
-  sourceParts: 'Compte par compte',
-  sourcePartCapital: 'Capital',
-  sourcePartMonthly: 'Versements',
-  sourcePartTotal: 'Total',
+  /* --- Le versement -------------------------------------------------------*/
+  amount: 'Versement',
+  amountFromRules: 'Repris de tes règles : %s',
+  amountReset: 'Reprendre %s',
+  amountInvalid: 'Montant illisible.',
 
-  /* --- « Et si je versais… » ----------------------------------------------
-     La seule lecture actionnable de l'écran : « combien j'aurai » se contemple,
-     « ce que 50 € de plus changeraient » se décide. Elle avait deux
-     dispositifs — un tableau de quatre barreaux et un curseur qui explorait le
-     continu entre eux —, dont le second contenait strictement le premier. Il
-     n'en reste qu'un réglage d'une ligne : moins, plus, et ce que ça change. */
-  effort: 'Et si je versais…',
-  effortHint: 'À la même durée et à la même fourchette.',
-  effortLess: 'Retirer %s',
-  effortMore: 'Ajouter %s',
-  /* L'écart, et non l'arrivée : « 208 k€ » ne dit pas ce que le geste a changé,
-     et le comparer de tête au chiffre lu en haut de l'écran est précisément le
-     calcul que cette ligne existe pour éviter. */
-  effortGap: '%s à l’arrivée.',
-  effortArrival: 'soit %s',
-  /* Reprendre, c'est **essayer** — jamais adopter : le bouton recopie le montant
-     dans la simulation, et rien n'est enregistré nulle part. */
-  effortApply: 'Simuler avec %s',
+  /* --- Le rendement, compte par compte ------------------------------------
+     Trois façons de le poser, et une seule à la fois : le taux de la fiche —
+     seul à engager le document et seul à porter ses paliers datés —, une valeur
+     qu'on essaie, ou une fourchette. Le troisième mode est le défaut d'un
+     compte muet : l'app ne devine aucun rendement, et une fourchette large est
+     la seule chose honnête à mettre à la place. */
+  rate: 'Taux de rendement',
+  rateAxis: 'D’où vient le rendement',
+  rateOwn: 'Taux du support',
+  rateFlat: 'Une valeur',
+  rateRange: 'Fourchette',
+  rateOwnNote: 'Posé sur la fiche du support, daté : la fourchette ne s’y applique pas.',
+  rateDated: 'Un changement de taux est prévu pendant la durée simulée.',
+  rateFlatNote: 'Essayé pour cette simulation. La fiche du support n’est pas modifiée.',
+  rateRangeNote:
+    'Deux hypothèses, et l’écart entre elles est la réponse honnête : personne ne connaît le rendement des années à venir.',
+  rateNone: 'Aucun taux posé sur ce compte : c’est la fourchette qui s’applique.',
+  rateLow: 'Au plus bas',
+  rateHigh: 'Au plus haut',
+  rateInvalid: 'Entre 0 et %s %.',
+  /* L'unité se lit au bord du champ, pas seulement dans son libellé : « 100 »
+     et « 3 » posés l'un sous l'autre ne disent pas lequel est un montant et
+     lequel est un pourcentage. */
+  unitYear: '%/an',
+  /* La nature du taux : une distinction de sens, pas de calcul. Elle se lit
+     dans le mot, jamais dans la seule couleur. « Garanti / Hypothèse » laissait
+     entendre que l'app savait lequel des deux était vrai — elle ne sait rien du
+     contrat, et c'est celui qui coche qui l'affirme. */
+  kindGuaranteed: 'Taux garanti',
+  kindAssumed: 'Rendement hypothétique',
+
+  /* --- La durée et la cadence ---------------------------------------------
+     La cadence n'est pas un détail d'affichage : le moteur capitalise, donc
+     1 200 € versés une fois l'an ne valent pas 100 € versés douze fois. C'est
+     le seul endroit de l'app où une échéance **n'est pas** ramenée au mois
+     (cahier §4.2), et c'est justement ce qu'on vient mesurer. */
+  duration: 'Durée',
+  durationYears: 'Durée personnalisée',
+  durationOther: 'Autre durée',
+  durationPreset: '%s ans',
+  /* Les bornes viennent des constantes qui les font respecter, jamais d'un
+     nombre recopié dans la phrase : un message qui annonce une limite que le
+     code n'applique plus est pire qu'un message absent. */
+  durationInvalid: 'Entre %s et %s ans.',
+  cadence: 'Cadence des versements',
+  cadenceMonthly: 'Mensuel',
+  cadenceQuarterly: 'Trimestriel',
+  cadenceHalf: 'Semestriel',
+  cadenceYearly: 'Annuel',
+  cadenceHint:
+    'À effort égal, verser une fois l’an rend un peu moins que verser tous les mois : l’argent passe moins de temps à produire des intérêts.',
+  perMonth: '%s/mois',
+  perQuarter: '%s/trimestre',
+  perHalf: '%s/semestre',
+  perYear: '%s/an',
 
   /* --- Euros constants ----------------------------------------------------*/
-  constant: 'Tenir compte de l’inflation',
-  constantHint: 'Affiche le pouvoir d’achat équivalent, en euros d’aujourd’hui.',
+  inflationAxis: 'En quels euros lire',
+  inflationCurrent: 'Euros courants',
+  inflationConstant: 'Euros d’aujourd’hui',
   inflation: 'Inflation annuelle',
+  inflationHint:
+    'En euros d’aujourd’hui, chaque montant est déflaté à sa propre date : un versement fait dans dix ans n’a pas le pouvoir d’achat de celui d’aujourd’hui.',
   constantOn: 'Montants en euros d’aujourd’hui, inflation à %s.',
 
   /* --- Ce qu'il faut savoir, à la demande ---------------------------------
      Sept paragraphes vivaient dans le flux de l'écran. Chacun était juste ;
      ensemble ils donnaient une impression de documentation intercalée dans une
      interface, et personne ne les lisait. Ils sont ici, d'un seul tenant. */
-  explain: 'Comprendre cette projection',
+  explain: 'Comprendre cette simulation',
   explainRate: 'Un taux constant n’est pas une trajectoire',
   explainRateBody:
     'Le calcul dit ce qu’un taux constant donnerait, pas ce qui arrivera. Un rendement moyen sur dix ans cache des années hautes et des années basses, et l’ordre dans lequel elles tombent change le résultat. Rien ici n’est une promesse, ni un conseil de placement.',
@@ -308,21 +241,24 @@ const fr = {
     'Le rendement espéré, moins les frais annuels, moins la fiscalité qui s’appliquera aux gains. L’app ne modélise ni prélèvement forfaitaire, ni prélèvements sociaux, ni frais de gestion : la fiscalité change, et un barème figé dans le code se lirait comme un calcul faux au premier changement de loi.',
   explainMethod: 'Méthode de calcul',
   explainMethodBody:
-    'Les versements sont comptés en fin de mois : celui du mois en cours ne produit encore rien. Le rendement est composé mensuellement, au taux équivalent du taux annuel saisi — (1 + r) puissance 1/12, et non r/12, qui rendrait chaque année un peu plus que le taux annoncé.',
+    'Les versements sont comptés en fin d’échéance : celui du mois en cours ne produit encore rien. Le rendement est composé mensuellement, au taux équivalent du taux annuel saisi — (1 + r) puissance 1/12, et non r/12, qui rendrait chaque année un peu plus que le taux annoncé.',
+  explainSum: 'Compte par compte, puis la somme',
+  explainSumBody:
+    'Chaque compte coché est projeté avec son capital, son versement et son rendement, et la courbe du haut est l’addition de ces trajectoires. Un portefeuille ne suit aucun taux moyen : un Livret A à 2,40 % et un PEA à 6 % ne se résument pas à 4,20 %, et prétendre le contraire donnerait un chiffre que le détail ne retrouverait pas.',
   explainInflation: 'L’inflation',
   explainInflationBody:
-    'En euros d’aujourd’hui, chaque montant est déflaté à sa propre date : un versement fait dans dix ans n’a pas le pouvoir d’achat de celui d’aujourd’hui. Le rendement saisi est net de frais et d’impôt, mais jamais net d’inflation — ce sont deux couches distinctes, et l’option les sépare au lieu de les confondre.',
+    'Le rendement saisi est net de frais et d’impôt, mais jamais net d’inflation — ce sont deux couches distinctes, et l’option les sépare au lieu de les confondre. En euros d’aujourd’hui, le rendement affiché peut devenir négatif : c’est ce que le taux a produit, moins ce que l’érosion a pris.',
   explainRounding: 'Les arrondis',
   explainRoundingBody:
     'Les montants sont arrondis à ce que le modèle sait dire, et jamais au centime : « ≈ 202 k€ ». Le centime affiché est précisément ce qui fait passer une hypothèse pour une mesure.',
   explainData: 'Ce que l’écran fait de tes données',
   explainDataBody:
-    'Il peut lire le capital d’un support et les versements que tes règles récurrentes y posent, pour t’éviter de les retaper. La lecture est à sens unique : rien de ce que tu simules ici n’est enregistré, n’entre dans un mois, ni ne ressort dans un export. Le rendement n’est jamais repris d’un support — c’est toi qui le poses.',
+    'Il lit le capital de tes comptes, les versements que tes règles récurrentes y posent, les taux que tu as datés sur leurs fiches et leurs plafonds, pour t’éviter de les retaper. La lecture est à sens unique : rien de ce que tu simules ici n’est enregistré, n’entre dans un mois, ni ne ressort dans un export.',
 
   /* --- Les lectures accessibles -------------------------------------------
      Ce qui se lit à l'œil se lit à l'oreille, ou l'un des deux ment. Le
-     tableau porte déjà les chiffres ligne à ligne : le graphique n'a donc
-     qu'à dire ce qu'il trace et où il arrive. */
+     tableau porte les chiffres ligne à ligne, et il est à un appui : le
+     graphique n'a donc qu'à dire ce qu'il trace et où il arrive. */
   srChart: 'De %s aujourd’hui à %s dans %s.',
   /* Deux gabarits et non un avec un morceau conditionnel : une fourchette et un
      chiffre unique ne se disent pas dans le même ordre à l'oreille, et coudre
@@ -337,17 +273,15 @@ const fr = {
   years: '%s ans',
   monthOne: '1 mois',
   months: '%s mois',
-  /* « 2 ans 6 mois » : le quart d'un horizon de dix ans ne tombe pas sur une
-     année pleine, et l'arrondir à « 2 ans » ferait mentir le montant posé à
-     côté. */
+  /* « 2 ans 6 mois » : un horizon en années pleines n'en a pas besoin, mais la
+     dernière ligne du tableau peut tomber ailleurs. */
   yearsAndMonths: '%s %s',
-
 } as const
 
 export type ProjectionStrings = Widen<typeof fr>
 
 /**
- * Les chaînes des projections, dans la langue active.
+ * Les chaînes de la simulation, dans la langue active.
  *
  * Même mécanique que `history.ts`, `landing.ts` et `legal.ts` : une liaison
  * d'export vivante, et les deux langues dans le même morceau — celui-ci est

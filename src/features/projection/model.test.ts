@@ -1,36 +1,43 @@
+/* ============================================================================
+ * Ce que les réglages de la simulation produisent, et ce qu'ils refusent.
+ *
+ * Cinq règles y sont tenues plus que les autres : la courbe est la **somme des
+ * trajectoires** des comptes cochés et jamais une projection de plus posée à
+ * côté ; un compte dont on n'a rien réglé court au taux de sa fiche ; un compte
+ * muet court à une fourchette et non à un chiffre flatteur ; **rien ne bloque le
+ * calcul** — un champ illisible retire l'essai et se signale ; et le plafond d'un
+ * contrat arrête les versements sans arrêter le capital.
+ * ==========================================================================*/
+
 import { afterEach, describe, expect, it } from 'vitest'
 import { currentYm } from '@/domain/date'
 import { eur } from '@/domain/fixtures'
-import type { ProjectionPart, ProjectionStart } from '@/domain/projectionStart'
-import { tpl } from '@/i18n/format'
+import type { ProjectionPart } from '@/domain/projectionStart'
 import { projection } from '@/i18n/projection'
 import {
   DEFAULT_DRAFT,
   MAX_YEARS,
-  MIN_YEARS,
   PROJECTION_STORAGE_KEY,
-  type ProjectionDraft,
+  type SimulationDraft,
+  type SupportSetting,
   analyse,
-  breakdownOf,
-  effortAt,
+  defaultAmount,
+  modeOf,
+  pickedParts,
   readDraft,
   writeDraft,
+  yearMarks,
 } from './model'
 
-const draft = (patch: Partial<ProjectionDraft> = {}): ProjectionDraft => ({
+const draft = (patch: Partial<SimulationDraft> = {}): SimulationDraft => ({
   ...DEFAULT_DRAFT,
   ...patch,
-})
-
-/** Une fourchette refermée : les deux bornes au même taux. */
-const flat = (rateText: string): Partial<ProjectionDraft> => ({
-  lowText: rateText,
-  highText: rateText,
 })
 
 const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
   supportId: 's-1',
   label: 'Livret A',
+  memberId: 'm-1',
   capital: eur(100_000),
   monthly: eur(10_000),
   rateBp: 200,
@@ -38,572 +45,353 @@ const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
   steps: [{ rateBp: 200, kind: 'assumed', from: '2020-01-01', to: null }],
   cap: null,
   room: null,
+  rules: 1,
+  ending: 0,
+  variable: false,
   ...over,
 })
 
-const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
-  capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
-  monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
-  valued: parts.length,
-  unvalued: 0,
-  rules: parts.length,
-  ending: 0,
-  variable: false,
-  parts,
+/** Un réglage d'écran, complet — les champs vides valent leur défaut. */
+const setting = (over: Partial<SupportSetting> = {}): SupportSetting => ({
+  supportId: 's-1',
+  mode: 'own',
+  rateText: '',
+  lowText: '2',
+  highText: '5',
+  amountText: '',
+  ...over,
 })
 
-const linked = draft({ source: { kind: 'member', id: 'm-1' } })
+const arrival = (one: ReturnType<typeof analyse>): number => one.result?.arrival.low ?? Number.NaN
 
 afterEach(() => {
   localStorage.clear()
 })
 
-describe('ce que la saisie donne', () => {
-  it('trace ce qu’un versement mensuel devient', () => {
-    const { result } = analyse(draft({ monthlyText: '250', years: 20, ...flat('11') }))
-    expect(result?.months).toBe(240)
-    expect(result?.low.series.balance.at(-1)).toBeCloseTo(20_213_625, -1)
+describe('les comptes cochés', () => {
+  it('prend tous les comptes tant que personne n’a choisi', () => {
+    /* `null` et non la liste complète : un compte créé demain doit entrer de
+       lui-même dans un écran qu'on n'a jamais réglé. */
+    const parts = [part(), part({ supportId: 's-2' })]
+    expect(pickedParts(parts, null)).toHaveLength(2)
   })
 
-  it('donne la même aire de versements aux deux bornes', () => {
-    // Le versé ne dépend pas du taux : c'est ce qui rend l'écart entre l'aire
-    // et chaque courbe lisible comme « ce que le taux a produit ».
-    const { result } = analyse(draft({ monthlyText: '100', lowText: '2', highText: '7' }))
-    expect(result?.contributed).toEqual(result?.high.series.contributed)
+  it('ne garde que ceux qui sont cochés, dans l’ordre du document', () => {
+    const parts = [part(), part({ supportId: 's-2' }), part({ supportId: 's-3' })]
+    expect(pickedParts(parts, ['s-3', 's-1']).map((one) => one.supportId)).toEqual(['s-1', 's-3'])
   })
 
-  it('signale un montant illisible plutôt que de le lire comme zéro', () => {
-    const { errors } = analyse(draft({ initialText: 'beaucoup' }))
-    expect(errors.initial).toBe(projection.amountInvalid)
+  it('ignore un identifiant qui ne désigne plus rien', () => {
+    // Un compte supprimé depuis la dernière visite : la case disparaît, l'écran
+    // ne cherche pas à projeter un contrat qui n'existe plus.
+    expect(pickedParts([part()], ['s-1', 's-mort'])).toHaveLength(1)
   })
 
-  it('lit un capital de départ vide comme zéro, pas comme une erreur', () => {
-    const { errors, result } = analyse(draft({ initialText: '' }))
-    expect(errors.initial).toBeUndefined()
-    expect(result?.initial).toBe(0)
+  it('ne trace rien quand tout est décoché, et le dit', () => {
+    const { result, missing } = analyse(draft({ picked: [] }), [part()])
+    expect(result).toBe(null)
+    expect(missing).toBe(projection.pickSupports)
   })
 
-  it('ne trace rien sans versement ni capital, et dit ce qui manque', () => {
-    const { result, missing } = analyse(draft({ initialText: '', monthlyText: '' }))
-    expect(result).toBeNull()
-    expect(missing).toBe(projection.nothingToPlot)
-  })
-
-  it('refuse une durée hors bornes', () => {
-    expect(analyse(draft({ years: 0 })).errors.years).toBe(
-      tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS),
-    )
-    expect(analyse(draft({ years: MAX_YEARS + 1 })).errors.years).toBeDefined()
-    expect(analyse(draft({ years: 7 })).errors.years).toBeUndefined()
+  it('ne trace rien quand le document n’a aucun compte, et dit autre chose', () => {
+    /* Deux absences, deux gestes : il faut créer un compte, ou en cocher un. Un
+       seul message aurait envoyé créer un compte quelqu'un qui en a cinq. */
+    const { result, missing } = analyse(draft(), [])
+    expect(result).toBe(null)
+    expect(missing).toBe(projection.noSupports)
   })
 })
 
-describe('la fourchette', () => {
-  /* Ce que trois courbes ne savaient pas faire : montrer l'écart sans demander
-     laquelle croire. */
-  it('donne deux trajectoires, la haute au-dessus de la basse', () => {
-    const { result } = analyse(draft({ monthlyText: '100', years: 20, lowText: '2', highText: '7' }))
-    if (result === null) throw new Error('pas de résultat')
+describe('la somme des trajectoires', () => {
+  it('additionne les comptes plutôt que de les projeter à un taux moyen', () => {
+    /* La règle qui tient tout l'écran. Un Livret A à 2 % et un compte à 6 % ne
+       se résument pas à 4 % : la courbe est l'addition de leurs deux séries, et
+       le détail par compte s'y recompose exactement. */
+    const parts = [
+      part({ supportId: 's-1', rateBp: 200 }),
+      part({ supportId: 's-2', rateBp: 600 }),
+    ]
+    const { result } = analyse(draft({ years: 10 }), parts)
+    const runs = result?.runs ?? []
+    expect(runs).toHaveLength(2)
+    const summed = runs.reduce((total, one) => total + one.arrival.low, 0)
+    expect(result?.arrival.low).toBe(summed)
+  })
 
-    expect(result.single).toBe(false)
-    expect(result.high.series.balance.at(-1)).toBeGreaterThan(
-      result.low.series.balance.at(-1) ?? 0,
+  it('décompose chaque rang en départ, versé et rendement — et les trois font le total', () => {
+    const { result } = analyse(draft({ years: 5 }), [part()])
+    for (const point of result?.points ?? []) {
+      expect(point.initial + point.paid + point.gain).toBe(point.total)
+    }
+  })
+
+  it('garde le capital de départ constant d’un rang à l’autre', () => {
+    // C'est ce qui fait de la première couche une bande et non une pente : ce
+    // qu'il y avait au départ ne bouge pas, seul ce qu'on ajoute bouge.
+    const { result } = analyse(draft({ years: 3 }), [part({ capital: eur(500_000) })])
+    const initials = new Set((result?.points ?? []).map((point) => point.initial))
+    expect([...initials]).toEqual([500_000])
+  })
+
+  it('rejoint le vecteur de référence du cahier', () => {
+    /* 250 €/mois, 11 % annuels, 20 ans → ≈ 202 k€. Il vaut moins pour son
+       chiffre que pour ce qu'il fixe : la convention de fin de mois, et le fait
+       qu'un compte réglé à une valeur suit exactement `projectSeries`. */
+    const one = analyse(
+      draft({
+        years: 20,
+        settings: [setting({ mode: 'flat', rateText: '11', amountText: '250' })],
+      }),
+      [part({ capital: eur(0), monthly: eur(0) })],
     )
+    expect(arrival(one)).toBeCloseTo(20_213_625, -1)
   })
+})
 
-  /* Une fourchette se lit du plus bas au plus haut, quel que soit l'ordre dans
-     lequel les deux champs ont été remplis : refuser l'inverse n'apprendrait
-     qu'une chose, dans quel ordre l'app veut ses champs. */
-  it('se range toute seule quand les deux champs sont inversés', () => {
-    const straight = analyse(draft({ lowText: '2', highText: '7' }))
-    const swapped = analyse(draft({ lowText: '7', highText: '2' }))
-    expect(swapped.result?.low.series.balance).toEqual(straight.result?.low.series.balance)
-    expect(swapped.result?.high.series.balance).toEqual(straight.result?.high.series.balance)
-  })
-
-  /* Deux bornes égales ne sont pas une fourchette : l'écran doit alors rendre un
-     chiffre, et un seul trait. */
-  it('se referme quand les deux bornes coïncident', () => {
-    const { result } = analyse(draft({ ...flat('3') }))
+describe('d’où vient le rendement d’un compte', () => {
+  it('part du taux de sa fiche quand rien n’a été réglé', () => {
+    expect(modeOf(part({ rateBp: 240 }), undefined)).toBe('own')
+    const { result } = analyse(draft(), [part({ rateBp: 240 })])
+    expect(result?.rateSpan).toEqual({ low: 240, high: 240 })
     expect(result?.single).toBe(true)
   })
 
-  it('signale une borne illisible sans effacer l’autre', () => {
-    const { errors } = analyse(draft({ lowText: '2', highText: '450' }))
-    expect(errors.low).toBeUndefined()
-    expect(errors.high).toBe(tpl(projection.rateInvalid, 100))
+  it('part d’une fourchette quand la fiche est muette', () => {
+    /* L'app ne devine aucun rendement : entre suggérer un chiffre et montrer un
+       écart large, elle montre l'écart. */
+    expect(modeOf(part({ rateBp: null }), undefined)).toBe('range')
+    const { result } = analyse(draft(), [part({ rateBp: null, rateKind: null, steps: [] })])
+    expect(result?.rateSpan).toEqual({ low: 200, high: 500 })
+    expect(result?.single).toBe(false)
   })
 
-  /* Un taux illisible ne vaut pas zéro : il n'y a plus de fourchette du tout,
-     donc plus rien à tracer — plutôt qu'une courbe à plat sur une faute de
-     frappe. */
-  it('ne trace rien tant qu’une borne est illisible', () => {
-    expect(analyse(draft({ lowText: 'beaucoup' })).result).toBeNull()
+  it('retombe sur la fourchette si le taux de la fiche a disparu depuis', () => {
+    // Le réglage survit à ce qu'il désignait : un compte réglé sur « le taux du
+    // support » dont le taux a été retiré ne vaut pas 0 %, il vaut la fourchette.
+    expect(modeOf(part({ rateBp: null }), setting({ mode: 'own' }))).toBe('range')
   })
 
-  /* L'étendue affichée est celle des taux qui **courent**, et non celle des deux
-     champs : un compte posé sous la borne basse la tire vers lui, et afficher
-     les champs à sa place mentirait sur ce que la simulation fait. */
-  it('rend l’étendue des taux réellement en jeu', () => {
-    const free = analyse(draft({ lowText: '2', highText: '7' }))
-    expect(free.result?.rateSpan).toEqual({ low: 200, high: 700 })
-
-    const mixed = analyse(
-      { ...linked, lowText: '2', highText: '7' },
-      portfolio([
-        part({ rateBp: 150 }),
-        part({ supportId: 's-2', label: 'PEA', rateBp: null, steps: [] }),
-      ]),
+  it('essaie une valeur unique, et referme la fourchette', () => {
+    const { result } = analyse(
+      draft({ settings: [setting({ mode: 'flat', rateText: '4' })] }),
+      [part({ rateBp: null, rateKind: null, steps: [] })],
     )
-    expect(mixed.result?.rateSpan).toEqual({ low: 150, high: 700 })
+    expect(result?.rateSpan).toEqual({ low: 400, high: 400 })
+    expect(result?.single).toBe(true)
+  })
+
+  it('range les deux bornes d’une fourchette tapée à l’envers', () => {
+    // « entre 5 % et 2 % » est la même fourchette que « entre 2 % et 5 % ».
+    const { result } = analyse(
+      draft({ settings: [setting({ mode: 'range', lowText: '5', highText: '2' })] }),
+      [part()],
+    )
+    expect(result?.rateSpan).toEqual({ low: 200, high: 500 })
+  })
+
+  it('affiche l’étendue de ce qui court, jamais celle des champs', () => {
+    /* Un Livret A posé à 2,40 % et un compte muet laissé entre 3 % et 7 %
+       donnent « 2,40 % – 7 % » : c'est ce qui court dans le calcul, et non les
+       deux champs de la fourchette. */
+    const parts = [
+      part({ supportId: 's-1', rateBp: 240 }),
+      part({ supportId: 's-2', rateBp: null, rateKind: null, steps: [] }),
+    ]
+    const { result } = analyse(
+      draft({ settings: [setting({ supportId: 's-2', mode: 'range', lowText: '3', highText: '7' })] }),
+      parts,
+    )
+    expect(result?.rateSpan).toEqual({ low: 240, high: 700 })
+  })
+
+  it('ne dit « garanti » que si tout ce qui court l’est', () => {
+    const guaranteed = part({ rateKind: 'guaranteed' })
+    expect(analyse(draft(), [guaranteed]).result?.guaranteed).toBe(true)
+    /* Un seul compte laissé à la fourchette, et l'ensemble redevient une
+       hypothèse — c'est la lecture qui promet le moins. */
+    expect(
+      analyse(draft(), [guaranteed, part({ supportId: 's-2', rateBp: null, steps: [] })]).result
+        ?.guaranteed,
+    ).toBe(false)
+    /* Un taux essayé n'engage que celui qui l'a tapé, même sur un contrat qui
+       garantit le sien. */
+    expect(
+      analyse(draft({ settings: [setting({ mode: 'flat', rateText: '9' })] }), [guaranteed]).result
+        ?.guaranteed,
+    ).toBe(false)
+  })
+
+  it('applique un palier daté au rang qui lui revient, et le signale', () => {
+    const ym = currentYm()
+    const [year, month] = ym.split('-').map(Number)
+    const next = `${String((year ?? 2026) + 1)}-${String(month ?? 1).padStart(2, '0')}-01`
+    const dated = part({
+      rateBp: 300,
+      steps: [
+        { rateBp: 300, kind: 'guaranteed', from: '2020-01-01', to: null },
+        { rateBp: 100, kind: 'guaranteed', from: next, to: null },
+      ],
+    })
+    const { result } = analyse(draft({ years: 5 }), [dated])
+    expect(result?.runs[0]?.dated).toBe(true)
+    // Le taux de départ reste celui du jour : la révision est dans le barème.
+    expect(result?.runs[0]?.lowBp).toBe(300)
   })
 })
 
-describe('mode inverse', () => {
-  it('rend le versement requis à chaque borne, et le range par ce qu’il coûte', () => {
-    const { result } = analyse(
-      draft({ mode: 'target', targetText: '50000', years: 10, lowText: '2', highText: '7' }),
+describe('ce qu’on verse, et tous les combien', () => {
+  it('propose ce que les règles du compte versent, à la cadence choisie', () => {
+    const one = part({ monthly: eur(35_000) })
+    expect(defaultAmount(one, 1)).toBe(35_000)
+    expect(defaultAmount(one, 3)).toBe(105_000)
+    expect(defaultAmount(one, 12)).toBe(420_000)
+  })
+
+  it('verse le même effort annuel quelle que soit la cadence, et rend un peu moins', () => {
+    const base = part({ capital: eur(0), monthly: eur(10_000), rateBp: 400 })
+    const monthly = analyse(draft({ years: 10, every: 1 }), [base])
+    const yearly = analyse(draft({ years: 10, every: 12 }), [base])
+    expect(monthly.result?.paid).toBe(yearly.result?.paid)
+    expect(arrival(yearly)).toBeLessThan(arrival(monthly))
+  })
+
+  it('remplace le versement du document par celui qu’on tape', () => {
+    const one = analyse(
+      draft({ settings: [setting({ amountText: '500' })] }),
+      [part({ monthly: eur(10_000) })],
     )
-    if (result === null) throw new Error('pas de résultat')
-
-    expect(result.target).toBe(5_000_000)
-    expect(result.monthly).toBeNull()
-    /* Un rendement plus haut demande de verser moins : la borne « basse » de la
-       réponse est donc celle du taux le plus haut, sans quoi la fourchette
-       s'écrirait à l'envers. */
-    expect(result.low.monthly).toBeLessThan(result.high.monthly)
+    expect(one.result?.amount).toBe(50_000)
   })
 
-  it('n’a pas d’aire commune : chaque borne a son propre versement', () => {
-    const { result } = analyse(draft({ mode: 'target', targetText: '50000' }))
-    expect(result?.contributed).toBeNull()
-  })
-
-  it('demande la cible plutôt que de tracer une courbe à zéro', () => {
-    const { result, missing } = analyse(draft({ mode: 'target', targetText: '' }))
-    expect(result).toBeNull()
-    expect(missing).toBe(projection.targetMissing)
-  })
-
-  it('dit qu’il n’y a rien à verser quand le capital de départ suffit', () => {
-    const { result } = analyse(
-      draft({ mode: 'target', initialText: '60000', targetText: '50000', years: 10 }),
+  it('lit un versement illisible comme un essai retiré, et signale le champ', () => {
+    /* Rien ne bloque le calcul : un réglage vit dans une feuille qu'on referme,
+       donc une saisie à moitié tapée ne doit pas vider l'écran derrière. */
+    const one = analyse(
+      draft({ settings: [setting({ amountText: 'beaucoup' })] }),
+      [part({ monthly: eur(10_000) })],
     )
-    expect(result?.targetReached).toBe(true)
-    expect(result?.low.monthly).toBe(0)
+    expect(one.result?.amount).toBe(10_000)
+    expect(one.errors.supports['s-1']?.amount).toBe(projection.amountInvalid)
+  })
+
+  it('n’arrête les versements qu’au plafond, jamais le capital', () => {
+    const capped = part({
+      capital: eur(0),
+      monthly: eur(10_000),
+      rateBp: 300,
+      cap: eur(50_000),
+      room: eur(50_000),
+    })
+    const { result } = analyse(draft({ years: 5 }), [capped])
+    expect(result?.capped).toBe(true)
+    expect(result?.paid).toBe(50_000)
+    // Le capital, lui, a continué de croître au-delà du plafond.
+    expect(result?.arrival.low ?? 0).toBeGreaterThan(50_000)
   })
 })
 
-describe('euros constants', () => {
-  it('ne change rien tant que la case est décochée', () => {
-    const { result } = analyse(draft({ inflationText: '2', constant: false }))
-    expect(result?.inflationBp).toBe(0)
+describe('la durée et l’inflation', () => {
+  it('ramène une durée hors bornes dans la plage et signale le champ', () => {
+    /* Le champ se tape chiffre par chiffre : « 1 » sur le chemin de « 12 » ne
+       doit pas faire disparaître la figure. */
+    const one = analyse(draft({ years: 0 }), [part()])
+    expect(one.errors.years).toBeDefined()
+    expect(one.result?.months).toBe(12)
+    expect(analyse(draft({ years: 99 }), [part()]).result?.months).toBe(MAX_YEARS * 12)
   })
 
-  it('déflate l’arrivée une fois la case cochée', () => {
-    const nominal = analyse(draft({ monthlyText: '100', years: 20 }))
-    const real = analyse(draft({ monthlyText: '100', years: 20, constant: true }))
-    expect(real.result?.low.series.balance.at(-1)).toBeLessThan(
-      nominal.result?.low.series.balance.at(-1) ?? 0,
-    )
+  it('ne déflate rien en euros courants', () => {
+    const one = analyse(draft({ constant: false, inflationText: '2' }), [part()])
+    const other = analyse(draft({ constant: false, inflationText: '9' }), [part()])
+    expect(one.result?.inflationBp).toBe(0)
+    expect(arrival(one)).toBe(arrival(other))
   })
 
-  it('fait arriver la courbe sur la cible tapée, et non dessous', () => {
-    const { result } = analyse(
-      draft({
-        mode: 'target',
-        targetText: '50000',
-        years: 10,
-        constant: true,
-        ...flat('3'),
-      }),
+  it('déflate à la demande, et dit à quel taux', () => {
+    const nominal = analyse(draft({ years: 20 }), [part()])
+    const constant = analyse(draft({ years: 20, constant: true, inflationText: '2' }), [part()])
+    expect(constant.result?.inflationBp).toBe(200)
+    expect(arrival(constant)).toBeLessThan(arrival(nominal))
+  })
+
+  it('éteint la lecture en euros d’aujourd’hui quand l’inflation est illisible', () => {
+    // Une inflation illisible ne vaut pas zéro : elle éteint une lecture de
+    // plus, elle ne change pas le calcul.
+    const one = analyse(draft({ constant: true, inflationText: 'un peu' }), [part()])
+    expect(one.errors.inflation).toBeDefined()
+    expect(one.result?.inflationBp).toBe(0)
+  })
+
+  it('peut rendre un rendement négatif en euros d’aujourd’hui', () => {
+    /* Un taux sous l'inflation ne compense pas l'érosion, et c'est précisément
+       ce que cette lecture existe pour montrer. Sans rouge : ce n'est pas une
+       faute. */
+    const one = analyse(
+      draft({ years: 20, constant: true, inflationText: '5', settings: [setting({ mode: 'flat', rateText: '1' })] }),
+      [part()],
     )
-    expect(result?.low.series.balance.at(-1)).toBeCloseTo(5_000_000, -3)
+    expect(one.result?.points.at(-1)?.gain ?? 0).toBeLessThan(0)
+  })
+})
+
+describe('les lignes du tableau', () => {
+  it('pose une ligne par année, départ compris', () => {
+    expect(yearMarks(60)).toEqual([0, 12, 24, 36, 48, 60])
+  })
+
+  it('garde la dernière année même incomplète', () => {
+    // Sans elle, le tableau s'arrêterait avant le chiffre que l'écran annonce.
+    expect(yearMarks(30)).toEqual([0, 12, 24, 30])
+  })
+
+  it('ne rend qu’un départ sur un horizon nul', () => {
+    expect(yearMarks(0)).toEqual([0])
   })
 })
 
 describe('le confort local', () => {
-  it('retrouve les derniers réglages', () => {
-    writeDraft(draft({ years: 7, lowText: '1', highText: '4' }))
-    expect(readDraft().years).toBe(7)
-    expect(readDraft().lowText).toBe('1')
-    expect(readDraft().highText).toBe('4')
+  it('relit ce qu’on a laissé', () => {
+    writeDraft(draft({ years: 25, every: 3, view: 'table', picked: ['s-2'] }))
+    const back = readDraft()
+    expect(back.years).toBe(25)
+    expect(back.every).toBe(3)
+    expect(back.view).toBe('table')
+    expect(back.picked).toEqual(['s-2'])
   })
 
-  it('garde l’origine choisie, et refuse une origine illisible', () => {
-    writeDraft(draft({ source: { kind: 'support', id: 's-1' } }))
-    expect(readDraft().source).toEqual({ kind: 'support', id: 's-1' })
-
-    localStorage.setItem(
-      PROJECTION_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_DRAFT, source: { kind: 'planet', id: 'x' } }),
-    )
-    expect(readDraft().source).toEqual({ kind: 'free' })
-  })
-
-  it('retombe sur les valeurs par défaut quand rien n’a été gardé', () => {
+  it('retombe sur les défauts quand le stockage est vide', () => {
     expect(readDraft()).toEqual(DEFAULT_DRAFT)
   })
 
-  /* `localStorage` s'édite depuis la console du navigateur : ce qui en sort
-     traverse la même méfiance qu'un document importé. */
-  it('revalide tout ce qui vient du stockage', () => {
+  it('ne croit pas ce que le stockage raconte', () => {
+    /* `localStorage` s'édite depuis la console du navigateur : une durée à
+       `NaN`, une cadence inventée ou un tableau de mille entrées ne doivent pas
+       casser l'écran. C'est la prudence de `persistence/validate.ts`, à
+       l'échelle de six champs. */
     localStorage.setItem(
       PROJECTION_STORAGE_KEY,
       JSON.stringify({
-        mode: 'nawak',
-        years: 900,
-        lowText: 'x'.repeat(200),
-        supportRates: [{ supportId: 42 }, { supportId: 's-1', rateText: '4' }],
+        picked: [42, 's-1', 's-1'],
+        years: 'beaucoup',
+        every: 7,
+        constant: 'oui',
+        inflationText: 'x'.repeat(100),
+        settings: [{ supportId: 's-1', mode: 'magique' }, 'nope'],
+        view: 'ailleurs',
       }),
     )
-    const kept = readDraft()
-    expect(kept.mode).toBe('forecast')
-    expect(kept.years).toBe(DEFAULT_DRAFT.years)
-    expect(kept.lowText).toBe(DEFAULT_DRAFT.lowText)
-    expect(kept.supportRates).toEqual([{ supportId: 's-1', rateText: '4', kind: 'assumed' }])
-  })
-
-  /* Les champs de l'ancienne forme du brouillon ne sont plus lus, et les
-     nouveaux retombent sur leur défaut : c'est ce que cette lecture champ par
-     champ fait déjà de n'importe quelle saleté. */
-  it('ignore un brouillon d’avant la fourchette sans rien casser', () => {
-    localStorage.setItem(
-      PROJECTION_STORAGE_KEY,
-      JSON.stringify({ years: 15, scenarios: [{ id: 'a', rateText: '9', kind: 'assumed' }] }),
-    )
-    const kept = readDraft()
-    expect(kept.years).toBe(15)
-    expect(kept.lowText).toBe(DEFAULT_DRAFT.lowText)
-    expect(kept.highText).toBe(DEFAULT_DRAFT.highText)
+    const back = readDraft()
+    expect(back.picked).toEqual(['s-1'])
+    expect(back.years).toBe(DEFAULT_DRAFT.years)
+    expect(back.every).toBe(1)
+    expect(back.constant).toBe(false)
+    expect(back.inflationText).toBe(DEFAULT_DRAFT.inflationText)
+    expect(back.settings).toEqual([setting({ mode: 'own' })])
+    expect(back.view).toBe('chart')
   })
 
   it('survit à un JSON abîmé', () => {
     localStorage.setItem(PROJECTION_STORAGE_KEY, '{oups')
     expect(readDraft()).toEqual(DEFAULT_DRAFT)
-  })
-
-  /* Un défaut flatteur est le tour de passe-passe des simulateurs de vente :
-     celui-ci est modeste et large des deux côtés. */
-  it('ne propose jamais un défaut qui ressemblerait à un rendement promis', () => {
-    expect(Number(DEFAULT_DRAFT.highText)).toBeLessThanOrEqual(5)
-    expect(Number(DEFAULT_DRAFT.lowText)).toBeLessThan(Number(DEFAULT_DRAFT.highText))
-  })
-})
-
-describe('quand l’origine est l’épargne réelle', () => {
-  const start = (over: Partial<ProjectionStart> = {}): ProjectionStart => ({
-    capital: eur(845_000),
-    monthly: eur(35_000),
-    valued: 1,
-    unvalued: 0,
-    rules: 1,
-    ending: 0,
-    variable: false,
-    parts: [],
-    ...over,
-  })
-
-  it('projette le capital et les versements lus, et non les champs de saisie', () => {
-    // Les deux champs gardent ce qu'on y avait tapé — c'est du confort local,
-    // pas une donnée du foyer — mais ils ne pilotent plus rien.
-    const { result } = analyse({ ...linked, initialText: '1', monthlyText: '2' }, start())
-    expect(result?.initial).toBe(845_000)
-    expect(result?.monthly).toBe(35_000)
-  })
-
-  it('part d’un capital nul quand rien n’a jamais été relevé, sans crier à l’erreur', () => {
-    // Il n'y a pas eu de saisie : il ne peut donc pas y avoir de faute de
-    // saisie. L'écran le *dit*, il ne le signale pas en rouge.
-    const { errors, result } = analyse(linked, start({ capital: null }))
-    expect(errors.initial).toBeUndefined()
-    expect(result?.initial).toBe(0)
-  })
-
-  it('ne lit pas les champs comme illisibles quand ils ne servent pas', () => {
-    const { errors } = analyse({ ...linked, monthlyText: 'beaucoup' }, start())
-    expect(errors.monthly).toBeUndefined()
-  })
-
-  it('ne reprend que le capital en mode inverse : le versement est la réponse', () => {
-    const { result } = analyse(
-      { ...linked, mode: 'target', targetText: '100000', years: 10 },
-      start(),
-    )
-    expect(result?.initial).toBe(845_000)
-    expect(result?.monthly).toBe(null)
-  })
-})
-
-describe('la décomposition du résultat', () => {
-  it('sépare ce qu’il y avait, ce qu’on a mis, et ce que le taux a ajouté', () => {
-    const { result } = analyse(draft({ initialText: '1000', monthlyText: '100', years: 10 }))
-    if (result === null) throw new Error('pas de résultat')
-
-    const breakdown = breakdownOf(result.low.series, result.months)
-    expect(breakdown.initial).toBe(100_000)
-    expect(breakdown.paid).toBe(120 * 10_000)
-    expect(breakdown.interest).toBe(
-      breakdown.total - breakdown.initial - breakdown.paid,
-    )
-    expect(breakdown.share).toBeGreaterThan(0)
-  })
-
-  it('ne met pas un total nul en fraction', () => {
-    expect(breakdownOf({ balance: [], contributed: [] }, 0).share).toBeNull()
-  })
-})
-
-describe('un portefeuille dont les comptes ont chacun leur taux', () => {
-  it('trace une part par compte, et leur somme est la courbe de l’écran', () => {
-    const { result } = analyse(
-      linked,
-      portfolio([part(), part({ supportId: 's-2', label: 'PEA', rateBp: 600 })]),
-    )
-    if (result === null) throw new Error('pas de résultat')
-
-    expect(result.split.map((one) => one.label)).toEqual(['Livret A', 'PEA'])
-    // Un seul moteur : le total *est* la somme des parts, rang par rang.
-    const summed = result.split.reduce((total, one) => total + (one.series.balance.at(-1) ?? 0), 0)
-    expect(result.low.series.balance.at(-1)).toBe(summed)
-  })
-
-  /* Le cœur du modèle : la fourchette ne se pose pas uniformément sur un
-     portefeuille, elle se pose là où l'app ne sait pas. */
-  it('referme la fourchette sur les comptes qui portent leur taux', () => {
-    const { result } = analyse(
-      { ...linked, lowText: '2', highText: '7' },
-      portfolio([part({ rateBp: 240 })]),
-    )
-    expect(result?.single).toBe(true)
-    expect(result?.split[0]?.rateBp).toBe(240)
-    expect(result?.split[0]?.highBp).toBe(240)
-  })
-
-  it('l’ouvre sur les comptes qui n’en portent aucun', () => {
-    const { result } = analyse(
-      { ...linked, lowText: '2', highText: '7' },
-      portfolio([part({ rateBp: null, steps: [] })]),
-    )
-    if (result === null) throw new Error('pas de résultat')
-
-    expect(result.single).toBe(false)
-    expect(result.split[0]?.origin).toBe('screen')
-    expect(result.split[0]?.rateBp).toBe(200)
-    expect(result.split[0]?.highBp).toBe(700)
-  })
-
-  /* Un compte muet à côté d'un compte renseigné : l'écart ne porte que sur le
-     premier, et le total du bas reste celui des taux posés. */
-  it('n’écarte que ce qui est incertain', () => {
-    const { result } = analyse(
-      { ...linked, lowText: '2', highText: '7' },
-      portfolio([
-        part({ rateBp: 240 }),
-        part({ supportId: 's-2', label: 'PEA', rateBp: null, steps: [] }),
-      ]),
-    )
-    if (result === null) throw new Error('pas de résultat')
-
-    const [livret, pea] = result.split
-    expect(livret?.series.balance.at(-1)).toBe(livret?.highSeries.balance.at(-1))
-    expect(pea?.highSeries.balance.at(-1)).toBeGreaterThan(pea?.series.balance.at(-1) ?? 0)
-  })
-
-  it('ne décompose rien en simulation libre', () => {
-    expect(analyse(draft()).result?.split).toEqual([])
-  })
-
-  /* Un trait plein n'est permis que si **tout** ce qui court est contractuel :
-     un seul compte muet, et l'ensemble redevient une hypothèse. */
-  it('ne se dit garanti que si tout l’est', () => {
-    const all = analyse(
-      linked,
-      portfolio([part({ rateKind: 'guaranteed' }), part({ supportId: 's-2', rateKind: 'guaranteed' })]),
-    )
-    expect(all.result?.guaranteed).toBe(true)
-
-    const one = analyse(
-      linked,
-      portfolio([part({ rateKind: 'guaranteed' }), part({ supportId: 's-2', rateBp: null, steps: [] })]),
-    )
-    expect(one.result?.guaranteed).toBe(false)
-  })
-})
-
-describe('un taux essayé sur un compte', () => {
-  it('l’emporte sur le taux du compte, qui l’emporte sur la fourchette', () => {
-    const tried = analyse(
-      {
-        ...linked,
-        supportRates: [{ supportId: 's-1', rateText: '9', kind: 'assumed' }],
-      },
-      portfolio([part()]),
-    )
-    expect(tried.result?.split[0]?.origin).toBe('simulated')
-    expect(tried.result?.split[0]?.rateBp).toBe(900)
-    /* Un taux qu'on affirme ferme la fourchette, comme un taux posé : on vient
-       de dire ce que ce compte rapporte. */
-    expect(tried.result?.single).toBe(true)
-  })
-
-  it('ne touche pas un compte qu’il ne désigne pas', () => {
-    const { result } = analyse(
-      { ...linked, supportRates: [{ supportId: 'ailleurs', rateText: '9', kind: 'assumed' }] },
-      portfolio([part()]),
-    )
-    expect(result?.split[0]?.origin).toBe('own')
-    expect(result?.split[0]?.rateBp).toBe(200)
-  })
-
-  it('retombe sur le taux du compte quand le champ est vide ou illisible', () => {
-    for (const rateText of ['', 'beaucoup']) {
-      const { result } = analyse(
-        { ...linked, supportRates: [{ supportId: 's-1', rateText, kind: 'assumed' }] },
-        portfolio([part()]),
-      )
-      expect(result?.split[0]?.origin).toBe('own')
-    }
-  })
-
-  /* « Et si celui-ci rendait 4 % » ne peut pas cohabiter avec une révision
-     datée qui viendrait le contredire au rang 14. */
-  it('remplace le barème entier, sans laisser une révision le contredire', () => {
-    const { result } = analyse(
-      { ...linked, supportRates: [{ supportId: 's-1', rateText: '9', kind: 'assumed' }] },
-      portfolio([
-        part({
-          steps: [
-            { rateBp: 200, kind: 'assumed', from: '2020-01-01', to: '2030-01-01' },
-            { rateBp: 50, kind: 'assumed', from: '2030-01-01', to: null },
-          ],
-        }),
-      ]),
-    )
-    expect(result?.split[0]?.schedule).toBe(900)
-    expect(result?.split[0]?.dated).toBe(false)
-  })
-})
-
-describe('un compte dont le taux change en route', () => {
-  const nextYearStart = (): string => `${String(Number(currentYm().slice(0, 4)) + 1)}-01-01`
-
-  const dated = (from: string): ProjectionPart =>
-    part({
-      label: 'Assurance-vie',
-      capital: eur(1_000_000),
-      rateBp: 400,
-      steps: [
-        { rateBp: 400, kind: 'assumed', from: '2020-01-01', to: from },
-        { rateBp: 100, kind: 'assumed', from, to: null },
-      ],
-    })
-
-  it('applique la révision, et le signale', () => {
-    const soon = analyse({ ...linked, years: 10 }, portfolio([dated(nextYearStart())]))
-    const never = analyse({ ...linked, years: 10 }, portfolio([dated('2099-01-01')]))
-
-    expect(soon.result?.split[0]?.dated).toBe(true)
-    expect(never.result?.split[0]?.dated).toBe(false)
-    expect(soon.result?.low.series.balance.at(-1)).toBeLessThan(
-      never.result?.low.series.balance.at(-1) ?? 0,
-    )
-  })
-})
-
-describe('un compte plafonné', () => {
-  const capped = (over: Partial<ProjectionPart> = {}): ProjectionPart =>
-    part({
-      capital: eur(2_000_000),
-      monthly: eur(30_000),
-      rateBp: 300,
-      steps: [{ rateBp: 300, kind: 'assumed', from: '2020-01-01', to: null }],
-      cap: eur(2_295_000),
-      room: eur(295_000),
-      ...over,
-    })
-  const decade = draft({ source: { kind: 'member', id: 'm-1' }, years: 10 })
-
-  it('arrête les versements au plafond, et le signale', () => {
-    const { result } = analyse(decade, portfolio([capped()]))
-    // 300 €/mois sur dix ans, mais 2 950 € de place : le versé s'y arrête.
-    expect(result?.split[0]?.series.contributed.at(-1)).toBe(2_000_000 + 295_000)
-    expect(result?.split[0]?.capped).toBe(true)
-  })
-
-  it('laisse le capital croître au-delà du plafond', () => {
-    const { result } = analyse(decade, portfolio([capped()]))
-    expect(result?.split[0]?.series.balance.at(-1)).toBeGreaterThan(2_295_000)
-  })
-
-  it('ne signale rien quand le plafond ne coupe rien', () => {
-    const { result } = analyse(decade, portfolio([capped({ room: eur(9_000_000) })]))
-    expect(result?.split[0]?.capped).toBe(false)
-  })
-
-  it('ne signale rien sur un compte qu’on vide', () => {
-    const { result } = analyse(decade, portfolio([capped({ monthly: eur(-10_000) })]))
-    expect(result?.split[0]?.capped).toBe(false)
-  })
-
-  it('borne aussi ce que l’effort ajoute', () => {
-    const { result } = analyse(decade, portfolio([capped()]))
-    if (result === null) throw new Error('pas de résultat')
-
-    /* Verser deux fois plus sur un compte presque plein ne donne pas deux fois
-       plus : la place restante est la même, et le plafond la tient. Ce qui
-       change n'est que la **date** à laquelle elle est consommée — les mêmes
-       2 950 € versés plus tôt capitalisent un peu plus longtemps —, et c'est
-       exactement ce qu'un calcul qui ignorerait le plafond ne dirait pas. */
-    const here = effortAt(result, eur(30_000))
-    const twice = effortAt(result, eur(60_000))
-    expect(twice.low).toBeGreaterThan(here.low)
-    expect(twice.low - here.low).toBeLessThan(here.low * 0.01)
-    expect(twice.parts[0]?.arrival).toBe(twice.low)
-  })
-})
-
-describe('« et si je versais… »', () => {
-  it('monte avec l’effort, et retrouve la projection de l’écran au montant simulé', () => {
-    const { result } = analyse(draft({ monthlyText: '100', years: 10 }))
-    if (result === null) throw new Error('pas de résultat')
-
-    const same = effortAt(result, eur(10_000))
-    expect(same.low).toBe(result.low.series.balance.at(-1))
-    expect(same.high).toBe(result.high.series.balance.at(-1))
-    expect(effortAt(result, eur(20_000)).low).toBeGreaterThan(same.low)
-  })
-
-  /* La fourchette suit l'effort : un écart unique posé sous une arrivée qui est
-     une fourchette se lirait comme une promesse. */
-  it('rend les deux bornes de l’arrivée', () => {
-    const { result } = analyse(draft({ monthlyText: '100', years: 20, lowText: '2', highText: '7' }))
-    if (result === null) throw new Error('pas de résultat')
-
-    const tried = effortAt(result, eur(20_000))
-    expect(tried.high).toBeGreaterThan(tried.low)
-  })
-
-  it('n’a rien à comparer sans versement', () => {
-    const { result } = analyse(draft({ initialText: '1000', monthlyText: '0' }))
-    if (result === null) throw new Error('pas de résultat')
-    expect(effortAt(result, eur(10_000))).toEqual({ low: 0, high: 0, parts: [] })
-  })
-
-  /* Sur un portefeuille décomposé, l'effort se répartit au prorata et chaque
-     compte garde son taux : sans le détail, on saurait combien verser sans
-     savoir où. */
-  it('répartit l’effort au prorata, chaque compte à son taux', () => {
-    const { result } = analyse(
-      linked,
-      portfolio([part(), part({ supportId: 's-2', label: 'PEA', monthly: eur(30_000), rateBp: 600 })]),
-    )
-    if (result === null) throw new Error('pas de résultat')
-
-    const doubled = effortAt(result, eur(80_000))
-    expect(doubled.parts.map((one) => one.monthly)).toEqual([20_000, 60_000])
-    expect(doubled.low).toBe(
-      doubled.parts.reduce((total, one) => total + one.arrival, 0),
-    )
   })
 })

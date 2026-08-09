@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { eur } from './fixtures'
 import { ZERO } from './money'
-import { inflate, milestoneMonths, monthlyRate, projectSeries, requiredMonthly } from './projection'
+import { monthlyRate, projectSeries } from './projection'
 
 /** Le dernier point d'une série — ce que l'écran appelle « à l'arrivée ». */
 const at = (values: readonly number[], month: number): number => values[month] ?? Number.NaN
@@ -175,104 +175,72 @@ describe('euros constants', () => {
   })
 })
 
-describe('versement requis', () => {
-  it('atteint la cible quand on le réinjecte dans la projection', () => {
-    const monthly = requiredMonthly({
-      target: eur(20_000_000),
-      initial: eur(500_000),
-      months: 240,
-      rateBp: 500,
+describe('cadence des versements', () => {
+  /* Le même effort annuel, versé de trois façons : mensuellement, par trimestre,
+     une fois l'an. Les trois mettent 1 200 € par an et n'arrivent pas au même
+     endroit — c'est exactement ce qu'on vient vérifier en changeant la cadence,
+     et ce qu'un amortissement au mois (cahier §4.2) effacerait. */
+  const decade = { initial: eur(0), months: 120, rateBp: 400 }
+
+  it('verse la même chose en tout, quelle que soit la cadence', () => {
+    const monthly = projectSeries({ ...decade, monthly: eur(10_000) })
+    const quarterly = projectSeries({ ...decade, monthly: eur(30_000), everyMonths: 3 })
+    const yearly = projectSeries({ ...decade, monthly: eur(120_000), everyMonths: 12 })
+
+    expect(at(monthly.contributed, 120)).toBe(1_200_000)
+    expect(at(quarterly.contributed, 120)).toBe(1_200_000)
+    expect(at(yearly.contributed, 120)).toBe(1_200_000)
+  })
+
+  it('rend moins à mesure que la cadence s’espace, à effort égal', () => {
+    const monthly = projectSeries({ ...decade, monthly: eur(10_000) })
+    const quarterly = projectSeries({ ...decade, monthly: eur(30_000), everyMonths: 3 })
+    const yearly = projectSeries({ ...decade, monthly: eur(120_000), everyMonths: 12 })
+
+    /* 1 200 € posés au douzième mois n'ont produit d'intérêts sur rien pendant
+       onze mois : la cadence annuelle arrive donc en dessous, et jamais
+       au-dessus. */
+    expect(at(quarterly.balance, 120)).toBeLessThan(at(monthly.balance, 120))
+    expect(at(yearly.balance, 120)).toBeLessThan(at(quarterly.balance, 120))
+  })
+
+  it('ne verse rien avant la première échéance, et le capital croît quand même', () => {
+    const yearly = projectSeries({
+      initial: eur(1_000_000),
+      monthly: eur(120_000),
+      months: 12,
+      rateBp: 400,
+      everyMonths: 12,
     })
-    expect(monthly).not.toBeNull()
 
-    const { balance } = projectSeries({
-      initial: eur(500_000),
-      monthly: monthly ?? eur(0),
-      months: 240,
-      rateBp: 500,
-    })
-    // Jamais en dessous — c'est tout l'intérêt de l'arrondi au centime
-    // supérieur —, et jamais loin au-dessus non plus.
-    expect(at(balance, 240)).toBeGreaterThanOrEqual(20_000_000)
-    expect(at(balance, 240) - 20_000_000).toBeLessThan(100_000)
+    // Onze rangs sans versement : le versé ne bouge pas du capital de départ.
+    expect(at(yearly.contributed, 11)).toBe(1_000_000)
+    // Le capital, lui, a couru : c'est toute la différence avec une pause.
+    expect(at(yearly.balance, 11)).toBeGreaterThan(1_000_000)
+    expect(at(yearly.contributed, 12)).toBe(1_120_000)
   })
 
-  it('à taux nul, partage simplement le reste à couvrir', () => {
-    expect(requiredMonthly({ target: eur(120_000), initial: eur(0), months: 12, rateBp: 0 })).toBe(
-      10_000,
-    )
+  it('lit une cadence absente, nulle ou fractionnaire comme le mois', () => {
+    const base = { initial: eur(0), monthly: eur(10_000), months: 24, rateBp: 300 }
+    const plain = projectSeries(base)
+    expect(projectSeries({ ...base, everyMonths: 1 })).toEqual(plain)
+    expect(projectSeries({ ...base, everyMonths: 0 })).toEqual(plain)
+    expect(projectSeries({ ...base, everyMonths: 1.6 })).toEqual(plain)
   })
 
-  it('refuse de répondre sans durée, plutôt que de rendre zéro', () => {
-    expect(requiredMonthly({ target: eur(100_000), initial: eur(0), months: 0, rateBp: 300 })).toBe(
-      null,
-    )
-  })
-
-  it('ne demande rien quand le capital initial atteint seul la cible', () => {
-    expect(
-      requiredMonthly({ target: eur(1_000_000), initial: eur(1_000_000), months: 120, rateBp: 300 }),
-    ).toBe(0)
-  })
-
-  it('reste un entier de centimes', () => {
-    const monthly = requiredMonthly({
-      target: eur(3_333_333),
-      initial: eur(77_777),
-      months: 137,
-      rateBp: 615,
-    })
-    expect(Number.isInteger(monthly)).toBe(true)
-  })
-})
-
-describe('cible en euros constants', () => {
-  it('réinflate la cible pour que la courbe arrive sur le chiffre demandé', () => {
-    const target = eur(20_000_000)
-    const nominal = inflate(target, 200, 240)
-    expect(nominal).toBeGreaterThan(target)
-
-    const monthly = requiredMonthly({
-      target: nominal,
+  it('respecte le plafond du contrat sur une cadence espacée', () => {
+    /* La place restante s'écrête au versement, pas au mois : trois échéances de
+       500 € sur une place de 1 200 € en laissent passer deux pleines et une
+       rognée. */
+    const capped = projectSeries({
       initial: eur(0),
-      months: 240,
-      rateBp: 500,
+      monthly: eur(50_000),
+      months: 36,
+      rateBp: 0,
+      everyMonths: 12,
+      room: 120_000,
     })
-    const { balance } = projectSeries({
-      initial: eur(0),
-      monthly: monthly ?? eur(0),
-      months: 240,
-      rateBp: 500,
-      inflationBp: 200,
-    })
-    // Relue en euros d'aujourd'hui, l'arrivée est bien la cible tapée.
-    expect(at(balance, 240)).toBeGreaterThanOrEqual(20_000_000)
-    expect(at(balance, 240) - 20_000_000).toBeLessThan(100_000)
-  })
-
-  it('ne bouge pas un montant sans inflation', () => {
-    expect(inflate(eur(500_000), 0, 240)).toBe(500_000)
-  })
-})
-
-describe('jalons', () => {
-  it('découpe l’horizon en quarts', () => {
-    expect(milestoneMonths(240)).toEqual([60, 120, 180, 240])
-  })
-
-  it('redonne bien 5 / 10 / 15 / 20 ans sur l’horizon de référence', () => {
-    expect(milestoneMonths(240).map((m) => m / 12)).toEqual([5, 10, 15, 20])
-  })
-
-  it('reste utile sur un horizon que 5/10/15/20 ne couvrirait pas', () => {
-    expect(milestoneMonths(480)).toEqual([120, 240, 360, 480])
-    expect(milestoneMonths(36)).toEqual([9, 18, 27, 36])
-  })
-
-  it('ne pose jamais deux fois le même rang, ni le rang zéro', () => {
-    expect(milestoneMonths(2)).toEqual([1, 2])
-    expect(milestoneMonths(1)).toEqual([1])
-    expect(milestoneMonths(0)).toEqual([])
+    expect(at(capped.contributed, 36)).toBe(120_000)
   })
 })
 

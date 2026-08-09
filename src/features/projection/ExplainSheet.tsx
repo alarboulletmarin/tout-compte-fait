@@ -27,6 +27,7 @@ const sections = (): { title: string; body: string }[] => [
   { title: projection.explainRate, body: projection.explainRateBody },
   { title: projection.explainNet, body: projection.explainNetBody },
   { title: projection.explainMethod, body: projection.explainMethodBody },
+  { title: projection.explainSum, body: projection.explainSumBody },
   { title: projection.explainInflation, body: projection.explainInflationBody },
   { title: projection.explainRounding, body: projection.explainRoundingBody },
   { title: projection.explainData, body: projection.explainDataBody },

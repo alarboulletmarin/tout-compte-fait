@@ -12,6 +12,64 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — la simulation ne projette plus que des comptes, et tient dans une page
+
+- **On coche des comptes, et c'est tout.** L'écran demandait d'abord *d'où
+  partir* — quatre nombres tapés à la main, un support, ou « toute l'épargne
+  d'une personne » —, ce qui posait trois questions pour une. La première était
+  une calculatrice qu'on trouve n'importe où ; la troisième additionnait des
+  comptes qui ne suivent pas la même courbe avant de les projeter à un taux moyen
+  qui n'existe pas. Il n'y a plus qu'une liste de cases : chaque compte coché
+  court à **son** rendement et reçoit **son** versement, et la courbe est
+  l'addition de leurs trajectoires. Cocher un seul compte fait de tout l'écran sa
+  trajectoire à lui — et « ces deux comptes-là » n'était exprimable par aucune
+  des trois origines.
+- **Trois façons de poser un rendement, une seule à la fois, compte par
+  compte** : le taux de sa fiche — daté, et seul à engager le document —, une
+  valeur qu'on essaie, ou une fourchette. L'écran en proposait quatre *en même
+  temps*, sans qu'aucune ne dise laquelle des autres elle remplaçait. La
+  fourchette reste le défaut d'un compte muet : l'app ne devine aucun rendement,
+  et entre suggérer un chiffre flatteur et montrer un écart large, elle montre
+  l'écart.
+- **La cadence des versements**, mensuelle à annuelle. C'est le seul endroit de
+  l'app où une échéance n'est pas ramenée au mois, et c'est délibéré : le calcul
+  capitalise, donc 1 200 € versés une fois l'an rendent moins que 100 € versés
+  douze fois — l'argent passe moins de temps à produire. Ramener la cadence au
+  mois aurait effacé exactement ce qu'on vient mesurer.
+- **Une page qui ne défile pas.** L'écran empilait dix-sept blocs dans une
+  colonne de trois mille pixels : on réglait un taux en bas et on remontait voir
+  ce que ça changeait. La réponse est en tête, la figure prend toute la place
+  restante, les réglages sont des pilules au bas du pouce — chacune dit **sa
+  valeur** plutôt que son nom : « 3 comptes », « 2,40 % – 5 % », « 10 ans » —, et
+  ce qui se règle s'ouvre en feuille montante.
+- **Le tableau devient une vue, à un appui de la figure.** Il vivait replié sous
+  la courbe et donnait quatre jalons pris aux quarts de l'horizon ; il donne une
+  ligne par année, parce que « combien dans sept ans » est une question qu'on se
+  pose et « au troisième quart de mon horizon » n'en est pas une. Il porte les
+  mêmes séries que la figure : il n'y a pas de second calcul.
+- **La figure dit d'où vient le capital**, en trois aires empilées : ce qu'il y
+  avait au départ, ce qu'on a versé depuis, ce que le taux a produit. « ≈ 42 000 € »
+  impressionne ; « 12 000 € versés et 6 000 € de rendement » informe. La borne
+  haute passe au-dessus en trait tireté — une hypothèse, pas une mesure.
+- **Ce qui a disparu**, et ne manque pas : le mode « atteindre un objectif » — le
+  verdict d'un objectif y répond déjà, et deux écrans qui répondent à la même
+  question par deux calculs finissent par ne plus donner le même chiffre —, le
+  pas de réglage « et si je versais… », qui posait un second dispositif pour une
+  question à laquelle un champ répond, la simulation libre, et la décomposition
+  compte par compte, qui vit désormais là où l'on coche les comptes.
+
+### Ajouté — une bibliothèque de graphique, pour cet écran et pour lui seul
+
+- **Recharts**, et c'est la seule figure de l'app qui ne soit pas écrite à la
+  main. Les cinq autres tracent une série connue d'avance ; celle-ci est un
+  instrument qu'on manipule, et la bibliothèque apporte ce qui coûterait le plus
+  à réécrire : l'échelle, l'axe, l'infobulle au doigt, la navigation au clavier.
+  Elle pèse 110 Kio compressés, soit vingt fois l'écran qu'elle sert — une
+  dépense assumée, et bornée : elle voyage dans le morceau de la simulation, qui
+  se charge à la demande. Le premier chargement de l'app n'a pas bougé d'un
+  octet, et son budget non plus.
+
+
 ### Ajouté — l'épargne dit si ça va, et pas seulement combien il y a
 
 *Migration de schéma : version 14.* Rien à convertir, et surtout rien à deviner :

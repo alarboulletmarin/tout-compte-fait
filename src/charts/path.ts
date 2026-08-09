@@ -38,9 +38,12 @@ export function isolatedPoints(points: readonly Point[]): { x: number; y: number
  * quand elle suit une autre série, c'est la bande d'un empilement — le même
  * code pour les deux, parce que c'est la même figure.
  *
- * Elle vivait dans `ProjectionChart`, qui était son seul appelant. Ils sont deux
- * depuis que l'épargne s'empile elle aussi, et une figure recopiée est une
- * figure qui finit par ne plus se lire pareil d'un graphique à l'autre.
+ * Elle vivait dans le tracé de la simulation, qui était son seul appelant, puis
+ * dans les deux — celui de l'épargne s'empile de la même façon. La simulation
+ * est passée à Recharts depuis, et il n'en reste qu'un : la fonction ne bouge
+ * pas pour autant, c'est la figure de `GrowthAreas` qu'elle décrit, et une aire
+ * fermée sur une base qui suit une autre série n'a pas de raison de vivre à
+ * l'intérieur d'un composant.
  *
  * Les deux contours doivent avoir la **même longueur** et ne porter aucun trou :
  * une bande n'a pas de sens là où l'un des deux bords manque, et l'appelant

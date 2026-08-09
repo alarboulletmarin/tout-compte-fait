@@ -1861,17 +1861,15 @@ export const fr = {
     goalsEmpty:
       'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
     goalAdd: 'Ajouter un objectif',
-    /* La sortie du simulateur, et la porte de retour vers lui. Ces deux mots
-       sont la boucle : ce qu'on essaie devient un cap, et un cap qu'on rouvre
-       repart en simulation. Sans eux, on règle quatre choses, on regarde une
-       courbe, on part — et rien n'est retenu.
-       « En faire un objectif » et non « Enregistrer » : ce qui entre dans le
-       document n'est pas la simulation mais l'intention qu'on en tire, et le
-       verbe doit dire lequel des deux. */
-    goalFromSimulation: 'En faire un objectif',
+    /* La porte du simulateur, depuis la fiche d'un objectif : ses comptes et son
+       échéance, préréglés. Trois mots vivaient ici avec elle — « En faire un
+       objectif », « Adopter ce rythme », « Rythme adopté » —, c'est-à-dire une
+       sortie du simulateur vers le document. Elle a disparu avec la question à
+       laquelle elle répondait : le simulateur ne cherche plus combien il faudrait
+       verser, et c'est cette fiche-ci qui le dit (`domain/goal.ts`). Ce qui reste
+       est une lecture à sens unique — l'épargne alimente la simulation, jamais
+       l'inverse. */
     goalSimulate: 'Simuler autrement',
-    goalAdopt: 'Adopter ce rythme',
-    goalAdopted: 'Rythme adopté',
     /* Le formulaire. Trois questions, et c'est tout ce qu'un objectif stocke :
        le capital, le rendement et le versement se lisent sur les comptes. */
     /* La gestion, en fin de formulaire comme pour un support : ranger, reprendre,

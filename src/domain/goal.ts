@@ -31,7 +31,7 @@
 import { type ISODate, type YearMonth, addMonthsToYm, endOfMonth, today, ymOf } from './date'
 import { type Money, ZERO, money, ratio } from './money'
 import { type ProjectionSeries, projectSeries } from './projection'
-import { type ProjectionPart, supportStart } from './projectionStart'
+import { type ProjectionPart, supportPart } from './projectionStart'
 import { monthlyRateBps } from './savingRate'
 import type {
   Entry,
@@ -72,7 +72,7 @@ export type GoalBasis = {
 /**
  * Ce que les comptes d'un objectif apportent, lu sur le document.
  *
- * Le **même** chemin que le simulateur, compte par compte : `supportStart` rend
+ * Le **même** chemin que le simulateur, compte par compte : `supportPart` rend
  * déjà le capital, les versements durables, le barème daté et le plafond d'un
  * support, et deux façons de lire un portefeuille finiraient par ne plus donner
  * les mêmes chiffres à un écran d'écart.
@@ -105,8 +105,8 @@ export function goalBasis(
     return support === undefined ? [] : [support]
   })
 
-  const parts = linked.flatMap((support) => {
-    const part = supportStart(
+  const parts = linked.map((support) =>
+    supportPart(
       support,
       document.valuations,
       document.entries,
@@ -114,9 +114,8 @@ export function goalBasis(
       document.rates,
       on,
       until,
-    ).parts
-    return part
-  })
+    ),
+  )
 
   /* Un compte sans relevé ne compte pas dans le capital, et l'objectif n'en a
      donc aucun tant qu'aucun de ses comptes n'a été relevé : zéro est une
