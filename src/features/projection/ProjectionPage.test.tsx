@@ -585,10 +585,10 @@ describe('le rendement par support', () => {
   it('dit qu’un compte sans taux emprunte l’hypothèse de l’écran', async () => {
     await portfolio()
     expect(screen.getByText(projection.supportRateBorrowed)).toBeInTheDocument()
-    expect(rateField('PEL')).toHaveAttribute(
-      'placeholder',
-      projection.supportRateEmpty,
-    )
+    /* L'invite porte le taux qui s'applique — celui de l'écran, 3 % par
+       défaut. Le champ fait deux caractères de large : un libellé y serait
+       coupé au milieu, et d'où vient le taux se lit sous lui. */
+    expect(rateField('PEL')).toHaveAttribute('placeholder', expect.stringContaining('3'))
   })
 
   /** Le chiffre héros — celui qu'on vient chercher, et le seul en `t-hero-fit`. */

@@ -82,8 +82,6 @@ const fr = {
   sourceUnvalued: '%s supports sans relevé ne comptent pas dans ce capital.',
   sourceNoMonthly: 'Aucun versement récurrent n’est déclaré : la simulation n’en ajoute aucun.',
   sourceVariable: 'Une règle au montant variable n’a pas de mensualité à reprendre.',
-  /* Le taux, lui, ne se reprend jamais — c'est la règle qui tient tout le
-     branchement sur l'épargne réelle. */
   /* Elle disait « l'app n'en prête aucun à un support », ce qui est devenu faux
      le jour où un support a pu porter son taux. Ce que la phrase visait tient
      toujours : l'app ne **devine** aucun rendement — elle relit celui que son
@@ -232,7 +230,6 @@ const fr = {
   supportRateBorrowed: 'Aucun taux posé : l’hypothèse ci-dessous s’applique.',
   supportRateSimulated: 'Modifié pour cette simulation',
   supportRateReset: 'Reprendre le taux du support',
-  supportRateEmpty: 'Hypothèse de l’écran',
   screenRate: 'Hypothèse de l’écran',
   screenRateHint: 'Elle s’applique aux supports qui ne portent aucun taux.',
 

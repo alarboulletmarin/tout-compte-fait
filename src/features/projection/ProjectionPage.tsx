@@ -593,9 +593,11 @@ export function ProjectionPage() {
                     draft.supportRates.find((one) => one.supportId === part.supportId)?.rateText ??
                     ''
                   }
-                  placeholder={
-                    part.origin === 'screen' ? projection.supportRateEmpty : percent(part.rateBp)
-                  }
+                  /* Le taux qui s'applique, quel qu'il soit : le champ fait deux
+                     caractères de large, et « Hypothèse de l'écran » s'y
+                     couperait au milieu. D'où il vient se lit en toutes lettres
+                     sous le champ, où il y a la place. */
+                  placeholder={percent(part.rateBp)}
                   onChange={(next) => {
                     patch({ supportRates: setSupportRate(draft.supportRates, part, next) })
                   }}

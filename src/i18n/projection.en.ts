@@ -126,7 +126,6 @@ export const en: ProjectionStrings = {
   supportRateBorrowed: 'No rate set: the assumption below applies.',
   supportRateSimulated: 'Changed for this simulation',
   supportRateReset: 'Restore the account’s rate',
-  supportRateEmpty: 'Screen assumption',
   screenRate: 'Screen assumption',
   screenRateHint: 'It applies to accounts that carry no rate of their own.',
 
