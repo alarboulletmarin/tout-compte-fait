@@ -12,6 +12,112 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Corrigé — deux libellés presque identiques sur deux montants différents
+
+« Sa part du mois » annonçait 1 659,83 € sur la tuile du virement, « Part du
+commun » 1 634,45 € sur celle du coût, à deux cases l'une de l'autre. Deux noms
+qui disent la même chose, deux nombres à vingt-cinq euros d'écart, et rien pour
+dire lequel était lequel ni pourquoi. La feuille d'explication le racontait en
+prose ; le montant qui les sépare, lui, ne s'affichait nulle part.
+
+- **Il a maintenant sa ligne, sur la tuile du virement et sur l'écran
+  Répartition** : « Remboursement d'avance ». Le calcul se lit donc en entier —
+  1 634,45 € de part du commun, plus 25,38 € de remboursement, plus 129,13 € de
+  régularisation, égale 1 788,96 € à verser.
+- **Les deux tuiles portent le même libellé sur le même montant** : « Part du
+  commun », 1 634,45 € des deux côtés. C'est ce qui les rend lisibles ensemble.
+- **Le domaine nomme ce qu'il calculait sans le dire.** Une part du pot se
+  décompose désormais en ce qui se consomme et ce qui se rembourse, découpé par
+  le même chemin entrée par entrée — allouer la somme plutôt que chaque ligne
+  ferait diverger les arrondis d'un centime, et ce centime se verrait.
+- **Les libellés de « Perso et commun » ne se tronquent plus.** Ils portaient
+  `truncate`, si bien que le retour à la ligne prévu ne se déclenchait jamais :
+  à 320px on lisait « Part du c… ». C'est le montant qui descend, comme le
+  commentaire de la tuile le décrivait déjà.
+
+### Ajouté — « Perso et commun » dit enfin ce que son chiffre représente
+
+C'était la seule tuile de la grille à porter deux montants sans mener nulle part
+et sans rien expliquer. Sa voisine « À verser sur le commun » ouvre l'écran
+Répartition, où son calcul est posé ligne à ligne ; celle-ci ne mène nulle part —
+ses deux moitiés viennent de deux endroits — et n'avait donc aucun endroit où
+s'expliquer. Devant deux chiffres voisins qui se ressemblent, la question « c'est
+quoi la différence ? » n'avait aucune réponse à l'écran.
+
+- **Elle ouvre une feuille**, celle-là même que les quatre soldes de la grille du
+  haut utilisent : ce que le chiffre est, **Le calcul**, et **Ce qui le
+  distingue**. Le glyphe d'information au coin, sans nom de destination, parce
+  qu'il n'y en a pas (DS §6).
+- **Elle nomme les deux causes de l'écart avec le virement** : la régularisation
+  du mois précédent, et la mensualité d'une avance. Les deux se virent sans rien
+  coûter au mois — un coût est arrêté au mois où la dépense a eu lieu.
+- **« Comment c'est calculé », sur l'écran Répartition, cesse de mentir par
+  omission.** Il disait « l'épargne n'est pas partagée » sans réserve, quand
+  l'app elle-même pose l'exception : la mensualité qui reconstitue un livret
+  après une avance est de nature épargne *et* partagée, puisque le foyer
+  rembourse celui qui a avancé. C'est la seule ligne du pot commun que rien
+  n'expliquait, et c'est elle qui fait qu'un virement peut dépasser ce que le
+  mois a coûté.
+
+### Corrigé — « Perso et commun » annonçait un coût plus grand que la tuile Charges
+
+Sur le jeu d'exemple, la tuile Charges disait 1 672,42 € et « Perso et commun »
+1 697,80 € pour le même mois de la même personne — 25,38 € d'écart, dans une
+tuile dont tout le propos est d'éclater le premier chiffre sans le contredire.
+
+L'écart vaut exactement la part d'une **mensualité d'avance**. Quelqu'un règle
+l'assurance auto du foyer depuis son livret ; l'app pose alors une récurrence qui
+le reconstitue — de nature « épargne », prise sur la catégorie du support — et la
+marque « à partager », puisque le foyer la lui rembourse. Cette mensualité est un
+**virement dû, pas un coût consommé** : elle entre à bon droit dans « À verser
+sur le commun », et la tuile Charges l'exclut à bon droit aussi, comme tout ce
+qui sort du compte sans quitter le foyer.
+
+- **La tuile du coût prend désormais la part des seules natures que la tuile
+  Charges compte** — charges et crédits —, là où elle prenait la part du pot
+  entier. Le domaine calculait déjà les deux et le disait ; c'est la tuile qui
+  lisait la mauvaise.
+- **Les deux « parts du commun » de l'écran ne sont donc pas le même montant, et
+  c'est correct** : celle du virement (1 659,83 €) comprend le remboursement de
+  l'avance, celle du coût (1 634,45 €) non. Elles portent déjà deux libellés
+  différents — « Sa part du mois » et « Part du commun ».
+- Vérifié sur les trois membres du jeu d'exemple : les deux tuiles tombent
+  maintenant au centime.
+
+### Modifié — un anneau sans son tout n'est plus qu'un pourcentage
+
+« À verser sur le commun » dessinait 45,3 % dans un anneau : la part du pot
+commun que le prorata des revenus met sur la personne filtrée. Or un anneau
+annonce *une fraction d'un tout*, et ce tout — le total des charges communes du
+foyer — n'est pas sur la tuile, délibérément : c'est un chiffre qu'on ne doit
+pas. Restait une jauge sans son tout, c'est-à-dire un pourcentage sans son « de
+quoi ». Sur l'écran de tout le monde la question ne se pose pas, la tuile
+Répartition découpe le pot entre les personnes et le tout est sous les yeux ;
+sous un filtre par membre, elle se posait et rien à l'écran n'y répondait.
+
+- **L'anneau est retiré, et le pourcentage avec lui** — pas remplacé par une
+  version « expliquée » posée à côté. Il sort du revenu de chacun rapporté à la
+  somme des revenus, et c'est cette division-là qu'il faut voir pour l'admettre.
+  L'écran Répartition la montre ligne à ligne, à un doigt d'ici, le prorata
+  contre le revenu dont il vient. Un pourcentage qu'on ne peut pas vérifier sur
+  l'écran où il s'affiche n'explique rien, quel que soit le mot qu'on lui
+  accroche.
+- **La règle vise cet anneau-ci, pas les anneaux.** « Perso et commun » en porte
+  un juste à côté sans rien enfreindre : le sien découpe un total qui est au
+  centre du cercle, et ses deux parts se lisent contre lui. Un anneau dont le
+  tout est à l'écran explique ; un anneau dont le tout est ailleurs décore.
+- **Le calcul prend la place qu'il libère.** Les deux lignes — sa part du mois,
+  la régularisation — disposaient d'une colonne de 152px à côté de l'anneau, où
+  chaque montant passait sous son libellé ; elles ont maintenant la largeur de
+  la tuile et tiennent chacune sur sa ligne, jusqu'à 320px.
+- **Sans régularisation, la tuile passe en `4x1`** : elle ne porte plus que son
+  chiffre, et deux rangées y laisseraient exactement les quarante pixels de vide
+  que le DS §5 reproche à une tuile sans visualisation. Le format suit le
+  contenu — deux rangées quand il y a une addition à montrer, une quand il n'y a
+  qu'un montant.
+- Le nom du membre vivait dans la lecture parlée de l'anneau : il passe dans le
+  nom de la région, que rien d'autre ne portait.
+
 ### Ajouté — l'épargne répond à ce que la banque ne sait pas, et cesse de réclamer ce qu'elle sait déjà
 
 **Migration de schéma : v8 → v9.** Un champ `SavingSupport.pace` s'ajoute —

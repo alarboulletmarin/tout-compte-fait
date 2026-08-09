@@ -1,14 +1,22 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { type Money, money } from '@/domain/money'
 import type { Entry, Recurrence } from '@/domain/types'
 import { fr } from '@/i18n/fr'
-import { formatMoney } from '@/i18n/format'
+import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MemberChargesTile } from './MemberChargesTile'
+import type { Metric } from './MetricInfo'
 
 const initial = useStore.getState().data
+
+/** Ce que la tuile passe à la feuille, capté pour l'assertion. */
+let opened: Metric | null = null
+const explained = (metric: Metric): void => {
+  opened = metric
+}
 
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
@@ -18,12 +26,16 @@ const out = (value: Money): string =>
 const FAMILIES = [
   makeFamily({ id: 'fam-charges', label: 'Logement', kind: 'charge' }),
   makeFamily({ id: 'fam-res', label: 'Ressources', kind: 'resource' }),
+  // La famille où vit la catégorie d'un support : c'est elle que porte la
+  // mensualité d'une avance, prise sur le support qui l'a financée.
+  makeFamily({ id: 'fam-epargne', label: 'Épargne', kind: 'saving' }),
 ]
 
 const CATEGORIES = [
   makeCategory({ id: 'loyer', label: 'Loyer', familyId: 'fam-charges' }),
   makeCategory({ id: 'courses', label: 'Courses', familyId: 'fam-charges' }),
   makeCategory({ id: 'salaire', label: 'Salaire', familyId: 'fam-res', direction: 'in' }),
+  makeCategory({ id: 'livret', label: 'Livret', familyId: 'fam-epargne' }),
 ]
 
 const ALIX = makeMember({ id: 'm-1', name: 'Alix' })
@@ -76,12 +88,13 @@ function mount(over: { filterOn?: string; entries?: Entry[] } = {}): void {
     }),
   })
 
-  render(<MemberChargesTile />)
+  render(<MemberChargesTile onExplain={explained} />)
 }
 
 describe('« Perso et commun », ce que le mois coûte et d’où ça vient', () => {
   afterEach(() => {
     useStore.setState({ data: initial })
+    opened = null
   })
 
   /* Le foyer entier n'a pas de perso : la découpe n'existe que du point de vue
@@ -116,7 +129,14 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
     mount({ filterOn: 'm-1' })
 
     expect(screen.queryByText(fr.dashboard.memberShare)).not.toBeInTheDocument()
-    expect(screen.queryByText(fr.split.settlementShare)).not.toBeInTheDocument()
+    /* Le report et le remboursement d'avance sont les deux termes qui
+       n'appartiennent qu'au virement. La part des charges communes, elle, est
+       bien ici — et sous le libellé exact de la tuile voisine, puisque c'est le
+       même montant. */
+    expect(screen.queryByText(/Régularisation/)).not.toBeInTheDocument()
+    expect(screen.queryByText(fr.split.settlementRefund)).not.toBeInTheDocument()
+    expect(screen.getByText(fr.dashboard.memberChargesCommon)).toBeInTheDocument()
+    expect(fr.split.settlementShare).toBe(fr.dashboard.memberChargesCommon)
   })
 
   /* Sans charge commune, « tout est à moi » reste une réponse — et c'est le
@@ -126,6 +146,59 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
 
     expect(screen.getByText(fr.dashboard.memberCharges)).toBeInTheDocument()
     expect(screen.getByText(out(eur(5_000)))).toBeInTheDocument()
+  })
+
+  /* La mensualité d'une avance partagée est « à partager » et de nature
+     épargne : quelqu'un a réglé l'assurance du foyer depuis son livret, et le
+     foyer le lui rembourse. C'est un virement dû, pas un coût consommé — la
+     tuile Charges l'exclut, celle-ci doit l'exclure aussi. Prise sur `common`,
+     la part y ajoutait 40 € et cette tuile annonçait un coût *supérieur* au
+     chiffre qu'elle prétend éclater. */
+  it('exclut la part d’une ligne partagée qui n’est pas une dépense', () => {
+    mount({
+      filterOn: 'm-1',
+      entries: [
+        RENT,
+        GROCERIES,
+        makeEntry({
+          date: '2026-08-14',
+          label: 'Assurance auto',
+          categoryId: 'livret',
+          amount: eur(6_000),
+          memberId: 'm-1',
+          shared: true,
+        }),
+      ],
+    })
+
+    // 600 € de loyer et non 640 : les 60 € de mensualité restent dehors.
+    expect(screen.getByText(out(eur(60_000)))).toBeInTheDocument()
+    expect(screen.queryByText(out(eur(64_000)))).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(65_000), 'EUR', false)}`),
+      ),
+    ).toBeInTheDocument()
+  })
+
+  /* Elle ne mène nulle part — ses deux moitiés viennent de deux endroits —, et
+     restait donc la seule tuile de la grille à porter deux montants sans que
+     rien nulle part ne dise ce qu'ils sont. Elle ouvre sa feuille, comme les
+     soldes de la grille du haut, et lui passe la moitié qui vient du foyer :
+     une explication qui parle d'un montant qu'on ne voit plus oblige à la
+     refermer pour le retrouver. */
+  it('ouvre son explication, avec le chiffre et la part du commun', async () => {
+    mount({ filterOn: 'm-1' })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: tpl(fr.dashboard.explain, fr.dashboard.memberCharges) }),
+    )
+
+    expect(opened).toEqual({
+      key: 'memberCharges',
+      value: eur(65_000),
+      hint: tpl(fr.dashboard.memberChargesOfWhich, formatMoney(eur(60_000), 'EUR')),
+    })
   })
 
   /* Une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va (cahier §4.6). */

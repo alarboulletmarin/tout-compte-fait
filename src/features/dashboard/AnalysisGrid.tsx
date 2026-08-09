@@ -3,6 +3,7 @@ import { BentoGrid } from '@/ui/Tile'
 import { BreakdownTile, type ShowFamily } from './BreakdownTile'
 import { CreditsTile } from './CreditsTile'
 import { MemberChargesTile } from './MemberChargesTile'
+import type { Metric } from './MetricInfo'
 import { MemberShareTile } from './MemberShareTile'
 import { SavingTile } from './SavingTile'
 import { SplitTile } from './SplitTile'
@@ -42,13 +43,19 @@ import { SplitTile } from './SplitTile'
  * hors de la grille : leur hauteur doit venir de leur contenu et non d'un
  * format (DS §5).
  */
-export function AnalysisGrid({ onShowFamily }: { onShowFamily?: ShowFamily }) {
+export function AnalysisGrid({
+  onShowFamily,
+  onExplain,
+}: {
+  onShowFamily?: ShowFamily
+  onExplain: (metric: Metric) => void
+}) {
   const common = useIsCommonFilter()
 
   return (
     <BentoGrid>
       <BreakdownTile {...(onShowFamily === undefined ? {} : { onShowFamily })} />
-      <MemberChargesTile />
+      <MemberChargesTile onExplain={onExplain} />
       {!common && <SavingTile />}
       <MemberShareTile />
       <SplitTile />

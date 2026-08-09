@@ -891,11 +891,14 @@ export const fr = {
        « À verser sur le commun » juste en dessous disaient deux fois la même
        chose, et cette redite valait les trente pixels qui débordaient. */
     memberShare: 'À verser sur le commun',
-    /* La lecture de la jauge, et elle seule : les montants qu'elle accompagnait
-       se lisent ligne à ligne dans la tuile, qui n'est plus un bouton derrière
-       lequel tout disparaissait. Le nom du membre y reste, lui : rien dans le
-       contenu ne le porte, il vient du filtre. */
-    srMemberShare: '%s porte %s des charges communes.',
+    /* Le nom de la région, et le nom du membre avec lui. Il ne s'affiche pas —
+       il vient du filtre, que la tuile ne redit pas — et il vivait jusqu'ici
+       dans la lecture parlée de l'anneau, partie avec l'anneau : une jauge à
+       45,3 % annonçait une fraction du total des charges communes du foyer,
+       lequel n'est pas sur cette tuile et n'a pas à y être. Un pourcentage sans
+       son « de quoi » ne s'explique pas d'un mot posé à côté ; il se vérifie sur
+       l'écran Répartition, contre le revenu dont il sort. */
+    memberShareOf: 'À verser sur le commun · %s',
 
     /* Ce que le mois coûte à la personne filtrée, et la seule chose que ses
        chiffres ne disent jamais : ce qui est à elle, et ce qui est le foyer.
@@ -916,7 +919,22 @@ export const fr = {
        pour la `2×1`, seule à rester en demi-colonne sur mobile (DS §5). */
     memberCharges: 'Perso et commun',
     memberChargesOwn: 'Charges perso',
+    /* Le **même libellé** que la ligne d'« À verser sur le commun », parce que
+       c'est le même montant au centime. Sa voisine disait « Sa part du mois » —
+       deux noms proches sur deux nombres à vingt-cinq euros l'un de l'autre, et
+       rien pour dire lequel était lequel ; elle dit maintenant celui-ci, et ce
+       qui les séparait a sa propre ligne.
+
+       Quinze caractères, et c'est un plafond mesuré : la colonne posée à côté
+       de l'anneau fait 152px, où « Part des charges communes » se faisait
+       tronquer — « Part des … », c'est-à-dire plus rien. Le DS §5 l'interdit, et
+       la précision perdue se rattrape sur la ligne d'en dessous et dans la
+       feuille, qui ont la place de la dire. */
     memberChargesCommon: 'Part du commun',
+    /* La lecture que la feuille pose sous le chiffre : la moitié qui vient du
+       foyer, c'est-à-dire celle des deux qu'on ne décide pas seul·e — donc
+       celle dont on vient chercher l'explication. */
+    memberChargesOfWhich: 'dont %s de part du commun',
     srMemberCharges: '%s de charges pour %s : %s en propre, %s de part du commun.',
 
     /* Quatre soldes qui se ressemblent à l'œil sans dire la même chose. Chacun
@@ -952,6 +970,23 @@ export const fr = {
         calculation: 'Le prévisionnel, arrêté la veille de la prochaine rentrée d’argent.',
         apart:
           'C’est le prévisionnel arrêté plus tôt : lui va jusqu’au bout du mois, celui-ci s’arrête au prochain salaire. Sans rentrée en vue, les deux se rejoignent — l’horizon devient la fin du mois.',
+      },
+      /* Le seul des quatre qui ne soit pas un solde, et il est là pour la
+         raison qui a fait les trois autres : deux chiffres voisins qui se
+         ressemblent sans dire la même chose. Sa voisine « À verser sur le
+         commun » mène à l'écran Répartition, où son calcul est posé ligne à
+         ligne ; celle-ci ne mène nulle part — ses deux moitiés viennent de deux
+         endroits — et n'avait donc aucun endroit où s'expliquer. */
+      memberCharges: {
+        lead: 'Ce que le mois t’a réellement coûté : tes dépenses à toi, plus la part du foyer que tes revenus te font porter.',
+        calculation:
+          'Tes charges et tes crédits à ton nom, plus ta part des charges et des crédits communs — au prorata des revenus. C’est le chiffre de la tuile Charges, au centime : celle-ci ne le contredit pas, elle l’éclate.',
+        /* La question exacte qui a fait écrire cette feuille : deux montants
+           proches, deux cases d'écart, et l'un plus grand que l'autre sans
+           qu'aucun écran ne dise pourquoi. Les deux causes sont nommées, dans
+           l'ordre où elles se rencontrent. */
+        apart:
+          'Ce n’est pas ce que tu verses sur le commun. Le virement porte en plus la régularisation du mois précédent, et la mensualité d’une avance — quand quelqu’un a réglé une dépense du foyer depuis son épargne et que le foyer la lui rembourse. Ces deux-là se virent sans rien coûter au mois : un coût est arrêté au mois où la dépense a eu lieu.',
       },
       /* La capacité d'épargne n'a plus sa feuille : elle ouvre son écran, où le
          calcul est posé terme par terme et suivi de ce qu'il reste à placer.
@@ -1413,7 +1448,18 @@ export const fr = {
        « de septembre » ne s'écrivent pas pareil — c'est `SplitPage` qui l'élide,
        comme il le fait déjà pour les prénoms. */
     settlement: 'Régularisation %s',
-    settlementShare: 'Sa part du mois',
+    /* « Sa part du mois » nommait la part du pot entier, et la tuile « Perso et
+       commun » nommait « Part du commun » la part qui coûte : deux libellés
+       presque identiques, deux montants à vingt-cinq euros l'un de l'autre, et
+       rien pour dire lequel était lequel. Celui-ci dit ce qu'il compte —
+       les charges communes —, et il porte le même nombre que la ligne de la
+       tuile Charges décomposée. Ce qui les séparait a maintenant sa ligne. */
+    settlementShare: 'Part du commun',
+    /* La mensualité d'une avance : la ligne qui expliquait l'écart sans jamais
+       s'afficher. Elle ne se lit qu'aux mois où elle existe — c'est-à-dire
+       presque jamais, ce qui est exactement pourquoi son absence coûtait si
+       cher à comprendre. */
+    settlementRefund: 'Remboursement d’avance',
     settlementDetail: 'Ce qui a été avancé en %s',
     settlementHint:
       'Ces charges communes ont été réglées par une seule personne. Chacun en portait sa part : le mois se rattrape ici, et la somme des versements vaut toujours le total.',
@@ -1432,8 +1478,18 @@ export const fr = {
       'Un salaire à montant variable vaut sa dernière échéance chiffrée, à défaut son montant habituel. Une récurrence laissée « en commun » ne compte dans le revenu de personne.',
     methodIncluded: 'Les charges et les crédits que personne ne s’est attribués.',
     methodFlagged: 'Les dépenses cochées « à partager ».',
+    /* La phrase disait « l'épargne n'est pas partagée », sans réserve — et le
+       jeu d'exemple la contredit à chaque mois : la mensualité qui reconstitue
+       un livret après une avance est de nature épargne *et* cochée « à
+       partager », puisque le foyer rembourse celui qui a avancé. C'est
+       `createAdvance` qui la pose ainsi, donc l'app elle-même. La règle
+       générale reste vraie ; l'exception, elle, était la seule ligne du pot que
+       rien n'expliquait, et c'est aussi elle qui fait qu'un virement peut
+       dépasser ce que le mois a coûté. */
     methodExcluded:
       'L’épargne n’est pas partagée : elle sort du compte, mais elle reste à qui la met de côté.',
+    methodAdvance:
+      'Une exception : quand quelqu’un a réglé une dépense du foyer depuis son épargne, la mensualité qui la lui rembourse est partagée. Elle se verse sans rien coûter au mois — c’est pourquoi un virement peut dépasser ce que le mois a coûté.',
     nothing: 'Aucune charge commune ce mois-ci.',
     /* Ce qui manque est nommé plutôt que remplacé par un zéro : un prorata au
        dénominateur incomplet ne vaut pas zéro, il ne veut rien dire. */

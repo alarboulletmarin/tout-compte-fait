@@ -307,8 +307,26 @@ export type MemberShare = {
   income: Money
   /** Part du revenu du foyer, en points de base. 5556 = 55,56 %. */
   shareBp: number
-  /** Sa part des charges communes du mois — ce que le mois lui coûte. */
+  /**
+   * Sa part du **pot commun** du mois : tout ce qui y entre, au prorata.
+   *
+   * Ce n'est pas ce que le mois lui coûte, et le confondre est ce qui faisait
+   * lire deux chiffres voisins comme une erreur. Le pot porte aussi la
+   * mensualité d'une avance — quelqu'un a réglé une dépense du foyer depuis son
+   * épargne, le foyer la lui rembourse —, qui est de nature épargne et se verse
+   * sans rien consommer. `due − refund` est la part qui coûte ; c'est elle que
+   * la tuile Charges compte, et elle seule.
+   */
   due: Money
+  /**
+   * La part de `due` qui ne se consomme pas : les lignes du pot dont la nature
+   * n'est ni charge ni crédit, c'est-à-dire les mensualités d'avance.
+   *
+   * Zéro sur presque tous les mois, et c'est bien pour ça qu'elle méritait un
+   * nom : le seul écart entre « ce que je verse » et « ce que je paie » qu'aucun
+   * écran ne pouvait expliquer venait d'elle.
+   */
+  refund: Money
   /**
    * Le report du mois précédent : ce qu'il aurait dû verser sur ce que l'autre
    * a avancé, moins ce qu'il a avancé lui-même. Négatif, il a trop avancé.
@@ -374,18 +392,34 @@ export function memberShares(
   incomes: readonly IncomeWeight[],
   amounts: readonly Money[],
   adjustments: ReadonlyMap<string, Money> | null = null,
+  /**
+   * Le sous-ensemble d'`amounts` qui ne se consomme pas — les mensualités
+   * d'avance. Passé à part plutôt que déduit ici : la nature d'une ligne se lit
+   * sur sa catégorie, que ce module ne connaît pas et n'a pas à connaître.
+   *
+   * Découpé **par le même chemin** que le reste, entrée par entrée : allouer
+   * une somme puis la retrancher d'une autre allocation ferait diverger les
+   * arrondis d'un centime, et ce centime se verrait — `due − refund` doit
+   * redonner au centime ce que la tuile Charges annonce.
+   */
+  refunds: readonly Money[] = [],
 ): MemberShare[] | null {
   const weights = prorataWeights(incomes)
   if (weights === null) return null
 
   const shares = largestRemainder(10_000, weights)
-  const dues = weights.map(() => 0)
-  for (const amount of amounts) {
-    const parts = largestRemainder(amount, weights)
-    for (const [index, part] of parts.entries()) {
-      dues[index] = (dues[index] ?? 0) + part
+  const split = (list: readonly Money[]): number[] => {
+    const totals = weights.map(() => 0)
+    for (const amount of list) {
+      const parts = largestRemainder(amount, weights)
+      for (const [index, part] of parts.entries()) {
+        totals[index] = (totals[index] ?? 0) + part
+      }
     }
+    return totals
   }
+  const dues = split(amounts)
+  const refunded = split(refunds)
 
   return incomes.map((entry, index) => {
     const due = money(dues[index] ?? 0)
@@ -398,6 +432,7 @@ export function memberShares(
       income: entry.income ?? ZERO,
       shareBp: shares[index] ?? 0,
       due,
+      refund: money(refunded[index] ?? 0),
       adjustment,
       toPay: add(due, adjustment),
     }

@@ -10,6 +10,7 @@ import { Ring, type RingSegment } from '@/ui/Ring'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
+import type { Metric } from './MetricInfo'
 
 /** La couleur du pot : aucune personne ne le porte, aucune couleur de membre
  *  ne peut donc le dire. C'est celle que la grille réserve à ce qui n'a pas
@@ -39,13 +40,29 @@ const COMMON_COLOR = 'var(--cat-rest)'
  * le contredit pas, elle l'éclate. C'est ce qui interdit d'arrondir ici — deux
  * moitiés arrondies ne redonnent plus le tout annoncé trois cases plus haut.
  *
+ * **Et c'est ce qui décide de quelle part du commun elle prend.** `common` est
+ * la part du *pot*, celle qu'on verse ; `commonCharge + commonDebt` est la part
+ * des seules natures que `spendingFlow` compte, celle que le mois coûte. Les
+ * deux diffèrent dès qu'une ligne « à partager » n'est pas une dépense, et ce
+ * n'est pas un document tordu à la main : une **avance** en produit une à chaque
+ * mensualité. Quelqu'un règle l'assurance auto du foyer depuis son livret,
+ * l'app pose une récurrence qui le reconstitue — nature « épargne », prise sur
+ * la catégorie du support — et la marque « à partager », puisque le foyer la lui
+ * rembourse. Cette mensualité est un virement dû, pas un coût consommé : elle
+ * entre dans « À verser sur le commun » et pas dans la tuile Charges.
+ *
+ * Prendre `common` ici faisait donc annoncer un coût **supérieur** à la tuile
+ * Charges de la même page — 1 697,80 € contre 1 672,42 € sur le jeu d'exemple,
+ * soit les 25,38 € de part d'une mensualité de 56 € —, dans une tuile dont tout
+ * le propos est d'éclater ce chiffre-là sans le contredire.
+ *
  * `2×2` et l'anneau de `BreakdownTile`, dont elle est l'autre découpe du même
  * montant : par famille chez l'une, par ce qui se décide seul·e ou à deux chez
  * l'autre. Elle s'efface sans filtre, sans prorata calculable — l'en-tête du
  * mois nomme alors ce qui manque — et quand le mois n'a coûté à cette personne
  * ni en propre ni en commun : une répartition de rien n'est pas une répartition.
  */
-export function MemberChargesTile() {
+export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) => void }) {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   const members = useMemberMap()
@@ -53,7 +70,11 @@ export function MemberChargesTile() {
 
   if (filter === undefined || charges === null) return null
 
-  const total = add(charges.own, charges.common)
+  /* La part des seules natures que compte la tuile Charges — voir plus haut :
+     `common` y ajouterait la mensualité d'une avance partagée, qui est un
+     virement dû et non un coût du mois. */
+  const common = add(charges.commonCharge, charges.commonDebt)
+  const total = add(charges.own, common)
   if (total <= ZERO) return null
 
   const member = members.get(filter)
@@ -73,7 +94,7 @@ export function MemberChargesTile() {
     },
     {
       id: 'common',
-      value: shareOf(charges.common),
+      value: shareOf(common),
       color: COMMON_COLOR,
       label: fr.dashboard.memberChargesCommon,
     },
@@ -84,16 +105,47 @@ export function MemberChargesTile() {
     formatMoney(total, currency),
     member?.name ?? '',
     formatMoney(charges.own, currency),
-    formatMoney(charges.common, currency),
+    formatMoney(common, currency),
   )
+  /* La feuille reprend le chiffre **et** la moitié qui vient du foyer : c'est
+     celle des deux qu'on ne décide pas seul·e, donc celle dont on vient
+     chercher l'explication, et une explication qui parle d'un montant qu'on ne
+     voit plus oblige à refermer la feuille pour le retrouver. */
+  const hint = tpl(fr.dashboard.memberChargesOfWhich, formatMoney(common, currency))
 
   return (
-    /* Sans lien, seule de la grille à porter deux montants sans destination :
-       ses deux moitiés viennent de deux endroits — ses lignes du mois pour
-       l'une, l'écran Répartition pour l'autre —, et un chevron unique
-       promettrait un écran qui les montrerait ensemble. Il n'y en a pas, et
-       en désigner un mentirait sur ce qu'on y trouve. */
-    <Tile span="2x2" className="gap-3">
+    /* **Aucun chevron, et une feuille à la place.** Ses deux moitiés viennent
+       de deux endroits — ses lignes du mois pour l'une, l'écran Répartition
+       pour l'autre —, et un chevron unique promettrait un écran qui les
+       montrerait ensemble : il n'y en a pas. Restait une tuile qui ne faisait
+       rien, seule de la grille à porter deux montants sans que rien nulle part
+       ne dise ce qu'ils sont — quand sa voisine, elle, mène à l'écran où son
+       calcul est posé ligne à ligne.
+       C'est exactement le cas que le DS §6 range sous « ouvre une feuille sur
+       place », et que les quatre soldes de la grille du haut utilisent déjà :
+       un chiffre à définir, pas un détail à ouvrir. Le glyphe d'information au
+       coin, sans nom de destination, parce qu'il n'y en a pas.
+
+       Toute la tuile est la cible, comme les soldes : à 152px de colonne, un
+       bouton « i » et l'eyebrow ne tiennent pas côte à côte, et le glyphe du
+       coin reste donc un repère et non une cible.
+
+       **Sa légende n'est plus une `<ul>`, et c'est ce qui l'autorise.** Le DS
+       §6 réserve le vrai lien aux tuiles « dont le contenu est une liste à
+       lire » — une liste de personnes, une preuve qu'on suit ligne à ligne.
+       Ces deux rangées-ci ne sont pas ça : ce sont les deux parts de l'anneau,
+       nommées, et l'anneau porte déjà leur lecture parlée en une phrase
+       (`srMemberCharges`). Un lecteur d'écran n'y perd donc rien, et un
+       `<button>` n'admettrait pas la liste. */
+    <Tile
+      span="2x2"
+      className="gap-3"
+      onClick={() => {
+        onExplain({ key: 'memberCharges', value: total, hint })
+      }}
+      label={tpl(fr.dashboard.explain, fr.dashboard.memberCharges)}
+      affordance={{ kind: 'explain' }}
+    >
       <Eyebrow icon={ChargesIcon}>{fr.dashboard.memberCharges}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring
@@ -116,25 +168,32 @@ export function MemberChargesTile() {
             l'anneau permettent (voir `donut.ts`) — à condition qu'aucune
             lecture ne vienne se poser sous eux, et il n'y en a pas.
 
+            **Et le libellé ne se tronquait pas non plus, en principe.** Il
+            portait `truncate`, si bien que le `flex-wrap` ne se déclenchait
+            jamais : la ligne tenait toujours, le libellé se faisait couper au
+            milieu d'un mot, et l'on lisait « Part du c… » à 320px — c'est-à-dire
+            plus rien. C'est ce que le DS §5 interdit. Sans lui, le libellé prend
+            sa largeur et c'est le montant qui descend, comme écrit ici.
+
             Avec leurs centimes : les deux moitiés doivent redonner le total de
             la tuile Charges de la même page, et arrondies elles ne le
             redonnent plus (cahier §4.6). */}
-        <ul className="flex min-w-0 flex-1 flex-col gap-2">
-          <li className="flex flex-wrap items-baseline gap-x-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={color} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesOwn}</span>
+              <span className="t-label min-w-0">{fr.dashboard.memberChargesOwn}</span>
             </span>
             <Amount value={charges.own} size="label" direction="out" />
-          </li>
-          <li className="flex flex-wrap items-baseline gap-x-2">
+          </p>
+          <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={COMMON_COLOR} />
-              <span className="t-label min-w-0 truncate">{fr.dashboard.memberChargesCommon}</span>
+              <span className="t-label min-w-0">{fr.dashboard.memberChargesCommon}</span>
             </span>
-            <Amount value={charges.common} size="label" direction="out" />
-          </li>
-        </ul>
+            <Amount value={common} size="label" direction="out" />
+          </p>
+        </div>
       </div>
     </Tile>
   )

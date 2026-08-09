@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
 import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH } from '@/app/routes'
 import type { YearMonth } from '@/domain/date'
-import { sum } from '@/domain/money'
+import { sub, sum } from '@/domain/money'
 import { totalToPay } from '@/domain/split'
 import type { MemberShare } from '@/domain/split'
 import type { Entry, Member } from '@/domain/types'
@@ -139,35 +139,59 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
         </div>
       )}
 
-      {/* Sans report, ces deux lignes ne disent rien : « Sa part du mois »
+      {/* Sans report ni remboursement, ces lignes ne disent rien : la part
           recopierait à l'identique le « À verser » juste dessous, et une
           régularisation à zéro laisserait croire à un rattrapage là où les
           comptes tombaient justes. */}
-      {share.adjustment !== 0 && (
+      {(share.adjustment !== 0 || share.refund !== 0) && (
         <>
           {/* Avec ses centimes, contrairement au revenu : c'est le premier
               terme de la soustraction qu'on lit juste en dessous, et arrondi il
               ne tombe plus juste — « 521 € − 45,60 € » ne fait pas 475,20 €.
-              Ces trois lignes n'existent que pour être vérifiables. */}
+              Ces lignes n'existent que pour être vérifiables.
+
+              La part **qui coûte**, report et remboursement d'avance exclus :
+              c'est le montant que la tuile « Perso et commun » du mois annonce,
+              au centime, et l'annoncer ici sous un autre nom faisait lire deux
+              nombres sans rapport là où il n'y en a qu'un. */}
           <div className="flex items-baseline justify-between gap-3">
             <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
-            <span className="t-axis tnum shrink-0">{formatMoney(share.due, currency)}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
-            {/* Le libellé passe à la ligne, il ne se tronque pas : c'est lui qui
-                porte l'argument de la carte, et « Régularisation de sep… » ne
-                porte plus rien. Le DS §5 tranche le cas — c'est au format d'être
-                choisi pour le libellé, jamais au libellé d'être raboté. */}
-            <span className="t-axis min-w-0">
-              {tpl(fr.split.settlement, de(formatYearMonth(previousYm)))}
-            </span>
-            {/* Signé, et sans `direction` : ce n'est pas un flux dont on lirait
-                la valeur absolue, c'est un écart dont le signe est toute la
-                lecture — la règle qu'applique déjà `MemberShareTile`. */}
             <span className="t-axis tnum shrink-0">
-              {formatSignedMoney(share.adjustment, currency)}
+              {formatMoney(sub(share.due, share.refund), currency)}
             </span>
           </div>
+          {/* La mensualité d'une avance : de nature épargne, donc hors de tout
+              total de charges, et pourtant due — c'est le seul écart entre ce
+              qu'on verse et ce qu'on paie, et il n'avait pas de ligne. */}
+          {share.refund !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="t-axis min-w-0">{fr.split.settlementRefund}</span>
+              <span className="t-axis tnum shrink-0">{formatMoney(share.refund, currency)}</span>
+            </div>
+          )}
+          {/* À zéro elle laisserait croire à un rattrapage là où les comptes
+              tombaient justes : un remboursement d'avance seul ouvre bien le
+              calcul, mais il ne fait pas apparaître un report qui n'existe
+              pas. */}
+          {share.adjustment !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              {/* Le libellé passe à la ligne, il ne se tronque pas : c'est lui
+                  qui porte l'argument de la carte, et « Régularisation de
+                  sep… » ne porte plus rien. Le DS §5 tranche le cas — c'est au
+                  format d'être choisi pour le libellé, jamais au libellé d'être
+                  raboté. */}
+              <span className="t-axis min-w-0">
+                {tpl(fr.split.settlement, de(formatYearMonth(previousYm)))}
+              </span>
+              {/* Signé, et sans `direction` : ce n'est pas un flux dont on
+                  lirait la valeur absolue, c'est un écart dont le signe est
+                  toute la lecture — la règle qu'applique déjà
+                  `MemberShareTile`. */}
+              <span className="t-axis tnum shrink-0">
+                {formatSignedMoney(share.adjustment, currency)}
+              </span>
+            </div>
+          )}
         </>
       )}
 
@@ -469,6 +493,11 @@ export function SplitPage() {
             <li className="t-label">{fr.split.methodFlagged}</li>
           </ul>
           <p className="t-label">{fr.split.methodExcluded}</p>
+          {/* L'exception, juste après la règle qu'elle contredit — et non dans
+              la liste de ce qui entre : c'est la seule ligne du pot qu'on ne
+              peut pas déduire des deux puces au-dessus, et la seule qui
+              explique qu'un virement dépasse ce que le mois a coûté. */}
+          <p className="t-label">{fr.split.methodAdvance}</p>
         </Tile>
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>
