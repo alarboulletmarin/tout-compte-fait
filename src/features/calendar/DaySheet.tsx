@@ -83,6 +83,7 @@ export function DaySheet({ date, entries, onOpen, onAdd, onClose }: DaySheetProp
         <>
           <Button
             size="sm"
+            variant="secondary"
             aria-label={t.entry.addOut}
             onClick={() => {
               onAdd('out')
