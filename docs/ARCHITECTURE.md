@@ -822,6 +822,16 @@ testé, déterministe. `e2e/` en tient onze, dans Chromium, sur `dist/` :
 **Graphiques.** Aucune librairie. L'anneau, les barres empilées et les courbes
 sont des composants SVG maison, dans `src/ui/Ring.tsx` et `src/charts/`.
 
+La question s'est reposée quand l'épargne a demandé des figures plus denses —
+décomposition en couches, légende qu'on éteint, petits multiples par compte — et
+la réponse n'a pas changé, pour trois raisons mesurables. Le budget d'octets se
+compte en kilo-octets de marge, quand recharts en pèse quatre-vingt-dix ; les
+thèmes clair et sombre passent par des variables CSS qu'un tracé en canvas ne
+suit pas ; et le DS §8 exige de tout graphique un doublon lisible au lecteur
+d'écran et un curseur au clavier, que `ChartCursor` et les blocs `sr-only`
+donnent déjà à cinq figures. Ce qui manquait était deux cents lignes —
+`charts/GrowthAreas.tsx` —, pas une dépendance.
+
 **Icônes.** Phosphor, graisse `bold`, réexportée sous des noms à nous par
 `src/ui/Icons.tsx` — changer de bibliothèque ne doit toucher qu'un fichier.
 Import par chemin (`@phosphor-icons/react/dist/csr/<Nom>`) et non depuis l'index,

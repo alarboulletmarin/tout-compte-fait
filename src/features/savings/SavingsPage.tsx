@@ -1,18 +1,14 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthFilterChips } from '@/app/MonthHeader'
 import { SAVINGS_ANALYSIS_PATH, SAVINGS_MONTH_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
-import { coveredYears, yearHorizon } from '@/domain/history'
-import { ZERO, add, sub } from '@/domain/money'
+import { ZERO, add } from '@/domain/money'
 import { savingLeft } from '@/domain/stats'
 import { t } from '@/i18n/strings'
-import { formatSignedMoney, tpl } from '@/i18n/format'
+
 import {
-  useEntries,
   useKindTotals,
   useMemberMap,
   useMembers,
-  useSavingYearSeries,
   useScopedSavingSupports,
 } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -22,63 +18,33 @@ import { NavCalendar, YearsIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row, RowGroup } from '@/ui/RowGroup'
 import { Tile } from '@/ui/Tile'
-import { useCurrency } from '@/ui/currency'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
 import { GoalsSection } from './GoalsSection'
 import { SupportsOverview } from './SupportsSection'
 import { useIndividualScope } from './individualScope'
 
-/** L'année lue quand le document n'en couvre aucune — voir `YearSection`. */
-const EMPTY_YEAR = 1
-
 /**
- * Ce que l'année a accumulé, en deux chiffres et un lien — jamais le tracé.
+ * La porte de l'analyse — une rangée, et **aucun chiffre**.
  *
- * La trajectoire support par support et le cumul de l'année contre l'année
- * d'avant sont les deux seules lectures de cet écran qui **capitalisent**, et
- * elles ont longtemps vécu ici, en bas de page, avec leur graphique entier.
- * Elles n'y agissent jamais — on ne décide rien en les regardant, on regarde —
- * et c'est ce qui les envoie sur `/epargne/analyse` : la vue d'ensemble n'a
- * besoin que de leur réponse, pas de leur tracé.
+ * Elle en portait deux : le cumul des versements de l'année, et l'écart avec
+ * l'année d'avant. Ils sont partis avec la lecture qu'ils résumaient — du flux
+ * pur, qui comptait ce qui sort du compte courant sans jamais dire ce que ça
+ * avait produit. Ce que l'écran dédié dit maintenant est d'une autre nature : de
+ * quoi le capital est fait.
  *
- * Les deux chiffres sont ceux que `YearSection` calcule déjà, au même mois
- * d'arrêt qu'elle — un seul moteur, deux lectures.
+ * Ce chiffre-là ne peut pas remonter ici, et c'est un arbitrage d'octets assumé.
+ * Il se calcule mois par mois sur toute la fenêtre (`domain/savingSeries.ts`) ;
+ * en écrire un seul résultat sur cette page ferait entrer ce module dans le
+ * graphe initial que `scripts/size.mjs` plafonne — pour une ligne de teaser, sur
+ * un écran qui ne s'y arrête pas.
  */
 function AnalysisPreview() {
-  const entries = useEntries()
-  const currency = useCurrency()
-  const years = useMemo(() => coveredYears(entries), [entries])
-  const year = years.at(-1)
-
-  const current = useSavingYearSeries(year ?? EMPTY_YEAR)
-  const previous = useSavingYearSeries((year ?? EMPTY_YEAR) - 1)
-
-  if (year === undefined) return null
-
-  const horizon = yearHorizon(current)
-  if (horizon === -1) return null
-
-  const cumulated = current[horizon]?.cumulative ?? ZERO
-  const hasPrevious = previous.some((point) => point.hasData)
-  const before = hasPrevious ? previous[horizon]?.cumulative ?? null : null
-
-  const description =
-    before === null
-      ? tpl(t.savings.analysisPreviewOnly, formatSignedMoney(cumulated, currency), String(year))
-      : tpl(
-          t.savings.analysisPreview,
-          formatSignedMoney(cumulated, currency),
-          String(year),
-          formatSignedMoney(sub(cumulated, before), currency),
-          String(year - 1),
-        )
-
   return (
     <RowGroup>
       <Row
         label={t.savings.analysis}
-        description={description}
+        description={t.savings.analysisPreview}
         icon={YearsIcon}
         to={SAVINGS_ANALYSIS_PATH}
       />

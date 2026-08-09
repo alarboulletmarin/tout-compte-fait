@@ -1694,15 +1694,16 @@ export const fr = {
        à un mot près pour le stock et pour le flux — c'est-à-dire pour les deux
        notions que cet écran existe pour séparer. */
     supports: 'Mes supports',
-    /* Le titre de `/epargne/analyse`, distinct de « Ce que tu mets de côté »
-       (`years`) : celui-ci nomme l'écran entier — trajectoire et cumul —,
-       l'autre une seule de ses deux sections. */
     analysis: 'Analyse',
     analysisHint: 'Voir l’analyse',
-    /* L'aperçu de `/epargne` : deux chiffres, jamais le tracé — celui-ci vit
-       sur l'écran dédié, qu'on descend chercher pour s'y arrêter. */
-    analysisPreview: '%s en %s · %s vs %s',
-    analysisPreviewOnly: '%s en %s',
+    /* L'aperçu de `/epargne`, et il ne porte **aucun chiffre** — c'est un
+       arbitrage d'octets assumé. La décomposition se calcule mois par mois sur
+       cinq ans (`domain/savingSeries.ts`) ; en écrire ne serait-ce qu'un
+       résultat ici ferait entrer tout ce module dans le graphe initial, que
+       `scripts/size.mjs` plafonne, pour une ligne de teaser. La rangée dit donc
+       ce qu'on va trouver, et l'écran dédié le calcule. */
+    analysisPreview:
+      'D’où vient ton capital : ton point de départ, tes versements, et ce que les comptes ont produit.',
     supportsEmpty:
       'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
@@ -2069,27 +2070,6 @@ export const fr = {
       'Un compte n’a pas encore de rôle : il ne compte pas ici tant que personne n’a dit à quoi il sert.',
     coverageMethodUnroled:
       '%s comptes n’ont pas encore de rôle : ils ne comptent pas ici tant que personne n’a dit à quoi ils servent.',
-
-    /* --- L'accumulation, année après année ---------------------------------
-       « Combien j'ai versé cette année » est du flux pur : aucune donnée
-       nouvelle, aucun relevé, et ça répond à la question que l'app ne posait
-       nulle part — elle est une machine à mois, et l'épargne est la seule notion
-       qui n'ait aucun sens à l'intérieur d'un mois. */
-    years: 'Ce que tu mets de côté',
-    year: 'Année',
-    yearsVersus: '%s contre %s',
-    yearsDelta: 'Écart',
-    /* Ce que les chiffres mesurent, et non la forme du tracé : « mois après
-       mois » décrivait la courbe, quand ce qu'on ne sait pas est ce que vaut le
-       nombre lu à un mois donné — ce qui a été versé ce mois-là, ou tout ce qui
-       s'est accumulé depuis janvier. C'est le second. Même correction que sur le
-       cumul du solde de l'historique, et pour la même raison. */
-    yearsCumulative: 'Cumul des versements depuis janvier',
-    yearsEmpty: 'Pas encore d’année à lire.',
-    yearsPartial: '%s s’arrête à %s : les deux années se lisent à ce mois-là.',
-    yearsNoPrevious: 'Rien de versé en %s : rien à comparer.',
-    srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
-    srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
 
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',

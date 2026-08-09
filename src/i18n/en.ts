@@ -994,8 +994,8 @@ export const en: Strings = {
     supports: 'My pots',
     analysis: 'Analysis',
     analysisHint: 'See the analysis',
-    analysisPreview: '%s in %s · %s vs %s',
-    analysisPreviewOnly: '%s in %s',
+    analysisPreview:
+      'Where your capital comes from: your starting point, your contributions, and what the accounts earned.',
     supportsEmpty:
       'No savings pot. Add an account, a plan or any other pot to track its value and your contributions.',
     supportsNoMember: 'Add a person to track your savings: a pot always belongs to someone.',
@@ -1166,17 +1166,6 @@ export const en: Strings = {
       'One account has no role yet: it doesn’t count here until someone says what it’s for.',
     coverageMethodUnroled:
       '%s accounts have no role yet: they don’t count here until someone says what they’re for.',
-
-    years: 'What you set aside',
-    year: 'Year',
-    yearsVersus: '%s against %s',
-    yearsDelta: 'Difference',
-    yearsCumulative: 'Contributions accumulated since January',
-    yearsEmpty: 'No year to read yet.',
-    yearsPartial: '%s stops at %s: both years are read at that month.',
-    yearsNoPrevious: 'Nothing paid in during %s: nothing to compare.',
-    srYears: 'Accumulated contributions %s against %s, stopped at %s: %s',
-    srYearsEmpty: 'Accumulated contributions %s: no data.',
 
     monthFlows: 'This month',
     contributions: 'Contributions',

@@ -71,6 +71,7 @@ import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { EffortStepper } from './EffortStepper'
 import { ExplainSheet } from './ExplainSheet'
+import { AccountBreakdown } from './AccountBreakdown'
 import { MilestoneTable, type MilestoneColumn } from './MilestoneTable'
 import { ProjectionChart } from './ProjectionChart'
 import { RateSheet } from './RateSheet'
@@ -672,6 +673,15 @@ export function ProjectionPage() {
             </Disclosure>
           </Tile>
         )}
+
+        {/* Ce que fait **chaque** compte. La courbe du haut somme, et sa somme
+            répond à « combien j'aurai » ; elle ne répond pas à « lequel
+            travaille », et c'était la moitié manquante de l'écran — le versé
+            s'y chiffrait pour le portefeuille entier, jamais pour un compte.
+            Après les jalons et non avant : le résultat, son tracé et les quatre
+            réglages restent en tête, et cette lecture-ci est celle qu'on
+            descend chercher. */}
+        {result !== null && <AccountBreakdown result={result} marks={marks} />}
 
         <RowGroup>
           <Row

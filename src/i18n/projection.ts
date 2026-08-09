@@ -134,7 +134,13 @@ const fr = {
      Elle ne s'applique qu'aux comptes muets : celui dont le taux est posé sur
      sa fiche vaut la même chose dans les deux bornes, parce que son
      propriétaire a dit ce qu'il en attend. */
-  rate: 'Rendement',
+  /* « Taux de rendement » et non « Rendement » tout court : depuis que chaque
+     compte porte sa décomposition, le mot « Rendement » nomme aussi une aire du
+     graphique — ce que le taux a **produit**, en euros. Deux boutons du même
+     nom sur un écran, dont l'un ouvre un réglage et l'autre éteint une teinte,
+     s'annoncent à l'identique au lecteur d'écran. C'est la ligne du réglage qui
+     précise, parce que c'est elle qui parle d'un pourcentage. */
+  rate: 'Taux de rendement',
   rangeAxis: 'Fourchette de rendement',
   rangeLow: 'Au plus bas',
   rangeHigh: 'Au plus haut',
@@ -213,6 +219,28 @@ const fr = {
   milestones: 'Voir le détail dans le temps',
   milestonesHint: 'Montants arrondis : la précision affichée ne dépasse pas celle du calcul.',
   milestoneWhen: 'Durée',
+
+  /* --- Compte par compte --------------------------------------------------
+     Le tracé du haut somme les comptes, et c'est la bonne réponse à « combien
+     j'aurai ». Ce n'est pas la réponse à « lequel travaille » : un Livret A
+     plafonné et un PEA muet arrivent au même total par deux chemins qui n'ont
+     rien à voir, et c'est le chemin qu'on vient regarder ici. Chaque compte a
+     donc sa figure, décomposée comme l'écran d'analyse décompose le passé — de
+     sorte que la même question se lise du même œil des deux côtés. */
+  accounts: 'Ce que fait chaque compte',
+  accountsHint:
+    'Chaque compte court à son propre rendement, et la somme de ces trajectoires est exactement la courbe du haut : il n’y a pas de second calcul.',
+  accountBase: 'Au départ',
+  accountGain: 'Rendement',
+  accountShown: 'Somme affichée',
+  accountLine: '%s au départ, %s versés, %s de rendement',
+  accountRange: 'Entre %s et %s à l’arrivée, selon le rendement',
+  accountChart: 'Trajectoire de %s',
+  accountCapped: 'Le plafond du contrat arrête les versements avant la fin.',
+  accountPaidTable: 'Voir les versements, année par année',
+  accountPaidHint:
+    'Ce que chaque compte reçoit, cumulé depuis aujourd’hui. Le rendement n’y est pas : c’est ce qui sort de la poche.',
+  srAccount: 'De %s à %s en %s : %s versés, %s de rendement.',
   /* --- Le rendement, compte par compte ------------------------------------
      Projeter tout le portefeuille d'une personne sous un taux unique n'a aucun
      sens : deux comptes ne suivent pas la même courbe, et leur somme n'est

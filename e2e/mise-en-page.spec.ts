@@ -94,6 +94,18 @@ test.describe('sur un écran de 320 points', () => {
       cut.push(...(await clipped(page, screen.path)))
     }
 
+    /* La décomposition compte par compte ne s'affiche pas sur l'écran nu : elle
+       demande une origine qui porte au moins deux comptes, et la boucle
+       ci-dessus ouvre `/simulation` en simulation libre. Sans ce détour, la
+       moitié la plus dense de l'écran — trois figures, trois légendes de trois
+       entrées, un tableau à cinq colonnes — ne serait mesurée nulle part. */
+    await page.goto('/simulation')
+    await page.waitForLoadState('networkidle')
+    await page.locator('select').first().selectOption('member:ex-alix')
+    await page.getByText(/versements, année par année/i).click()
+    expect(await overflow(page)).toBe(0)
+    expect(await clipped(page, '/simulation (portefeuille)')).toEqual([])
+
     expect(guilty).toEqual([])
     expect(cut).toEqual([])
   })

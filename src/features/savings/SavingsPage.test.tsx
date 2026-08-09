@@ -217,17 +217,17 @@ describe('l’écran range chaque question dans sa zone', () => {
     expect(within(supports as HTMLElement).queryByText(/Marie/)).not.toBeInTheDocument()
   })
 
-  /* Le tracé et le cumul de l'année vivent sur `/epargne/analyse` ; la vue
-     d'ensemble n'en garde que ce qu'ils répondent, en un aperçu qui y renvoie. */
-  it('renvoie vers l’analyse avec un aperçu, jamais le tracé', () => {
+  /* La décomposition vit sur `/epargne/analyse` ; la vue d'ensemble n'en garde
+     qu'une porte. Sans chiffre, et c'est mesuré : le calculer ici ferait entrer
+     `domain/savingSeries.ts` dans le graphe initial pour une ligne de teaser. */
+  it('renvoie vers l’analyse, et ne trace rien', () => {
     seed()
     open()
 
     const link = screen.getByRole('link', { name: new RegExp(t.savings.analysis) })
     expect(link).toHaveAttribute('href', '/epargne/analyse')
-    // 200 € versés par Andrea en juillet 2026, rien l'année précédente.
-    expect(link).toHaveTextContent(spoken(20_000))
-    expect(screen.queryByText(t.savings.yearsCumulative)).not.toBeInTheDocument()
+    expect(link).toHaveTextContent(t.savings.analysisPreview)
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
   /* La section disparaissait quand la personne n'avait aucun support — y

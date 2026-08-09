@@ -49,19 +49,40 @@ const fr = {
   capLeft: 'Plafond %s · reste %s à verser',
   capFull: 'Plafond %s · atteint',
   capUnknown: 'Plafond %s · sans relevé, la place restante est inconnue',
-  evolution: 'Évolution de l’épargne',
-  evolutionEmpty:
-    'Rien à tracer pour l’instant : la courbe démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
-  evolutionWindow: 'Période',
-  evolutionMonths: '%s mois',
-  evolutionYears: '%s ans',
-  evolutionTotal: 'Total',
-  evolutionWhen: 'Mois',
-  evolutionRest: '%s autres supports',
-  evolutionDetail: 'Voir le détail, mois par mois',
-  evolutionMethod:
-    'Estimation : les points sont tes relevés, le reste se dérive des mouvements confirmés et du taux en vigueur ce mois-là. Un support sans relevé n’y figure pas — sa valeur est inconnue, pas nulle.',
-  srEvolution: 'Épargne estimée de %s en %s à %s en %s, relevés compris.',
+  /* --- D'où vient ce que tu as ------------------------------------------
+     L'écran empilait les comptes les uns sur les autres et cumulait les
+     versements de l'année. Deux lectures qui ne concluaient rien : la première
+     répond à « où est l'argent », que la banque dit déjà et mieux ; la seconde
+     comptait ce qui sort du compte courant sans jamais dire ce que ça avait
+     produit. Ce qui les remplace est la seule lecture que l'app soit seule à
+     pouvoir faire, parce qu'elle seule connaît à la fois les relevés et les
+     mouvements : de quoi le capital est fait. */
+  growth: 'D’où vient ton épargne',
+  growthEmpty:
+    'Rien à décomposer pour l’instant : la lecture démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
+  growthWindow: 'Période',
+  growthMonths: '%s mois',
+  growthYears: '%s ans',
+  growthBase: 'Au départ',
+  growthPaid: 'Versements',
+  growthGain: 'Rendement',
+  growthTotal: 'Valeur',
+  growthShown: 'Somme affichée',
+  growthWhen: 'Mois',
+  growthDetail: 'Voir le détail, mois par mois',
+  /* Trois montants et un signe : la phrase se lit d'un trait, et le « produit »
+     porte le signe parce qu'il est le seul des trois qui puisse être négatif. */
+  growthLine: '%s au départ, %s versés, %s produits',
+  /* Le rendement rapporté à ce qu'on y a mis — pas au capital final : « 4 % de
+     ce que tu y as mis » est la question qu'on se pose, « 3,8 % du total »
+     n'est la réponse d'aucune. */
+  growthShare: 'soit %s de ce que tu y as mis',
+  growthAccounts: 'Compte par compte',
+  growthRest: '%s autres comptes, non tracés ici.',
+  growthChart: 'Décomposition de %s',
+  growthMethod:
+    'Estimation. Les points sont tes relevés ; entre eux, la valeur se dérive des mouvements confirmés et du taux en vigueur. Le rendement n’est pas recalculé d’un barème : c’est ce que la valeur a fait en plus de ce que tu y as mis, il attrape donc aussi ce qu’aucun taux ne modélise — et il peut être négatif. Tout se lit sur la période choisie : « au départ » est ce que le compte valait à son premier mois, pas le premier euro que tu y as posé.',
+  srGrowth: 'De %s en %s à %s en %s : %s versés, %s produits.',
 
   /* --- Les objectifs, sous leur fiche et leur formulaire ------------------
      Ce qui reste dans `fr.ts` est ce que la **section** de l'écran Épargne lit :

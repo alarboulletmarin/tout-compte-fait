@@ -61,7 +61,7 @@ export const en: ProjectionStrings = {
   capacityLeft: 'Saving capacity still available this month: %s',
   capacityUse: 'Use %s',
 
-  rate: 'Return',
+  rate: 'Rate of return',
   rangeAxis: 'Return range',
   rangeLow: 'At the low end',
   rangeHigh: 'At the high end',
@@ -102,6 +102,21 @@ export const en: ProjectionStrings = {
   milestonesHint:
     'Rounded amounts: the precision shown doesn’t exceed the precision of the calculation.',
   milestoneWhen: 'Term',
+
+  accounts: 'What each account does',
+  accountsHint:
+    'Each account runs at its own return, and the sum of these paths is exactly the curve above: there is no second calculation.',
+  accountBase: 'At the start',
+  accountGain: 'Return',
+  accountShown: 'Sum shown',
+  accountLine: '%s at the start, %s paid in, %s of return',
+  accountRange: 'Between %s and %s on arrival, depending on the return',
+  accountChart: 'Path of %s',
+  accountCapped: 'The contract ceiling stops contributions before the end.',
+  accountPaidTable: 'See contributions, year by year',
+  accountPaidHint:
+    'What each account receives, accumulated from today. The return isn’t in it: this is what leaves your pocket.',
+  srAccount: 'From %s to %s in %s: %s paid in, %s of return.',
   supportRates: 'Account by account',
   supportRatesHint:
     'Each account starts from the rate set on its own page, and the range only applies to those carrying none. What you change here only applies to this simulation, and doesn’t alter your savings.',

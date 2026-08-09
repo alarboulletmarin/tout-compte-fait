@@ -326,8 +326,74 @@ describe('la fourchette de rendement', () => {
  * compte renseigné.
  * ==========================================================================*/
 
+/* ============================================================================
+ * Ce que fait chaque compte.
+ *
+ * La courbe du haut somme les comptes, et sa somme répond à « combien j'aurai ».
+ * Elle ne répond pas à « lequel travaille » : deux comptes arrivent au même
+ * total par deux chemins qui n'ont rien de commun — l'un a versé trois fois
+ * plus, l'autre a produit trois fois plus. C'est ce que cette section ajoute, et
+ * c'est le versé **par compte** qui manquait le plus : l'écran le chiffrait pour
+ * le portefeuille entier, jamais pour un compte.
+ * ==========================================================================*/
+
+describe('la décomposition compte par compte', () => {
+  it('donne sa figure à chaque compte, et la nomme', async () => {
+    const user = userEvent.setup()
+    seedTwo()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+
+    expect(screen.getByText(projection.accounts)).toBeInTheDocument()
+    for (const label of ['Livret A', 'PEL']) {
+      expect(
+        screen.getByRole('img', { name: tpl(projection.accountChart, label) }),
+      ).toBeInTheDocument()
+    }
+  })
+
+  /* Le versé par compte, année par année — la lecture qu'aucune courbe ne donne
+     au chiffre près, et la seule qui dise ce qui sortira de la poche. */
+  it('chiffre le versé de chaque compte, jalon par jalon', async () => {
+    const user = userEvent.setup()
+    seedTwo()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    await user.click(screen.getByText(projection.accountPaidTable))
+
+    const table = screen.getByRole('table', { name: projection.accountPaidTable })
+    for (const label of ['Livret A', 'PEL']) {
+      expect(within(table).getByRole('columnheader', { name: label })).toBeInTheDocument()
+    }
+  })
+
+  /* Sur un seul compte, la section répéterait mot pour mot la figure du haut —
+     même départ, même versé, même rendement. Un écran qui dit deux fois la même
+     chose apprend surtout qu'on ne sait pas laquelle des deux lire. */
+  it('se tait sur un portefeuille d’un seul compte', async () => {
+    const user = userEvent.setup()
+    seed()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    expect(screen.queryByText(projection.accounts)).not.toBeInTheDocument()
+  })
+
+  it('ne s’affiche pas en simulation libre — il n’y a aucun compte', () => {
+    seed()
+    show()
+    expect(screen.queryByText(projection.accounts)).not.toBeInTheDocument()
+  })
+})
+
 describe('le rendement par compte', () => {
-  const rateField = (label: string) => screen.getByLabelText(label, { exact: false })
+  /* Dans la feuille, et non sur l'écran entier : le nom d'un compte s'y écrit
+     désormais deux fois — sur le champ de son taux, et sur le tracé de sa
+     trajectoire, dont le nom accessible est « Trajectoire de Livret A ». Une
+     recherche non bornée en attrape deux, ce qui est la preuve que la lecture
+     par compte est bien là, pas le signe d'une ambiguïté. */
+  const rateField = (label: string) =>
+    within(screen.getByRole('dialog')).getByLabelText(label, { exact: false })
 
   async function portfolio() {
     const user = userEvent.setup()

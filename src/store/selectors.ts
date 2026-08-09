@@ -1133,11 +1133,12 @@ export function useSupportValuations(supportId: string | undefined): SavingValua
   )
 }
 
-/* `useStockBands` — la trajectoire mois par mois — n'est **pas** ici, et c'est
-   délibéré : ce module est dans le graphe initial de tout le monde, et le
+/* `useGrowthBands` — la décomposition mois par mois — n'est **pas** ici, et
+   c'est délibéré : ce module est dans le graphe initial de tout le monde, et le
    sélecteur y ferait entrer `domain/savingSeries.ts` et sa capitalisation pour
    une lecture qui vit derrière un `lazy`. Il est donc dans
-   `features/savings/EvolutionSection.tsx`, avec le seul écran qui le lit. */
+   `features/savings/GrowthSection.tsx`, avec le seul écran qui le lit. C'est la
+   même raison qui prive l'aperçu de `/epargne` de son chiffre. */
 
 /** Les paliers de taux d'un support, du plus récent au plus ancien. */
 export function useSupportRates(supportId: string | undefined): SavingRate[] {

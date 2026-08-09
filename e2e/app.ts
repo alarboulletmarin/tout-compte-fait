@@ -94,6 +94,10 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
      savait faire ne serait plus ouverte par aucun scénario. */
   { path: '/epargne/mois', heading: /ce mois/i },
   { path: '/epargne/supports', heading: /supports/i },
+  /* La décomposition : trois couches, une légende qu'on peut éteindre, un tracé
+     par compte et un tableau à cinq colonnes. Rien de tout cela ne se mesure
+     dans jsdom, et c'est l'écran de l'épargne qui porte le plus de figures. */
+  { path: '/epargne/analyse', heading: /analyse/i },
   /* La fiche d'un objectif, prise sur le jeu d'exemple : c'est le seul écran qui
      porte un verdict, une jauge, une courbe et deux montants sur la même ligne
      — « 28 400 € sur 42 000 € », la plus longue chaîne de l'app. Rien de tout

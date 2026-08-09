@@ -42,6 +42,40 @@ intention qu'il n'a jamais formulée.
   nécessaire — tout était déjà dans le document —, et c'est ce qui distingue un
   suivi d'une courbe décorative.
 
+### Ajouté — l'épargne dit **d'où vient** ce qu'on a
+
+- **Une identité, et trois nombres qui s'y referment.** Ce qu'un compte vaut,
+  c'est ce qu'il valait au départ, plus ce qu'on y a versé, plus ce qu'il a
+  produit tout seul. Le troisième est le seul chiffre que ni la banque ni un
+  tableur ne donnent sans travail : il faut connaître **à la fois** les relevés
+  et les mouvements, ce que le document porte depuis le premier jour.
+- **Le rendement est mesuré, jamais recalculé.** Ce n'est pas la somme des
+  intérêts d'un barème : c'est `valeur − départ − versé`. Il attrape donc ce
+  qu'aucun taux ne modélise — un PEA qui prend 9 % ou qui en perd 4 —, et il
+  peut être négatif. Sans rouge : un placement qui baisse n'est pas une faute.
+- **La légende est un réglage.** Éteindre une couche la retire de la pile *et*
+  de l'échelle. Sur un capital où le départ pèse quarante fois le rendement, les
+  deux couches intéressantes tiennent dans un dixième du cadre ; un appui sur
+  « Au départ » et la figure montre ce que la période a fait, à l'échelle de ce
+  qu'elle a fait.
+- **Le simulateur dit ce que fait chaque compte.** Il chiffrait le versé du
+  portefeuille entier, jamais celui d'un compte — alors que deux comptes
+  arrivent au même total par deux chemins qui n'ont rien de commun. Chacun a
+  maintenant sa figure, décomposée comme le passé l'est sur l'analyse, et un
+  tableau donne le versé de chacun, jalon par jalon.
+
+### Supprimé — deux lectures qui ne concluaient rien
+
+- **La pile des comptes dans le temps** répondait à « où est mon argent » : la
+  banque le dit déjà, plus vite et sans qu'on recopie quoi que ce soit.
+- **Le cumul des versements de l'année contre l'année d'avant** comptait ce qui
+  sort du compte courant. Du flux pur : il ne savait pas dire si les 4 200 € mis
+  de côté avaient produit quatre euros ou quatre cents.
+- L'aperçu de `/epargne` perd donc ses deux chiffres et garde sa porte. C'est un
+  arbitrage d'octets assumé : la décomposition se calcule mois par mois sur toute
+  la fenêtre, et en écrire un seul résultat sur cet écran-là ferait entrer tout
+  ce calcul dans le graphe initial pour une ligne de teaser.
+
 ### Ajouté — le simulateur produit quelque chose
 
 - **« En faire un objectif »**, et la simulation cesse d'être un cul-de-sac. Ce
