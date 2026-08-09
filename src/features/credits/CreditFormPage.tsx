@@ -102,7 +102,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
       {status !== null && (
         <Tile className="gap-1">
           <span className="t-label">{t.credits.remaining}</span>
-          <Amount value={status.remaining} size="tile" />
+          <Amount value={status.remaining} size="tile-fit" />
           <span className="t-axis">
             {tpl(t.credits.progress, formatPercent(status.progress))} ·{' '}
             {t.credits.paid} {formatMoney(status.paid, currency)}

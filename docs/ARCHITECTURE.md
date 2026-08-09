@@ -967,6 +967,15 @@ comme un mot qu'on n'a pas su lire, pas comme un défaut — c'est exactement ce
 qu'une relecture laisse passer. « Reste à vivre » débordait ainsi de 4px sur
 l'écran du mois ; c'est le troisième palier de dégradation qui l'a réglé.
 
+**Cette mesure est un test**, et elle ne l'a pas toujours été : elle était écrite
+ici, refaite à la main quand on y pensait, et `e2e/mise-en-page.spec.ts` ne
+vérifiait que le débordement horizontal de la **page**. Or une tuile qui rogne
+son contenu ne déborde rien du tout — elle garde sa boîte et jette ce qui n'y
+rentre pas —, si bien que la suite est restée verte pendant qu'une tuile
+d'autonomie perdait 203px de hauteur dans une rangée de bento. Les deux
+comparaisons ci-dessus tournent maintenant sur tous les écrans du jeu d'exemple,
+à 320 points, dans la même traversée que le test de débordement.
+
 **Ce qui se masque faute de place se décide sur la place, pas sur l'écran.** La
 seconde lecture d'une tuile plate — « reste 102 € à payer » — était en
 `max-lg:sr-only` : un seuil de viewport pour une question de largeur de tuile.

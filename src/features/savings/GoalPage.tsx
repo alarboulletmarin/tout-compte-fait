@@ -119,7 +119,11 @@ export function GoalPage() {
             pas de verdict, et c'est sa date d'arrivée qui prend la place — un
             surtitre vide se lirait comme un état qu'on n'a pas su calculer. */}
         <Eyebrow icon={verdict.icon}>{verdict.label === '' ? (arrival ?? '') : verdict.label}</Eyebrow>
-        <p className="t-tile-num tnum">
+        {/* `t-tile-fit` et non `t-tile-num` : la ligne porte **deux** montants
+            — « 28 400 € sur 42 000 € » —, donc la plus longue chaîne de
+            l'écran, et une taille fixe la ferait sortir de la tuile au premier
+            capital à six chiffres. */}
+        <p className="t-tile-fit tnum">
           {tpl(
             t.savings.goalProgress,
             formatMoney(read.capital ?? ZERO, currency, false),

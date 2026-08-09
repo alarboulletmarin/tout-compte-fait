@@ -102,13 +102,12 @@ function MonthPreview() {
 
   return (
     <Tile
-      span="2x1"
       onClick={() => {
         void navigate(SAVINGS_MONTH_PATH)
       }}
     >
       <Eyebrow icon={NavCalendar}>{t.savings.month}</Eyebrow>
-      <Amount value={savingLeft(totals)} size="tile" />
+      <Amount value={savingLeft(totals)} size="tile-fit" />
       <span className="t-label">{t.savings.left}</span>
     </Tile>
   )
@@ -202,8 +201,22 @@ export function SavingsPage() {
           {/* Deux lectures de rang égal, côte à côte : ce que le capital tient,
               et ce que le mois permet d'y mettre. L'autonomie **qualifie** le
               chiffre du dessus, elle ne rivalise pas avec lui — et le mois n'est
-              plus qu'une porte. */}
-          <div className="bento">
+              plus qu'une porte.
+
+              **Une grille ordinaire, et non la bento du DS §5.** Celle-ci pose
+              des rangées d'une hauteur fixe — 88px sous 768 — pour des tuiles
+              qui déclarent leur format ; l'autonomie porte un repli
+              d'explication et ne rentre dans aucune. Mesuré : elle y était
+              coupée de 203px en hauteur. Ce qu'on veut ici n'est pas un format
+              de bento, c'est deux colonnes qui prennent la hauteur de ce
+              qu'elles portent.
+
+              **Et empilées sous 640px.** Deux colonnes y laissent ~140px
+              chacune, quand le DS lui-même plafonne l'eyebrow d'une tuile
+              étroite à treize caractères : « Combien de temps je tiens » en fait
+              vingt-cinq. Côte à côte à 320, la rangée ne dirait plus rien de ce
+              qu'elle nomme. */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <CoverageTile />
             <MonthPreview />
           </div>

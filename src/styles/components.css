@@ -25,6 +25,19 @@
     box-shadow: var(--shadow);
   }
 
+  /* Un second conteneur, à l'intérieur de la tuile.
+     `t-tile-fit` et `t-hero-fit` se dimensionnent sur `cqi`, donc sur la
+     largeur du conteneur le plus proche — et c'est la tuile entière. Un chiffre
+     posé dans une **colonne** de cette tuile, à côté d'un anneau de 72px ou
+     d'une pastille, dispose en réalité de cent pixels de moins : mesuré sur la
+     fiche d'un crédit, « 191 541,32 € » y débordait de 26px alors que la
+     requête, elle, voyait la tuile au complet et ne réduisait rien.
+     Poser cette classe sur la colonne rend la mesure exacte, sans qu'aucun
+     chiffre ait à connaître la mise en page qui l'entoure. */
+  .fit-box {
+    container-type: inline-size;
+  }
+
   /* Les variantes accentuées repointent les tokens sémantiques pour tout leur
      contenu : un enfant qui lit `--text-muted` s'adapte sans rien savoir. */
   /* Les voiles sont tirés de --accent-fg au lieu d'être écrits en dur.
@@ -102,6 +115,35 @@
       padding-inline: 6px;
       letter-spacing: 0.04em;
     }
+
+    /* Le glyphe part dès ce palier quand la mesure porte sur **la place qui
+       reste** et non sur la tuile — voir `.eyebrow-room` juste en dessous. Une
+       tuile de 200px garde son icône : elle n'a rien d'autre sur sa ligne. Une
+       étiquette à qui il reste 168px en a déjà cédé la moitié à un voisin, et
+       les deux paliers de resserrement ne rendent pas les dix-neuf pixels du
+       repère. */
+    .eyebrow-room .eyebrow-pill > svg {
+      display: none;
+    }
+  }
+
+  /* La place qui reste à une étiquette, mesurée et non devinée.
+     Une tuile pleine largeur peut couper son étiquette sans que la tuile
+     déborde de rien : il suffit qu'un lien partage sa première ligne. Les
+     requêtes ci-dessus visent alors la tuile entière — 286px à 320 points,
+     donc aucun palier — pendant que l'étiquette, elle, n'a que 168px et perd
+     ses cinq derniers pixels. Mesuré sur « Prochaines échéances », qui partage
+     sa ligne avec le lien du calendrier.
+     Poser ce conteneur sur ce qui reste après le voisin rend la mesure vraie :
+     `flex-1 min-w-0` donne exactement la largeur disponible, et les paliers
+     répondent à la bonne question. Aucune classe `max-sm:` n'aurait pu le
+     faire — c'est une question de place, pas de largeur d'écran.
+     La marge qui en résulte est mince — 165px d'étiquette dans 168px de place,
+     à 320 points, en français : une étiquette plus longue que « Prochaines
+     échéances » sur une ligne partagée n'a plus de palier derrière elle. Le
+     test de mise en page le dira. */
+  .eyebrow-room {
+    container-type: inline-size;
   }
 
   /* Le troisième palier existe parce que le deuxième ne suffisait pas :
