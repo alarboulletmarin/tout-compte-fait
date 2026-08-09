@@ -362,6 +362,7 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
     monthly: eur(10_000),
     rateBp: 200,
     rateKind: 'assumed',
+    steps: [{ rateBp: 200, kind: 'assumed', from: '2020-01-01', to: null }],
     ...over,
   })
   const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({

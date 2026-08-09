@@ -440,6 +440,7 @@ export const en: Strings = {
       advances: 'Advance',
       savingSupports: 'Savings pot',
       savingValuations: 'Valuation',
+      savingRates: 'Savings rate',
       months: 'Month',
     },
     reportReason: {
@@ -450,6 +451,7 @@ export const en: Strings = {
       month: 'month that doesn’t exist',
       noMember: 'nobody it belongs to',
       period: 'period back to front',
+      rate: 'unreadable rate',
       duplicateId: 'duplicate identifier',
       unknownCategory: 'category not found, filed under “To sort”',
       unknownFamily: 'family not found',

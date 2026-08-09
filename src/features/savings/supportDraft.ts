@@ -78,11 +78,14 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
 }
 
 /**
- * Le brouillon d'un support qui existe déjà, sa dernière valeur comprise.
+ * Le brouillon d'un support qui existe déjà.
  *
- * La valeur n'est **pas** modifiée par ce formulaire : la reprendre ici
- * l'écraserait, alors qu'un relevé s'empile. Le champ n'apparaît donc qu'à la
- * création — voir `SupportFields`.
+ * **Ni la valeur ni le taux n'y sont repris**, et pour la même raison : les
+ * deux s'empilent, datés, alors que ce formulaire écrase ce qu'il touche. Les
+ * reprendre ici ferait d'une correction de libellé une réécriture du capital et
+ * du passé du taux. Les deux champs n'apparaissent donc qu'à la création — voir
+ * `SupportFields` —, et se modifient ensuite depuis la fiche, où chaque ligne
+ * porte sa date.
  */
 export function supportDraftFrom(support: SavingSupport): SupportDraft {
   return {
@@ -92,13 +95,8 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     /* Un support d'avant le champ n'en porte aucune : c'est la lecture du
        domaine qui décide, et jamais une seconde valeur par défaut posée ici. */
     pace: paceOf(support),
-    /* `toRateInput` n'irait pas : il rend la chaîne vide pour zéro, ce qui
-       convient à un crédit sans intérêts mais pas ici — « 0 % » est une
-       hypothèse qu'on peut poser (un compte courant), et « rien » veut dire
-       « je m'en remets à l'hypothèse de l'écran ». Les confondre ferait
-       disparaître le zéro à la première modification du support. */
-    rateText: support.rateBp === undefined ? '' : String(support.rateBp / 100).replace('.', ','),
-    rateKind: support.rateKind ?? 'assumed',
+    rateText: '',
+    rateKind: 'assumed',
     note: support.note ?? '',
     amountText: '',
     valueDate: today(),
@@ -154,12 +152,23 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         memberId: draft.memberId,
         categoryId: draft.categoryId,
         pace: draft.pace,
-        /* La nature ne part jamais seule : sans taux, « garanti » ne qualifie
-           rien et laisserait croire à un support renseigné. */
-        ...(typedRate && rateBp !== null ? { rateBp, rateKind: draft.rateKind } : {}),
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null
           ? { value: { amount, date: draft.valueDate } }
+          : {}),
+        /* Le premier palier part **du jour du relevé** quand il y en a un, et
+           du jour même sinon : un support ouvert avec « 12 400 € au 31
+           décembre » sert son taux depuis ce 31 décembre, et le dater
+           d'aujourd'hui laisserait les mois d'intervalle sans taux. La nature
+           ne part jamais seule : sans taux, « garanti » ne qualifie rien. */
+        ...(typedRate && rateBp !== null
+          ? {
+              rate: {
+                rateBp,
+                kind: draft.rateKind,
+                from: typedAmount && amount !== null ? draft.valueDate : today(),
+              },
+            }
           : {}),
       }
     },

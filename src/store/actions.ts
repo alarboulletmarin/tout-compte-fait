@@ -8,7 +8,7 @@
 import { type ISODate, today } from '@/domain/date'
 import { makeId } from '@/domain/ids'
 import type { Money } from '@/domain/money'
-import { type Advance, type Category, type CategoryKind, type Debt, type Entry, type Family, type Member, type Recurrence, type SavingSupport, type SavingValuation, type Settings, directionOfKind } from '@/domain/types'
+import { type Advance, type Category, type CategoryKind, type Debt, type Entry, type Family, type Member, type Recurrence, type SavingRate, type SavingSupport, type SavingValuation, type Settings, directionOfKind } from '@/domain/types'
 import * as updates from '@/domain/updates'
 import { t } from '@/i18n/strings'
 import { nextCategoryColor, nextMemberColor } from '@/persistence/defaults'
@@ -192,6 +192,20 @@ export function replaceSavingValuation(id: string, next: Omit<SavingValuation, '
 
 export function removeSavingValuation(id: string): void {
   mutate((data) => updates.removeSavingValuation(data, id))
+}
+
+export function addSavingRate(input: Omit<SavingRate, 'id'>): SavingRate {
+  const rate: SavingRate = { ...input, id: makeId() }
+  mutate((data) => updates.addSavingRate(data, rate))
+  return rate
+}
+
+export function replaceSavingRate(id: string, next: Omit<SavingRate, 'id'>): void {
+  mutate((data) => updates.replaceSavingRate(data, id, next))
+}
+
+export function removeSavingRate(id: string): void {
+  mutate((data) => updates.removeSavingRate(data, id))
 }
 
 /* --- Avances --------------------------------------------------------------*/

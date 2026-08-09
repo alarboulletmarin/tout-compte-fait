@@ -22,6 +22,7 @@ import {
   sequentialIds,
 } from './fixtures'
 import {
+  savingCoverage,
   savingTotal,
   latestValuation,
   savingsBySupport,
@@ -605,5 +606,78 @@ describe('six mois de versements sur un support', () => {
     expect(value.estimated).toBe(1_124_000)
     // Les six versements restent, à leur date : un relevé ne réécrit rien.
     expect(after.entries.filter((e) => e.savingSupportId === supportId)).toHaveLength(MONTHS)
+  })
+})
+
+/* ============================================================================
+ * Le taux ne fabrique aucun euro dans le document.
+ *
+ * C'est la garde de la v12, et elle protège une phrase du modèle plutôt qu'une
+ * fonction : un `SavingRate` est **lu** par les projections et par la courbe
+ * d'évolution, qui annoncent toutes deux une estimation, et par personne
+ * d'autre. Un jour où `supportValue` capitaliserait, la valeur estimée d'un
+ * livret cesserait d'être « le relevé plus ce qui a bougé » — elle deviendrait
+ * un calcul, que le relevé suivant contredirait.
+ *
+ * Le test compare donc le document à lui-même, taux posés et taux retirés, sur
+ * les quatre lectures qui pourraient se laisser tenter.
+ * ==========================================================================*/
+
+describe('un taux posé ne bouge aucun total', () => {
+  function withRates(): { before: Data; after: Data; supportId: string } {
+    const base = withSupport(household(), 'Livret A', 'm-andrea', 'passbook', 1_000_000)
+    const before = addRecurrence(base.data, {
+      id: 'r-livret',
+      label: 'Virement livret',
+      categoryId: 'passbook',
+      memberId: 'm-andrea',
+      savingSupportId: base.id,
+      direction: 'out',
+      amount: eur(20_000),
+      period: { unit: 'month', every: 1, anchorDay: 5 },
+      startedOn: '2026-01-05',
+    })
+    const after = {
+      ...before,
+      savingRates: [
+        { id: 'tx-1', supportId: base.id, rateBp: 300, kind: 'assumed' as const, from: '2020-01-01' },
+        { id: 'tx-2', supportId: base.id, rateBp: 1_000, kind: 'assumed' as const, from: '2026-01-01' },
+      ],
+    }
+    return { before, after, supportId: base.id }
+  }
+
+  it('laisse la valeur estimée d’un support à l’identique', () => {
+    const { before, after, supportId } = withRates()
+    expect(supportValue(supportId, after.savingValuations, after.entries, ON)).toEqual(
+      supportValue(supportId, before.savingValuations, before.entries, ON),
+    )
+  })
+
+  it('laisse le total d’épargne à l’identique', () => {
+    const { before, after } = withRates()
+    expect(savingTotal(after.savingSupports, after.savingValuations, after.entries, ON)).toEqual(
+      savingTotal(before.savingSupports, before.savingValuations, before.entries, ON),
+    )
+  })
+
+  it('laisse la couverture à l’identique', () => {
+    const { before, after } = withRates()
+    const capital = savingTotal(
+      after.savingSupports,
+      after.savingValuations,
+      after.entries,
+      ON,
+    ).estimated
+    expect(savingCoverage(capital, after.entries, kindOfIn(after), ON)).toEqual(
+      savingCoverage(capital, before.entries, kindOfIn(before), ON),
+    )
+  })
+
+  it('laisse les totaux du mois à l’identique', () => {
+    const { before, after } = withRates()
+    expect(totalsByKind(after.entries, MONTH, kindOfIn(after), undefined, true)).toEqual(
+      totalsByKind(before.entries, MONTH, kindOfIn(before), undefined, true),
+    )
   })
 })

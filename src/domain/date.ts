@@ -140,6 +140,37 @@ export function clampISO(iso: ISODate, from: ISODate, to: ISODate): ISODate {
   return iso < from ? from : iso > to ? to : iso
 }
 
+/**
+ * Une pile de faits datés, du plus récent au plus ancien.
+ *
+ * Écrit ici et employé deux fois — les valorisations d'un support et ses
+ * paliers de taux (`saving.ts`, `savingRate.ts`) —, parce que ce sont deux fois
+ * la même question et qu'y répondre deux fois finirait par y répondre
+ * différemment.
+ *
+ * `rank` est l'indice d'origine, c'est-à-dire l'**ordre d'arrivée** dans le
+ * document : c'est lui qui départage deux faits du même jour, le dernier posé
+ * d'abord. Il faut un ordre total et déterministe, faute de quoi deux lectures
+ * du même document pourraient ne pas désigner le même « dernier ».
+ *
+ * Par l'ordre d'arrivée, et pas par l'identifiant : les identifiants sont des
+ * UUID aléatoires, donc départager une saisie de sa correction par leur id,
+ * c'est tirer à pile ou face — déterministe, mais faux une fois sur deux. Ces
+ * collections ne sont qu'empilées, rien ne les réordonne à la lecture du
+ * document, et leur rang dans le tableau *est* leur chronologie : il survit à
+ * l'export.
+ */
+export function stackedByDate<T>(rows: readonly T[], dateOf: (row: T) => ISODate): T[] {
+  return rows
+    .map((row, rank) => ({ row, rank }))
+    .sort((a, b) => {
+      const left = dateOf(a.row)
+      const right = dateOf(b.row)
+      return left === right ? b.rank - a.rank : compareISO(right, left)
+    })
+    .map((entry) => entry.row)
+}
+
 /* --- Jour de la semaine ---------------------------------------------------*/
 
 /** 1 = lundi … 7 = dimanche (convention ISO 8601). */

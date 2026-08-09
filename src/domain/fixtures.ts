@@ -12,6 +12,7 @@ import type {
   Member,
   Period,
   Recurrence,
+  SavingRate,
   SavingSupport,
   SavingValuation,
 } from './types'
@@ -104,6 +105,12 @@ export function makeSavingValuation(
   return { amount: money(1000000), date: '2026-01-01', ...over }
 }
 
+export function makeSavingRate(
+  over: Partial<SavingRate> & { id: string; supportId: string },
+): SavingRate {
+  return { rateBp: 250, kind: 'assumed', from: '2026-01-01', ...over }
+}
+
 export function makeData(over: Partial<Data> = {}): Data {
   return {
     /* La version courante du document : un aller-retour export / import doit
@@ -120,6 +127,7 @@ export function makeData(over: Partial<Data> = {}): Data {
     advances: [],
     savingSupports: [],
     savingValuations: [],
+    savingRates: [],
     months: [],
     settings: {
       theme: 'system',

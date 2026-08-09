@@ -28,12 +28,22 @@ import type { SupportDraft, SupportErrors } from './supportDraft'
  * estimée, ni la couverture, ni un total du mois : un rendement n'est pas un
  * mouvement, et l'aide du champ le dit, parce qu'un taux posé sur une fiche
  * d'épargne se lit spontanément comme un calcul qui va se mettre à tourner.
+ *
+ * **Le taux suit le relevé : à la création seulement.** Il s'empile daté, comme
+ * une valorisation, et ce formulaire écrase ce qu'il touche — le reprendre ici
+ * ferait d'une correction de libellé une réécriture du passé du compte, c'est-
+ * à-dire exactement ce que le taux daté existe pour empêcher. Ensuite, il se
+ * change depuis la fiche, où chaque palier porte sa date.
  */
 export function SupportFields({
   draft,
   patch,
   errors,
-  /** À la création seulement : un relevé s'empile, il ne se réécrit pas ici. */
+  /**
+   * À la création seulement : un relevé et un taux s'empilent, ils ne se
+   * réécrivent pas ici. Les deux vont ensemble — le premier palier prend la
+   * date du premier relevé.
+   */
   withValue = true,
   autoFocus = false,
 }: {
@@ -149,55 +159,59 @@ export function SupportFields({
       {/* Vide veut dire « je m'en remets à l'hypothèse du simulateur », jamais
           « zéro pour cent » — les deux existent, et les confondre ferait
           projeter à plat un support dont personne n'a rien dit. */}
-      <Field
-        label={t.savings.supportRate}
-        optional
-        hint={t.savings.supportRateHint}
-        {...(errors.rate === undefined ? {} : { error: errors.rate })}
-      >
-        {(id, describedBy) => (
-          <span className="flex items-center gap-2">
-            <TextInput
-              id={id}
-              aria-describedby={describedBy}
-              className="max-w-24"
-              inputMode="decimal"
-              value={draft.rateText}
-              invalid={errors.rate !== undefined}
-              onChange={(event) => {
-                patch({ rateText: event.target.value })
-              }}
-            />
-            {/* L'unité au bord du champ : « 3 » posé seul sous un libellé ne dit
-                pas s'il s'agit d'un pourcentage ou d'un montant. */}
-            <span className="t-label shrink-0" aria-hidden="true">
-              {t.savings.ratePerYear}
-            </span>
-          </span>
-        )}
-      </Field>
+      {withValue && (
+        <>
+          <Field
+            label={t.savings.supportRate}
+            optional
+            hint={t.savings.supportRateHint}
+            {...(errors.rate === undefined ? {} : { error: errors.rate })}
+          >
+            {(id, describedBy) => (
+              <span className="flex items-center gap-2">
+                <TextInput
+                  id={id}
+                  aria-describedby={describedBy}
+                  className="max-w-24"
+                  inputMode="decimal"
+                  value={draft.rateText}
+                  invalid={errors.rate !== undefined}
+                  onChange={(event) => {
+                    patch({ rateText: event.target.value })
+                  }}
+                />
+                {/* L'unité au bord du champ : « 3 » posé seul sous un libellé ne
+                    dit pas s'il s'agit d'un pourcentage ou d'un montant. */}
+                <span className="t-label shrink-0" aria-hidden="true">
+                  {t.savings.ratePerYear}
+                </span>
+              </span>
+            )}
+          </Field>
 
-      {/* La nature ne se demande qu'une fois un taux posé : sans chiffre, elle
-          ne qualifie rien. Elle ne change aucun calcul — elle change ce que le
-          taux engage, et c'est celui qui coche qui l'affirme. */}
-      {draft.rateText.trim() !== '' && (
-        <div className="flex flex-col gap-2">
-          <Segmented
-            options={[
-              { value: 'guaranteed' as const, label: t.savings.supportRateGuaranteed },
-              { value: 'assumed' as const, label: t.savings.supportRateAssumed },
-            ]}
-            value={draft.rateKind}
-            onChange={(rateKind) => {
-              patch({ rateKind })
-            }}
-            label={t.savings.supportRateKind}
-            className="w-fit"
-          />
-          {draft.rateKind === 'guaranteed' && (
-            <p className="t-label">{t.savings.supportRateGuaranteedHint}</p>
+          {/* La nature ne se demande qu'une fois un taux posé : sans chiffre,
+              elle ne qualifie rien. Elle ne change aucun calcul — elle change ce
+              que le taux engage, et c'est celui qui coche qui l'affirme. */}
+          {draft.rateText.trim() !== '' && (
+            <div className="flex flex-col gap-2">
+              <Segmented
+                options={[
+                  { value: 'guaranteed' as const, label: t.savings.supportRateGuaranteed },
+                  { value: 'assumed' as const, label: t.savings.supportRateAssumed },
+                ]}
+                value={draft.rateKind}
+                onChange={(rateKind) => {
+                  patch({ rateKind })
+                }}
+                label={t.savings.supportRateKind}
+                className="w-fit"
+              />
+              {draft.rateKind === 'guaranteed' && (
+                <p className="t-label">{t.savings.supportRateGuaranteedHint}</p>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Le premier relevé est facultatif, et son absence a un sens : on ne

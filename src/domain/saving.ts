@@ -22,6 +22,7 @@ import {
   endOfMonth,
   isWithin,
   parseISO,
+  stackedByDate,
   startOfMonth,
   today,
   ym,
@@ -75,15 +76,10 @@ export function valuationsOf(
   valuations: readonly SavingValuation[],
   supportId: string,
 ): SavingValuation[] {
-  return valuations
-    .map((valuation, rank) => ({ valuation, rank }))
-    .filter((row) => row.valuation.supportId === supportId)
-    .sort((a, b) =>
-      a.valuation.date === b.valuation.date
-        ? b.rank - a.rank
-        : compareText(b.valuation.date, a.valuation.date),
-    )
-    .map((row) => row.valuation)
+  return stackedByDate(
+    valuations.filter((valuation) => valuation.supportId === supportId),
+    (valuation) => valuation.date,
+  )
 }
 
 const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)

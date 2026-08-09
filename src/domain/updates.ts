@@ -21,6 +21,7 @@ import type {
   Member,
   Recurrence,
   SavingPace,
+  SavingRate,
   SavingSupport,
   SavingValuation,
   Settings,
@@ -170,15 +171,16 @@ export type SavingSupportInput = {
   categoryId: string
   /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
   pace: SavingPace
-  /**
-   * L'hypothèse de rendement, en points de base — absente tant que personne ne
-   * l'a posée. Elle ne se déduit d'aucun produit : voir `SavingSupport.rateBp`.
-   */
-  rateBp?: number
-  rateKind?: RateKind
   note?: string
   /** Le capital du jour, s'il est connu, et la date à laquelle il l'est. */
   value?: { amount: Money; date: ISODate }
+  /**
+   * Le premier palier de taux, s'il est connu — posé exactement comme la
+   * première valorisation, et pour la même raison : ni le capital ni le taux ne
+   * s'écrivent sur le support, tous deux sont des faits datés qui s'empilent.
+   * Absent tant que personne n'a posé d'hypothèse : voir `SavingRate`.
+   */
+  rate?: { rateBp: number; kind: RateKind; from: ISODate }
 }
 
 /**
@@ -199,8 +201,13 @@ export function createSavingSupport(
   data: Data,
   input: SavingSupportInput,
   makeId: () => string,
-): { data: Data; support: SavingSupport; valuation: SavingValuation | null } {
-  const { value, note, ...rest } = input
+): {
+  data: Data
+  support: SavingSupport
+  valuation: SavingValuation | null
+  rate: SavingRate | null
+} {
+  const { value, rate: firstRate, note, ...rest } = input
   const support: SavingSupport = {
     ...rest,
     id: makeId(),
@@ -211,13 +218,13 @@ export function createSavingSupport(
     value === undefined
       ? null
       : { id: makeId(), supportId: support.id, amount: value.amount, date: value.date }
+  const rate: SavingRate | null =
+    firstRate === undefined ? null : { id: makeId(), supportId: support.id, ...firstRate }
 
-  const next = addSavingSupport(data, support)
-  return {
-    data: valuation === null ? next : addSavingValuation(next, valuation),
-    support,
-    valuation,
-  }
+  let next = addSavingSupport(data, support)
+  if (valuation !== null) next = addSavingValuation(next, valuation)
+  if (rate !== null) next = addSavingRate(next, rate)
+  return { data: next, support, valuation, rate }
 }
 
 /** Réécrit un support de bout en bout — même raison que `replaceRecurrence`. */
@@ -266,7 +273,7 @@ export function stopSupportRecurrences(data: Data, supportId: string, on: ISODat
 }
 
 /**
- * Supprime un support pour de bon, ses valorisations avec lui.
+ * Supprime un support pour de bon, ses valorisations et ses taux avec lui.
  *
  * Réservé à ce qui n'a pas d'histoire — voir `isSupportEmpty` : un support créé
  * par erreur se retire, un support qui porte des mouvements s'archive. La
@@ -285,6 +292,7 @@ export function removeSavingSupport(data: Data, id: string): Data {
     ...data,
     savingSupports: data.savingSupports.filter((s) => s.id !== id),
     savingValuations: data.savingValuations.filter((v) => v.supportId !== id),
+    savingRates: data.savingRates.filter((r) => r.supportId !== id),
     entries: data.entries.map(unlink),
     recurrences: data.recurrences.map(unlink),
     advances: data.advances.map(unlink),
@@ -341,6 +349,39 @@ export function replaceSavingValuation(
 
 export function removeSavingValuation(data: Data, id: string): Data {
   return { ...data, savingValuations: data.savingValuations.filter((v) => v.id !== id) }
+}
+
+/* --- Taux -----------------------------------------------------------------*/
+
+/**
+ * Ajoute un palier de taux. Il **s'empile**, il n'écrase rien.
+ *
+ * Le pendant exact d'`addSavingValuation`, et pour la même raison : un taux
+ * corrigé ne doit pas emporter celui qu'il remplace. « 3 % jusqu'en février,
+ * 2,40 % ensuite » est la seule forme qui permette à l'évolution passée de
+ * rester ce qu'elle était — un champ mutable la recalculerait entièrement au
+ * dernier taux connu, c'est-à-dire à un taux qui n'y a jamais couru.
+ */
+export function addSavingRate(data: Data, rate: SavingRate): Data {
+  return { ...data, savingRates: [...data.savingRates, rate] }
+}
+
+/**
+ * Corrige un palier — sa date comme son taux.
+ *
+ * Corriger n'est pas changer de taux : on ne pose pas un palier de plus quand
+ * on s'est trompé de chiffre en saisissant celui-ci. Les deux gestes existent
+ * donc, et l'écran les nomme différemment.
+ */
+export function replaceSavingRate(data: Data, id: string, next: Omit<SavingRate, 'id'>): Data {
+  return {
+    ...data,
+    savingRates: data.savingRates.map((rate) => (rate.id === id ? { ...next, id } : rate)),
+  }
+}
+
+export function removeSavingRate(data: Data, id: string): Data {
+  return { ...data, savingRates: data.savingRates.filter((rate) => rate.id !== id) }
 }
 
 /* --- Avances --------------------------------------------------------------*/

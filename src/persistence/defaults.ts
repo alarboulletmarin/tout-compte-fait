@@ -250,6 +250,7 @@ export function emptyData(): Data {
     advances: [],
     savingSupports: [],
     savingValuations: [],
+    savingRates: [],
     months: [],
     settings: {
       theme: 'system',

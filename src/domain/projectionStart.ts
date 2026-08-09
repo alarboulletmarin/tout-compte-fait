@@ -33,8 +33,9 @@ import type { RateKind } from './projection'
 import { type Money, ZERO, add, sub } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { savingTotal, supportValue } from './saving'
+import { type RateStep, rateOn, rateSchedule } from './savingRate'
 import type { KindOf } from './stats'
-import type { Entry, Recurrence, SavingSupport, SavingValuation } from './types'
+import type { Entry, Recurrence, SavingRate, SavingSupport, SavingValuation } from './types'
 
 /**
  * D'où part la simulation.
@@ -84,10 +85,22 @@ export type ProjectionPart = {
   capital: Money | null
   /** Ce que ses règles récurrentes y versent, au mois, en net. */
   monthly: Money
-  /** Son hypothèse de rendement, ou `null` — l'écran comble alors. */
+  /** Son taux **du jour du départ**, ou `null` — l'écran comble alors. */
   rateBp: number | null
   /** Ce que ce taux engage. `null` avec le taux. */
   rateKind: RateKind | null
+  /**
+   * Les paliers déjà datés qui tombent dans l'horizon, celui du départ compris.
+   *
+   * Un seul terme quand rien ne change — et c'est le cas courant. Le barème
+   * n'invente aucun changement : il transporte ceux que quelqu'un a posés, si
+   * bien qu'un taux daté du 1er janvier prochain s'applique dans la projection
+   * au rang qui lui revient, et pas avant.
+   *
+   * Vide quand le support ne porte aucun palier : `rateBp` vaut alors `null`, et
+   * c'est l'écran qui comble.
+   */
+  steps: readonly RateStep[]
 }
 
 export type ProjectionStart = {
@@ -205,6 +218,7 @@ export function supportStart(
   valuations: readonly SavingValuation[],
   entries: readonly Entry[],
   recurrences: readonly Recurrence[],
+  rates: readonly SavingRate[],
   on: ISODate,
   until: ISODate,
 ): ProjectionStart {
@@ -214,6 +228,14 @@ export function supportStart(
     on,
     until,
   )
+
+  /* Le barème complet, et pas seulement le taux du jour : c'est lui qui porte
+     les changements datés — un livret révisé au 1er février prochain change de
+     taux dans la projection à ce rang-là, et pas au départ. Le taux du jour
+     reste rendu à côté, parce que c'est celui que l'écran affiche et propose à
+     la modification. */
+  const steps = rateSchedule(rates, support.id)
+  const current = rateOn(rates, support.id, on)
 
   return {
     capital: value.estimated,
@@ -232,8 +254,9 @@ export function supportStart(
         label: support.label,
         capital: value.estimated,
         monthly,
-        rateBp: support.rateBp ?? null,
-        rateKind: support.rateBp === undefined ? null : (support.rateKind ?? 'assumed'),
+        rateBp: current?.rateBp ?? null,
+        rateKind: current?.kind ?? null,
+        steps,
       },
     ],
   }
@@ -255,6 +278,7 @@ export function memberStart(
   valuations: readonly SavingValuation[],
   entries: readonly Entry[],
   recurrences: readonly Recurrence[],
+  rates: readonly SavingRate[],
   kindOf: KindOf,
   on: ISODate,
   until: ISODate,
@@ -277,7 +301,7 @@ export function memberStart(
      « un support » : deux façons de décomposer un portefeuille finiraient par
      ne plus donner les mêmes colonnes que le total qu'elles surplombent. */
   const parts = owned.map(
-    (support) => supportStart(support, valuations, entries, recurrences, on, until).parts[0],
+    (support) => supportStart(support, valuations, entries, recurrences, rates, on, until).parts[0],
   )
 
   return {

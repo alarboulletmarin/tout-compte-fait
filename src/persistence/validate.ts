@@ -31,6 +31,7 @@ import type {
   Period,
   PeriodUnit,
   Recurrence,
+  SavingRate,
   SavingSupport,
   SavingValuation,
   Settings,
@@ -54,6 +55,7 @@ export type ImportCollection =
   | 'advances'
   | 'savingSupports'
   | 'savingValuations'
+  | 'savingRates'
   | 'months'
 
 /**
@@ -77,6 +79,8 @@ export type ImportReason =
   | 'noMember'
   /** Période dont la fin précède le début. */
   | 'period'
+  /** Taux absent, fractionnaire, ou hors des bornes de la saisie. */
+  | 'rate'
   /** Identifiant déjà porté par une autre ligne de la même collection. */
   | 'duplicateId'
   /** Désigne une catégorie qui n'existe pas dans le document. */
@@ -232,23 +236,11 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
   if (memberId === undefined) return 'noMember'
   const note = optionalStr(raw['note'])
   const pace = raw['pace']
-  /* Le taux est **omis** dès qu'il est illisible, jamais ramené à zéro ni à une
-     valeur d'attente : zéro pour cent est une hypothèse qu'on peut poser
-     volontairement — un compte courant, un fonds en perte —, et l'inventer à la
-     place d'un champ abîmé ferait dire à l'app ce qu'elle ne sait pas. Un
-     support sans taux retombe sur l'hypothèse de l'écran, ce qui est exactement
-     la bonne conduite. Les bornes sont celles de la saisie (`domain/rate.ts`) :
-     ce qui entre par un fichier passe le même filtre que ce qui entre par un
-     clavier. */
-  const storedRate = raw['rateBp']
-  const rateBp =
-    typeof storedRate === 'number' &&
-    Number.isInteger(storedRate) &&
-    storedRate >= 0 &&
-    storedRate <= MAX_RATE_PERCENT * 100
-      ? storedRate
-      : undefined
-  const rateKind = raw['rateKind']
+  /* `rateBp` et `rateKind` ne sont plus lus : depuis la v12 le taux vit dans
+     `savingRates`, daté. Un document annoncé v12 qui les porterait encore les
+     perd donc sans un mot — c'est écrit dans les coercitions silencieuses du
+     document de schéma. Un document plus ancien, lui, passe par `toVersion12`,
+     qui les convertit avant que cette lecture n'ait lieu. */
   return {
     id: str(raw['id'], `saving-support-${String(index)}`),
     label: str(raw['label'], '—'),
@@ -256,12 +248,6 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
     categoryId: str(raw['categoryId'], ''),
     archived: bool(raw['archived'], false),
     ...(pace === 'yearly' || pace === 'quarterly' ? { pace } : {}),
-    ...(rateBp === undefined ? {} : { rateBp }),
-    /* La nature ne survit pas sans son taux : « garanti » tout seul ne qualifie
-       rien, et laisserait croire à un support renseigné qui ne l'est pas. */
-    ...(rateBp !== undefined && (rateKind === 'guaranteed' || rateKind === 'assumed')
-      ? { rateKind }
-      : {}),
     ...(note === undefined ? {} : { note }),
   }
 }
@@ -285,6 +271,45 @@ function savingValuation(raw: unknown, index: number): Read<SavingValuation> {
     supportId,
     amount: raw['amount'],
     date: raw['date'],
+  }
+}
+
+/**
+ * Un palier de taux sans date, sans support ou sans taux lisible n'est pas un
+ * palier : c'est tout ce qu'il porte.
+ *
+ * Le taux est **écarté** plutôt que ramené à zéro, et c'est la même règle que
+ * pour un montant fractionnaire : 0 % est une hypothèse qu'on peut poser
+ * volontairement — un compte courant, un fonds à l'arrêt —, et l'inventer à la
+ * place d'un champ abîmé ferait dire à l'app ce qu'elle ne sait pas. Un support
+ * sans palier retombe sur l'hypothèse de l'écran, ce qui est la bonne conduite.
+ *
+ * Les bornes sont celles de la saisie (`domain/rate.ts`) : ce qui entre par un
+ * fichier passe le même filtre que ce qui entre par un clavier.
+ */
+function savingRate(raw: unknown, index: number): Read<SavingRate> {
+  if (!isRecord(raw)) return 'shape'
+  const supportId = optionalStr(raw['supportId'])
+  if (supportId === undefined) return 'unknownSupport'
+  if (typeof raw['from'] !== 'string' || !isValidISO(raw['from'])) return 'date'
+  const rateBp = raw['rateBp']
+  if (
+    typeof rateBp !== 'number' ||
+    !Number.isInteger(rateBp) ||
+    rateBp < 0 ||
+    rateBp > MAX_RATE_PERCENT * 100
+  ) {
+    return 'rate'
+  }
+  return {
+    id: str(raw['id'], `saving-rate-${String(index)}`),
+    supportId,
+    rateBp,
+    /* Contrairement au support d'avant la v12, la nature ne peut pas manquer :
+       elle qualifie un taux qui, lui, est là. Tout ce qui n'est pas exactement
+       « guaranteed » vaut hypothèse — la lecture qui promet le moins. */
+    kind: raw['kind'] === 'guaranteed' ? 'guaranteed' : 'assumed',
+    from: raw['from'],
   }
 }
 
@@ -504,6 +529,7 @@ export function normalizeDocument(raw: unknown): NormalizedDocument {
       savingValuation,
       notices,
     ),
+    savingRates: compact(array(source['savingRates']), 'savingRates', savingRate, notices),
     months: compact(array(source['months']), 'months', monthState, notices),
     settings: settings(source['settings']),
   }
@@ -581,6 +607,7 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
   const advances = dedupeIds(data.advances, 'advances', notices)
   const supports = dedupeIds(data.savingSupports, 'savingSupports', notices)
   const valuations = dedupeIds(data.savingValuations, 'savingValuations', notices)
+  const rates = dedupeIds(data.savingRates, 'savingRates', notices)
 
   const memberIds = new Set(members.map((m) => m.id))
   const familyIds = new Set(families.map((f) => f.id))
@@ -677,6 +704,23 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
     notices.push({
       kind: 'discarded',
       collection: 'savingValuations',
+      index,
+      reason: 'unknownSupport',
+    })
+  })
+
+  /* Un palier orphelin ne qualifie rien : le compte auquel il prêtait un taux
+     n'existe pas. La même règle qu'une valorisation, et non celle du lien coupé
+     — un taux sans support ne vaut plus rien du tout. */
+  const keptRates: SavingRate[] = []
+  rates.forEach((rate, index) => {
+    if (supportIds.has(rate.supportId)) {
+      keptRates.push(rate)
+      return
+    }
+    notices.push({
+      kind: 'discarded',
+      collection: 'savingRates',
       index,
       reason: 'unknownSupport',
     })
@@ -803,6 +847,7 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
     advances: repairedAdvances,
     savingSupports: keptSupports,
     savingValuations: keptValuations,
+    savingRates: keptRates,
     months,
   }
 }

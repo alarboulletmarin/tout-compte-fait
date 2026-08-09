@@ -24,6 +24,7 @@ import {
   makeFamily,
   makeMember,
   makeRecurrence,
+  makeSavingRate,
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
@@ -444,14 +445,11 @@ describe('un portefeuille support par support', () => {
       data: {
         ...data,
         savingSupports: [
-          makeSavingSupport({
-            id: 's-1',
-            memberId: 'm-1',
-            label: 'Livret A',
-            rateBp: 250,
-            rateKind: 'assumed',
-          }),
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
           makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: '2020-01-01' }),
         ],
         savingValuations: [
           ...data.savingValuations,

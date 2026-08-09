@@ -690,6 +690,7 @@ export const fr = {
       advances: 'Avance',
       savingSupports: 'Support d’épargne',
       savingValuations: 'Valorisation',
+      savingRates: 'Taux d’épargne',
       months: 'Mois',
     },
     reportReason: {
@@ -700,6 +701,7 @@ export const fr = {
       month: 'mois inexistant',
       noMember: 'sans personne à qui elle est',
       period: 'période à l’envers',
+      rate: 'taux illisible',
       duplicateId: 'identifiant en double',
       unknownCategory: 'catégorie introuvable, rangée dans « À ranger »',
       unknownFamily: 'famille introuvable',

@@ -130,10 +130,13 @@ export type SavingPace = 'yearly' | 'quarterly'
  * énuméré parallèle serait une seconde classification à tenir d'accord avec la
  * première.
  *
- * Aucun rendement, aucun objectif, aucune échéance : le stock se photographie
- * (`SavingValuation`), il ne se projette pas encore. `pace` ne fait pas
- * exception — il dit à quel rythme la photographie est attendue, pas ce que le
- * support rapportera entre-temps.
+ * Aucun capital, aucun rendement, aucun objectif : le stock se photographie
+ * (`SavingValuation`) et le taux se date (`SavingRate`). Ni l'un ni l'autre ne
+ * se pose ici, et pour la même raison : ce sont des **faits datés**, qui
+ * s'empilent et gardent leur passé, quand un champ posé sur le support n'aurait
+ * qu'une valeur — la dernière —, et la réécrirait à chaque changement. `pace`
+ * ne fait pas exception : il dit à quel rythme la photographie est attendue,
+ * pas ce que le support vaut ni ce qu'il rapporte.
  */
 export type SavingSupport = {
   id: string
@@ -151,29 +154,52 @@ export type SavingSupport = {
   archived: boolean
   /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
   pace?: SavingPace
-  /**
-   * L'hypothèse de rendement annuel qu'on prête à ce support, en points de
-   * base. 300 = 3,00 %. Absente tant que personne ne l'a posée.
-   *
-   * **Saisie, jamais déduite.** L'app ne connaît aucun produit et ne lit aucun
-   * cours : ce champ ne contient que ce que son propriétaire a tapé, et il ne
-   * se remplit ni par défaut, ni à l'import, ni par une migration (cahier
-   * §4.6 ter). C'est ce qui le distingue de l'`expectedReturn` que le §2
-   * refusait de poser « au cas où » — celui-là n'aurait rien fait, celui-ci est
-   * lu par la projection le jour même où il est écrit.
-   *
-   * Il ne change **rien** ailleurs : ni le capital relevé, ni la valeur
-   * estimée, ni la couverture, ni un total du mois. Un rendement n'est pas un
-   * mouvement, et il ne fabrique aucun euro dans le document.
-   */
-  rateBp?: number
-  /**
-   * Ce que ce taux engage — la même distinction que le simulateur, et pour la
-   * même raison : elle ne change aucun calcul, elle change ce que le chiffre
-   * *promet*. Absente, le taux est une hypothèse.
-   */
-  rateKind?: RateKind
   note?: string
+}
+
+/**
+ * Ce qu'un support sert **à partir d'une date** — un palier, pas un réglage.
+ *
+ * Un Livret A à 3 % en 2024 et à 2,40 % en 2025 n'a pas « changé de réglage » :
+ * il a servi deux taux, chacun sur sa période, et les deux restent vrais à leur
+ * date. Un champ posé sur le support ne savait dire que le dernier, et
+ * l'écrire réécrivait le passé : l'évolution du support se retrouvait
+ * recalculée à un taux qui n'y a jamais couru.
+ *
+ * Ils s'empilent donc comme les valorisations, et pour la même raison : le taux
+ * courant est le plus récent dont la date est passée, les précédents font
+ * l'historique. Rien ne s'écrase, et poser un palier au 1er janvier prochain ne
+ * touche aucun mois d'avant.
+ *
+ * **Saisi, jamais déduit.** L'app ne connaît aucun produit et ne lit aucun
+ * cours : un palier ne contient que ce que son propriétaire a tapé, et il ne se
+ * pose ni par défaut, ni à l'import, ni par une migration à partir de rien
+ * (cahier §4.6 ter).
+ *
+ * Il ne change **rien** aux totaux : ni le capital relevé, ni la valeur estimée
+ * de `supportValue`, ni la couverture, ni un total du mois. Un rendement n'est
+ * pas un mouvement, et il ne fabrique aucun euro dans le document — il est lu
+ * par la projection et par la courbe d'évolution, qui annoncent toutes deux une
+ * estimation.
+ */
+export type SavingRate = {
+  id: string
+  supportId: string
+  /**
+   * Taux annuel **net**, en points de base. 250 = 2,50 %.
+   *
+   * Zéro est une réponse — un compte courant, un fonds à l'arrêt — et non une
+   * absence : un support sans aucun palier est ce qui n'a pas de taux.
+   */
+  rateBp: number
+  /**
+   * Ce que ce palier engage — la même distinction que le simulateur, et pour la
+   * même raison : elle ne change aucun calcul, elle change ce que le chiffre
+   * *promet*.
+   */
+  kind: RateKind
+  /** Le premier jour où il s'applique, borne incluse. Le précédent s'arrête la veille. */
+  from: ISODate
 }
 
 /**
@@ -469,6 +495,8 @@ export type Data = {
   savingSupports: SavingSupport[]
   /** Ce que chaque support valait, aux dates où on l'a relevé. */
   savingValuations: SavingValuation[]
+  /** Ce que chaque support sert, et depuis quand. */
+  savingRates: SavingRate[]
   months: MonthState[]
   settings: Settings
 }

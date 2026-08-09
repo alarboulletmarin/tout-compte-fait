@@ -8,11 +8,12 @@
  * ressort exploitable plutôt qu'à moitié valide.
  * ==========================================================================*/
 
+import { RATE_ORIGIN } from '@/domain/savingRate'
 import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 11
+export const CURRENT_SCHEMA_VERSION = 12
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -344,6 +345,65 @@ function toVersion11(doc: RawDocument): RawDocument {
   return { ...doc, schemaVersion: 11 }
 }
 
+/**
+ * Le taux quitte le support et devient un **palier daté**.
+ *
+ * La v11 posait `rateBp` sur le support : un scalaire, sans date, donc un taux
+ * qui valait rétroactivement pour toute l'histoire du compte. Le corriger
+ * réécrivait le passé — un Livret A passé de 3 % à 2,40 % voyait ses deux
+ * années précédentes recalculées à 2,40 %, ce qu'elles n'ont jamais servi.
+ *
+ * **La conversion ne perd rien et n'invente rien.** Chaque support qui portait
+ * un taux lisible rend un palier, et un seul ; un support qui n'en portait pas
+ * n'en reçoit aucun — c'est la règle de la v9 et de la v11 elles-mêmes, et la
+ * seule défendable : l'app ne connaît pas le contrat d'un livret.
+ *
+ * **Le palier commence à `RATE_ORIGIN`, et surtout pas au jour de l'import.**
+ * Le scalaire n'avait pas de date parce qu'il valait « depuis toujours » : une
+ * date d'origine dit exactement cela. Le dater d'aujourd'hui ferait deux fautes
+ * d'un coup — inventer un changement de taux que personne n'a décidé, le jour
+ * où le fichier s'ouvre, et rendre la migration non déterministe, alors que
+ * deux lectures du même fichier doivent donner le même document.
+ *
+ * Les identifiants sont dérivés du support, comme ceux de la v8 : déterministes,
+ * donc comparables d'une lecture à l'autre.
+ */
+function toVersion12(doc: RawDocument): RawDocument {
+  const supports = asRecords(doc['savingSupports'])
+  const rates = asRecords(doc['savingRates'])
+
+  const converted: RawDocument[] = []
+  const stripped = supports.map((support) => {
+    const { rateBp, rateKind, ...rest } = support
+    const id = text(support['id'])
+    if (
+      id === undefined ||
+      typeof rateBp !== 'number' ||
+      !Number.isInteger(rateBp) ||
+      rateBp < 0
+    ) {
+      return rest
+    }
+    converted.push({
+      id: `rate-${id}`,
+      supportId: id,
+      rateBp,
+      kind: rateKind === 'guaranteed' ? 'guaranteed' : 'assumed',
+      from: RATE_ORIGIN,
+    })
+    return rest
+  })
+
+  return {
+    ...doc,
+    savingSupports: stripped,
+    /* Les paliers déjà présents passent devant : un document bricolé à la main
+       peut en porter, et la conversion n'a pas à les écraser. */
+    savingRates: [...rates, ...converted],
+    schemaVersion: 12,
+  }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -356,6 +416,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 9, migrate: toVersion9 },
   { to: 10, migrate: toVersion10 },
   { to: 11, migrate: toVersion11 },
+  { to: 12, migrate: toVersion12 },
 ]
 
 export class ImportError extends Error {
