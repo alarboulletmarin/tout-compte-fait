@@ -493,7 +493,16 @@ L'app suivait l'épargne **réalisée** — capacité, ventilation, capital rele
 
 **Wording.** « Projection à taux constant », jamais « performance ». Une phrase fixe, qui ne se replie ni ne s'écarte, rappelle qu'un taux moyen n'est pas une trajectoire et que rien ici n'est une promesse ni un conseil : c'est la seule chose de l'écran qui reste vraie quels que soient les chiffres saisis.
 
-**Emplacement.** L'écran vit à `/projections`, et sa porte est une rangée en **fin de l'écran Épargne** — pas une cinquième destination de « Gérer ». C'est le raisonnement des avances (§4.7 quater), mot pour mot : elles vivent sous les récurrences et la liste des récurrences porte leur rangée. Une projection vit sous l'épargne, et l'écran Épargne porte la sienne, après le cumul de l'année : le mois se décide en haut, l'année se contemple en dessous, les années à venir viennent après elles. L'URL est à la racine et non sous `/epargne/` parce que tout ce qui vit sous ce préfixe est un **objet** de l'épargne — un support, un relevé — et se comporte comme une fiche ; le simulateur est une destination pleine, qu'on met en signet.
+**Emplacement — deux portes, et aucune dans « Gérer ».** L'écran vit à `/projections`.
+
+- Une rangée en **fin de l'écran Épargne**, après le cumul de l'année : le mois se décide en haut, l'année se contemple en dessous, les années à venir viennent après elles. C'est la porte du **contexte** — on est en train de regarder ce qu'on place, et c'est là que la question se pose.
+- Un groupe **« Simuler »** dans « Plus », le cinquième (DS §6). C'est la porte de l'**adresse** : une rangée qu'on n'atteint qu'en descendant tout un autre écran ne suffit pas, et c'est exactement le défaut que « Plus » existe pour corriger — quatre écrans réels de l'app n'avaient d'autre accès qu'une tuile qui s'efface.
+
+Il n'est **pas** un cinquième rang de « Gérer », et c'est la distinction qui fait exister le groupe : « Gérer » range ce qui décide de ce que le budget calcule, quand un simulateur ne décide de rien — il ne lit même pas le document. Le titre est un verbe comme les autres, « Simuler » et non « Calculateurs » : les quatre autres nomment une **intention**, quand « Calculateurs » nommerait une catégorie d'outil, c'est-à-dire ce qu'on a sous la main plutôt que ce qu'on cherche. C'est le reproche exact fait à « Réglages », et le rangement ne le réintroduit pas par la petite porte.
+
+Un groupe d'une seule rangée est assumé. La règle qui refuse un titre au-dessus d'un lien unique vaut là où le titre est **à la place** du lien — dans la colonne latérale ; ici il vit à côté de quatre autres titres, sur un écran qu'on parcourt à l'œil, et c'est lui qui dit qu'on change de nature.
+
+L'URL est à la racine et non sous `/epargne/` parce que tout ce qui vit sous ce préfixe est un **objet** de l'épargne — un support, un relevé — et se comporte comme une fiche ; le simulateur est une destination pleine, qu'on met en signet.
 
 **Conventions de calcul**, figées ici et vérifiées par des tests contre des valeurs calculées à la main :
 

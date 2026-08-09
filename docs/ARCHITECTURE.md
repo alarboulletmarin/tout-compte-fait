@@ -42,9 +42,10 @@ doit faire, et le [design system](DESIGN-SYSTEM.md) de quoi elle a l'air.
   prose n'avait pas plus de raison qu'eux de peser sur l'écran du mois. Les
   projections sont le même cas, en plus net encore — ce que cet écran refuse de
   calculer demande plus de mots que ce qu'il calcule. Le nom de l'écran, lui,
-  reste là où vit la porte qui y mène : `fr.nav` pour l'historique, que la barre
-  d'onglets nomme sans le charger, `fr.savings` pour les projections, dont
-  l'écran Épargne porte la rangée.
+  reste dans `fr.nav` avec les autres destinations : la barre d'onglets nomme
+  l'historique sans le charger, et « Plus » comme l'écran Épargne nomment les
+  projections sans les charger non plus — deux portes pour un écran, donc un
+  seul libellé, sans quoi elles finiraient par ne plus dire la même chose.
 - `src/persistence/schemaDoc.ts` — le modèle de données à donner à un assistant,
   et `src/persistence/example.ts` — le document d'exemple. Tous deux dérivés du
   code, tous deux chargés à la demande.
@@ -386,7 +387,7 @@ en avait sept.
 
 Le critère de rangement n'est plus « où peut-on techniquement ranger cette
 fonctionnalité ? » mais « avec quelle intention vient-on ? », et il en sort
-quatre — **Gérer** (ce qui décide de ce que le budget calcule), **Organiser**
+cinq — **Gérer** (ce qui décide de ce que le budget calcule), **Organiser**
 (qui y figure, sous quelles étiquettes), **Données** (où elles vivent, comment
 en sortir une copie), **Application** (ce qui ne touche qu'à la présentation).
 « Plus » porte les quatre, la page d'entrée disparaît, et les cinq vues
@@ -399,7 +400,7 @@ exactement pourquoi aucun segment n'a été renommé au passage.
 Le gain se compte en crans : « Plus → Réglages → Catégories » devient « Plus →
 Catégories », et « Plus → Réglages → Données → Exporter/importer » devient
 « Plus → Exporter/importer ». L'écran est un peu plus long, et c'est le bon
-échange sur un téléphone — quatre groupes qu'on comprend en les balayant valent
+échange sur un téléphone — des groupes qu'on comprend en les balayant valent
 mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce qu'il
 contient.
 
@@ -426,7 +427,7 @@ famille ») ; et la barre d'onglets garde « Plus » allumé sur `/a-propos`, qu
 
 **La colonne latérale, elle, nomme « Plus » au lieu de le déplier**, et c'est un
 revirement. Elle le dépliait tant qu'il tenait en deux groupes ; il en porte
-quatre, les onze destinations doubleraient la colonne, et surtout l'un d'eux
+cinq, les douze destinations doubleraient la colonne, et surtout l'un d'eux
 n'est pas fait que de liens — la devise se règle sur place, dans un sélecteur,
 et une colonne de navigation n'a pas à héberger un champ de formulaire. Aucune
 porte n'est perdue au change : ce qu'elle montrait d'un clic, elle le montre
@@ -715,7 +716,7 @@ La barre porte **quatre** onglets — Le mois, Calendrier, Historique, Plus — 
 plus cinq. Ce n'est pas un choix de largeur mais d'architecture : cinq était le
 plafond à 320px, et ce plafond décidait qu'un écran de plus n'aurait aucune
 adresse. Quatre écrans réels vivaient dans ce cas. Le quatrième onglet range ce
-qui déborde, en quatre groupes ; la colonne latérale déplie « Gérer » et nomme
+qui déborde, en cinq groupes ; la colonne latérale déplie « Gérer » et nomme
 « Plus » pour le reste (`SIDEBAR_GROUPS`, `app/routes.ts`). Voir le DS §6.
 
 L'écran du mois porte **deux** grilles bento et non une, séparées par la section

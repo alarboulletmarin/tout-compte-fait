@@ -162,18 +162,21 @@ export function SavingsPage() {
             <YearSection />
           </Suspense>
 
-          {/* Et après l'année, les années. La porte du simulateur vit ici parce
-              que c'est ici qu'on se demande ce que deviendra ce qu'on place —
-              pas dans la navigation, qui aurait posé une cinquième destination
-              au même rang que les quatre écrans de « Gérer » pour ne rien
-              raccourcir (voir `PROJECTION_PATH` dans `app/routes.ts`).
+          {/* Et après l'année, les années. Cette porte-ci est celle du
+              contexte — on est en train de regarder ce qu'on place, et la
+              question « ça donne quoi dans dix ans » se pose là. Elle n'est pas
+              la seule : « Plus » porte la même destination sous « Simuler »,
+              parce qu'un écran qu'on n'atteint qu'en descendant tout un autre
+              écran n'a pas d'adresse. Ce que le simulateur n'a toujours pas,
+              c'est un rang dans « Gérer » — il ne décide de rien (voir
+              `PROJECTION_PATH` dans `app/routes.ts`).
               Elle ne dépend pas de la section d'année, qui arrive par le
               réseau : une porte qui n'apparaîtrait qu'une fois le graphique
               chargé serait une porte qu'on rate. */}
           <RowGroup>
             <Row
-              label={fr.savings.projections}
-              description={fr.savings.projectionsHint}
+              label={fr.nav.projections}
+              description={fr.nav.projectionsHint}
               icon={ForecastIcon}
               to={PROJECTION_PATH}
             />

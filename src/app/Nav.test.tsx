@@ -28,6 +28,7 @@ import {
   MORE_PATH,
   NAV_ROUTES,
   PEOPLE_PATH,
+  PROJECTION_PATH,
   RECURRENCES_PATH,
   SAVINGS_PATH,
   SIDEBAR_GROUPS,
@@ -85,6 +86,7 @@ describe('Barre d’onglets — quatre destinations, et une porte pour le reste'
     ['le stockage', STORAGE_PATH],
     ['les données', DATA_PATH],
     ['à propos', ABOUT_PATH],
+    ['le simulateur', PROJECTION_PATH],
     ['lui-même', MORE_PATH],
   ])('laisse « Plus » allumé sur %s', (_, path) => {
     expect(isInMoreSection(path)).toBe(true)
@@ -102,7 +104,7 @@ describe('Barre d’onglets — quatre destinations, et une porte pour le reste'
 
 describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
   /* Elle déplie ce qu'on ouvre souvent, et nomme le reste. Elle dépliait tout
-     tant que « Plus » tenait en deux groupes ; il en porte quatre, dont un qui
+     tant que « Plus » tenait en deux groupes ; il en porte cinq, dont un qui
      n'est pas fait que de liens — la devise se règle dans un sélecteur, et une
      colonne de navigation n'héberge pas un champ de formulaire. */
   it('déplie « Gérer » et nomme « Plus » pour le reste', () => {
@@ -150,6 +152,10 @@ describe('Colonne latérale — trois groupes, et rien qui disparaisse', () => {
     ['l’apparence', APPEARANCE_PATH],
     ['le stockage', STORAGE_PATH],
     ['les données', DATA_PATH],
+    /* Le simulateur n'est pas déplié par la colonne, contrairement aux quatre
+       écrans de « Gérer » : « Plus » est donc la seule chose qu'elle puisse
+       allumer quand on lit une projection. */
+    ['le simulateur', PROJECTION_PATH],
     ['lui-même', MORE_PATH],
   ])('garde « Plus » allumé sur %s', (_, path) => {
     expect(isUnderMore(path)).toBe(true)

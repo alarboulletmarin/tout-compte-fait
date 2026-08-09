@@ -201,10 +201,27 @@ export const fr = {
        « Organiser » dit ce qu'on y fait : structurer les personnes et les
        étiquettes dont le reste de l'app se sert. */
     organise: 'Organiser',
+    /* Le cinquième groupe, et le seul dont le contenu ne décrit pas le foyer.
+       « Simuler » et non « Calculateurs », pour la raison exacte qui a fait
+       tomber « Réglages » : les quatre autres titres nomment une **intention**
+       — ce pour quoi on vient —, quand « Calculateurs » nommerait une catégorie
+       d'outil, c'est-à-dire ce qu'on a sous la main plutôt que ce qu'on
+       cherche. C'est aussi ce qui le distingue de « Gérer » : on n'y règle
+       rien, on essaie un chiffre pour voir. */
+    simulate: 'Simuler',
     data: 'Données',
     application: 'Application',
     savings: 'Épargne',
     split: 'Répartition',
+    /* La destination du simulateur, nommée ici et nulle part ailleurs : deux
+       écrans y mènent — l'écran Épargne par sa rangée de fin, « Plus » par son
+       groupe « Simuler » —, et deux libellés pour une porte finiraient par
+       diverger. Toute la prose de l'écran d'arrivée, elle, est dans
+       `i18n/projection.ts`, qui voyage avec lui.
+       Le libellé ne promet aucun rendement, et la phrase dit exactement ce que
+       l'écran fait : un calcul sous une hypothèse qu'on pose soi-même. */
+    projections: 'Projections',
+    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
     /* Ce que chaque rangée de « Gérer » dit d'elle-même : sur un écran qui n'est
        qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir.
        Les rangées des trois autres groupes n'en ont pas besoin — elles disent
@@ -1766,21 +1783,6 @@ export const fr = {
     yearsNoPrevious: 'Rien de versé en %s : rien à comparer.',
     srYears: 'Versements cumulés %s contre %s, arrêtés à %s : %s',
     srYearsEmpty: 'Versements cumulés %s : aucune donnée.',
-
-    /* --- La porte des projections ------------------------------------------
-       Les deux seules chaînes du simulateur qui vivent ici : c'est cet écran-ci
-       qui porte la rangée, et il est chargé d'avance — il doit pouvoir nommer
-       où elle mène sans aller chercher le morceau qui la sert. Toute la prose
-       de l'écran d'arrivée est dans `i18n/projection.ts`, qui voyage avec lui.
-
-       La rangée est en fin de page, et c'est sa place : le mois se décide en
-       haut, l'année se contemple en dessous, et les années à venir viennent
-       après elles. C'est la suite de la même ligne du temps.
-
-       Le libellé ne promet pas un rendement, et la phrase dit exactement ce que
-       l'écran fait — un calcul sous une hypothèse qu'on pose soi-même. */
-    projections: 'Projections',
-    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
 
     /* --- La fiche d'un support --------------------------------------------*/
     monthFlows: 'Ce mois-ci',
