@@ -12,6 +12,51 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — les projections partent de ton épargne, et répondent avant de demander
+
+L'écran était une calculatrice posée à côté de l'app : il ne lisait rien du
+document, au motif que rien ne devait y être écrit. Les deux ne se valaient pas.
+Refuser d'écrire protège les données ; refuser de lire ne protégeait rien — ça
+obligeait à retaper à la main un capital que l'écran Épargne affiche au centime
+deux écrans plus haut. Et il fallait traverser presque tout l'écran pour trouver
+« ≈ 14 k€ », qui est pourtant la seule chose qu'on vient y chercher.
+
+- **Un point de départ** : simulation libre, un support, ou toute l'épargne
+  d'une personne. Le capital estimé et les versements récurrents sont repris tels
+  quels ; ils s'affichent en lecture, jamais dans un champ, et « Modifier pour
+  cette simulation » les recopie dans la saisie en coupant le lien. La lecture
+  est à sens unique : rien de ce qui se simule ici n'est enregistré, n'entre dans
+  un mois, ni ne ressort dans un export.
+- **Le rendement, lui, n'est jamais repris.** Un capital et un versement sont
+  des faits ; un rendement futur n'en est pas un, et aucun support n'en porte. Un
+  Livret A dont le taux du jour est connu n'est pas un rendement garanti sur dix
+  ans — il est révisé deux fois par an.
+- **Le résultat passe en tête**, avec sa décomposition : capital de départ,
+  versements, rendement, capital projeté, et la part que le rendement pèse dans
+  le total. Un capital projeté est trois choses, et un nombre seul les confond.
+  La tuile « ce que le taux aura produit », qui vivait tout en bas, disparaît —
+  elle en disait la moitié.
+- **Le graphique devient la pièce maîtresse.** À une hypothèse, versements et
+  rendement se lisent **empilés** : la hauteur d'une bande est la réponse, et le
+  haut de la pile est le capital. Le tracé se lit au doigt et au clavier, à
+  n'importe quel rang de l'horizon, et non plus aux seuls quatre jalons — qui
+  passent derrière un repli, et portent désormais le versé, le rendement et le
+  total plutôt qu'une colonne de totaux.
+- **« Et si je verse davantage ? »** — quatre versements autour de celui qu'on
+  simule, et ce qu'ils donnent au même horizon. Des multiples du montant réel,
+  jamais des paliers que l'app jugerait raisonnables.
+- **Le formulaire a fondu.** Le champ de durée ne s'affiche plus à côté des
+  raccourcis qui font la même chose : il se demande. Chaque champ porte son
+  unité. « Ce que ça donne / Ce qu'il faut verser » devient « Projeter mon
+  épargne / Atteindre un objectif », et « Garanti / Hypothèse » devient « Taux
+  garanti / Rendement hypothétique » — l'app ne sait pas ce que dit ton contrat,
+  c'est toi qui l'affirmes.
+- **Sept paragraphes de pédagogie passent derrière une seule porte**,
+  « Comprendre cette projection ». Chacun était juste ; ensemble ils faisaient
+  une notice intercalée entre des champs, et personne ne lit une notice. La
+  réserve, elle, reste sous le résultat et ne se replie pas : une mise en garde
+  qu'il faut ouvrir pour lire n'en est plus une.
+
 ### Corrigé — deux libellés presque identiques sur deux montants différents
 
 « Sa part du mois » annonçait 1 659,83 € sur la tuile du virement, « Part du

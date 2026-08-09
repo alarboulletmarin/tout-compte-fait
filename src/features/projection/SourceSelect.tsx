@@ -1,0 +1,179 @@
+/* ============================================================================
+ * D'où part la simulation : de l'épargne réelle, ou de rien.
+ *
+ * C'est le branchement que l'écran n'avait pas, et son absence coûtait plus
+ * qu'elle ne protégeait : l'app connaissait le capital d'un livret et les 350 €
+ * qui y tombent tous les mois, et on les retapait à la main deux écrans plus
+ * loin. Le cahier §4.6 ter interdisait de *lire* pour être sûr de ne pas
+ * *écrire* — mais ce sont deux choses, et seule la seconde met le document en
+ * danger.
+ *
+ * **Le sens est unique, et rien dans cet écran ne l'inverse.** Les deux chiffres
+ * repris s'affichent en **lecture**, pas dans des champs : on ne tape jamais
+ * par-dessus l'épargne, donc on ne peut pas croire qu'on la modifie. Qui veut
+ * essayer autre chose appuie sur « Modifier pour cette simulation », qui recopie
+ * les valeurs dans la saisie et repasse en simulation libre — le lien est coupé,
+ * et il se voit.
+ *
+ * **Le rendement n'est jamais repris.** Le capital et les versements sont des
+ * faits ; un rendement futur n'en est pas un, et un support n'en porte pas.
+ * Préremplir 3 % sous prétexte qu'un livret est à 3 % aujourd'hui serait
+ * exactement le tour des simulateurs de vente que cet écran existe pour ne pas
+ * être.
+ *
+ * **Une liste par personne, jamais un total du foyer.** Deux personnes qui ont
+ * 12 000 € et 8 000 € de côté n'ont pas 20 000 € (cahier §4.6 bis) : les
+ * supports sont donc rangés sous leur propriétaire, et « toute l'épargne » est
+ * toujours celle de quelqu'un.
+ * ==========================================================================*/
+
+import type { Money } from '@/domain/money'
+import type { ProjectionSource, ProjectionStart } from '@/domain/projectionStart'
+import type { Member, SavingSupport } from '@/domain/types'
+import { de, formatMoney, tpl } from '@/i18n/format'
+import { projection } from '@/i18n/projection'
+import { Button } from '@/ui/Button'
+import { Field, Select } from '@/ui/Field'
+import { useCurrency } from '@/ui/currency'
+
+/* Deux clés d'option, et un séparateur qui ne peut pas apparaître dans un
+   identifiant : `makeId` rend un UUID, qui ne porte que des chiffres, des
+   lettres et des tirets. */
+const FREE = 'free'
+const key = (source: ProjectionSource): string =>
+  source.kind === 'free' ? FREE : `${source.kind}:${source.id}`
+
+function parseKey(value: string): ProjectionSource {
+  const [kind, id] = value.split(':')
+  if ((kind === 'member' || kind === 'support') && id !== undefined && id !== '') {
+    return { kind, id }
+  }
+  return { kind: 'free' }
+}
+
+export type SourceSelectProps = {
+  source: ProjectionSource
+  onChange: (next: ProjectionSource) => void
+  /** Ce que l'origine choisie rapporte. Vide en simulation libre. */
+  start: ProjectionStart
+  members: readonly Member[]
+  /** Les supports proposables — les archivés n'en sont pas. */
+  supports: readonly SavingSupport[]
+  /** Recopie les chiffres dans la saisie et repasse en libre. */
+  onDetach: () => void
+  /** Le mode inverse calcule le versement : il ne reprend que le capital. */
+  showMonthly: boolean
+}
+
+export function SourceSelect({
+  source,
+  onChange,
+  start,
+  members,
+  supports,
+  onDetach,
+  showMonthly,
+}: SourceSelectProps) {
+  const currency = useCurrency()
+  /* À l'euro près, et **pas** au format arrondi des projections : ces deux
+     chiffres-là ne sortent pas d'un modèle, ce sont des faits — un relevé, des
+     règles récurrentes. Écrire « ≈ 8,5 k€ » sous « Épargne actuelle » ferait
+     passer pour une estimation ce que l'écran Épargne affiche au centime deux
+     écrans plus haut, et donnerait deux réponses à « combien j'ai ». Le « ≈ »
+     commence à la sortie du calcul, pas à son entrée. */
+  const money = (value: Money): string => formatMoney(value, currency, false)
+  const alone = members.length === 1
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Field label={projection.source}>
+        {(id, describedBy) => (
+          <Select
+            id={id}
+            aria-describedby={describedBy}
+            value={key(source)}
+            onChange={(event) => {
+              onChange(parseKey(event.target.value))
+            }}
+          >
+            <option value={FREE}>{projection.sourceFree}</option>
+            {members.map((member) => {
+              const owned = supports.filter((support) => support.memberId === member.id)
+              /* Une personne sans support n'a rien à projeter : la proposer
+                 offrirait une origine qui rend un capital vide. */
+              if (owned.length === 0) return null
+              const all = (
+                <option value={key({ kind: 'member', id: member.id })}>
+                  {alone ? projection.sourceMine : tpl(projection.sourceMember, de(member.name))}
+                </option>
+              )
+              const each = owned.map((support) => (
+                <option key={support.id} value={key({ kind: 'support', id: support.id })}>
+                  {support.label}
+                </option>
+              ))
+              /* Seul du foyer, personne n'a besoin qu'on lui rappelle à qui
+                 sont ses livrets : le groupe disparaît, les options restent. */
+              return alone ? (
+                <optgroup key={member.id} label={projection.source}>
+                  {all}
+                  {each}
+                </optgroup>
+              ) : (
+                <optgroup key={member.id} label={member.name}>
+                  {all}
+                  {each}
+                </optgroup>
+              )
+            })}
+          </Select>
+        )}
+      </Field>
+
+      {source.kind !== 'free' && (
+        <div className="flex flex-col gap-3 border-t border-border pt-3">
+          {/* En lecture, jamais dans un champ : c'est ce qui dit qu'on regarde
+              l'épargne et qu'on ne l'édite pas. */}
+          <dl className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="t-label">{projection.sourceCapital}</dt>
+              <dd className="t-num-body tnum shrink-0">
+                {start.capital === null ? '—' : money(start.capital)}
+              </dd>
+            </div>
+            {showMonthly && (
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="t-label">{projection.sourceMonthly}</dt>
+                <dd className="t-num-body tnum shrink-0">
+                  {tpl(projection.perMonth, money(start.monthly))}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {/* Ce que le chiffre repris ne dit pas — une seule de ces phrases à la
+              fois, dans l'ordre de ce qui manque le plus. Un support sans relevé
+              n'est pas un support à zéro. */}
+          {start.capital === null ? (
+            <p className="t-label">{projection.sourceNoValue}</p>
+          ) : start.unvalued === 1 ? (
+            <p className="t-label">{projection.sourceUnvaluedOne}</p>
+          ) : start.unvalued > 1 ? (
+            <p className="t-label">{tpl(projection.sourceUnvalued, start.unvalued)}</p>
+          ) : null}
+          {showMonthly && start.variable && <p className="t-label">{projection.sourceVariable}</p>}
+          {showMonthly && start.monthly === 0 && !start.variable && (
+            <p className="t-label">{projection.sourceNoMonthly}</p>
+          )}
+
+          <p className="t-label">{projection.sourceNote}</p>
+          <p className="t-label">{projection.sourceNoRate}</p>
+
+          <Button variant="secondary" size="sm" className="w-fit" onClick={onDetach}>
+            {projection.sourceEdit}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

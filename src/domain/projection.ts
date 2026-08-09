@@ -3,9 +3,10 @@
  *
  * Ce module ne sait faire qu'une chose : dire ce que devient un capital qu'on
  * alimente tous les mois, sous une hypothèse de taux qu'on lui donne. Il ne
- * choisit aucun taux, ne connaît aucun produit, et ne lit pas le document — un
- * simulateur n'est pas une lecture du foyer, c'est une calculatrice qu'on
- * interroge (cahier §4.6 ter).
+ * choisit aucun taux, ne connaît aucun produit, et ne connaît pas le document.
+ * D'où viennent ses quatre nombres ne le regarde pas — l'écran peut les lire sur
+ * un support (`projectionStart.ts`) ou les recevoir d'un champ de saisie, la
+ * capitalisation est la même (cahier §4.6 ter).
  *
  * **Le taux est saisi net.** Ni fiscalité, ni frais de gestion, ni enveloppe :
  * ce qu'on lui donne est déjà ce qui reste. Modéliser le PFU et les

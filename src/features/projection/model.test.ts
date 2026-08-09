@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { eur } from '@/domain/fixtures'
+import type { ProjectionStart } from '@/domain/projectionStart'
 import { tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import {
@@ -8,6 +10,8 @@ import {
   PROJECTION_STORAGE_KEY,
   type ProjectionDraft,
   analyse,
+  breakdownOf,
+  effortLadder,
   nextSlot,
   readDraft,
   writeDraft,
@@ -157,9 +161,30 @@ describe('euros constants', () => {
 
 describe('le confort local', () => {
   it('retrouve les derniers réglages', () => {
-    const saved = draft({ years: 7, monthlyText: '325', constant: true })
+    const saved = draft({ years: 7, customYears: true, monthlyText: '325', constant: true })
     writeDraft(saved)
     expect(readDraft()).toEqual(saved)
+  })
+
+  it('ramène le champ de durée avec une durée qui n’est pas un raccourci', () => {
+    // Sans lui, sept ans reviendraient à l'écran sans rien pour les relire, et
+    // le premier appui sur une pilule les écraserait sans qu'on ait pu voir ce
+    // qu'ils valaient.
+    writeDraft(draft({ years: 7, customYears: false }))
+    expect(readDraft().customYears).toBe(true)
+    writeDraft(draft({ years: 10, customYears: false }))
+    expect(readDraft().customYears).toBe(false)
+  })
+
+  it('garde l’origine choisie, et refuse une origine illisible', () => {
+    writeDraft(draft({ source: { kind: 'support', id: 's-1' } }))
+    expect(readDraft().source).toEqual({ kind: 'support', id: 's-1' })
+
+    localStorage.setItem(
+      PROJECTION_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_DRAFT, source: { kind: 'support' } }),
+    )
+    expect(readDraft().source).toEqual({ kind: 'free' })
   })
 
   it('retombe sur les valeurs par défaut quand rien n’a été gardé', () => {
@@ -217,5 +242,110 @@ describe('emplacements de scénario', () => {
         { id: 'c', rateText: '', kind: 'assumed' },
       ]),
     ).toBe('b')
+  })
+})
+
+describe('quand l’origine est l’épargne réelle', () => {
+  const start = (over: Partial<ProjectionStart> = {}): ProjectionStart => ({
+    capital: eur(845_000),
+    monthly: eur(35_000),
+    unvalued: 0,
+    variable: false,
+    ...over,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' } })
+
+  it('projette le capital et les versements lus, et non les champs de saisie', () => {
+    // Les deux champs gardent ce qu'on y avait tapé — c'est du confort local,
+    // pas une donnée du foyer — mais ils ne pilotent plus rien.
+    const { result } = analyse({ ...linked, initialText: '1', monthlyText: '2' }, start())
+    expect(result?.initial).toBe(845_000)
+    expect(result?.monthly).toBe(35_000)
+  })
+
+  it('part d’un capital nul quand rien n’a jamais été relevé, sans crier à l’erreur', () => {
+    // Il n'y a pas eu de saisie : il ne peut donc pas y avoir de faute de
+    // saisie. L'écran le *dit*, il ne le signale pas en rouge.
+    const { errors, result } = analyse(linked, start({ capital: null }))
+    expect(errors.initial).toBeUndefined()
+    expect(result?.initial).toBe(0)
+  })
+
+  it('ne lit pas les champs comme illisibles quand ils ne servent pas', () => {
+    const { errors } = analyse({ ...linked, monthlyText: 'beaucoup' }, start())
+    expect(errors.monthly).toBeUndefined()
+  })
+
+  it('ne reprend le capital que, en mode inverse : le versement est la réponse', () => {
+    const { result } = analyse(
+      { ...linked, mode: 'target', targetText: '100000', years: 10 },
+      start(),
+    )
+    expect(result?.initial).toBe(845_000)
+    expect(result?.monthly).toBe(null)
+  })
+})
+
+describe('la décomposition du résultat', () => {
+  it('sépare ce qu’il y avait, ce qu’on a mis, et ce que le taux a ajouté', () => {
+    const { result } = analyse(
+      draft({ initialText: '1000', monthlyText: '100', years: 10 }),
+    )
+    const series = result?.scenarios[0]?.series
+    if (series === undefined || result === undefined || result === null) throw new Error('pas de série')
+    const split = breakdownOf(series, result.months)
+
+    expect(split.initial).toBe(100_000)
+    expect(split.paid).toBe(120 * 10_000)
+    // Les trois se recomposent exactement : il n'existe pas de second calcul.
+    expect(split.initial + split.paid + split.interest).toBe(split.total)
+    expect(split.share).toBeCloseTo(split.interest / split.total, 10)
+  })
+
+  it('ne met pas un total nul en fraction', () => {
+    const empty = { balance: [], contributed: [] }
+    expect(breakdownOf(empty, 0).share).toBe(null)
+  })
+})
+
+describe('l’échelle des efforts', () => {
+  it('range quatre versements autour de celui qu’on simule, et le marque', () => {
+    const { result } = analyse(draft({ monthlyText: '200', years: 10 }))
+    if (result === null) throw new Error('pas de résultat')
+    const rungs = effortLadder(result, result.scenarios[0])
+
+    expect(rungs.map((rung) => rung.monthly)).toEqual([10_000, 20_000, 30_000, 40_000])
+    expect(rungs.filter((rung) => rung.current)).toHaveLength(1)
+    expect(rungs.find((rung) => rung.current)?.monthly).toBe(20_000)
+  })
+
+  it('monte avec l’effort, et retrouve la projection de l’écran au barreau courant', () => {
+    const { result } = analyse(draft({ monthlyText: '200', years: 10 }))
+    if (result === null) throw new Error('pas de résultat')
+    const rungs = effortLadder(result, result.scenarios[0])
+    const current = rungs.find((rung) => rung.current)
+
+    expect(current?.arrival).toBe(result.scenarios[0]?.series.balance.at(-1))
+    for (let i = 1; i < rungs.length; i += 1) {
+      expect(rungs[i]?.arrival ?? 0).toBeGreaterThan(rungs[i - 1]?.arrival ?? 0)
+    }
+  })
+
+  it('garde le versement simulé à son montant exact, jamais arrondi', () => {
+    const { result } = analyse(draft({ monthlyText: '327,40', years: 10 }))
+    if (result === null) throw new Error('pas de résultat')
+    expect(effortLadder(result, result.scenarios[0]).find((r) => r.current)?.monthly).toBe(32_740)
+  })
+
+  it('n’a rien à comparer sans versement', () => {
+    const { result } = analyse(draft({ monthlyText: '', initialText: '5000' }))
+    if (result === null) throw new Error('pas de résultat')
+    expect(effortLadder(result, result.scenarios[0])).toEqual([])
+  })
+
+  it('se tait en mode inverse : le versement requis répond déjà par l’autre bout', () => {
+    const { result } = analyse(draft({ mode: 'target', targetText: '100000' }))
+    if (result === null) throw new Error('pas de résultat')
+    expect(effortLadder(result, result.scenarios[0])).toEqual([])
   })
 })

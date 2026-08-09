@@ -59,6 +59,13 @@ import {
   valuationsOf,
 } from '@/domain/saving'
 import {
+  NO_START,
+  type ProjectionSource,
+  type ProjectionStart,
+  memberStart,
+  supportStart,
+} from '@/domain/projectionStart'
+import {
   type MemberCharges,
   type MemberIncome,
   type MemberShare,
@@ -1014,6 +1021,38 @@ export function useUnlinkedSavings(): Entry[] {
       ),
     [entries, month, kindOf],
   )
+}
+
+/**
+ * D'où part une projection, quand elle part de l'épargne réelle.
+ *
+ * Deux nombres — le capital estimé, les versements récurrents — et **aucun
+ * taux** : le rendement reste une hypothèse que la personne pose (cahier
+ * §4.6 ter). C'est la seule lecture du document que l'écran des projections
+ * fasse, et elle est à sens unique : rien de ce qu'on simule ne redescend.
+ *
+ * Elle ignore le filtre par membre de l'app : le simulateur n'a pas de bandeau
+ * de mois, et son origine est **choisie sur place** — un support, ou toute
+ * l'épargne d'une personne. Suivre en plus un filtre posé deux écrans plus tôt
+ * ferait varier le chiffre sans que rien ne le montre.
+ */
+export function useProjectionStart(source: ProjectionSource): ProjectionStart {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const kindOf = useKindOf()
+
+  return useMemo(() => {
+    const on = today()
+    if (source.kind === 'support') {
+      return supportStart(source.id, valuations, entries, recurrences, on)
+    }
+    if (source.kind === 'member') {
+      return memberStart(source.id, supports, valuations, entries, recurrences, kindOf, on)
+    }
+    return NO_START
+  }, [source, supports, valuations, entries, recurrences, kindOf])
 }
 
 /* `useMemberSavings` vivait ici — la même lecture pour chaque membre, en
