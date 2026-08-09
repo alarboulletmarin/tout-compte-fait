@@ -137,7 +137,7 @@ function cornerClass(span: TileSpan | undefined): string {
   const flat = span !== undefined && FLAT.includes(span)
 
   return cn(
-    'absolute flex max-w-[60%] items-center gap-1 text-text-muted',
+    'absolute flex max-w-[60%] items-center',
     flat ? 'right-4' : 'right-5 md:right-6',
     /* Une 2×1 étroite n'offre qu'une centaine de pixels utiles, et
        « PRÉVISIONNEL » les consomme déjà à lui seul — le repère posé en
@@ -170,7 +170,10 @@ function Marker({
           {destination}
         </span>
       )}
-      <Glyph size={14} />
+      {/* Sans pilule, une 2×1 garde le budget de pixels d'origine — voir
+          `Corner` : c'est là, et seulement là, que le glyphe se pose sur un
+          chiffre taillé au bord. */}
+      <Glyph size={span === '2x1' ? 14 : 16} />
     </>
   )
 }
@@ -178,6 +181,20 @@ function Marker({
 /**
  * Le repère posé au coin, en décor : il dit ce que le geste fait, il n'est pas
  * le geste. `aria-hidden`, parce que le nom accessible de la cible le dit déjà.
+ *
+ * **Sa pilule, et pas seulement le glyphe nu.** Un chevron seul, flottant dans
+ * le coin d'une tuile aussi large que celle-ci, se perdait : rien ne le
+ * reliait à un fond, à un contour, à quoi que ce soit qui dise « ceci se
+ * touche ». La pilule reprend le traitement de l'eyebrow d'en face — même
+ * fond, même coin arrondi — pour que les deux se répondent comme les deux
+ * bouts d'une même rangée d'en-tête, plutôt qu'une étiquette pleine d'un côté
+ * et un pixel muet de l'autre.
+ *
+ * **Sauf sur une `2x1` repliée au coin bas.** Là, le repère se pose par-dessus
+ * le chiffre héros et non plus à côté — voir `cornerClass` — et ce chiffre est
+ * taillé pour remplir la tuile jusqu'au bord (`FlowTiles` : onze caractères sur
+ * 104px de contenu). Une pilule pleine y mordrait sur les derniers chiffres ;
+ * le glyphe nu, lui, tient dans l'espace qu'un zéro ou un centime laisse libre.
  */
 function Corner({
   destination,
@@ -188,9 +205,17 @@ function Corner({
   glyph: typeof ChevronRight
   span: TileSpan | undefined
 }) {
+  const marker = <Marker destination={destination} glyph={glyph} span={span} />
+
   return (
     <span aria-hidden="true" className={cn('pointer-events-none', cornerClass(span))}>
-      <Marker destination={destination} glyph={glyph} span={span} />
+      {span === '2x1' ? (
+        marker
+      ) : (
+        <span className="inline-flex items-center gap-1 rounded-chip bg-surface-2 px-2 py-1 text-text">
+          {marker}
+        </span>
+      )}
     </span>
   )
 }
