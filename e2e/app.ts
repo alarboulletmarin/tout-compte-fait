@@ -94,5 +94,12 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
   { path: '/repartition', heading: /répartition/i },
   { path: '/personnes', heading: /personnes/i },
   { path: '/categories', heading: /catégories/i },
+  /* Il manquait à la liste, et c'est l'écran qui en avait le plus besoin : un
+     tracé, deux tableaux et une décomposition à deux colonnes, dont rien ne se
+     mesure dans jsdom. Le tableau des jalons porte quatre colonnes de
+     « ≈ 202 k€ » dès qu'on compare trois hypothèses — il défile dans son cadre,
+     et c'est exactement le genre de chose qui pousse les murs quand le cadre
+     manque. */
+  { path: '/projections', heading: /projections/i },
   { path: '/plus', heading: /plus/i },
 ]

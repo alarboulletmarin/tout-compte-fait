@@ -1358,6 +1358,14 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      /* Un taux **hypothétique**, et jamais garanti, sur un livret dont le taux
+         du jour est pourtant connu : c'est précisément la distinction que
+         l'écran des projections existe pour tenir. Un Livret A est révisé au
+         1er février et au 1er août — connaître son taux aujourd'hui ne le
+         garantit pas sur dix ans. Le jeu d'exemple ne peut pas se permettre de
+         montrer le contraire (cahier §4.6 ter). */
+      rateBp: 250,
+      rateKind: 'assumed',
       note: 'Vidé pour l’achat, refait depuis : cinq ans tiennent dans sa courbe.',
     },
     {
@@ -1384,6 +1392,12 @@ function withSupports(data: Data): Data {
       categoryId: 'plans',
       archived: false,
       pace: 'yearly',
+      /* Le seul **garanti** du jeu, et le seul qui puisse l'être : le taux d'un
+         PEL est fixé à l'ouverture pour toute la durée du plan. C'est ce qui
+         rend la distinction visible dans l'exemple plutôt que seulement
+         explicable. */
+      rateBp: 175,
+      rateKind: 'guaranteed',
     },
     {
       id: ASSURANCE_VIE,
@@ -1392,6 +1406,8 @@ function withSupports(data: Data): Data {
       categoryId: 'life-insurance',
       archived: false,
       pace: 'quarterly',
+      rateBp: 400,
+      rateKind: 'assumed',
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
     {

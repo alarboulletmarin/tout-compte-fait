@@ -2,6 +2,7 @@ import type { SavingPace } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
 import { AmountInput, DateInput, Field, Select, TextInput } from '@/ui/Field'
+import { Segmented } from '@/ui/Segmented'
 import type { SupportDraft, SupportErrors } from './supportDraft'
 
 /**
@@ -13,10 +14,20 @@ import type { SupportDraft, SupportErrors } from './supportDraft'
  * catégorie du catalogue, celle-là même sous laquelle les mouvements du support
  * se rangeront, et non un second classement à tenir d'accord avec le premier.
  *
- * **Aucun rendement, aucun objectif, aucune échéance.** Ce formulaire répond à
- * « combien j'ai, et où », et s'arrête là. La cadence n'y déroge pas : elle dit
- * quand un relevé sera attendu, jamais ce que le support rapportera d'ici là —
- * c'est le champ qui permet à l'écran de **se taire**, et non de projeter.
+ * **Aucun objectif, aucune échéance.** Ce formulaire répond à « combien j'ai,
+ * et où », et s'arrête là. La cadence n'y déroge pas : elle dit quand un relevé
+ * sera attendu, jamais ce que le support rapportera d'ici là — c'est le champ
+ * qui permet à l'écran de **se taire**, et non de projeter.
+ *
+ * **Une hypothèse de rendement, en revanche, et il faut dire pourquoi elle ne
+ * contredit pas ce qui précède.** Le formulaire refusait tout taux au motif
+ * qu'un champ inutilisé serait une promesse posée dans le modèle (cahier §2).
+ * Celui-ci n'est pas inutilisé : le simulateur le lit. Et il ne promet rien que
+ * son propriétaire n'ait tapé — l'app ne connaît aucun produit, ne lit aucun
+ * cours, et ne pose aucun défaut. Il ne change ni le capital, ni la valeur
+ * estimée, ni la couverture, ni un total du mois : un rendement n'est pas un
+ * mouvement, et l'aide du champ le dit, parce qu'un taux posé sur une fiche
+ * d'épargne se lit spontanément comme un calcul qui va se mettre à tourner.
  */
 export function SupportFields({
   draft,
@@ -134,6 +145,60 @@ export function SupportFields({
           </Select>
         )}
       </Field>
+
+      {/* Vide veut dire « je m'en remets à l'hypothèse du simulateur », jamais
+          « zéro pour cent » — les deux existent, et les confondre ferait
+          projeter à plat un support dont personne n'a rien dit. */}
+      <Field
+        label={t.savings.supportRate}
+        optional
+        hint={t.savings.supportRateHint}
+        {...(errors.rate === undefined ? {} : { error: errors.rate })}
+      >
+        {(id, describedBy) => (
+          <span className="flex items-center gap-2">
+            <TextInput
+              id={id}
+              aria-describedby={describedBy}
+              className="max-w-24"
+              inputMode="decimal"
+              value={draft.rateText}
+              invalid={errors.rate !== undefined}
+              onChange={(event) => {
+                patch({ rateText: event.target.value })
+              }}
+            />
+            {/* L'unité au bord du champ : « 3 » posé seul sous un libellé ne dit
+                pas s'il s'agit d'un pourcentage ou d'un montant. */}
+            <span className="t-label shrink-0" aria-hidden="true">
+              {t.savings.ratePerYear}
+            </span>
+          </span>
+        )}
+      </Field>
+
+      {/* La nature ne se demande qu'une fois un taux posé : sans chiffre, elle
+          ne qualifie rien. Elle ne change aucun calcul — elle change ce que le
+          taux engage, et c'est celui qui coche qui l'affirme. */}
+      {draft.rateText.trim() !== '' && (
+        <div className="flex flex-col gap-2">
+          <Segmented
+            options={[
+              { value: 'guaranteed' as const, label: t.savings.supportRateGuaranteed },
+              { value: 'assumed' as const, label: t.savings.supportRateAssumed },
+            ]}
+            value={draft.rateKind}
+            onChange={(rateKind) => {
+              patch({ rateKind })
+            }}
+            label={t.savings.supportRateKind}
+            className="w-fit"
+          />
+          {draft.rateKind === 'guaranteed' && (
+            <p className="t-label">{t.savings.supportRateGuaranteedHint}</p>
+          )}
+        </div>
+      )}
 
       {/* Le premier relevé est facultatif, et son absence a un sens : on ne
           connaît pas le capital. Le laisser vide n'écrit rien — surtout pas

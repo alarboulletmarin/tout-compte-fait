@@ -10,6 +10,7 @@ import { monthlyInstalment } from './advance'
 import { type ISODate, type YearMonth, endOfMonth, parseISO, startOfMonth, today, ymOf } from './date'
 import { type Money, ZERO } from './money'
 import { buildPlannedEntry, planMonth } from './month'
+import type { RateKind } from './projection'
 import type {
   Advance,
   Category,
@@ -169,6 +170,12 @@ export type SavingSupportInput = {
   categoryId: string
   /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
   pace: SavingPace
+  /**
+   * L'hypothèse de rendement, en points de base — absente tant que personne ne
+   * l'a posée. Elle ne se déduit d'aucun produit : voir `SavingSupport.rateBp`.
+   */
+  rateBp?: number
+  rateKind?: RateKind
   note?: string
   /** Le capital du jour, s'il est connu, et la date à laquelle il l'est. */
   value?: { amount: Money; date: ISODate }

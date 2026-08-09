@@ -9,10 +9,17 @@
  * migration ; et un `expectedReturn` posé sur un support serait exactement la
  * promesse que le cahier §2 refuse de poser « au cas où ».
  *
- * Ce qui est gardé l'est donc **hors du document**, en `localStorage`, à la
- * façon du thème et de l'accusé de lecture de la notice : ça décrit cet
- * appareil-ci et la personne devant lui, pas ses comptes. Le pire qui puisse
- * arriver en le perdant est de retaper trois chiffres.
+ * **En revanche l'écran lit.** Il ne le faisait pas, et c'était une erreur de
+ * symétrie : refuser d'écrire est ce qui protège le document, refuser de lire ne
+ * protégeait rien — ça obligeait seulement à retaper un capital que l'app
+ * affiche deux écrans plus haut. L'origine d'une simulation peut donc être un
+ * support ou l'épargne d'une personne (`domain/projectionStart.ts`) ; le sens
+ * reste unique — de l'épargne vers la simulation, jamais l'inverse.
+ *
+ * Ce qui est gardé l'est **hors du document**, en `localStorage`, à la façon du
+ * thème et de l'accusé de lecture de la notice : ça décrit cet appareil-ci et la
+ * personne devant lui, pas ses comptes. Le pire qui puisse arriver en le perdant
+ * est de retaper trois chiffres.
  *
  * Le calcul, lui, ne vit pas ici : il est dans `domain/projection.ts`, pur et
  * testé. Ce module ne fait que le brancher sur des champs de saisie.
@@ -26,6 +33,7 @@ import {
   projectSeries,
   requiredMonthly,
 } from '@/domain/projection'
+import { NO_START, type ProjectionSource, type ProjectionStart } from '@/domain/projectionStart'
 import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
 import { tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
@@ -40,11 +48,29 @@ export type ScenarioDraft = { id: ScenarioId; rateText: string; kind: RateKind }
 
 export type ProjectionDraft = {
   mode: ProjectionMode
+  /**
+   * D'où viennent le capital et le versement : de l'épargne réelle, ou de la
+   * saisie. Hors de `free`, les deux champs ne s'affichent plus — les chiffres
+   * se lisent, et « Modifier pour cette simulation » les recopie dans la saisie
+   * en repassant en libre. C'est ce qui garantit qu'une simulation ne peut pas
+   * *avoir l'air* de modifier l'épargne : on ne tape jamais par-dessus elle.
+   */
+  source: ProjectionSource
   initialText: string
   monthlyText: string
   targetText: string
   /** L'horizon en années : c'est ainsi qu'on le pense, et qu'on le saisit. */
   years: number
+  /**
+   * Le champ libre de durée est demandé.
+   *
+   * Il s'affichait en permanence, à côté des quatre raccourcis : deux contrôles
+   * pour une seule donnée, dont l'un ne sert qu'aux horizons que les autres ne
+   * savent pas dire. Il ne se montre donc que sur demande — et il se montre tout
+   * seul quand la durée gardée n'est pas un raccourci, sans quoi une durée de
+   * sept ans reviendrait sans champ pour la relire.
+   */
+  customYears: boolean
   scenarios: ScenarioDraft[]
   /** Lire en euros d'aujourd'hui. Éteint par défaut, et signalé quand il est allumé. */
   constant: boolean
@@ -52,6 +78,11 @@ export type ProjectionDraft = {
 }
 
 export const YEAR_PRESETS = [5, 10, 15, 20] as const
+
+/** La durée tombe-t-elle sur un raccourci ? Décide de l'affichage du champ libre. */
+export const isPreset = (years: number): boolean =>
+  (YEAR_PRESETS as readonly number[]).includes(years)
+
 export const MIN_YEARS = 1
 /**
  * Cinquante ans, et c'est déjà beaucoup. Au-delà, une projection à taux
@@ -79,10 +110,16 @@ export const MAX_YEARS = 50
  */
 export const DEFAULT_DRAFT: ProjectionDraft = {
   mode: 'forecast',
+  /* Libre au premier abord, et jamais l'épargne par défaut : un écran qui
+     s'ouvrirait sur « Livret A » aurait choisi à la place de qui le lit quel
+     compte mérite d'être projeté. C'est un geste, pas un réglage — et l'écran
+     s'ouvre sur ce qu'il sait faire sans rien connaître. */
+  source: { kind: 'free' },
   initialText: '',
   monthlyText: '100',
   targetText: '',
   years: 10,
+  customYears: false,
   scenarios: [{ id: 'a', rateText: '3', kind: 'assumed' }],
   constant: false,
   inflationText: '2',
@@ -117,6 +154,23 @@ function scenariosFrom(value: unknown): ScenarioDraft[] {
 }
 
 /**
+ * L'origine relue du stockage — et elle n'est pas crue sur parole.
+ *
+ * Un identifiant garde le **nom** d'un support, pas le support : celui-ci a pu
+ * être supprimé depuis, ou le document remplacé par un autre à l'import. La
+ * chaîne est donc bornée ici, et l'existence vérifiée à l'écran, qui seul
+ * connaît la liste — une origine qui ne désigne plus rien y retombe en libre
+ * plutôt que d'afficher une épargne vide sous le nom d'un compte disparu.
+ */
+function sourceFrom(value: unknown): ProjectionSource {
+  if (typeof value !== 'object' || value === null) return DEFAULT_DRAFT.source
+  const { kind, id } = value as Record<string, unknown>
+  if (kind !== 'member' && kind !== 'support') return DEFAULT_DRAFT.source
+  if (typeof id !== 'string' || id === '' || id.length > 64) return DEFAULT_DRAFT.source
+  return { kind, id }
+}
+
+/**
  * Les derniers réglages, ou les valeurs par défaut.
  *
  * Tout est revalidé : `localStorage` s'édite depuis la console du navigateur,
@@ -133,15 +187,20 @@ export function readDraft(): ProjectionDraft {
     const stored = parsed as Record<string, unknown>
     const years = Number(stored.years)
 
+    const validYears = Number.isInteger(years) && years >= MIN_YEARS && years <= MAX_YEARS
+    const kept = validYears ? years : DEFAULT_DRAFT.years
+
     return {
       mode: stored.mode === 'target' ? 'target' : 'forecast',
+      source: sourceFrom(stored.source),
       initialText: text(stored.initialText, DEFAULT_DRAFT.initialText),
       monthlyText: text(stored.monthlyText, DEFAULT_DRAFT.monthlyText),
       targetText: text(stored.targetText, DEFAULT_DRAFT.targetText),
-      years:
-        Number.isInteger(years) && years >= MIN_YEARS && years <= MAX_YEARS
-          ? years
-          : DEFAULT_DRAFT.years,
+      years: kept,
+      /* Une durée qui n'est pas un raccourci doit revenir avec son champ, sinon
+         elle serait à l'écran sans rien pour la relire — et le premier appui sur
+         une pilule l'écraserait sans qu'on ait pu voir ce qu'elle valait. */
+      customYears: stored.customYears === true || !isPreset(kept),
       scenarios: scenariosFrom(stored.scenarios),
       constant: stored.constant === true,
       inflationText: text(stored.inflationText, DEFAULT_DRAFT.inflationText),
@@ -173,9 +232,43 @@ export type ScenarioResult = {
   series: ProjectionSeries
 }
 
+/** La trajectoire d'un support, et le taux sous lequel elle a été calculée. */
+export type SupportSeries = {
+  supportId: string
+  label: string
+  rateBp: number
+  /** Le taux vient du support lui-même, et non de l'hypothèse de l'écran. */
+  own: boolean
+  series: ProjectionSeries
+}
+
 export type ProjectionResult = {
   months: number
   scenarios: ScenarioResult[]
+  /**
+   * La trajectoire de chaque support, quand le portefeuille se décompose.
+   *
+   * Vide en simulation libre, vide dès qu'on compare deux hypothèses, et vide
+   * quand les versements ne se rattachent à aucun compte : dans ces trois cas
+   * il n'existe pas de colonnes qui se somment au total, et un tableau dont les
+   * colonnes ne font pas le total est pire qu'un tableau absent.
+   *
+   * Quand il n'est pas vide, la somme de ses séries **est** celle de la
+   * première hypothèse — pas une lecture parallèle qu'il faudrait tenir
+   * d'accord (cahier §4.6 ter, « un seul moteur »).
+   */
+  split: SupportSeries[]
+  /** Le capital du premier jour, que le résumé décompose à côté du versé. */
+  initial: Money
+  /** Le versement du mode direct. `null` en mode inverse : il y en a un par hypothèse. */
+  monthly: Money | null
+  /**
+   * L'objectif tel qu'il a été tapé, en mode inverse — et non l'arrivée que le
+   * calcul produit. Les deux se ressemblent à un arrondi près, et c'est
+   * justement l'arrondi qui compte : quelqu'un qui a écrit « 50 000 € » doit
+   * relire 50 000 €, pas « ≈ 50 k€ ». `null` en mode direct.
+   */
+  target: Money | null
   /**
    * Les versements cumulés, quand ils sont les mêmes pour tous — c'est-à-dire
    * en mode direct. Le mode inverse donne à chaque hypothèse **son** versement
@@ -230,10 +323,18 @@ const outOfRangeRate = () => tpl(projection.rateInvalid, MAX_RATE_PERCENT)
  * illisible retire son hypothèse, il n'efface pas les deux autres. C'est la
  * règle qui vaut déjà pour les lectures qui n'ont pas de réponse — s'effacer
  * plutôt qu'afficher un nombre, et seulement là où la réponse manque.
+ *
+ * `start` est ce que l'épargne réelle apporte quand l'origine n'est pas libre.
+ * Il **remplace** les deux champs plutôt que de les préremplir : un chiffre lu
+ * dans le document et un chiffre tapé à la main n'ont pas le même statut, et les
+ * mélanger dans le même champ ferait croire qu'on édite l'épargne. Un capital
+ * inconnu — aucun relevé — vaut zéro pour le calcul et se dit à l'écran ; il
+ * n'invente pas d'erreur de saisie, puisqu'il n'y a pas eu de saisie.
  */
-export function analyse(draft: ProjectionDraft): Analysis {
-  const initial = amount(draft.initialText)
-  const monthly = amount(draft.monthlyText)
+export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_START): Analysis {
+  const linked = draft.source.kind !== 'free'
+  const initial = linked ? (start.capital ?? ZERO) : amount(draft.initialText)
+  const monthly = linked ? start.monthly : amount(draft.monthlyText)
   const target = amount(draft.targetText)
   const inflationBp = parseRateBp(draft.inflationText)
   const validYears =
@@ -251,7 +352,9 @@ export function analyse(draft: ProjectionDraft): Analysis {
 
   const errors: DraftErrors = {
     ...(initial === null ? { initial: projection.amountInvalid } : {}),
-    ...(draft.mode === 'forecast' && monthly === null ? { monthly: projection.amountInvalid } : {}),
+    ...(draft.mode === 'forecast' && !linked && monthly === null
+      ? { monthly: projection.amountInvalid }
+      : {}),
     ...(draft.mode === 'target' && target === null ? { target: projection.amountInvalid } : {}),
     ...(validYears ? {} : { years: outOfRangeYears() }),
     ...(inflationBp === null ? { inflation: outOfRangeRate() } : {}),
@@ -300,6 +403,12 @@ export function analyse(draft: ProjectionDraft): Analysis {
       result: {
         months,
         scenarios: computed,
+        initial,
+        monthly: null,
+        target,
+        /* Le mode inverse cherche un versement, pas une répartition : il n'y a
+           rien à décomposer tant qu'on ne sait pas encore combien verser. */
+        split: [],
         contributed: null,
         targetReached: computed.every((scenario) => scenario.monthly === ZERO),
         inflationBp: erosion,
@@ -311,16 +420,46 @@ export function analyse(draft: ProjectionDraft): Analysis {
     return { errors, result: null, missing: projection.nothingToPlot }
   }
 
-  const computed = scenarios.map((scenario) => ({
+  /* Le détail par support, quand il y en a un et qu'une seule hypothèse est
+     posée. Deux hypothèses veulent dire qu'on compare des portefeuilles
+     entiers ; les mélanger avec une décomposition par compte donnerait un
+     tableau à six colonnes dont trois ne se somment pas. */
+  const split =
+    scenarios.length === 1 && start.parts.length > 0
+      ? start.parts.map((part) => ({
+          part,
+          /* Le taux du support, ou celui de l'écran quand il n'en porte pas :
+             c'est la seule chose que l'hypothèse comble, et elle ne s'écrit
+             jamais sur le support. */
+          rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
+          series: projectSeries({
+            initial: part.capital ?? ZERO,
+            monthly: part.monthly,
+            months,
+            rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
+            inflationBp: erosion,
+          }),
+        }))
+      : []
+
+  const computed = scenarios.map((scenario, index) => ({
     ...scenario,
     monthly,
-    series: projectSeries({
-      initial,
-      monthly,
-      months,
-      rateBp: scenario.rateBp,
-      inflationBp: erosion,
-    }),
+    /* Un portefeuille dont les supports ont chacun leur taux ne suit **aucun**
+       taux moyen : sa trajectoire est la somme des leurs, et il n'existe pas de
+       troisième calcul à côté. La première hypothèse lit donc la somme des
+       parts dès qu'il y en a ; les suivantes restent des taux globaux, ce qui
+       est précisément ce qu'on veut comparer — « et si tout rendait 5 % ? ». */
+    series:
+      index === 0 && split.length > 0
+        ? sumSeries(split.map((one) => one.series))
+        : projectSeries({
+            initial,
+            monthly,
+            months,
+            rateBp: scenario.rateBp,
+            inflationBp: erosion,
+          }),
   }))
 
   return {
@@ -329,6 +468,19 @@ export function analyse(draft: ProjectionDraft): Analysis {
     result: {
       months,
       scenarios: computed,
+      initial,
+      monthly,
+      target: null,
+      split: split.map((one) => ({
+        supportId: one.part.supportId,
+        label: one.part.label,
+        rateBp: one.rateBp,
+        /* `null` quand le support ne portait pas de taux : la colonne dit alors
+           qu'elle emprunte celui de l'écran, au lieu de le faire passer pour le
+           sien. */
+        own: one.part.rateBp !== null,
+        series: one.series,
+      })),
       /* Le versé ne dépend pas du taux : les trois hypothèses partagent la même
          aire, et c'est ce qui rend l'écart entre elle et chaque courbe lisible
          comme « ce que le taux a produit ». */
@@ -344,7 +496,181 @@ export function nextSlot(scenarios: readonly ScenarioDraft[]): ScenarioId | null
   return SCENARIO_SLOTS.find((slot) => !scenarios.some((s) => s.id === slot)) ?? null
 }
 
+/**
+ * La somme de plusieurs trajectoires, rang par rang.
+ *
+ * C'est ce qui fait qu'un portefeuille dont les supports ont chacun leur taux
+ * garde **un seul** moteur : sa courbe n'est pas recalculée à un taux moyen —
+ * qui n'existe pas —, elle est l'addition des courbes de ses supports. Le
+ * tableau par colonnes et le chiffre d'arrivée lisent donc littéralement les
+ * mêmes nombres.
+ *
+ * Les séries ont toutes le même nombre de points : elles sortent du même
+ * horizon, passé au même `projectSeries`.
+ */
+function sumSeries(all: readonly ProjectionSeries[]): ProjectionSeries {
+  const first = all[0]
+  if (first === undefined) return { balance: [], contributed: [] }
+  const add = (pick: (s: ProjectionSeries) => Money[]): Money[] =>
+    pick(first).map((_, rank) =>
+      money(all.reduce((total, one) => total + (pick(one)[rank] ?? ZERO), 0)),
+    )
+  return { balance: add((s) => [...s.balance]), contributed: add((s) => [...s.contributed]) }
+}
+
 /** Les intérêts : ce que le taux a produit, par différence. */
 export function interestOf(series: ProjectionSeries, at: number): Money {
   return money((series.balance[at] ?? ZERO) - (series.contributed[at] ?? ZERO))
+}
+
+/* --- Ce que le résultat dit ------------------------------------------------*/
+
+/**
+ * La décomposition du chiffre d'arrivée, à un rang donné.
+ *
+ * Elle existe parce qu'un capital projeté est **trois choses** — ce qu'il y
+ * avait, ce qu'on a mis, ce que le taux a ajouté — et qu'un nombre seul les
+ * confond. « ≈ 14 000 € » impressionne ; « 12 000 € versés et 1 900 € de
+ * rendement » informe, et c'est la seule pédagogie que cet écran ait à donner.
+ *
+ * Tout se lit sur la **même** série que le tracé et les jalons : `paid` est le
+ * versé cumulé moins le capital du premier jour, `interest` l'écart entre le
+ * capital et le versé. Il n'existe pas de second calcul (cahier §4.6 ter).
+ */
+export type Breakdown = {
+  /** Le capital du premier jour. */
+  initial: Money
+  /** Ce qui a été versé depuis, capital de départ exclu. */
+  paid: Money
+  /** Ce que le taux a produit. */
+  interest: Money
+  /** Le capital à ce rang — la somme des trois. */
+  total: Money
+  /**
+   * La part du rendement dans le capital final, entre 0 et 1. `null` quand il
+   * n'y a rien à rapporter : un total nul ou négatif ne se met pas en fraction.
+   */
+  share: number | null
+}
+
+export function breakdownOf(series: ProjectionSeries, at: number): Breakdown {
+  const initial = series.contributed[0] ?? ZERO
+  const contributed = series.contributed[at] ?? ZERO
+  const total = series.balance[at] ?? ZERO
+  const interest = money(total - contributed)
+  return {
+    initial,
+    paid: money(contributed - initial),
+    interest,
+    total,
+    share: total > 0 ? interest / total : null,
+  }
+}
+
+/**
+ * Les quatre efforts d'épargne à comparer — « et si je verse davantage ? ».
+ *
+ * C'est la seule lecture de l'écran qui réponde à une question **actionnable**
+ * en mode direct : « combien j'aurai » se contemple, « qu'est-ce que 150 € de
+ * plus par mois changeraient » se décide. Elle ne conseille rien et ne
+ * recommande aucun montant — elle montre une pente, à taux constant, sous la
+ * première hypothèse posée.
+ *
+ * **Autour du versement en cours, jamais une échelle absolue.** Une liste figée
+ * 100 / 250 / 500 / 1 000 € serait hors sujet pour qui met 50 € de côté comme
+ * pour qui en met 2 000. Les barreaux sont donc des multiples du versement réel,
+ * arrondis à un pas lisible — personne ne programme un virement à 327 € — et le
+ * versement en cours reste dans la liste, à son montant exact, marqué comme tel.
+ */
+export const EFFORT_FACTORS = [0.5, 1, 1.5, 2] as const
+
+export type EffortRung = {
+  monthly: Money
+  arrival: Money
+  /** Le barreau qui correspond au versement simulé. */
+  current: boolean
+}
+
+/**
+ * Ce qu'un support reçoit par mois, relu sur sa propre série.
+ *
+ * Le versé cumulé compte le capital de départ à son rang zéro : la mensualité
+ * est donc l'écart entre deux rangs consécutifs, et non le premier point. La
+ * relire ici plutôt que de la reporter depuis `ProjectionStart` garde une seule
+ * source à la trajectoire d'un support — celle qui a servi à la tracer.
+ */
+function partMonthly(part: SupportSeries): number {
+  return (part.series.contributed[1] ?? ZERO) - (part.series.contributed[0] ?? ZERO)
+}
+
+/** Le pas d'arrondi d'un barreau : dix euros, cinquante, ou cent. */
+function rungStep(monthly: Money): number {
+  if (monthly < 20_000) return 1_000
+  if (monthly < 100_000) return 5_000
+  return 10_000
+}
+
+export function effortLadder(
+  result: ProjectionResult,
+  scenario: ScenarioResult | undefined,
+): EffortRung[] {
+  const base = result.monthly
+  /* Rien à comparer sans versement : l'échelle serait quatre fois zéro. Et rien
+     à comparer non plus sans hypothèse — le mode inverse a déjà son versement
+     requis, qui répond à la même question par l'autre bout. */
+  if (base === null || base <= 0 || scenario === undefined) return []
+
+  const step = rungStep(base)
+  const seen = new Set<number>()
+  const rungs: EffortRung[] = []
+
+  /**
+   * Ce que donne un versement donné, au même horizon.
+   *
+   * Sur un portefeuille décomposé, l'effort supplémentaire se répartit **au
+   * prorata** de ce que chaque support reçoit déjà, et chaque part garde son
+   * taux : verser 50 % de plus, c'est verser 50 % de plus partout. Recalculer
+   * le tout à un taux unique donnerait un chiffre que la ligne « Simulation en
+   * cours » ne retrouverait même pas.
+   */
+  const arrivalAt = (value: Money): Money => {
+    if (result.split.length > 0) {
+      const ratio = value / base
+      return money(
+        result.split.reduce(
+          (total, part) =>
+            total +
+            (projectSeries({
+              initial: part.series.contributed[0] ?? ZERO,
+              monthly: money(Math.round(partMonthly(part) * ratio)),
+              months: result.months,
+              rateBp: part.rateBp,
+              inflationBp: result.inflationBp,
+            }).balance.at(-1) ?? ZERO),
+          0,
+        ),
+      )
+    }
+    return (
+      projectSeries({
+        initial: result.initial,
+        monthly: value,
+        months: result.months,
+        rateBp: scenario.rateBp,
+        inflationBp: result.inflationBp,
+      }).balance.at(-1) ?? ZERO
+    )
+  }
+
+  for (const factor of EFFORT_FACTORS) {
+    /* Le barreau du milieu garde le montant exact : c'est celui qu'on simule,
+       et l'arrondir ferait afficher une arrivée qui n'est pas celle du reste de
+       l'écran. */
+    const value = factor === 1 ? base : money(Math.round((base * factor) / step) * step)
+    if (value <= 0 || seen.has(value)) continue
+    seen.add(value)
+    rungs.push({ monthly: value, arrival: arrivalAt(value), current: factor === 1 })
+  }
+
+  return rungs.sort((a, b) => a.monthly - b.monthly)
 }

@@ -299,15 +299,25 @@ arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans
 et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
 d'affichage. C'est le motif de `remainingPrincipal`.
 
-**Le simulateur n'écrit rien, et ne lit rien.** Aucune `Entry`, aucun support,
-aucun relevé n'entre dans `features/projection/` ; rien n'en ressort dans le
-document, donc rien dans les exports ni dans le schéma qu'on donne à un
+**Le simulateur n'écrit rien, et il lit dans un seul sens.** Rien n'en ressort
+dans le document, donc rien dans les exports ni dans le schéma qu'on donne à un
 assistant. Une projection est une **question qu'on pose**, pas un fait du
 foyer — et un `expectedReturn` posé sur un support « au cas où » serait
 exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent en
 `localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
 lecture, comme un document importé l'est par `validate.ts`, parce que cette
 clé-là s'édite depuis la console du navigateur.
+
+Ce qu'il **lit** passe par un seul module, `domain/projectionStart.ts`, qui rend
+exactement deux nombres : le capital estimé d'un support ou de l'épargne d'une
+personne, et ses versements récurrents amortis au mois. **Aucun taux** — un test
+vérifie la forme même du type rendu, parce que c'est la règle qui tient tout
+l'écran : un capital et un versement sont des faits, un rendement futur n'en est
+pas un. L'écran affiche ces deux nombres en **lecture**, jamais dans un champ,
+et le seul geste qui les rend éditables coupe le lien avec l'épargne au lieu
+d'écrire dessus. Refuser d'écrire protège le document ; refuser de *lire* ne
+protégeait rien — ça obligeait à retaper à la main un capital que l'écran
+Épargne affiche au centime deux écrans plus haut.
 
 **Les versements cumulés sont une aire, pas une quatrième courbe.** L'app n'a
 que trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les
@@ -319,6 +329,17 @@ graphique en deux lectures qu'il n'y a plus à expliquer — ce qui vient de la
 poche, ce qui vient du taux. Son échelle part de zéro, contrairement à la courbe
 d'un support, qui part de son minimum relevé : une aire mesurée depuis une base
 flottante ne dit rien.
+
+À **une seule hypothèse**, les deux se lisent **empilées** : le versé en bas, le
+rendement au-dessus, le haut de la pile étant le capital. La hauteur d'une bande
+*est* alors la réponse, là où deux tracés superposés demandaient de mesurer
+l'écart entre eux — et `bandPath` sert les deux figures, parce qu'une aire posée
+sur zéro et une bande posée sur une autre série sont la même chose à la base
+près. Au-delà d'une hypothèse on n'empile plus : trois rendements assis sur le
+même versé ne s'additionnent pas, et les empiler tracerait un capital que
+personne n'a. La bande du rendement est teintée de l'accent à faible opacité et
+non d'une quatrième couleur — une aire n'a pas de contraste de trait à tenir,
+c'est le trait posé dessus qui porte la lecture.
 
 **Prorata des revenus.** Le revenu d'un membre est *dérivé* de ses récurrences
 de nature `resource`, ramenées au mois — il n'est stocké nulle part. Le déclarer

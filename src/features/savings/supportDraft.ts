@@ -14,6 +14,8 @@
 import { useMemo, useState } from 'react'
 import { type ISODate, type YearMonth, startOfMonth, today } from '@/domain/date'
 import { type Money, parseAmount, toAmountInput } from '@/domain/money'
+import type { RateKind } from '@/domain/projection'
+import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
 import { DEFAULT_PACE, paceOf } from '@/domain/saving'
 import type { Recurrence, SavingPace, SavingSupport, SavingValuation } from '@/domain/types'
 import type { SavingSupportInput } from '@/domain/updates'
@@ -32,13 +34,25 @@ export type SupportDraft = {
    * et c'est ce champ-là qui reste facultatif.
    */
   pace: SavingPace
+  /**
+   * L'hypothèse de rendement, telle qu'on la tape — « 3 », « 1,5 », ou rien.
+   *
+   * Vide veut dire « je n'en pose pas », jamais « zéro » : un support sans
+   * hypothèse retombe sur celle de l'écran des projections, et écrire 0 % à sa
+   * place figerait une réponse que personne n'a donnée. C'est la même règle que
+   * le montant : vide n'est pas nul.
+   */
+  rateText: string
+  rateKind: RateKind
   note: string
   /** Facultatif : vide veut dire « je ne connais pas », jamais « zéro ». */
   amountText: string
   valueDate: ISODate
 }
 
-export type SupportErrors = Partial<Record<'label' | 'member' | 'category' | 'amount', string>>
+export type SupportErrors = Partial<
+  Record<'label' | 'member' | 'category' | 'amount' | 'rate', string>
+>
 
 export type SupportDefaults = {
   memberId?: string
@@ -51,6 +65,12 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
     memberId: defaults.memberId ?? '',
     categoryId: defaults.categoryId ?? '',
     pace: DEFAULT_PACE,
+    /* Aucun taux par défaut, et surtout pas 3 % : préremplir reviendrait à
+       annoncer le rendement d'un produit que l'app ne connaît pas (cahier
+       §4.6 ter). Le simulateur, lui, a le droit d'avoir un défaut — il ne
+       désigne aucun compte. */
+    rateText: '',
+    rateKind: 'assumed',
     note: '',
     amountText: '',
     valueDate: today(),
@@ -72,6 +92,13 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     /* Un support d'avant le champ n'en porte aucune : c'est la lecture du
        domaine qui décide, et jamais une seconde valeur par défaut posée ici. */
     pace: paceOf(support),
+    /* `toRateInput` n'irait pas : il rend la chaîne vide pour zéro, ce qui
+       convient à un crédit sans intérêts mais pas ici — « 0 % » est une
+       hypothèse qu'on peut poser (un compte courant), et « rien » veut dire
+       « je m'en remets à l'hypothèse de l'écran ». Les confondre ferait
+       disparaître le zéro à la première modification du support. */
+    rateText: support.rateBp === undefined ? '' : String(support.rateBp / 100).replace('.', ','),
+    rateKind: support.rateKind ?? 'assumed',
     note: support.note ?? '',
     amountText: '',
     valueDate: today(),
@@ -93,6 +120,8 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
 
   const amount: Money | null = useMemo(() => parseAmount(draft.amountText), [draft.amountText])
   const typedAmount = draft.amountText.trim() !== ''
+  const rateBp: number | null = useMemo(() => parseRateBp(draft.rateText), [draft.rateText])
+  const typedRate = draft.rateText.trim() !== ''
 
   const errors: SupportErrors = useMemo(() => {
     const found: SupportErrors = {}
@@ -104,8 +133,12 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
        le total d'épargne ne compte toujours pas le support. Zéro passe — un
        livret vidé est une information réelle ; un négatif, non. */
     if (typedAmount && (amount === null || amount < 0)) found.amount = t.savings.valueRequired
+    /* Même règle que le montant : un taux tapé puis avalé en silence se
+       découvre des mois plus tard, devant une projection qui ne l'a jamais
+       pris. Vide passe — c'est l'absence d'hypothèse, et elle est légitime. */
+    if (typedRate && rateBp === null) found.rate = tpl(t.savings.rateInvalid, MAX_RATE_PERCENT)
     return found
-  }, [draft.label, draft.memberId, draft.categoryId, typedAmount, amount])
+  }, [draft.label, draft.memberId, draft.categoryId, typedAmount, amount, typedRate, rateBp])
 
   return {
     draft,
@@ -121,6 +154,9 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         memberId: draft.memberId,
         categoryId: draft.categoryId,
         pace: draft.pace,
+        /* La nature ne part jamais seule : sans taux, « garanti » ne qualifie
+           rien et laisserait croire à un support renseigné. */
+        ...(typedRate && rateBp !== null ? { rateBp, rateKind: draft.rateKind } : {}),
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null
           ? { value: { amount, date: draft.valueDate } }

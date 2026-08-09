@@ -7,7 +7,15 @@
  * ==========================================================================*/
 
 import { useMemo } from 'react'
-import { type ISODate, type YearMonth, addMonthsToYm, currentYm, endOfMonth, today } from '@/domain/date'
+import {
+  type ISODate,
+  type YearMonth,
+  addMonthsToYm,
+  currentYm,
+  endOfMonth,
+  today,
+  ymOf,
+} from '@/domain/date'
 import { type MonthPoint, trailingMonths } from '@/domain/history'
 import { type MonthBounds, navigationBounds } from '@/domain/month'
 import { type Money, sum } from '@/domain/money'
@@ -58,6 +66,13 @@ import {
   supportsDue,
   valuationsOf,
 } from '@/domain/saving'
+import {
+  NO_START,
+  type ProjectionSource,
+  type ProjectionStart,
+  memberStart,
+  supportStart,
+} from '@/domain/projectionStart'
 import {
   type MemberCharges,
   type MemberIncome,
@@ -1014,6 +1029,51 @@ export function useUnlinkedSavings(): Entry[] {
       ),
     [entries, month, kindOf],
   )
+}
+
+/**
+ * D'où part une projection, quand elle part de l'épargne réelle.
+ *
+ * Deux nombres — le capital estimé, les versements récurrents — et **aucun
+ * taux** : le rendement reste une hypothèse que la personne pose (cahier
+ * §4.6 ter). C'est la seule lecture du document que l'écran des projections
+ * fasse, et elle est à sens unique : rien de ce qu'on simule ne redescend.
+ *
+ * Elle ignore le filtre par membre de l'app : le simulateur n'a pas de bandeau
+ * de mois, et son origine est **choisie sur place** — un support, ou toute
+ * l'épargne d'une personne. Suivre en plus un filtre posé deux écrans plus tôt
+ * ferait varier le chiffre sans que rien ne le montre.
+ *
+ * `months` est l'horizon simulé, et il **change la réponse** : une règle qui
+ * s'arrête avant la fin n'entre pas dans un versement constant. Une
+ * reconstitution d'avance de six mois projetée sur dix ans ajouterait des
+ * milliers d'euros que personne n'a l'intention de verser.
+ */
+export function useProjectionStart(source: ProjectionSource, months: number): ProjectionStart {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  const recurrences = useRecurrences()
+  const kindOf = useKindOf()
+
+  return useMemo(() => {
+    const on = today()
+    /* Le dernier jour du dernier mois simulé : une règle qui s'éteint le 31 du
+       mois d'arrivée a bien couru sur tout l'horizon. */
+    const until = endOfMonth(addMonthsToYm(ymOf(on), Math.max(0, months)))
+    if (source.kind === 'support') {
+      const support = supports.find((one) => one.id === source.id)
+      /* Un support qui n'existe plus n'a rien à reprendre — l'écran retombe de
+         son côté en simulation libre, mais le sélecteur ne peut pas inventer un
+         support pour autant. */
+      if (support === undefined) return NO_START
+      return supportStart(support, valuations, entries, recurrences, on, until)
+    }
+    if (source.kind === 'member') {
+      return memberStart(source.id, supports, valuations, entries, recurrences, kindOf, on, until)
+    }
+    return NO_START
+  }, [source, months, supports, valuations, entries, recurrences, kindOf])
 }
 
 /* `useMemberSavings` vivait ici — la même lecture pour chaque membre, en
