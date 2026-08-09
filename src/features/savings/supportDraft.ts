@@ -17,7 +17,13 @@ import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import type { RateKind } from '@/domain/projection'
 import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
 import { DEFAULT_PACE, paceOf } from '@/domain/saving'
-import type { Recurrence, SavingPace, SavingSupport, SavingValuation } from '@/domain/types'
+import type {
+  Recurrence,
+  SavingPace,
+  SavingRate,
+  SavingSupport,
+  SavingValuation,
+} from '@/domain/types'
 import type { SavingSupportInput } from '@/domain/updates'
 import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
@@ -44,6 +50,18 @@ export type SupportDraft = {
    */
   rateText: string
   rateKind: RateKind
+  /**
+   * Le plafond de versements du contrat, tel qu'on le tape — « 22950 », ou rien.
+   *
+   * Vide veut dire « je n'en pose pas », jamais « zéro » : un plafond de zéro
+   * dirait qu'on ne peut plus rien verser, ce qui est un compte fermé et non un
+   * compte plafonné — et c'est l'archivage qui le dit.
+   *
+   * Contrairement au taux et au relevé, **il se modifie ici**. Un plafond ne
+   * s'empile pas : il ne réécrit aucun passé, il ne borne que ce qui reste à
+   * verser. Le corriger n'a donc pas de conséquence rétroactive à protéger.
+   */
+  capText: string
   note: string
   /** Facultatif : vide veut dire « je ne connais pas », jamais « zéro ». */
   amountText: string
@@ -51,7 +69,7 @@ export type SupportDraft = {
 }
 
 export type SupportErrors = Partial<
-  Record<'label' | 'member' | 'category' | 'amount' | 'rate', string>
+  Record<'label' | 'member' | 'category' | 'amount' | 'rate' | 'cap', string>
 >
 
 export type SupportDefaults = {
@@ -71,6 +89,7 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
        désigne aucun compte. */
     rateText: '',
     rateKind: 'assumed',
+    capText: '',
     note: '',
     amountText: '',
     valueDate: today(),
@@ -78,11 +97,14 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
 }
 
 /**
- * Le brouillon d'un support qui existe déjà, sa dernière valeur comprise.
+ * Le brouillon d'un support qui existe déjà.
  *
- * La valeur n'est **pas** modifiée par ce formulaire : la reprendre ici
- * l'écraserait, alors qu'un relevé s'empile. Le champ n'apparaît donc qu'à la
- * création — voir `SupportFields`.
+ * **Ni la valeur ni le taux n'y sont repris**, et pour la même raison : les
+ * deux s'empilent, datés, alors que ce formulaire écrase ce qu'il touche. Les
+ * reprendre ici ferait d'une correction de libellé une réécriture du capital et
+ * du passé du taux. Les deux champs n'apparaissent donc qu'à la création — voir
+ * `SupportFields` —, et se modifient ensuite depuis la fiche, où chaque ligne
+ * porte sa date.
  */
 export function supportDraftFrom(support: SavingSupport): SupportDraft {
   return {
@@ -92,13 +114,11 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     /* Un support d'avant le champ n'en porte aucune : c'est la lecture du
        domaine qui décide, et jamais une seconde valeur par défaut posée ici. */
     pace: paceOf(support),
-    /* `toRateInput` n'irait pas : il rend la chaîne vide pour zéro, ce qui
-       convient à un crédit sans intérêts mais pas ici — « 0 % » est une
-       hypothèse qu'on peut poser (un compte courant), et « rien » veut dire
-       « je m'en remets à l'hypothèse de l'écran ». Les confondre ferait
-       disparaître le zéro à la première modification du support. */
-    rateText: support.rateBp === undefined ? '' : String(support.rateBp / 100).replace('.', ','),
-    rateKind: support.rateKind ?? 'assumed',
+    rateText: '',
+    rateKind: 'assumed',
+    /* Le plafond, lui, se relit : il n'a pas de passé à protéger, et le taire
+       ferait disparaître un plafond posé à la première correction de libellé. */
+    capText: support.depositCap === undefined ? '' : toAmountInput(support.depositCap),
     note: support.note ?? '',
     amountText: '',
     valueDate: today(),
@@ -122,6 +142,8 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
   const typedAmount = draft.amountText.trim() !== ''
   const rateBp: number | null = useMemo(() => parseRateBp(draft.rateText), [draft.rateText])
   const typedRate = draft.rateText.trim() !== ''
+  const cap: Money | null = useMemo(() => parseAmount(draft.capText), [draft.capText])
+  const typedCap = draft.capText.trim() !== ''
 
   const errors: SupportErrors = useMemo(() => {
     const found: SupportErrors = {}
@@ -137,8 +159,23 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
        découvre des mois plus tard, devant une projection qui ne l'a jamais
        pris. Vide passe — c'est l'absence d'hypothèse, et elle est légitime. */
     if (typedRate && rateBp === null) found.rate = tpl(t.savings.rateInvalid, MAX_RATE_PERCENT)
+    /* Un plafond doit être **strictement positif** : zéro dirait qu'on ne peut
+       plus rien verser, ce qui est un compte fermé — et c'est l'archivage qui le
+       dit. Le refuser ici plutôt que de l'enregistrer évite un support qui
+       n'accepterait plus aucun versement sans que rien ne l'explique. */
+    if (typedCap && (cap === null || cap <= 0)) found.cap = t.savings.capInvalid
     return found
-  }, [draft.label, draft.memberId, draft.categoryId, typedAmount, amount, typedRate, rateBp])
+  }, [
+    draft.label,
+    draft.memberId,
+    draft.categoryId,
+    typedAmount,
+    amount,
+    typedRate,
+    rateBp,
+    typedCap,
+    cap,
+  ])
 
   return {
     draft,
@@ -154,12 +191,24 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         memberId: draft.memberId,
         categoryId: draft.categoryId,
         pace: draft.pace,
-        /* La nature ne part jamais seule : sans taux, « garanti » ne qualifie
-           rien et laisserait croire à un support renseigné. */
-        ...(typedRate && rateBp !== null ? { rateBp, rateKind: draft.rateKind } : {}),
+        ...(typedCap && cap !== null && cap > 0 ? { depositCap: cap } : {}),
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null
           ? { value: { amount, date: draft.valueDate } }
+          : {}),
+        /* Le premier palier part **du jour du relevé** quand il y en a un, et
+           du jour même sinon : un support ouvert avec « 12 400 € au 31
+           décembre » sert son taux depuis ce 31 décembre, et le dater
+           d'aujourd'hui laisserait les mois d'intervalle sans taux. La nature
+           ne part jamais seule : sans taux, « garanti » ne qualifie rien. */
+        ...(typedRate && rateBp !== null
+          ? {
+              rate: {
+                rateBp,
+                kind: draft.rateKind,
+                from: typedAmount && amount !== null ? draft.valueDate : today(),
+              },
+            }
           : {}),
       }
     },
@@ -253,6 +302,40 @@ export function valuationError(draft: ValuationDraft): string | undefined {
   const amount = parseAmount(draft.amountText)
   if (draft.amountText.trim() === '' || amount === null || amount < 0) {
     return t.savings.valueRequired
+  }
+  return undefined
+}
+
+/* --- Le palier de taux ----------------------------------------------------*/
+
+export type RateDraft = { rateText: string; kind: RateKind; from: ISODate }
+
+export function rateDraftFrom(rate: SavingRate | null): RateDraft {
+  return rate === null
+    ? { rateText: '', kind: 'assumed', from: today() }
+    : {
+        /* `toRateInput` n'irait pas : il rend la chaîne vide pour zéro, ce qui
+           convient à un crédit sans intérêts mais pas ici — 0 % est un palier
+           qu'on peut poser (un compte courant), et le relire vide effacerait la
+           réponse à la première correction. */
+        rateText: String(rate.rateBp / 100).replace('.', ','),
+        kind: rate.kind,
+        from: rate.from,
+      }
+}
+
+/**
+ * Un palier se valide plus strictement que le champ de création d'un support :
+ * là-bas, vide veut dire « je ne pose aucune hypothèse » ; ici il n'y a rien
+ * d'autre à saisir — un palier sans taux ne dit rien.
+ *
+ * Zéro passe : c'est une réponse, et c'est la seule façon de dire « ce capital
+ * ne bouge pas ».
+ */
+export function rateError(draft: RateDraft): string | undefined {
+  const rateBp = parseRateBp(draft.rateText)
+  if (draft.rateText.trim() === '' || rateBp === null) {
+    return tpl(t.savings.rateInvalid, MAX_RATE_PERCENT)
   }
   return undefined
 }

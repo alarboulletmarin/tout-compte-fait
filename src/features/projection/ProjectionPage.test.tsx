@@ -7,9 +7,9 @@
  * avant les paramètres, et rien de ce qu'on tape ne touche au document.
  *
  * **Le dernier point a changé de forme, pas de fond.** L'écran lit désormais
- * l'épargne — un capital relevé, des versements récurrents — mais la lecture est
- * à sens unique : le document ne bouge pas d'un octet, et aucun rendement n'est
- * jamais repris d'un support. Ce fichier tient les deux bouts.
+ * l'épargne — un capital relevé, des versements récurrents, et le taux posé sur
+ * la fiche d'un compte —, mais la lecture est à sens unique : le document ne
+ * bouge pas d'un octet, quoi qu'on tape ici. Ce fichier tient les deux bouts.
  * ==========================================================================*/
 
 import { cleanup, render, screen, within } from '@testing-library/react'
@@ -24,6 +24,7 @@ import {
   makeFamily,
   makeMember,
   makeRecurrence,
+  makeSavingRate,
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
@@ -444,14 +445,11 @@ describe('un portefeuille support par support', () => {
       data: {
         ...data,
         savingSupports: [
-          makeSavingSupport({
-            id: 's-1',
-            memberId: 'm-1',
-            label: 'Livret A',
-            rateBp: 250,
-            rateKind: 'assumed',
-          }),
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
           makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: '2020-01-01' }),
         ],
         savingValuations: [
           ...data.savingValuations,
@@ -503,8 +501,11 @@ describe('un portefeuille support par support', () => {
     show()
     await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
 
-    // « 3 %/an » sous le rendement serait faux, et faux dans le sens qui rassure.
-    expect(screen.getAllByText(projection.splitRates).length).toBeGreaterThan(0)
+    // « 3 %/an » sous le rendement serait faux, et faux dans le sens qui
+    // rassure. La mention vit dans une phrase — d'où la recherche par contenu.
+    expect(
+      screen.getAllByText((text) => said(text).includes(said(projection.splitRates))).length,
+    ).toBeGreaterThan(0)
   })
 
   it('renonce à la décomposition dès qu’on compare deux hypothèses', async () => {
@@ -520,5 +521,287 @@ describe('un portefeuille support par support', () => {
         .getAllByRole('columnheader')
         .map((cell) => said(cell.textContent ?? '')),
     ).not.toContain(projection.splitTotal)
+  })
+})
+
+/* ============================================================================
+ * Le rendement, compte par compte.
+ *
+ * Trois choses à tenir. Chaque compte a **sa ligne**, préremplie de ce que sa
+ * fiche porte — projeter un Livret A et un PEA sous un taux unique n'a aucun
+ * sens. Ce qu'on y tape ne vaut que pour la **simulation** : rien ne redescend
+ * dans le document, et c'est la règle qui tient tout l'écran (cahier §4.6 ter).
+ * Et la provenance de chaque taux se **dit** — un compte muet ne doit pas
+ * passer pour un compte renseigné.
+ * ==========================================================================*/
+
+describe('le rendement par support', () => {
+  const rateField = (label: string) => screen.getByLabelText(label, { exact: false })
+
+  /** Deux comptes, dont un seul porte un taux : c'est le cas courant. */
+  function seedTwo() {
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
+          makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: '2020-01-01' }),
+        ],
+        savingValuations: [
+          ...data.savingValuations,
+          makeSavingValuation({
+            id: 'v-2',
+            supportId: 's-2',
+            amount: eur(300_000),
+            date: '2020-01-01',
+          }),
+        ],
+      },
+    })
+  }
+
+  async function portfolio() {
+    const user = userEvent.setup()
+    seedTwo()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('donne une ligne à chaque compte, préremplie de ce que sa fiche porte', async () => {
+    await portfolio()
+    // Le placeholder porte le taux repris : le champ reste vide, parce qu'un
+    // champ prérempli laisserait croire qu'on édite le support.
+    expect(rateField('Livret A')).toHaveValue('')
+    expect(rateField('Livret A')).toHaveAttribute('placeholder', expect.stringContaining('2,5'))
+    expect(screen.getByText(projection.supportRateOwn)).toBeInTheDocument()
+  })
+
+  it('dit qu’un compte sans taux emprunte l’hypothèse de l’écran', async () => {
+    await portfolio()
+    expect(screen.getByText(projection.supportRateBorrowed)).toBeInTheDocument()
+    /* L'invite porte le taux qui s'applique — celui de l'écran, 3 % par
+       défaut. Le champ fait deux caractères de large : un libellé y serait
+       coupé au milieu, et d'où vient le taux se lit sous lui. */
+    expect(rateField('PEL')).toHaveAttribute('placeholder', expect.stringContaining('3'))
+  })
+
+  /** Le chiffre héros — celui qu'on vient chercher, et le seul en `t-hero-fit`. */
+  const hero = (): string =>
+    said(document.querySelector('.t-hero-fit')?.textContent ?? '')
+
+  it('change l’arrivée quand on essaie un autre taux', async () => {
+    const user = await portfolio()
+    const before = hero()
+    await user.type(rateField('Livret A'), '9')
+
+    expect(screen.getByText(projection.supportRateSimulated)).toBeInTheDocument()
+    expect(hero()).not.toBe(before)
+  })
+
+  it('n’écrit rien dans le document', async () => {
+    /* La règle qui tient l'écran : une simulation ne redescend jamais. Le
+       document doit être identique au caractère près après la saisie. */
+    const user = await portfolio()
+    const before = JSON.stringify(useStore.getState().data)
+    await user.type(rateField('Livret A'), '9')
+    expect(JSON.stringify(useStore.getState().data)).toBe(before)
+  })
+
+  it('rend le taux du support quand on retire l’essai', async () => {
+    const user = await portfolio()
+    await user.type(rateField('Livret A'), '9')
+    await user.click(screen.getByRole('button', { name: projection.supportRateReset }))
+
+    expect(rateField('Livret A')).toHaveValue('')
+    expect(screen.queryByText(projection.supportRateSimulated)).not.toBeInTheDocument()
+  })
+
+  it('ne s’affiche pas en simulation libre — il n’y a aucun compte', () => {
+    seed()
+    show()
+    expect(screen.queryByText(projection.supportRates)).not.toBeInTheDocument()
+  })
+})
+
+describe('le tracé décomposé', () => {
+  async function portfolio() {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'Livret A' }),
+          makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingValuations: [
+          ...data.savingValuations,
+          makeSavingValuation({
+            id: 'v-2',
+            supportId: 's-2',
+            amount: eur(300_000),
+            date: '2020-01-01',
+          }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('empile une bande par compte, et nomme chacune', async () => {
+    await portfolio()
+    expect(screen.getByRole('img', { name: projection.chartStack })).toBeInTheDocument()
+    // La légende nomme chaque bande : la couleur ne dit jamais seule (DS §2.3).
+    expect(screen.getAllByText('Livret A').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('PEL').length).toBeGreaterThan(0)
+  })
+
+  it('revient au tracé habituel dès qu’on compare deux hypothèses', async () => {
+    /* Trois rendements posés sur le même versé ne s'additionnent pas : les
+       empiler tracerait un capital que personne n'a (cahier §4.6 ter). */
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.scenarioAdd }))
+    expect(screen.queryByRole('img', { name: projection.chartStack })).toBeNull()
+  })
+
+  it('revient au tracé habituel en simulation libre', () => {
+    seed()
+    show()
+    expect(screen.queryByRole('img', { name: projection.chartStack })).toBeNull()
+  })
+})
+
+/* ============================================================================
+ * La fourchette, et le plafond.
+ *
+ * Deux lectures qui n'existent que sur un portefeuille, et deux règles qu'aucun
+ * composant ne dit seul : le chiffre héros reste **un** chiffre — la fourchette
+ * est une lecture de plus, pas une seconde vérité —, et un compte plein cesse de
+ * recevoir sans cesser de croître.
+ * ==========================================================================*/
+
+describe('deux taux sur un compte', () => {
+  async function portfolio() {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'PEA' })],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 300, from: '2020-01-01' }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('ne montre aucune fourchette tant que rien n’est comparé', async () => {
+    await portfolio()
+    expect(screen.queryByText(projection.comparedHeading)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: projection.supportCompare })).toBeInTheDocument()
+  })
+
+  it('ouvre le second champ sur le taux du compte, puis compare', async () => {
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+
+    const second = screen.getByLabelText(projection.supportComparedRate, { exact: false })
+    expect(second).toHaveValue('3')
+
+    await user.clear(second)
+    await user.type(second, '11')
+    expect(screen.getByText(projection.comparedHeading)).toBeInTheDocument()
+  })
+
+  it('garde un seul chiffre héros : la fourchette ne le remplace pas', async () => {
+    const user = await portfolio()
+    const hero = (): string => said(document.querySelector('.t-hero-fit')?.textContent ?? '')
+    const before = hero()
+
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    const second = screen.getByLabelText(projection.supportComparedRate, { exact: false })
+    await user.clear(second)
+    await user.type(second, '11')
+
+    // Le chiffre du haut reste celui des taux posés : la comparaison est en
+    // dessous, nommée, et n'écrase rien.
+    expect(hero()).toBe(before)
+  })
+
+  it('retire la comparaison quand on la retire', async () => {
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    await user.click(screen.getByRole('button', { name: projection.supportCompareDrop }))
+    expect(screen.queryByText(projection.comparedHeading)).not.toBeInTheDocument()
+  })
+
+  it('n’écrit rien dans le document', async () => {
+    const user = await portfolio()
+    const before = JSON.stringify(useStore.getState().data)
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    expect(JSON.stringify(useStore.getState().data)).toBe(before)
+  })
+})
+
+describe('un compte plafonné', () => {
+  async function capped(cap: number) {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({
+            id: 's-1',
+            memberId: 'm-1',
+            label: 'Livret A',
+            depositCap: eur(cap),
+          }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('dit ce qu’il reste à verser, et que les versements s’arrêteront', async () => {
+    // Le livret vaut 8 450 € ; plafond 10 000 € : 1 550 € de place, et
+    // 350 €/mois les remplissent bien avant dix ans.
+    await capped(1_000_000)
+    expect(
+      screen.getByText((text) => said(text).startsWith(said(projection.supportCap.slice(0, 8)))),
+    ).toBeInTheDocument()
+    expect(screen.getByText(projection.supportCapped)).toBeInTheDocument()
+  })
+
+  it('dit « déjà atteint » sur un compte plein, sans en faire une erreur', async () => {
+    /* Un livret plein n'est pas une faute : c'est ce qui arrive à tout livret
+       qu'on a fini de remplir, et les intérêts continuent de le faire monter. */
+    await capped(100_000)
+    expect(
+      screen.getByText((text) =>
+        said(text).startsWith(said(projection.supportCapFull.slice(0, 8))),
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('ne dit rien quand le plafond ne coupe rien', async () => {
+    await capped(90_000_000)
+    expect(screen.queryByText(projection.supportCapped)).not.toBeInTheDocument()
   })
 })

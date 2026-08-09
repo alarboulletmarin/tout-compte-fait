@@ -3,20 +3,26 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   SAVINGS_PATH,
   entryPath,
+  rateEditPath,
+  rateNewPath,
   supportEditPath,
   valuationEditPath,
   valuationNewPath,
 } from '@/app/routes'
-import { ZERO } from '@/domain/money'
+import { today } from '@/domain/date'
+import { type Money, ZERO, money } from '@/domain/money'
+import { isOrigin } from '@/domain/savingRate'
 import type { SavingSupport } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { formatDate, tpl } from '@/i18n/format'
+import { supports } from '@/i18n/supports'
+import { formatDate, formatMoney, formatPercent, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
   useMemberMap,
   useSavingSupport,
   useSupportEntries,
   useSupportMonthFlows,
+  useSupportRates,
   useSupportValuations,
   useSupportValue,
 } from '@/store/selectors'
@@ -27,6 +33,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
+import { useCurrency } from '@/ui/currency'
 import { ValuationChart } from './ValuationChart'
 import { freshness } from './freshness'
 
@@ -39,6 +46,9 @@ import { freshness } from './freshness'
  * la coupe ne doit pas produire.
  */
 const SHOWN_VALUATIONS = 8
+/* Un taux change une ou deux fois l'an au plus : quatre paliers couvrent
+   plusieurs années, là où huit relevés ne couvrent que huit trimestres. */
+const SHOWN_RATES = 4
 const SHOWN_MOVEMENTS = 12
 
 /**
@@ -68,17 +78,23 @@ function SupportView({ support }: { support: SavingSupport }) {
   const categories = useCategoryMap()
   const value = useSupportValue(support.id)
   const valuations = useSupportValuations(support.id)
+  const rates = useSupportRates(support.id)
   const flows = useSupportMonthFlows(support.id)
   const entries = useSupportEntries(support.id)
   const [allValuations, setAllValuations] = useState(false)
+  const [allRates, setAllRates] = useState(false)
   const [allMovements, setAllMovements] = useState(false)
 
+  const currency = useCurrency()
+  /* Un plafond est un nombre écrit dans un contrat : il s'écrit exact. */
+  const exact = (amount: Money): string => formatMoney(amount, currency, false)
   const member = members.get(support.memberId)
   const category = categories.get(support.categoryId)
   const color = category?.color ?? 'var(--cat-rest)'
   const known = value?.known ?? null
 
   const restValuations = valuations.length - SHOWN_VALUATIONS
+  const restRates = rates.length - SHOWN_RATES
   const restMovements = entries.length - SHOWN_MOVEMENTS
 
   return (
@@ -118,6 +134,28 @@ function SupportView({ support }: { support: SavingSupport }) {
             )}
           </>
         )}
+        {/* Le plafond du contrat, et ce qu'il en reste. Sur ce qui est
+            **versé** : un livret plein continue de rapporter, et la place
+            restante est calculée sur le capital d'aujourd'hui — donc un peu
+            sous-estimée, puisque les intérêts déjà acquis y sont comptés comme
+            des versements. Sans relevé, il n'y a rien à retrancher : le plafond
+            se lit, la place non.
+            En mots et sans couleur : un livret plein n'est pas une erreur, et
+            le DS §2.3 réserve l'alerte aux dépassements. */}
+        {support.depositCap !== undefined && (
+          <p className="t-label mt-2">
+            {known === null
+              ? tpl(supports.capUnknown, exact(support.depositCap))
+              : (value?.estimated ?? ZERO) >= support.depositCap
+                ? tpl(supports.capFull, exact(support.depositCap))
+                : tpl(
+                    supports.capLeft,
+                    exact(support.depositCap),
+                    exact(money(support.depositCap - (value?.estimated ?? ZERO))),
+                  )}
+          </p>
+        )}
+
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className="t-label inline-flex items-center gap-2">
             <Dot color={member?.color ?? 'var(--cat-rest)'} />
@@ -218,6 +256,77 @@ function SupportView({ support }: { support: SavingSupport }) {
             )}
           </>
         )}
+      </Tile>
+
+      {/* L'histoire du taux, sous celle du stock et bâtie pareil : les deux
+          sont des faits datés qui s'empilent. Chaque palier porte sa date de
+          début et celle où le suivant lui succède, parce qu'un taux lu sans sa
+          période ne dit pas s'il court encore. */}
+      <Tile className="gap-3">
+        <Eyebrow>{supports.rates}</Eyebrow>
+        {rates.length === 0 ? (
+          <p className="t-label">{supports.ratesEmpty}</p>
+        ) : (
+          <>
+            <ul className="flex flex-col">
+              {(allRates ? rates : rates.slice(0, SHOWN_RATES)).map((rate, index) => (
+                <li key={rate.id}>
+                  <ListRow
+                    color={color}
+                    label={
+                      isOrigin(rate.from)
+                        ? supports.rateFromOrigin
+                        : tpl(
+                            /* Un palier daté dans l'avenir n'a pas encore
+                               commencé : « depuis le 1er janvier 2027 » posé
+                               en 2026 se lirait comme une erreur de saisie. */
+                            rate.from > today() ? supports.rateAhead : supports.rateFrom,
+                            formatDate(rate.from),
+                          )
+                    }
+                    {...(index === 0
+                      ? {}
+                      : { meta: tpl(supports.rateUntil, formatDate(rates[index - 1]?.from ?? '')) })}
+                    trailing={
+                      <span className="t-num-body tnum">
+                        {`${formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)} · ${
+                          rate.kind === 'guaranteed'
+                            ? t.savings.supportRateGuaranteed
+                            : t.savings.supportRateAssumed
+                        }`}
+                      </span>
+                    }
+                    onClick={() => {
+                      void navigate(rateEditPath(support.id, rate.id))
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+            {restRates > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-fit"
+                onClick={() => {
+                  setAllRates((shown) => !shown)
+                }}
+              >
+                {allRates ? t.common.less : tpl(supports.ratesMore, restRates)}
+              </Button>
+            )}
+          </>
+        )}
+        <Button
+          size="sm"
+          variant="secondary"
+          className="w-fit"
+          onClick={() => {
+            void navigate(rateNewPath(support.id))
+          }}
+        >
+          {rates.length === 0 ? supports.rateFirst : supports.rateAdd}
+        </Button>
       </Tile>
 
       {/* Les mouvements — les `Entry` liées, telles qu'elles vivent dans le

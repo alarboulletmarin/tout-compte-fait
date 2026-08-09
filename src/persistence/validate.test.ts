@@ -318,6 +318,46 @@ describe('les supports d’épargne', () => {
     expect(reasons(notices)).toEqual(['unknownSupport'])
   })
 
+  /* Un palier orphelin ne qualifie rien : le compte auquel il prêtait un taux
+     n'existe pas. La même règle qu'une valorisation, et non celle du lien
+     coupé — un taux sans support ne vaut plus rien du tout. */
+  it('écarte un palier de taux qui ne désigne aucun support', () => {
+    const document = raw(makeData(savings())) as Record<string, unknown>
+    document['savingRates'] = [
+      { id: 'tx1', supportId: 's-parti', rateBp: 250, kind: 'assumed', from: '2026-01-01' },
+    ]
+    const { data, notices } = normalizeDocument(document)
+    expect(data.savingRates).toEqual([])
+    expect(reasons(notices)).toEqual(['unknownSupport'])
+  })
+
+  /* Un taux illisible ne se remplace pas par zéro : zéro est une hypothèse
+     qu'on peut poser volontairement — un compte courant —, et l'inventer à la
+     place d'un champ abîmé ferait dire à l'app ce qu'elle ne sait pas. */
+  it('écarte un palier au taux illisible, garde un zéro', () => {
+    const document = raw(makeData(savings())) as Record<string, unknown>
+    document['savingRates'] = [
+      { id: 'tx1', supportId: 's1', rateBp: 2.5, kind: 'assumed', from: '2026-01-01' },
+      { id: 'tx2', supportId: 's1', rateBp: 20_000, kind: 'assumed', from: '2026-01-01' },
+      { id: 'tx3', supportId: 's1', rateBp: 0, kind: 'assumed', from: '2026-01-01' },
+    ]
+    const { data, notices } = normalizeDocument(document)
+    expect(data.savingRates.map((rate) => rate.id)).toEqual(['tx3'])
+    expect(reasons(notices)).toEqual(['rate', 'rate'])
+  })
+
+  it('écarte un palier sans date lisible, et lit toute nature inconnue en hypothèse', () => {
+    const document = raw(makeData(savings())) as Record<string, unknown>
+    document['savingRates'] = [
+      { id: 'tx1', supportId: 's1', rateBp: 250, kind: 'assumed', from: '2026-02-30' },
+      { id: 'tx2', supportId: 's1', rateBp: 250, kind: 'sûr', from: '2026-01-01' },
+    ]
+    const { data, notices } = normalizeDocument(document)
+    expect(data.savingRates.map((rate) => rate.id)).toEqual(['tx2'])
+    expect(data.savingRates[0]?.kind).toBe('assumed')
+    expect(reasons(notices)).toEqual(['date'])
+  })
+
   /* Un montant illisible n'est pas une observation. Zéro, en revanche, en est
      une — un livret vidé —, et il passe. */
   it('écarte une valorisation sans montant lisible, garde un zéro', () => {

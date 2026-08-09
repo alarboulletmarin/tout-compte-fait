@@ -42,7 +42,8 @@ export const en: ProjectionStrings = {
   sourceUnvalued: '%s accounts without a valuation aren’t counted in this capital.',
   sourceNoMonthly: 'No recurring contribution is declared: the simulation adds none.',
   sourceVariable: 'A rule with a variable amount has no monthly figure to take.',
-  sourceNoRate: 'The return stays an assumption: the app lends none to an account.',
+  sourceNoRate:
+    'The return stays an assumption: the app guesses none — the ones picked up are the ones you set.',
 
   params: 'Parameters',
   initial: 'Capital today',
@@ -109,12 +110,48 @@ export const en: ProjectionStrings = {
   splitTotal: 'Total capital',
   splitRates: 'a rate per account',
   splitBorrowed: '%s (screen assumption)',
+  splitSimulated: '%s (simulated)',
+  splitDated: '%s (dated rate)',
   splitOwn:
     'Each account at its own assumption; those carrying none take the screen’s.',
+  chartStack: 'Capital per account',
+  chartTotal: 'Total',
+  srChartStack: 'From %s to %s in %s, spread across %s accounts.',
+
+  supportRates: 'Return per account',
+  supportRatesHint:
+    'Each account starts from the rate set on its own page. What you change here only applies to this simulation, and doesn’t alter your savings.',
+  supportRateOwn: 'Set on this account',
+  supportRateDated: 'A rate change is scheduled during the simulated term.',
+  supportRateBorrowed: 'No rate set: the assumption below applies.',
+  supportRateSimulated: 'Changed for this simulation',
+  supportRateReset: 'Restore the account’s rate',
+  supportCompare: 'Compare a second rate',
+  supportComparedRate: 'Second rate',
+  supportCompareDrop: 'Drop the comparison',
+  supportCompareHint: 'Same contributions, same term: only the return changes.',
+  supportRange: 'from %s to %s',
+  comparedHeading: 'With the second rates',
+  comparedTotal: 'Compared capital',
+  comparedGap: '%s apart. At equal contributions, the whole gap comes from the return.',
+  comparedLine: 'Second rates',
+  supportCap: 'Cap %s · %s left to pay in',
+  supportCapFull: 'Cap %s · already reached',
+  supportCapped:
+    'Contributions stop at the cap during the term simulated; the capital itself keeps growing.',
+  capNote:
+    'The room left is worked out from today’s capital: the interest already earned counts as contributions there, so it is slightly understated.',
+  screenRateHint: 'It applies to accounts that carry no rate of their own.',
+
+  sourceParts: 'Account by account',
+  sourcePartCapital: 'Capital',
+  sourcePartMonthly: 'Contributions',
+  sourcePartTotal: 'Total',
 
   effort: 'What if I paid in more?',
   effortHint: 'At the first assumption, over the same term.',
   effortCurrent: 'Current simulation',
+  effortParts: 'Of which: %s',
 
   constant: 'Account for inflation',
   constantHint: 'Shows the equivalent purchasing power, in today’s money.',

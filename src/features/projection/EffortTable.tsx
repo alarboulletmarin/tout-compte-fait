@@ -54,10 +54,37 @@ export function EffortTable({ rungs }: { rungs: readonly EffortRung[] }) {
                 <span className="t-label ml-2 font-normal">{projection.effortCurrent}</span>
               )}
             </th>
-            <td className="t-num-body tnum py-2 text-right whitespace-nowrap">
+            <td className="t-num-body tnum py-2 text-right">
               {/* Le « ≈ » sur chaque cellule : un montant recopié hors de son
                   tableau doit emporter avec lui le fait qu'il sort d'un modèle. */}
-              {tpl(projection.approx, formatRoundedMoney(rung.arrival, currency))}
+              <span className="whitespace-nowrap">
+                {tpl(projection.approx, formatRoundedMoney(rung.arrival, currency))}
+              </span>
+              {/* Où l'effort tombe, quand il y a plusieurs comptes. Dans la
+                  même cellule et non en colonnes : quatre comptes feraient six
+                  colonnes, et « ≈ 202 k€ » ne tient pas six fois dans les 250px
+                  utiles d'un téléphone. L'en-tête de ligne nomme déjà le
+                  barreau pour un lecteur d'écran ; ceci en est la décomposition,
+                  et sa somme *est* l'arrivée au-dessus.
+                  Le versement s'écrit exact, l'arrivée s'arrondit : c'est la
+                  règle de tout l'écran — ce qui entre dans le calcul est un
+                  fait, ce qui en sort est un modèle. */}
+              {rung.parts.length > 1 && (
+                <span className="t-label mt-0.5 block">
+                  {tpl(
+                    projection.effortParts,
+                    rung.parts
+                      .map(
+                        (part) =>
+                          `${part.label} ${tpl(
+                            projection.approx,
+                            formatRoundedMoney(part.arrival, currency),
+                          )}`,
+                      )
+                      .join(' · '),
+                  )}
+                </span>
+              )}
             </td>
           </tr>
         ))}

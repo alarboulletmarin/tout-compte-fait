@@ -107,6 +107,7 @@ const savings = () => import('@/features/savings/pages')
 const SupportPage = lazy(async () => ({ default: (await savings()).SupportPage }))
 const SupportFormPage = lazy(async () => ({ default: (await savings()).SupportFormPage }))
 const ValuationFormPage = lazy(async () => ({ default: (await savings()).ValuationFormPage }))
+const RateFormPage = lazy(async () => ({ default: (await savings()).RateFormPage }))
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
 
 /**
@@ -210,6 +211,8 @@ export function AppRoutes() {
             path={`${SAVINGS_PATH}/:id/valeur/:valuationId`}
             element={<ValuationFormPage />}
           />
+          <Route path={`${SAVINGS_PATH}/:id/taux`} element={<RateFormPage />} />
+          <Route path={`${SAVINGS_PATH}/:id/taux/:rateId`} element={<RateFormPage />} />
           <Route path={ADVANCES_PATH} element={<AdvancesPage />} />
           <Route path={ADVANCE_NEW_PATH} element={<AdvanceFormPage />} />
           {/* Sous l'épargne par l'intention, à la racine par l'URL — voir

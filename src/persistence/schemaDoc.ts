@@ -72,6 +72,9 @@ const RULES = [
   '**Un support d’épargne est une entité, pas une catégorie.** La catégorie dit la *nature* du mouvement (livret, plan, assurance-vie) ; le `SavingSupport` dit *lequel* et *à qui*. Deux personnes peuvent avoir chacune leur « Livret A » : ce sont deux supports, sous la même catégorie. `SavingSupport.categoryId` doit désigner une catégorie de nature `saving`.',
   '**`SavingSupport.memberId` est obligatoire**, comme sur une avance : une épargne est toujours à quelqu’un, et il n’existe pas de support commun. Un support sans porteur est écarté à l’import.',
   '**Le capital ne se pose jamais sur le support.** Il vit dans les `savingValuations`, qui s’empilent : la valeur courante est le relevé le plus récent, et les précédents font l’historique. Un support sans relevé a une valeur *inconnue* — ce qui n’est pas zéro, et ce qui ne s’additionne à rien.',
+  '**Le taux non plus ne se pose jamais sur le support.** Il vit dans les `savingRates`, qui s’empilent comme les relevés : un `SavingRate` dit ce que le support sert **à partir de** `from`, et le taux courant est le plus récent dont la date est passée. Poser un palier au 1er janvier prochain ne change donc rien à ce qui précède — c’est toute la raison d’être de la collection. Il est **saisi, jamais déduit** : l’app ne connaît aucun produit et n’en pose aucun par défaut. Un support sans palier n’a **pas** de taux, ce qui n’est pas 0 % : l’écran des projections y met alors son hypothèse et le dit, quand un support à 0 % annonce que son capital ne bouge pas.',
+  '**`SavingSupport.depositCap` plafonne les versements, jamais le solde.** C’est ce que le contrat autorise à verser **en tout** — 22 950 € sur un Livret A —, en centimes comme tout montant. Les intérêts, eux, passent au-dessus : un plafond de solde arrêterait la courbe à plat là où la réalité continue de monter. Facultatif, **saisi et jamais déduit** — l’app ne pose pas 22 950 € sous « Livret A », parce qu’un barème figé est faux dès qu’il change. Absent ≠ illimité : c’est une question à laquelle personne n’a répondu, et la projection ne borne alors rien. Un plafond nul ou négatif est **retiré** : « on ne peut plus rien verser » n’est pas un plafond, c’est un compte fermé, et `archived` le dit déjà.',
+  '**Un taux ne fabrique aucun euro dans le document.** Il ne change ni le capital relevé, ni la valeur estimée d’un support, ni la couverture, ni un total du mois — un rendement n’est pas un mouvement. Il est lu par les projections et par la courbe d’évolution de l’épargne, qui annoncent toutes deux une **estimation**.',
   '**`SavingSupport.pace` dit à quel rythme un relevé est attendu**, et rien d’autre : `"yearly"` — un livret réglementé, dont la valeur est déterministe entre deux relevés — ou `"quarterly"` — un PEA, un compte-titres, une assurance-vie en unités de compte. Ce n’est ni un rendement ni une projection : l’app s’en sert pour savoir **quand se taire**, pas pour calculer une valeur. Le champ est facultatif ; absent, l’app lit « annuel » sans l’écrire.',
   '**Un mouvement d’épargne désigne son support par identifiant** — `Entry.savingSupportId`, `Recurrence.savingSupportId`, `Advance.savingSupportId` — et jamais par libellé ni par catégorie. Le champ n’a de sens que sur une ligne de nature `saving` ; ailleurs, omets-le. Une échéance générée hérite du support de sa règle.',
   '**Les `id` sont des chaînes libres**, à toi de les choisir. Ils doivent être uniques dans leur tableau, et tout `categoryId`, `memberId`, `familyId` ou `recurrenceId` cité doit désigner quelque chose qui existe.',
@@ -101,6 +104,7 @@ const REPAIRS: Record<ImportReason, string> = {
   noMember:
     '`memberId` absent sur une `Advance` ou un `SavingSupport`. La ligne est **écartée** : une épargne est toujours à quelqu’un, et lui inventer un porteur attribuerait à quelqu’un ce qu’il n’a pas fait.',
   period: 'Sur une avance, `to` précède `from`. Elle est **écartée** — rien ne se reconstituerait jamais.',
+  rate: 'Sur un `SavingRate`, taux absent, fractionnaire — `2.5` là où il fallait `250` — ou hors de 0 à 100 %. Le palier est **écarté** : un taux illisible ne se remplace pas par zéro, qui est une hypothèse qu’on peut poser volontairement.',
   duplicateId:
     'Deux lignes au même `id` dans la même collection. La seconde est **renommée** `mon-id~2` — et tout ce qui désignait cet identifiant pointe désormais sur la première, ce qui n’est probablement pas ce que tu voulais.',
   unknownCategory:
@@ -138,10 +142,12 @@ const SILENT = [
   '`families` vide ou illisible fait **substituer tout le catalogue par défaut** : sans premier niveau, aucune catégorie ne sait plus de quelle nature elle relève. Tes propres catégories se retrouvent alors orphelines de la famille que tu croyais poser.',
   'Un `theme`, une `palette`, une `currency` ou un `monthStartsOn` hors de leurs valeurs retombent sur les valeurs par défaut, sans que la ligne soit écartée.',
   'Un `pace` qui ne vaut ni `"yearly"` ni `"quarterly"` devient **absent**, ce qui n’est pas `"yearly"` : l’app lit alors « annuel » sans que le support porte ce choix, et le formulaire recueillera la vraie réponse.',
+  'Sur un `SavingRate`, `kind` : tout ce qui n’est pas exactement `"guaranteed"` vaut `"assumed"` — la lecture qui promet le moins.',
+  '`rateBp` et `rateKind` posés **sur un `SavingSupport`** sont ignorés et **perdus sans un mot**. Ils y vivaient jusqu’au schéma 11 ; depuis le 12, le taux est daté et vit dans `savingRates`. Un document annoncé en version antérieure est converti à l’import — un palier par taux, à l’origine des temps —, mais un document qui se déclare à la version courante n’a plus rien à convertir : c’est à toi d’écrire ses paliers.',
 ]
 
 /**
- * Un document court, mais dont aucune des douze clés n'est vide.
+ * Un document court, mais dont aucune des treize clés n'est vide.
  *
  * Il a longtemps porté `"debts": []` et `"advances": []`, et c'était précisément
  * laisser sans exemple les deux objets qu'on écrit le plus mal : un crédit a son
@@ -454,7 +460,8 @@ const MINIMAL = `{
       "memberId": "m-alix",
       "categoryId": "passbook",
       "archived": false,
-      "pace": "yearly"
+      "pace": "yearly",
+      "depositCap": 2295000
     }
   ],
   "savingValuations": [
@@ -469,6 +476,22 @@ const MINIMAL = `{
       "supportId": "s-livret-alix",
       "amount": 1183400,
       "date": "2026-01-20"
+    }
+  ],
+  "savingRates": [
+    {
+      "id": "tx-1",
+      "supportId": "s-livret-alix",
+      "rateBp": 300,
+      "kind": "assumed",
+      "from": "2024-02-01"
+    },
+    {
+      "id": "tx-2",
+      "supportId": "s-livret-alix",
+      "rateBp": 240,
+      "kind": "assumed",
+      "from": "2025-02-01"
     }
   ],
   "months": [{ "ym": "2026-01", "openedAt": "2026-01-01", "closed": false }],
@@ -595,6 +618,12 @@ marché.
 Un support sans relevé vaut « inconnu », jamais zéro : l'app le compte à part
 plutôt que de l'additionner.
 
+Le **taux** suit la même forme que le stock, pour la même raison : des
+\`SavingRate\` datés qui s'empilent, chacun disant ce que le support sert **à
+partir de** son \`from\`. Le taux courant est le plus récent dont la date est
+passée ; poser celui de l'an prochain ne réécrit donc pas l'année en cours. Un
+support sans palier n'a pas de taux, ce qui n'est pas 0 %.
+
 ## Le catalogue par défaut
 
 Ces identifiants existent déjà dans une app neuve — réutilise-les plutôt que
@@ -610,15 +639,16 @@ Deux personnes aux revenus inégaux, un salaire chacune, un loyer commun, des
 courses à montant variable que l'une règle et que les deux partagent, une
 dépense ponctuelle, un crédit avec son taux et sa mensualité, une avance avec sa
 reprise sur le livret et la mensualité qui la reconstitue, et un livret avec deux
-relevés dont l'écart s'explique exactement par les mouvements du mois.
+relevés dont l'écart s'explique exactement par les mouvements du mois, et deux
+paliers de taux dont le second ne réécrit pas le premier.
 
 Il est arrêté au 20 janvier : ce qui est tombé avant est \`confirmed\`, ce qui
 reste à venir est \`planned\`. Un document transcrit depuis des notes ressemble à
 ça — un mois entamé, pas un mois fini.
 
 Tout ce qui n'est pas ton cas se retire : vide \`debts\`, \`advances\`,
-\`savingSupports\` et \`savingValuations\`, le document reste valide — à condition
-qu'aucun identifiant encore cité ne disparaisse avec.
+\`savingSupports\`, \`savingValuations\` et \`savingRates\`, le document reste valide
+— à condition qu'aucun identifiant encore cité ne disparaisse avec.
 
 \`\`\`json
 ${MINIMAL}

@@ -440,6 +440,7 @@ export const en: Strings = {
       advances: 'Advance',
       savingSupports: 'Savings pot',
       savingValuations: 'Valuation',
+      savingRates: 'Savings rate',
       months: 'Month',
     },
     reportReason: {
@@ -450,6 +451,7 @@ export const en: Strings = {
       month: 'month that doesn’t exist',
       noMember: 'nobody it belongs to',
       period: 'period back to front',
+      rate: 'unreadable rate',
       duplicateId: 'duplicate identifier',
       unknownCategory: 'category not found, filed under “To sort”',
       unknownFamily: 'family not found',
@@ -1013,6 +1015,10 @@ export const en: Strings = {
       'Only use this if the rate is contractually guaranteed for the whole term you will simulate. The rate known today for a regulated savings account is not: it gets revised.',
     rateInvalid: 'Between 0 and %s%.',
     ratePerYear: '%/year',
+    supportCap: 'Contribution cap',
+    supportCapHint:
+      'Optional. What the contract allows you to pay in altogether — €22,950 on a Livret A, say. Interest can go above it. You set it: the app knows no product.',
+    capInvalid: 'Enter a cap above zero, or leave it empty.',
     supportNote: 'Note',
     supportNotePlaceholder: 'Emergency fund, three months of costs',
     manage: 'Managing the pot',
@@ -1045,6 +1051,8 @@ export const en: Strings = {
     historyEmpty: 'No valuation. Add the first one to follow how its value changes.',
     historyOne: 'The curve appears from the second valuation.',
     historyMore: 'See the %s other valuations',
+
+
 
     valuesUpdate: 'Update the valuations',
     valuesDueOne: '1 valuation to do',

@@ -15,5 +15,6 @@
 
 export { SupportPage } from './SupportPage'
 export { SupportFormPage } from './SupportFormPage'
+export { RateFormPage } from './RateFormPage'
 export { ValuationFormPage } from './ValuationFormPage'
 export { ValuationsFormPage } from './ValuationsFormPage'

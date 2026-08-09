@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { eur } from './fixtures'
+import { ZERO } from './money'
 import { inflate, milestoneMonths, monthlyRate, projectSeries, requiredMonthly } from './projection'
 
 /** Le dernier point d'une série — ce que l'écran appelle « à l'arrivée ». */
@@ -272,5 +273,117 @@ describe('jalons', () => {
     expect(milestoneMonths(2)).toEqual([1, 2])
     expect(milestoneMonths(1)).toEqual([1])
     expect(milestoneMonths(0)).toEqual([])
+  })
+})
+
+/* ============================================================================
+ * Le barème — un taux par mois, quand il change en cours de route.
+ *
+ * Un scalaire est le cas particulier d'un barème plat, et c'est ce que ces
+ * tests protègent : il n'y a pas deux moteurs, il y en a un dont l'un des
+ * arguments peut varier (cahier §4.6 ter).
+ * ==========================================================================*/
+
+describe('un taux qui change en cours de route', () => {
+  const base = { initial: eur(1_000_000), monthly: eur(20_000), months: 24 }
+
+  it('rend exactement la série du scalaire quand le barème est plat', () => {
+    const flat = Array.from({ length: base.months }, () => 400)
+    expect(projectSeries({ ...base, rateBp: flat })).toEqual(
+      projectSeries({ ...base, rateBp: 400 }),
+    )
+  })
+
+  it('ne touche aucun point avant le rang où le taux change', () => {
+    /* La propriété qui a fait exister le taux daté : poser un palier pour
+       l'an prochain ne réécrit pas l'année en cours. */
+    const changing = Array.from({ length: base.months }, (_, month) => (month < 12 ? 400 : 100))
+    const constant = projectSeries({ ...base, rateBp: 400 })
+    const stepped = projectSeries({ ...base, rateBp: changing })
+
+    expect(stepped.balance.slice(0, 13)).toEqual(constant.balance.slice(0, 13))
+    expect(stepped.balance[24]).toBeLessThan(constant.balance[24] ?? 0)
+  })
+
+  it('équivaut à deux projections enchaînées', () => {
+    const first = projectSeries({ ...base, months: 12, rateBp: 400 })
+    const second = projectSeries({
+      initial: first.balance[12] ?? ZERO,
+      monthly: base.monthly,
+      months: 12,
+      rateBp: 100,
+    })
+    const stepped = projectSeries({
+      ...base,
+      rateBp: Array.from({ length: 24 }, (_, month) => (month < 12 ? 400 : 100)),
+    })
+    /* À l'euro près : la chaîne arrondit une fois de plus que le barème, qui
+       garde ses flottants d'un bout à l'autre. */
+    expect(Math.abs((stepped.balance[24] ?? 0) - (second.balance[12] ?? 0))).toBeLessThanOrEqual(1)
+  })
+
+  it('tient son dernier terme jusqu’au bout de l’horizon', () => {
+    const short = projectSeries({ ...base, rateBp: [400] })
+    expect(short).toEqual(projectSeries({ ...base, rateBp: 400 }))
+  })
+
+  it('lit un barème vide comme un taux nul, sans casser la série', () => {
+    const empty = projectSeries({ ...base, rateBp: [] })
+    expect(empty).toEqual(projectSeries({ ...base, rateBp: 0 }))
+  })
+})
+
+/* ============================================================================
+ * Le plafond de versements.
+ *
+ * Il porte sur ce qui est **versé**, jamais sur le solde : un Livret A plein
+ * continue de rapporter, et une courbe qui s'arrêterait à plat au plafond
+ * dirait l'inverse de ce qui se passe.
+ * ==========================================================================*/
+
+describe('un plafond de versements', () => {
+  const base = { initial: eur(0), monthly: eur(10_000), months: 12, rateBp: 0 }
+
+  it('ne borne rien tant qu’il n’est pas posé', () => {
+    expect(projectSeries(base).balance.at(-1)).toBe(120_000)
+  })
+
+  it('arrête les versements quand la place est faite', () => {
+    // 100 €/mois, 350 € de place : trois versements pleins, puis un écrêté.
+    const capped = projectSeries({ ...base, room: 35_000 })
+    expect(capped.balance.at(-1)).toBe(35_000)
+    expect(capped.contributed.at(-1)).toBe(35_000)
+  })
+
+  it('écrête le dernier versement au lieu de le refuser en entier', () => {
+    const capped = projectSeries({ ...base, months: 1, room: 4_000 })
+    expect(capped.balance.at(-1)).toBe(4_000)
+  })
+
+  it('laisse le capital croître une fois le plafond atteint', () => {
+    /* La règle qui fait tout : les versements s'arrêtent, le capital non. */
+    const capped = projectSeries({ ...base, initial: eur(100_000), rateBp: 1_000, room: 0 })
+    expect(capped.balance.at(-1)).toBeGreaterThan(100_000)
+    // Et rien n'a été versé : le versé cumulé reste le capital de départ.
+    expect(capped.contributed.at(-1)).toBe(100_000)
+  })
+
+  it('lit une place nulle comme un compte plein, sans cas particulier', () => {
+    expect(projectSeries({ ...base, room: 0 }).contributed.at(-1)).toBe(0)
+  })
+
+  it('ne borne pas une reprise : on ne plafonne pas ce qui sort', () => {
+    const draining = projectSeries({ ...base, initial: eur(1_000_000), monthly: eur(-10_000), room: 0 })
+    expect(draining.balance.at(-1)).toBe(1_000_000 - 12 * 10_000)
+  })
+
+  it('ne se déflate pas avec l’inflation : un plafond est un nombre de contrat', () => {
+    /* Le plafond vaut 22 950 € dans le contrat, quels que soient les euros dans
+       lesquels on lit la courbe. */
+    const courants = projectSeries({ ...base, room: 35_000 })
+    const constants = projectSeries({ ...base, room: 35_000, inflationBp: 200 })
+    // Même nombre de versements écrêtés : seule la lecture change.
+    expect(constants.contributed.at(-1)).toBeLessThan(courants.contributed.at(-1) ?? 0)
+    expect(constants.balance.at(-1)).toBeLessThan(courants.balance.at(-1) ?? 0)
   })
 })

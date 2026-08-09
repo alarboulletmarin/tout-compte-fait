@@ -180,6 +180,13 @@ export const valuationNewPath = (supportId: string): string =>
   `${SAVINGS_PATH}/${supportId}/valeur`
 export const valuationEditPath = (supportId: string, valuationId: string): string =>
   `${SAVINGS_PATH}/${supportId}/valeur/${valuationId}`
+/* Le taux se change comme la valeur se relève : par une saisie qui a son URL,
+   et par une seconde qui vise un palier existant pour le corriger. Changer de
+   taux et corriger un taux sont deux gestes, et c'est la présence du second
+   segment qui les distingue — poser un palier n'écrase pas le précédent. */
+export const rateNewPath = (supportId: string): string => `${SAVINGS_PATH}/${supportId}/taux`
+export const rateEditPath = (supportId: string, rateId: string): string =>
+  `${SAVINGS_PATH}/${supportId}/taux/${rateId}`
 
 /**
  * Le simulateur de projections — à la racine, et sous l'écran Épargne.

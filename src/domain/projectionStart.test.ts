@@ -15,6 +15,7 @@ import {
   makeEntry,
   makeFamily,
   makeRecurrence,
+  makeSavingRate,
   makeSavingSupport,
   makeSavingValuation,
 } from './fixtures'
@@ -64,7 +65,7 @@ function unlinked(over: Partial<Recurrence> = {}): Recurrence {
 
 describe('ce qu’un support apporte à une projection', () => {
   it('reprend le capital estimé et le versement récurrent', () => {
-    const start = supportStart(livret, [valued], [], [paysIn()], ON, UNTIL)
+    const start = supportStart(livret, [valued], [], [paysIn()], [], ON, UNTIL)
     expect(start.capital).toBe(420_000)
     expect(start.monthly).toBe(35_000)
   })
@@ -79,13 +80,13 @@ describe('ce qu’un support apporte à une projection', () => {
       direction: 'out',
       amount: eur(10_000),
     })
-    expect(supportStart(livret, [valued], [paid], [], ON, UNTIL).capital).toBe(430_000)
+    expect(supportStart(livret, [valued], [paid], [], [], ON, UNTIL).capital).toBe(430_000)
   })
 
   it('rend un capital inconnu plutôt qu’un capital nul', () => {
     // Zéro est une information financière — un livret vidé ; l'absence de
     // relevé n'en est pas une, et les additionner donnerait un faux exact.
-    const start = supportStart(livret, [], [], [paysIn()], ON, UNTIL)
+    const start = supportStart(livret, [], [], [paysIn()], [], ON, UNTIL)
     expect(start.capital).toBe(null)
     expect(start.unvalued).toBe(1)
     // Les versements, eux, restent vrais : on sait ce qui part chaque mois.
@@ -94,7 +95,7 @@ describe('ce qu’un support apporte à une projection', () => {
 
   it('compte les versements en net, reprises déduites', () => {
     const takesOut = paysIn({ id: 'r-2', direction: 'in', amount: eur(10_000) })
-    expect(supportStart(livret, [valued], [], [paysIn(), takesOut], ON, UNTIL).monthly).toBe(25_000)
+    expect(supportStart(livret, [valued], [], [paysIn(), takesOut], [], ON, UNTIL).monthly).toBe(25_000)
   })
 
   it('amortit une règle annuelle au mois', () => {
@@ -102,23 +103,23 @@ describe('ce qu’un support apporte à une projection', () => {
       amount: eur(120_000),
       period: { unit: 'year', every: 1, anchorDay: 5 },
     })
-    expect(supportStart(livret, [valued], [], [yearly], ON, UNTIL).monthly).toBe(10_000)
+    expect(supportStart(livret, [valued], [], [yearly], [], ON, UNTIL).monthly).toBe(10_000)
   })
 
   it('signale une règle au montant variable au lieu de la compter pour zéro', () => {
-    const start = supportStart(livret, [valued], [], [paysIn({ amount: null })], ON, UNTIL)
+    const start = supportStart(livret, [valued], [], [paysIn({ amount: null })], [], ON, UNTIL)
     expect(start.variable).toBe(true)
     expect(start.monthly).toBe(0)
   })
 
   it('ignore une règle arrêtée : elle ne posera plus d’échéance', () => {
     const stopped = paysIn({ endedOn: '2026-06-30' })
-    expect(supportStart(livret, [valued], [], [stopped], ON, UNTIL).monthly).toBe(0)
+    expect(supportStart(livret, [valued], [], [stopped], [], ON, UNTIL).monthly).toBe(0)
   })
 
   it('ne reprend que les règles de ce support', () => {
     const elsewhere = paysIn({ id: 'r-3', savingSupportId: 's-2' })
-    expect(supportStart(livret, [valued], [], [elsewhere], ON, UNTIL).monthly).toBe(0)
+    expect(supportStart(livret, [valued], [], [elsewhere], [], ON, UNTIL).monthly).toBe(0)
   })
 
   it('écarte une règle qui s’arrête avant la fin de l’horizon, et la compte', () => {
@@ -128,7 +129,7 @@ describe('ce qu’un support apporte à une projection', () => {
        l'intention de verser, et qui ne sont même pas un effort d'épargne : on
        remet de l'argent là où on l'avait pris. */
     const advance = paysIn({ id: 'r-6', amount: eur(6_600), endedOn: '2027-02-28' })
-    const start = supportStart(livret, [valued], [], [paysIn(), advance], ON, UNTIL)
+    const start = supportStart(livret, [valued], [], [paysIn(), advance], [], ON, UNTIL)
     expect(start.monthly).toBe(35_000)
     expect(start.ending).toBe(1)
     expect(start.rules).toBe(1)
@@ -136,28 +137,28 @@ describe('ce qu’un support apporte à une projection', () => {
 
   it('garde une règle qui court au-delà de l’horizon', () => {
     const long = paysIn({ endedOn: '2040-01-31' })
-    const start = supportStart(livret, [valued], [], [long], ON, UNTIL)
+    const start = supportStart(livret, [valued], [], [long], [], ON, UNTIL)
     expect(start.monthly).toBe(35_000)
     expect(start.ending).toBe(0)
   })
 
   it('ne signale pas une règle déjà éteinte : elle n’est plus du présent', () => {
     const stopped = paysIn({ endedOn: '2026-06-30' })
-    expect(supportStart(livret, [valued], [], [stopped], ON, UNTIL).ending).toBe(0)
+    expect(supportStart(livret, [valued], [], [stopped], [], ON, UNTIL).ending).toBe(0)
   })
 
   it('raccourcir l’horizon peut suffire à reprendre une règle bornée', () => {
     // La même règle, deux horizons : à dix ans elle est écartée, à six mois
     // elle est comptée. C'est ce qui rend la lecture dépendante de la durée.
     const advance = paysIn({ id: 'r-7', endedOn: '2027-02-28' })
-    expect(supportStart(livret, [valued], [], [advance], ON, UNTIL).monthly).toBe(0)
-    expect(supportStart(livret, [valued], [], [advance], ON, '2026-12-31').monthly).toBe(35_000)
+    expect(supportStart(livret, [valued], [], [advance], [], ON, UNTIL).monthly).toBe(0)
+    expect(supportStart(livret, [valued], [], [advance], [], ON, '2026-12-31').monthly).toBe(35_000)
   })
 
   it('compte les supports et les règles qui composent chaque chiffre', () => {
     // C'est ce qui permet à l'écran de dire d'où sortent ses deux nombres, au
     // lieu de les faire croire sur parole.
-    const start = supportStart(livret, [valued], [], [paysIn()], ON, UNTIL)
+    const start = supportStart(livret, [valued], [], [paysIn()], [], ON, UNTIL)
     expect(start.valued).toBe(1)
     expect(start.rules).toBe(1)
   })
@@ -165,7 +166,7 @@ describe('ce qu’un support apporte à une projection', () => {
 
 describe('ce que toute l’épargne d’une personne apporte', () => {
   it('additionne ses supports relevés, et compte ceux qui ne le sont pas', () => {
-    const start = memberStart('m-1', [livret, pea], [valued], [], [], kindOf, ON, UNTIL)
+    const start = memberStart('m-1', [livret, pea], [valued], [], [], [], kindOf, ON, UNTIL)
     expect(start.capital).toBe(420_000)
     expect(start.unvalued).toBe(1)
   })
@@ -179,7 +180,7 @@ describe('ce que toute l’épargne d’une personne apporte', () => {
       amount: eur(800_000),
       date: '2026-07-01',
     })
-    const start = memberStart('m-1', [livret, hers], [valued, valuedToo], [], [], kindOf, ON, UNTIL)
+    const start = memberStart('m-1', [livret, hers], [valued, valuedToo], [], [], [], kindOf, ON, UNTIL)
     expect(start.capital).toBe(420_000)
   })
 
@@ -187,21 +188,21 @@ describe('ce que toute l’épargne d’une personne apporte', () => {
     // Un versement d'avant les supports désigne un poste et pas un compte, mais
     // il part bien tous les mois : le taire annoncerait un effort inférieur.
     const loose = unlinked({ id: 'r-4' })
-    expect(memberStart('m-1', [livret], [valued], [], [loose], kindOf, ON, UNTIL).monthly).toBe(35_000)
+    expect(memberStart('m-1', [livret], [valued], [], [loose], [], kindOf, ON, UNTIL).monthly).toBe(35_000)
   })
 
   it('ne compte pas une règle qui n’est pas de nature épargne', () => {
     const rent = unlinked({ id: 'r-5', categoryId: 'rent' })
-    expect(memberStart('m-1', [livret], [valued], [], [rent], kindOf, ON, UNTIL).monthly).toBe(0)
+    expect(memberStart('m-1', [livret], [valued], [], [rent], [], kindOf, ON, UNTIL).monthly).toBe(0)
   })
 
   it('laisse le capital inconnu quand aucun support n’a de relevé', () => {
-    expect(memberStart('m-1', [livret, pea], [], [], [], kindOf, ON, UNTIL).capital).toBe(null)
+    expect(memberStart('m-1', [livret, pea], [], [], [], [], kindOf, ON, UNTIL).capital).toBe(null)
   })
 
   it('écarte les supports archivés', () => {
     const closed = makeSavingSupport({ id: 's-1', memberId: 'm-1', archived: true })
-    expect(memberStart('m-1', [closed], [valued], [], [], kindOf, ON, UNTIL).capital).toBe(null)
+    expect(memberStart('m-1', [closed], [valued], [], [], [], kindOf, ON, UNTIL).capital).toBe(null)
   })
 })
 
@@ -211,30 +212,42 @@ describe('le taux d’un support', () => {
      module n'a toujours pas le droit de faire, c'est d'en **inventer** une :
      sans champ rempli, il rend `null`, et c'est l'écran qui comble avec son
      hypothèse à lui. Un défaut posé ici passerait pour le rendement du produit. */
-  it('rend `null` quand le support ne porte aucune hypothèse', () => {
-    const start = supportStart(livret, [valued], [], [paysIn()], ON, UNTIL)
+  it('rend `null` quand le support ne porte aucun palier', () => {
+    const start = supportStart(livret, [valued], [], [paysIn()], [], ON, UNTIL)
     expect(start.parts[0]?.rateBp).toBe(null)
     expect(start.parts[0]?.rateKind).toBe(null)
+    expect(start.parts[0]?.steps).toEqual([])
   })
 
-  it('rend exactement ce que le support porte, sans rien y ajouter', () => {
-    const placed = makeSavingSupport({ id: 's-1', memberId: 'm-1', rateBp: 250, rateKind: 'guaranteed' })
-    const start = supportStart(placed, [valued], [], [], ON, UNTIL)
+  it('rend exactement le palier en vigueur, sans rien y ajouter', () => {
+    const rate = makeSavingRate({
+      id: 'tx-1',
+      supportId: 's-1',
+      rateBp: 250,
+      kind: 'guaranteed',
+      from: '2020-01-01',
+    })
+    const start = supportStart(livret, [valued], [], [], [rate], ON, UNTIL)
     expect(start.parts[0]?.rateBp).toBe(250)
     expect(start.parts[0]?.rateKind).toBe('guaranteed')
   })
 
-  it('lit une hypothèse par défaut sur un taux sans nature, jamais un taux garanti', () => {
-    // « Garanti » est ce qui engage : il ne s'obtient pas par omission.
-    const placed = makeSavingSupport({ id: 's-1', memberId: 'm-1', rateBp: 250 })
-    expect(supportStart(placed, [valued], [], [], ON, UNTIL).parts[0]?.rateKind).toBe('assumed')
+  it('ne prend pas un palier qui n’a pas encore commencé pour le taux du jour', () => {
+    /* C'est toute la raison d'être du taux daté : une révision annoncée pour
+       l'an prochain ne change pas ce que le support sert aujourd'hui. Elle est
+       dans le barème, pas dans le taux de départ. */
+    const now = makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: '2020-01-01' })
+    const later = makeSavingRate({ id: 'tx-2', supportId: 's-1', rateBp: 180, from: '2027-01-01' })
+    const start = supportStart(livret, [valued], [], [], [now, later], ON, UNTIL)
+    expect(start.parts[0]?.rateBp).toBe(250)
+    expect(start.parts[0]?.steps).toHaveLength(2)
   })
 
   it('rend zéro pour cent comme une hypothèse, et non comme une absence', () => {
     // Un compte courant rend zéro : c'est une réponse, pas un silence, et la
     // confondre avec l'absence ferait emprunter le taux de l'écran.
-    const idle = makeSavingSupport({ id: 's-1', memberId: 'm-1', rateBp: 0 })
-    expect(supportStart(idle, [valued], [], [], ON, UNTIL).parts[0]?.rateBp).toBe(0)
+    const idle = makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 0, from: '2020-01-01' })
+    expect(supportStart(livret, [valued], [], [], [idle], ON, UNTIL).parts[0]?.rateBp).toBe(0)
   })
 })
 
@@ -246,7 +259,7 @@ describe('la décomposition d’un portefeuille', () => {
       amount: eur(350_000),
       date: '2026-07-01',
     })
-    const start = memberStart('m-1', [livret, pea], [valued, other], [], [paysIn()], kindOf, ON, UNTIL)
+    const start = memberStart('m-1', [livret, pea], [valued, other], [], [paysIn()], [], kindOf, ON, UNTIL)
 
     expect(start.parts.map((part) => part.label)).toEqual(['Livret A', 'PEA'])
     const capitals = start.parts.reduce((sum, part) => sum + (part.capital ?? 0), 0)
@@ -261,7 +274,7 @@ describe('la décomposition d’un portefeuille', () => {
        colonnes ne font pas le total est pire qu'un tableau absent — on cherche
        l'erreur, et il n'y en a pas. */
     const loose = unlinked({ id: 'r-8' })
-    const start = memberStart('m-1', [livret], [valued], [], [loose], kindOf, ON, UNTIL)
+    const start = memberStart('m-1', [livret], [valued], [], [loose], [], kindOf, ON, UNTIL)
     expect(start.monthly).toBe(35_000)
     expect(start.parts).toEqual([])
   })

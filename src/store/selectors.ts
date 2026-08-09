@@ -66,6 +66,7 @@ import {
   supportsDue,
   valuationsOf,
 } from '@/domain/saving'
+import { rateOn, ratesOf } from '@/domain/savingRate'
 import {
   NO_START,
   type ProjectionSource,
@@ -102,6 +103,7 @@ import {
   type Member,
   type Recurrence,
   type SavingSupport,
+  type SavingRate,
   type SavingValuation,
   isSpending,
 } from '@/domain/types'
@@ -146,6 +148,7 @@ export const useAdvances = (): Advance[] => useStore((s) => s.data.advances)
 export const useSavingSupports = (): SavingSupport[] => useStore((s) => s.data.savingSupports)
 export const useSavingValuations = (): SavingValuation[] =>
   useStore((s) => s.data.savingValuations)
+export const useSavingRates = (): SavingRate[] => useStore((s) => s.data.savingRates)
 export const useMembers = (): Member[] => useStore((s) => s.data.household.members)
 export const useHouseholdName = (): string => useStore((s) => s.data.household.name)
 export const useCurrentYm = (): YearMonth => useStore((s) => s.ym)
@@ -949,6 +952,30 @@ export function useSupportValuations(supportId: string | undefined): SavingValua
   )
 }
 
+/* `useStockBands` — la trajectoire mois par mois — n'est **pas** ici, et c'est
+   délibéré : ce module est dans le graphe initial de tout le monde, et le
+   sélecteur y ferait entrer `domain/savingSeries.ts` et sa capitalisation pour
+   une lecture qui vit derrière un `lazy`. Il est donc dans
+   `features/savings/EvolutionSection.tsx`, avec le seul écran qui le lit. */
+
+/** Les paliers de taux d'un support, du plus récent au plus ancien. */
+export function useSupportRates(supportId: string | undefined): SavingRate[] {
+  const rates = useSavingRates()
+  return useMemo(
+    () => (supportId === undefined ? [] : ratesOf(rates, supportId)),
+    [rates, supportId],
+  )
+}
+
+/** Le taux qu'un support sert aujourd'hui, ou `null` s'il n'en porte aucun. */
+export function useSupportRate(supportId: string | undefined): SavingRate | null {
+  const rates = useSavingRates()
+  return useMemo(
+    () => (supportId === undefined ? null : rateOn(rates, supportId)),
+    [rates, supportId],
+  )
+}
+
 /** Les mouvements d'un support sur le mois affiché — versements et reprises. */
 export function useSupportMonthFlows(supportId: string | undefined): SupportFlows {
   const entries = useEntries()
@@ -1034,10 +1061,11 @@ export function useUnlinkedSavings(): Entry[] {
 /**
  * D'où part une projection, quand elle part de l'épargne réelle.
  *
- * Deux nombres — le capital estimé, les versements récurrents — et **aucun
- * taux** : le rendement reste une hypothèse que la personne pose (cahier
- * §4.6 ter). C'est la seule lecture du document que l'écran des projections
- * fasse, et elle est à sens unique : rien de ce qu'on simule ne redescend.
+ * Deux nombres — le capital estimé, les versements récurrents — et les paliers
+ * de taux **posés sur les supports**, jamais un taux deviné : l'app ne connaît
+ * aucun produit et n'en prête aucun (cahier §4.6 ter). C'est la seule lecture
+ * du document que l'écran des projections fasse, et elle est à sens unique :
+ * rien de ce qu'on simule ne redescend.
  *
  * Elle ignore le filtre par membre de l'app : le simulateur n'a pas de bandeau
  * de mois, et son origine est **choisie sur place** — un support, ou toute
@@ -1052,6 +1080,7 @@ export function useUnlinkedSavings(): Entry[] {
 export function useProjectionStart(source: ProjectionSource, months: number): ProjectionStart {
   const supports = useSavingSupports()
   const valuations = useSavingValuations()
+  const rates = useSavingRates()
   const entries = useEntries()
   const recurrences = useRecurrences()
   const kindOf = useKindOf()
@@ -1067,13 +1096,23 @@ export function useProjectionStart(source: ProjectionSource, months: number): Pr
          son côté en simulation libre, mais le sélecteur ne peut pas inventer un
          support pour autant. */
       if (support === undefined) return NO_START
-      return supportStart(support, valuations, entries, recurrences, on, until)
+      return supportStart(support, valuations, entries, recurrences, rates, on, until)
     }
     if (source.kind === 'member') {
-      return memberStart(source.id, supports, valuations, entries, recurrences, kindOf, on, until)
+      return memberStart(
+        source.id,
+        supports,
+        valuations,
+        entries,
+        recurrences,
+        rates,
+        kindOf,
+        on,
+        until,
+      )
     }
     return NO_START
-  }, [source, months, supports, valuations, entries, recurrences, kindOf])
+  }, [source, months, supports, valuations, entries, recurrences, rates, kindOf])
 }
 
 /* `useMemberSavings` vivait ici — la même lecture pour chaque membre, en

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { currentYm } from '@/domain/date'
 import { eur } from '@/domain/fixtures'
 import type { ProjectionPart, ProjectionStart } from '@/domain/projectionStart'
 import { tpl } from '@/i18n/format'
@@ -362,6 +363,9 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
     monthly: eur(10_000),
     rateBp: 200,
     rateKind: 'assumed',
+    steps: [{ rateBp: 200, kind: 'assumed', from: '2020-01-01', to: null }],
+    cap: null,
+    room: null,
     ...over,
   })
   const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
@@ -412,9 +416,9 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
       portfolio([part({ rateBp: null, rateKind: null })]),
     )
     expect(result?.split[0]?.rateBp).toBe(700)
-    // `own` dit que le taux est emprunté : la colonne ne le fera pas passer
-    // pour celui du support.
-    expect(result?.split[0]?.own).toBe(false)
+    // `origin` dit d'où le taux vient : la colonne ne fera pas passer celui de
+    // l'écran pour celui du support.
+    expect(result?.split[0]?.origin).toBe('screen')
   })
 
   it('renonce à décomposer dès qu’on compare deux hypothèses', () => {
@@ -454,5 +458,317 @@ describe('un portefeuille dont les supports ont chacun leur taux', () => {
     for (let i = 1; i < rungs.length; i += 1) {
       expect(rungs[i]?.arrival ?? 0).toBeGreaterThan(rungs[i - 1]?.arrival ?? 0)
     }
+  })
+})
+
+/* ============================================================================
+ * Le rendement essayé sur un support.
+ *
+ * Trois règles, et la troisième est celle qui tient tout l'écran : **rien ne
+ * redescend dans le document**. Ce qui se tape ici vit dans le brouillon, et la
+ * fiche du support reste le seul endroit où un taux s'enregistre — daté.
+ * ==========================================================================*/
+
+describe('un taux essayé sur un support', () => {
+  const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Livret A',
+    capital: eur(100_000),
+    monthly: eur(10_000),
+    rateBp: 200,
+    rateKind: 'assumed',
+    steps: [{ rateBp: 200, kind: 'assumed', from: '2020-01-01', to: null }],
+    cap: null,
+    room: null,
+    ...over,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' } })
+
+  it('l’emporte sur le taux du support, qui l’emporte sur celui de l’écran', () => {
+    const tried = analyse(
+      {
+        ...linked,
+        scenarios: [{ id: 'a', rateText: '7', kind: 'assumed' }],
+        supportRates: [{ supportId: 's-1', rateText: '4', kind: 'guaranteed' }],
+      },
+      portfolio([part()]),
+    )
+    expect(tried.result?.split[0]?.rateBp).toBe(400)
+    expect(tried.result?.split[0]?.kind).toBe('guaranteed')
+    expect(tried.result?.split[0]?.origin).toBe('simulated')
+  })
+
+  it('ne touche pas un support qu’il ne désigne pas', () => {
+    const { result } = analyse(
+      { ...linked, supportRates: [{ supportId: 's-2', rateText: '9', kind: 'assumed' }] },
+      portfolio([part()]),
+    )
+    expect(result?.split[0]?.rateBp).toBe(200)
+    expect(result?.split[0]?.origin).toBe('own')
+  })
+
+  it('retombe sur le taux du support quand le champ est vide ou illisible', () => {
+    /* Un champ vidé est un essai retiré, pas un taux nul ; une faute de frappe
+       ne doit pas projeter un compte à plat. */
+    for (const rateText of ['', '450']) {
+      const { result } = analyse(
+        { ...linked, supportRates: [{ supportId: 's-1', rateText, kind: 'assumed' }] },
+        portfolio([part()]),
+      )
+      expect(result?.split[0]?.rateBp).toBe(200)
+      expect(result?.split[0]?.origin).toBe('own')
+    }
+  })
+
+  it('remplace le barème entier, sans laisser une révision le contredire', () => {
+    const dated = part({
+      steps: [
+        { rateBp: 200, kind: 'assumed', from: '2020-01-01', to: '2099-01-01' },
+        { rateBp: 900, kind: 'assumed', from: '2099-01-01', to: null },
+      ],
+    })
+    const { result } = analyse(
+      { ...linked, supportRates: [{ supportId: 's-1', rateText: '4', kind: 'assumed' }] },
+      portfolio([dated]),
+    )
+    expect(result?.split[0]?.dated).toBe(false)
+    expect(result?.split[0]?.schedule).toBe(400)
+  })
+})
+
+describe('un support dont le taux change en route', () => {
+  const dated = (from: string): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Assurance-vie',
+    capital: eur(1_000_000),
+    monthly: eur(10_000),
+    rateBp: 400,
+    rateKind: 'assumed',
+    steps: [
+      { rateBp: 400, kind: 'assumed', from: '2020-01-01', to: from },
+      { rateBp: 100, kind: 'assumed', from, to: null },
+    ],
+    cap: null,
+    room: null,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' }, years: 10 })
+
+  it('applique la révision, et le signale', () => {
+    const soon = analyse(linked, portfolio([dated(nextYearStart())]))
+    const never = analyse(linked, portfolio([dated('2099-01-01')]))
+
+    expect(soon.result?.split[0]?.dated).toBe(true)
+    // Le taux du **départ** reste celui d'aujourd'hui : c'est celui qu'on lit.
+    expect(soon.result?.split[0]?.rateBp).toBe(400)
+    // Et la baisse se voit à l'arrivée.
+    expect(soon.result?.split[0]?.series.balance.at(-1) ?? 0).toBeLessThan(
+      never.result?.split[0]?.series.balance.at(-1) ?? 0,
+    )
+  })
+
+  it('ne signale rien quand la révision tombe hors de l’horizon', () => {
+    /* Un changement au-delà de la durée simulée ne se voit pas sur la courbe :
+       l'annoncer ferait chercher un coude qui n'y est pas. */
+    expect(analyse(linked, portfolio([dated('2099-01-01')])).result?.split[0]?.dated).toBe(false)
+  })
+})
+
+/** Le 1er janvier de l'an prochain — une révision qui tombe dans l'horizon. */
+function nextYearStart(): string {
+  const year = Number(currentYm().slice(0, 4)) + 1
+  return `${String(year)}-01-01`
+}
+
+/* ============================================================================
+ * Le plafond d'un compte, et la fourchette de deux taux.
+ *
+ * Les cas limites du plafond comptent autant que le cas courant : un compte
+ * déjà plein, un compte sans relevé, un versement nul. Aucun ne doit produire
+ * une erreur, un nombre négatif, ou un écran qui refuse de calculer.
+ * ==========================================================================*/
+
+describe('un compte plafonné', () => {
+  const capped = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Livret A',
+    capital: eur(2_000_000),
+    monthly: eur(30_000),
+    rateBp: 300,
+    rateKind: 'assumed',
+    steps: [{ rateBp: 300, kind: 'assumed', from: '2020-01-01', to: null }],
+    cap: eur(2_295_000),
+    room: eur(295_000),
+    ...over,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' }, years: 10 })
+
+  it('arrête les versements au plafond, et le signale', () => {
+    const { result } = analyse(linked, portfolio([capped()]))
+    // 300 €/mois sur dix ans, mais 2 950 € de place : le versé s'y arrête.
+    expect(result?.split[0]?.series.contributed.at(-1)).toBe(2_000_000 + 295_000)
+    expect(result?.split[0]?.capped).toBe(true)
+  })
+
+  it('laisse le capital croître au-delà du plafond', () => {
+    /* Un livret plein rapporte encore : c'est toute la raison d'un plafond de
+       versements plutôt que d'un plafond de solde. */
+    const { result } = analyse(linked, portfolio([capped()]))
+    expect(result?.split[0]?.series.balance.at(-1) ?? 0).toBeGreaterThan(2_295_000)
+  })
+
+  it('ne signale rien quand le plafond ne coupe rien', () => {
+    const roomy = analyse(linked, portfolio([capped({ cap: eur(9_000_000), room: eur(7_000_000) })]))
+    expect(roomy.result?.split[0]?.capped).toBe(false)
+  })
+
+  it('tient un compte déjà plein sans rien casser', () => {
+    const full = analyse(linked, portfolio([capped({ room: eur(0) })]))
+    expect(full.result?.split[0]?.capped).toBe(true)
+    // Rien versé, et le capital croît quand même.
+    expect(full.result?.split[0]?.series.contributed.at(-1)).toBe(2_000_000)
+    expect(full.result?.split[0]?.series.balance.at(-1) ?? 0).toBeGreaterThan(2_000_000)
+  })
+
+  it('ne signale rien sur un compte qu’on vide', () => {
+    /* On ne plafonne pas ce qui sort : annoncer une coupe ferait chercher un
+       arrêt de versement là où il n'y a que des reprises. */
+    const draining = analyse(linked, portfolio([capped({ monthly: eur(-10_000), room: eur(0) })]))
+    expect(draining.result?.split[0]?.capped).toBe(false)
+  })
+
+  it('borne aussi l’échelle des efforts', () => {
+    /* Verser deux fois plus sur un livret presque plein ne donne presque rien
+       de plus : le plafond rattrape tous les barreaux, et une échelle qui
+       l'ignorerait promettrait un capital que le contrat refuse.
+       « Presque » et non « rien » : verser plus vite remplit le plafond plus
+       tôt, donc l'argent travaille quelques mois de plus. L'écart qui reste
+       est celui-là, et il est d'un autre ordre. */
+    const spread = (start: ProjectionStart): number => {
+      const { result } = analyse(linked, start)
+      if (result === null) throw new Error('pas de résultat')
+      const arrivals = effortLadder(result, result.scenarios[0]).map((rung) => rung.arrival)
+      const low = Math.min(...arrivals)
+      return (Math.max(...arrivals) - low) / low
+    }
+
+    expect(spread(portfolio([capped()]))).toBeLessThan(0.02)
+    expect(spread(portfolio([capped({ cap: null, room: null })]))).toBeGreaterThan(0.5)
+  })
+})
+
+describe('deux taux sur un même compte', () => {
+  const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'PEA',
+    capital: eur(1_000_000),
+    monthly: eur(20_000),
+    rateBp: 300,
+    rateKind: 'assumed',
+    steps: [{ rateBp: 300, kind: 'assumed', from: '2020-01-01', to: null }],
+    cap: null,
+    room: null,
+    ...over,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' }, years: 20 })
+
+  it('ne compare rien tant que le second champ est vide', () => {
+    const { result } = analyse(linked, portfolio([part()]))
+    expect(result?.compared).toBe(null)
+    expect(result?.split[0]?.comparedSeries).toBe(null)
+  })
+
+  it('trace la même trajectoire au second taux, aux mêmes versements', () => {
+    const { result } = analyse(
+      {
+        ...linked,
+        supportRates: [{ supportId: 's-1', rateText: '', kind: 'assumed', comparedText: '11' }],
+      },
+      portfolio([part()]),
+    )
+    expect(result?.split[0]?.comparedBp).toBe(1_100)
+    // Seul le rendement change : le versé cumulé est identique au centime.
+    expect(result?.split[0]?.comparedSeries?.contributed).toEqual(
+      result?.split[0]?.series.contributed,
+    )
+    expect(result?.split[0]?.comparedSeries?.balance.at(-1) ?? 0).toBeGreaterThan(
+      result?.split[0]?.series.balance.at(-1) ?? 0,
+    )
+  })
+
+  it('substitue le second taux là où il y en a un, et garde l’autre ailleurs', () => {
+    const { result } = analyse(
+      {
+        ...linked,
+        supportRates: [{ supportId: 's-1', rateText: '', kind: 'assumed', comparedText: '11' }],
+      },
+      portfolio([part(), part({ supportId: 's-2', label: 'Livret A' })]),
+    )
+    if (result?.compared === undefined || result.compared === null) throw new Error('pas de comparé')
+    const summed =
+      (result.split[0]?.comparedSeries?.balance.at(-1) ?? 0) +
+      (result.split[1]?.series.balance.at(-1) ?? 0)
+    expect(result.compared.balance.at(-1)).toBe(summed)
+  })
+
+  it('ne compare rien sur un second taux illisible', () => {
+    const { result } = analyse(
+      {
+        ...linked,
+        supportRates: [{ supportId: 's-1', rateText: '', kind: 'assumed', comparedText: '450' }],
+      },
+      portfolio([part()]),
+    )
+    expect(result?.compared).toBe(null)
+  })
+
+  it('respecte le plafond dans la comparaison comme dans le tracé', () => {
+    const { result } = analyse(
+      {
+        ...linked,
+        supportRates: [{ supportId: 's-1', rateText: '', kind: 'assumed', comparedText: '11' }],
+      },
+      portfolio([part({ cap: eur(1_100_000), room: eur(100_000) })]),
+    )
+    expect(result?.split[0]?.comparedSeries?.contributed.at(-1)).toBe(1_000_000 + 100_000)
   })
 })

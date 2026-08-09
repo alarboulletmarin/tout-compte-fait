@@ -47,6 +47,7 @@ import {
   ymOf,
 } from '@/domain/date'
 import { money } from '@/domain/money'
+import type { RateKind } from '@/domain/projection'
 import { clampToMonth } from '@/domain/recurrence'
 import type {
   Category,
@@ -64,6 +65,7 @@ import {
   addFamily,
   addMember,
   addEntry,
+  addSavingRate,
   addSavingSupport,
   addSavingValuation,
   archiveCategory,
@@ -1258,6 +1260,7 @@ export function exampleData(on: ISODate = today()): Data {
   data = withRules(data, first)
   data = withDebts(data, first)
   data = withValuations(data, anchor, ids)
+  data = withRates(data, anchor, ids)
   data = withAdvances(data, first, ids)
 
   /* Le rang de chaque échéance variable déjà chiffrée, par récurrence. Il vit
@@ -1358,14 +1361,12 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
-      /* Un taux **hypothétique**, et jamais garanti, sur un livret dont le taux
-         du jour est pourtant connu : c'est précisément la distinction que
-         l'écran des projections existe pour tenir. Un Livret A est révisé au
-         1er février et au 1er août — connaître son taux aujourd'hui ne le
-         garantit pas sur dix ans. Le jeu d'exemple ne peut pas se permettre de
-         montrer le contraire (cahier §4.6 ter). */
-      rateBp: 250,
-      rateKind: 'assumed',
+      /* Le plafond réel d'un Livret A, et le seul du jeu qui soit **atteint** :
+         le capital d'Alix le dépasse, ce qui est exactement ce qui arrive dans
+         la vraie vie — le plafond porte sur les versements, et les intérêts
+         passent au-dessus. C'est la situation que l'écran doit savoir dire sans
+         la présenter comme une erreur. */
+      depositCap: money(2_295_000),
       note: 'Vidé pour l’achat, refait depuis : cinq ans tiennent dans sa courbe.',
     },
     {
@@ -1375,6 +1376,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      depositCap: money(2_295_000),
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
     {
@@ -1384,6 +1386,10 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      /* 1 600 €, et le versement de Sacha le remplit pendant la durée simulée :
+         c'est le compte sur lequel la projection montre une courbe qui cesse de
+         recevoir sans cesser de monter. */
+      depositCap: money(160_000),
     },
     {
       id: PEL_ALIX,
@@ -1392,12 +1398,7 @@ function withSupports(data: Data): Data {
       categoryId: 'plans',
       archived: false,
       pace: 'yearly',
-      /* Le seul **garanti** du jeu, et le seul qui puisse l'être : le taux d'un
-         PEL est fixé à l'ouverture pour toute la durée du plan. C'est ce qui
-         rend la distinction visible dans l'exemple plutôt que seulement
-         explicable. */
-      rateBp: 175,
-      rateKind: 'guaranteed',
+      depositCap: money(6_120_000),
     },
     {
       id: ASSURANCE_VIE,
@@ -1406,8 +1407,6 @@ function withSupports(data: Data): Data {
       categoryId: 'life-insurance',
       archived: false,
       pace: 'quarterly',
-      rateBp: 400,
-      rateKind: 'assumed',
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
     {
@@ -1442,6 +1441,64 @@ function withSupports(data: Data): Data {
      arrêtée par son `until` : archiver un support que rien n'arrête laisserait
      un compte invisible grossir tout seul. */
   return archiveSavingSupport(supports.reduce(addSavingSupport, data), PEE_CAMILLE)
+}
+
+/**
+ * Les taux servis, et depuis quand.
+ *
+ * Trois supports sur huit en portent, et c'est voulu : un jeu où tout serait
+ * renseigné laisserait croire que le taux est obligatoire, alors qu'un support
+ * sans palier est le cas le plus courant — et celui que l'écran des projections
+ * doit savoir combler sans mentir.
+ *
+ * Les rangs sont **relatifs au mois courant**, comme tout le reste du fichier :
+ * le jeu se reconstruit à chaque chargement, et une date écrite en dur
+ * vieillirait au premier mois suivant.
+ */
+type RateSeed = {
+  supportId: string
+  rateBp: number
+  kind: RateKind
+  /** Rang du premier jour d'application, en mois depuis le mois courant. */
+  at: number
+}
+
+const RATES: RateSeed[] = [
+  /* Un taux **hypothétique**, et jamais garanti, sur un livret dont le taux du
+     jour est pourtant connu : c'est précisément la distinction que l'écran des
+     projections existe pour tenir. Un Livret A est révisé au 1er février et au
+     1er août — connaître son taux aujourd'hui ne le garantit pas sur dix ans.
+     Le jeu d'exemple ne peut pas se permettre de montrer le contraire (cahier
+     §4.6 ter).
+     Deux paliers, et c'est ce qui rend le taux daté visible plutôt que
+     seulement explicable : la courbe d'épargne capitalise 3 % jusqu'à la
+     révision, puis 2,50 %, et le premier palier ne bouge pas quand le second
+     est posé. */
+  { supportId: LIVRET_ALIX, rateBp: 300, kind: 'assumed', at: -HISTORY_MONTHS },
+  { supportId: LIVRET_ALIX, rateBp: 250, kind: 'assumed', at: -14 },
+  /* Le seul **garanti** du jeu, et le seul qui puisse l'être : le taux d'un PEL
+     est fixé à l'ouverture pour toute la durée du plan. Un palier, donc, et il
+     ne bougera jamais — c'est ce que « garanti » veut dire. */
+  { supportId: PEL_ALIX, rateBp: 175, kind: 'guaranteed', at: -HISTORY_MONTHS },
+  /* Une révision **à venir** : le contrat a annoncé son taux servi pour l'an
+     prochain. La projection l'applique à son rang et pas avant, et l'évolution
+     déjà passée n'en bouge pas d'un centime. */
+  { supportId: ASSURANCE_VIE, rateBp: 400, kind: 'assumed', at: -HISTORY_MONTHS },
+  { supportId: ASSURANCE_VIE, rateBp: 350, kind: 'assumed', at: 13 },
+]
+
+function withRates(data: Data, anchor: YearMonth, ids: () => string): Data {
+  return RATES.reduce(
+    (acc, seed) =>
+      addSavingRate(acc, {
+        id: ids(),
+        supportId: seed.supportId,
+        rateBp: seed.rateBp,
+        kind: seed.kind,
+        from: startOfMonth(addMonthsToYm(anchor, seed.at)),
+      }),
+    data,
+  )
 }
 
 /**
