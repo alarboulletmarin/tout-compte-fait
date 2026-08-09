@@ -72,9 +72,12 @@ export function App() {
             cent vingt-quatre abonnements posés à la main.
 
             Le prix est l'état local des écrans : un accordéon replié, un champ à
-            moitié rempli. Il se paie une fois, depuis l'écran d'apparence, sur un
+            moitié rempli. Il se paie une fois, depuis l'écran des réglages, sur un
             geste qu'on fait rarement et jamais au milieu d'une saisie. Le routeur
-            est au-dessus de la `key` : l'URL, elle, ne bouge pas.
+            est au-dessus de la `key` : l'URL, elle, ne bouge pas — et la position
+            de défilement non plus, que `useApplyLocale` relève avant le remontage
+            pour la reposer après. Sans elle, on choisissait sa langue en bas de
+            l'écran « Plus » pour se retrouver en haut.
 
             La clé est la langue **affichée** et non celle qui est demandée : le
             catalogue anglais arrive par le réseau, et remonter avant qu'il soit

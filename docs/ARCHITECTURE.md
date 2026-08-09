@@ -391,6 +391,28 @@ saisie. La `key` porte la langue **affichée** et non celle qui est demandée �
 catalogue anglais arrive par le réseau, et remonter avant qu'il soit là ferait
 deux remontages au lieu d'un.
 
+Il coûtait aussi la **position de défilement**, et celle-là ne se paie pas : un
+remontage vide le corps de la page avant de le reconstruire, et un navigateur qui
+recalcule la mise en page entre les deux rabat le défilement sur un document
+momentanément vide. On choisissait donc sa langue en bas de « Plus » pour se
+retrouver en haut. `useApplyLocale` relève la position dans l'abonnement à la
+langue — l'ancien DOM est encore là — et la repose dans un effet de mise en page,
+après que le nouvel arbre est écrit et avant que le navigateur ne peigne. À
+noter, parce que c'est le genre de défaut qui se referme tout seul au mauvais
+moment : **Chromium ne le montre pas**, ses deux moitiés de remontage tenant dans
+la même étape. Seuls WebKit et Gecko le montrent, c'est-à-dire pas la machine sur
+laquelle on le corrige.
+
+Une contrainte en découle, et elle vaut d'être dite parce qu'elle est le seul
+argument qui a fait garder le remontage : **le supprimer demanderait de savoir,
+pour chaque valeur mise en cache par un composant, si elle capture une chaîne**.
+`App` se rend déjà quand la langue change, et rien n'est mémoïsé au niveau des
+composants — un simple rendu suffirait donc presque. Presque : un `useMemo` qui
+construit des libellés, directement ou par une fonction qui lit `t`, les garderait
+dans l'ancienne langue tant que ses dépendances ne bougent pas. L'analyse est
+transitive, donc impossible à tenir juste dans la durée ; le remontage, lui, est
+correct par construction.
+
 **La traduction ne s'arrête pas aux mots.** Le français écrit « 1 284,50 € »,
 pose une espace fine devant le symbole et le pourcent, compte en octets et dit
 « le 5 » ; l'anglais écrit « €1,284.50 », n'en met aucune, compte en bytes et dit
