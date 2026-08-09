@@ -533,7 +533,7 @@ lit désormais sur `emptyData()` : la liste des dix noms qu'il recopiait s'étai
 périmée en silence le jour où l'épargne en a ajouté deux.
 
 **L'exemple est construit, pas commité.** `exampleData(on)` bâtit un document de
-quinze mois à partir d'une date, en posant des récurrences puis en *ouvrant*
+**cinq ans** à partir d'une date, en posant des récurrences puis en *ouvrant*
 chaque mois par `openMonth` — jamais en écrivant une `Entry` à la main. Deux
 conséquences : le jeu est toujours à l'heure, là où un `.json` figé serait vide
 du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe pour
@@ -541,20 +541,82 @@ du mois courant dès le mois suivant, c'est-à-dire l'écran vide qu'il existe p
 qui change le change avec elle. Les salaires y tombent en tête de mois, ce qui
 n'est pas cosmétique : chargé le 2, le jeu s'ouvrait sinon sur un solde à zéro.
 
+**Cinq ans, et non quinze mois, parce qu'une durée n'est pas une quantité.** Un
+an et demi montre des lignes ; cinq ans montrent des **bascules**, et ce sont
+elles qui font la différence entre un écran rempli et un écran qui raconte
+quelque chose. Un crédit auto va à son terme et un autre le remplace, sans qu'un
+seul mois porte les deux. Un foyer locataire achète : le loyer cesse, une
+mensualité, une taxe foncière et une assurance doublée le remplacent. Un
+alternant est embauché, son revenu triple, et le prorata des charges communes
+bascule sous les yeux. La crèche s'arrête, la cantine prend le relais. Une prime
+annuelle revient cinq fois, une assurance auto s'avance quatre fois depuis le
+livret. La fiche d'une récurrence n'affiche plus « le prix a changé une fois »
+mais cinq paliers, ce qui est la seule façon de distinguer une charge qui dérive
+d'une charge qui suit l'inflation. Coût : environ 2 500 `Entry` et 500 ko
+sérialisés, montés en une fraction de seconde.
+
 **Et ce qu'il contient est une liste d'états, pas une collection de lignes
-vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : un
-crédit soldé, une avance entièrement reconstituée, un support d'épargne archivé,
-un autre sans relevé — dont la valeur est donc *inconnue*, ce qui n'est pas zéro
-—, une règle qui s'arrêtera le mois prochain et une autre qui n'a pas encore
-commencé, un troisième membre au revenu très inférieur pour que le prorata cesse
-d'être un miroir. `persistence/example.test.ts` **est** cette liste, et le seul
-endroit où elle est vérifiée.
+vraisemblables.** Chaque graine y est parce qu'un écran s'efface sans elle : des
+crédits soldés — l'un par soustraction parce qu'il est sans intérêt, l'autre par
+sa date d'échéance parce qu'un taux ne retombe jamais à zéro pile —, des avances
+entièrement reconstituées et une en cours, un support d'épargne archivé à côté de
+celui qui l'a remplacé, un autre sans relevé — dont la valeur est donc
+*inconnue*, ce qui n'est pas zéro —, une règle qui s'arrêtera le mois prochain et
+une autre qui n'a pas encore commencé, un troisième membre au revenu très
+inférieur pour que le prorata cesse d'être un miroir.
+`persistence/example.test.ts` **est** cette liste, et le seul endroit où elle est
+vérifiée.
+
+**Les montants variables se lisent dans deux sortes de tables**, parce qu'il y a
+deux natures de variation. L'électricité, le carburant et les commissions d'un
+salaire dépendent du **mois calendaire** : elles se lisent dans douze valeurs
+indexées par le mois réel, plus la dérive de l'année — c'est ce qui permet au
+comparatif d'années d'opposer mars à mars, et non le quatrième mois du document
+au seizième. Les courses, elles, dépendent de la semaine écoulée et se lisent
+dans une table parcourue échéance après échéance, dont la longueur est première
+avec douze pour que deux années ne se ressemblent jamais tout à fait.
 
 Les deux modules valent une trentaine de kilo-octets pour des gestes qu'on fait
 une fois dans sa vie : ils sont chargés en `import()` dynamique, et le schéma
 est préparé à l'affichage de son contrôle — écrire dans le presse-papiers exige
 de rester dans la tâche du clic, qu'un `await` au milieu du gestionnaire perdrait
 sur Safari.
+
+**Et c'est lui qui a rendu les tests de bout en bout possibles.** Un scénario
+joué dans un vrai navigateur a besoin d'un document complet ; il n'existait
+jusqu'ici aucun moyen d'en obtenir un sans le saisir écran par écran,
+c'est-à-dire sans écrire en préambule de chaque scénario un second jeu de
+données à maintenir — qui aurait divergé du premier au premier changement de
+modèle. Le bouton « Charger l'exemple » est ce préambule, déjà écrit, déjà
+testé, déterministe. `e2e/` en tient onze, dans Chromium, sur `dist/` :
+
+- **Ce que jsdom ne peut pas voir.** Les 1 400 tests de `src/**` montent des
+  composants dans jsdom, avec `fake-indexeddb` là où le stockage compte. C'est
+  la bonne granularité pour presque tout, et elle ne dit rien de quatre choses :
+  le **chargement paresseux** — l'exemple, le schéma, la présentation et les
+  courbes cumulées arrivent tous par `import()`, qu'un test jsdom court-circuite
+  en important le module directement —, la **mise en page**, que jsdom rend à
+  zéro pixel, le **stockage réel**, dont `fake-indexeddb` est une
+  réimplémentation, et la **taille du document**, qui ne pèse que si on l'a
+  vraiment.
+- **Aucune assertion sur un calcul.** Les chiffres sont vérifiés par les tests
+  du domaine, qui le font mieux et mille fois plus vite. Les scénarios
+  vérifient qu'ils arrivent jusqu'à l'écran, et rien d'autre — un test de bout
+  en bout qui recalculerait un prorata serait un test lent et fragile pour une
+  réponse qu'on a déjà.
+- **Rien n'est figé sur une valeur.** Le jeu est ancré sur la date du jour :
+  fixer « 4 709,14 € » périmerait le test au mois suivant. On lit donc des
+  formes — un montant plutôt qu'un tiret, `n / m` avec `n < m`, trois crédits
+  soldés — et jamais des montants.
+- **Les animations sont éteintes.** `reducedMotion: 'reduce'`, la même décision
+  que `src/test/setup.ts` prend pour jsdom : les montants de l'app se comptent en
+  montant à l'écran, et deux lectures du même écran n'auraient sinon jamais le
+  même chiffre.
+- **Hors de `verify`, à dessein.** C'est la seule vérification du dépôt qui
+  exige un navigateur installé. La faire dépendre d'un téléchargement de 150 Mio
+  rendrait la porte de sortie inutilisable là où elle sert le plus — sur une
+  machine qui vient de cloner. La CI la joue dans un second travail, en
+  parallèle, avec la même commande qu'en local.
 
 **Graphiques.** Aucune librairie. L'anneau, les barres empilées et les courbes
 sont des composants SVG maison, dans `src/ui/Ring.tsx` et `src/charts/`.

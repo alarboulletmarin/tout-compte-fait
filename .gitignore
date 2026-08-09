@@ -22,3 +22,9 @@ npm-debug.log*
 .DS_Store
 .idea
 .vscode
+
+# Bout en bout — sorties de Playwright, jamais commitées : une trace pèse
+# quelques mébioctets et ne décrit qu'un échec déjà corrigé.
+test-results
+playwright-report
+.playwright

@@ -86,6 +86,126 @@ partage avec l'historique vivent dans un morceau à elles. Mesuré sans ce
 découpage, le premier chargement prenait quatre kibioctets de plus, pour un bloc
 qui vit sous le pli.
 
+### Modifié — le jeu d'exemple passe de quinze mois à cinq ans, et cesse d'être une capture
+
+Quinze mois montraient des lignes. Ils suffisaient à remplir les écrans, et
+c'était là toute leur ambition : une courbe qui ne soit pas plate, une
+répartition qui ne soit pas un miroir, un capital restant dû qui ne soit pas le
+capital emprunté. Mais un foyer ne se lit pas en quinze mois — il s'y répète.
+Tout ce que cette app peut apprendre sur une vie financière, elle l'apprend des
+**bascules**, et une bascule demande qu'il y ait un avant et un après.
+
+Le document couvre désormais **cinq années pleines**, mois courant compris, et
+son contenu a changé de nature avec sa durée.
+
+- **Un crédit auto va à son terme, un autre le remplace** le mois suivant, sans
+  qu'un seul mois porte les deux mensualités. C'est la forme qu'un poste de
+  dépense prend quand il dure plus longtemps qu'un crédit, et elle ne tenait pas
+  dans un an et demi.
+- **Le foyer est locataire, puis propriétaire.** Au dix-huitième mois, le loyer
+  cesse ; une mensualité, une taxe foncière, une redevance d'ordures et une
+  assurance habitation qui double le remplacent. Une reprise de vingt-quatre
+  mille euros sur le livret paie les frais de notaire, le déménagement et
+  l'installation, au centime — c'est le seul décrochement de cinq ans de courbe
+  d'épargne, et il est expliqué par les trois lignes qui le suivent.
+- **Un alternant est embauché** au vingt-quatrième mois : sa prime d'activité
+  s'éteint, son revenu triple, et le prorata des charges communes bascule sous
+  les yeux — de 9 % à 23 % de ce que le foyer partage.
+- **Un studio est mis en location** au trentième : un second crédit immobilier,
+  un loyer perçu qui n'est pas un salaire, une seconde taxe foncière, une
+  assurance qui n'est pas celle du logement habité, et des charges de
+  copropriété trimestrielles. C'est le premier emploi honnête de la catégorie
+  « Revenus fonciers », et l'occasion de montrer qu'un revenu locatif a quatre
+  lignes en face de lui qu'aucune vue ne rapproche.
+- **La crèche cède la place à l'école**, l'éveil musical au club de football, un
+  PEE fermé à celui de l'entreprise suivante. L'archivage cesse de se lire comme
+  une fin : les deux comptes coexistent dans le document, même personne, même
+  catégorie, un seul qui reçoit encore.
+- **Les prix ont cinq paliers, et non un changement isolé.** Le salaire connaît
+  quatre augmentations, la mutuelle quatre hausses, la pension alimentaire
+  quatre indexations, l'impôt quatre révisions. « Le prix a changé une fois » est
+  une anecdote ; cinq paliers disent si une charge dérive ou suit l'inflation, et
+  c'est la seule chose que la fiche d'une récurrence est seule à savoir.
+- **La même avance revient quatre années de suite** — la prime d'assurance auto,
+  réglée en une fois depuis le livret et remise mois par mois —, dont trois
+  entièrement reconstituées et une en cours. Une avance isolée ressemble à une
+  dépense compliquée ; quatre d'affilée montrent que c'est une **façon de
+  payer**. La récurrence mensualisée qui les précédait est restée dans le
+  document, arrêtée : les deux montages se lisent côte à côte, même catégorie et
+  même voiture.
+- **Trois crédits soldés, pour deux raisons différentes.** Les deux sans intérêt
+  retombent à zéro par soustraction — ce qu'on a versé est exactement ce qu'on
+  devait. Celui à taux a coûté treize mille euros pour douze mille prêtés, et
+  aucune soustraction ne pouvait le dire.
+
+Deux détails techniques valent d'être signalés parce qu'ils touchent ce que les
+écrans montrent. Les **montants variables se lisent désormais par mois
+calendaire** — douze valeurs saisonnières plus la dérive de l'année — là où ils
+suivaient le rang du mois dans le document : le comparatif d'années oppose enfin
+mars à mars, et non le quatrième mois au seizième. Et les tables des dépenses
+ponctuelles ont des longueurs premières entre elles, jamais douze, sans quoi cinq
+années auraient été rigoureusement identiques.
+
+Le catalogue par défaut est employé à quarante-quatre catégories sur quarante-six
+— restent l'aide au logement, que ces revenus interdisent, la taxe d'habitation,
+qui ne s'applique ni à la résidence principale ni à un bien loué, les pensions
+alimentaires reçues, qui raconteraient une histoire familiale qu'un exemple n'a
+pas à trancher, et la location longue durée, qui est justement celle qu'on
+archive. Le document pèse environ 2 500 échéances et 500 kio sérialisés, monté en
+une fraction de seconde à chaque chargement.
+
+### Ajouté — onze scénarios dans un vrai navigateur, que le jeu d'exemple rend possibles
+
+Le dépôt avait mille quatre cents tests et aucun ne lançait l'app. Ils montent
+des composants dans jsdom, avec `fake-indexeddb` là où le stockage compte : la
+bonne granularité pour presque tout, et un angle mort pour quatre choses qui ne
+cassent qu'en production — le **chargement paresseux** (l'exemple, le schéma, la
+présentation arrivent par `import()`, qu'un test jsdom court-circuite en
+important le module directement), la **mise en page** (jsdom rend tout à zéro
+pixel : « ça déborde » n'y veut rien dire), le **stockage réel** (`fake-indexeddb`
+est une réimplémentation) et la **taille du document**.
+
+Ce qui manquait pour les combler n'était pas un outil, c'était un **document**.
+Un scénario de bout en bout a besoin de données complètes, et il aurait fallu les
+saisir écran par écran — donc écrire, en préambule de chaque scénario, un second
+jeu de données à maintenir, qui aurait divergé du premier au premier changement
+de modèle. Le jeu d'exemple passé à cinq ans est ce préambule : un clic, un
+document déterministe, tous les états peuplés.
+
+`npm run e2e` joue donc onze scénarios dans Chromium, sur `dist/` — sur ce qui
+serait déployé, jamais sur ce qu'un serveur de développement assemble à la volée.
+
+- **Chaque écran s'ouvre sans une erreur** : console, exceptions et requêtes
+  échouées sont collectées du premier octet, et la liste doit être vide. Une
+  requête qui échoue est un bundle qu'on n'a pas su aller chercher, et c'est
+  exactement ce qu'aucun test jsdom ne peut voir puisqu'il n'en demande aucun.
+- **Le document survit à un rechargement, et à un second onglet.** C'est la
+  promesse de la première ligne du README, vérifiée contre IndexedDB plutôt que
+  contre sa réimplémentation. L'export produit un fichier qui pèse ce que pèsent
+  cinq ans.
+- **Aucun écran ne déborde à 320 points de large**, jeu d'exemple chargé — la
+  borne basse que le design system s'impose, et la vérification qu'aucune
+  relecture ne fait de façon fiable. Le document vide ne débordait jamais : ce
+  sont les montants à sept chiffres et les listes à quinze lignes qui poussent
+  les murs.
+- **Les états que seuls cinq ans produisent sont lus à l'écran** : trois crédits
+  soldés à zéro, la même avance répétée quatre années de suite, deux supports
+  d'épargne qui réclament un relevé pendant que six se taisent, trois parts
+  inégales dont la somme vaut le total.
+
+Deux décisions valent d'être dites. **Aucune assertion ne porte sur un calcul** :
+les chiffres sont vérifiés par les tests du domaine, qui le font mieux et mille
+fois plus vite ; ici on vérifie qu'ils arrivent jusqu'à l'écran. Et **rien n'est
+figé sur une valeur** — le jeu est ancré sur la date du jour, donc on lit des
+formes (un montant plutôt qu'un tiret, « n / m » avec n < m) et jamais des
+montants, sans quoi le test se périmerait au mois suivant.
+
+`e2e` reste **hors de `verify`** : c'est la seule vérification du dépôt qui exige
+un navigateur, et faire dépendre la porte de sortie d'un téléchargement de
+150 Mio la rendrait inutilisable là où elle sert le plus — sur une machine qui
+vient de cloner. La CI la joue dans un second travail, en parallèle, avec la même
+commande qu'en local ; aucune commande n'existe que dans le fichier de CI.
+
 ### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
 
 Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
