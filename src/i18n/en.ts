@@ -1003,6 +1003,16 @@ export const en: Strings = {
       'A savings account only moves with your contributions: one valuation a year is enough, and the app works out the rest. A share plan, a securities account or a unit-linked policy move on their own.',
     paceYearly: 'Once a year',
     paceQuarterly: 'Every quarter',
+    supportRate: 'Assumed return',
+    supportRateHint:
+      'Optional, and only for projections: nothing here changes your capital or your totals. Left empty, the simulator applies the assumption you set on its own screen.',
+    supportRateKind: 'Kind of rate',
+    supportRateGuaranteed: 'Guaranteed rate',
+    supportRateAssumed: 'Assumed return',
+    supportRateGuaranteedHint:
+      'Only use this if the rate is contractually guaranteed for the whole term you will simulate. The rate known today for a regulated savings account is not: it gets revised.',
+    rateInvalid: 'Between 0 and %s%.',
+    ratePerYear: '%/year',
     supportNote: 'Note',
     supportNotePlaceholder: 'Emergency fund, three months of costs',
     manage: 'Managing the pot',

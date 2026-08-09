@@ -194,6 +194,16 @@ const fr = {
   milestones: 'Voir le détail dans le temps',
   milestonesHint: 'Montants arrondis : la précision affichée ne dépasse pas celle du calcul.',
   milestoneWhen: 'Durée',
+  /* La décomposition par support : une colonne par compte, plus le total. Un
+     Livret A à 3 % et un PEA à 6 % qui partent de capitaux différents ne
+     suivent pas la même courbe, et leur somme n'est celle d'aucun taux moyen —
+     c'est la seule lecture qui dise *où* le capital se trouve. */
+  splitTotal: 'Capital total',
+  splitRates: 'un taux par support',
+  /* Un support sans hypothèse emprunte celle de l'écran, et la colonne le dit :
+     sans cette marque, il passerait pour un support renseigné. */
+  splitBorrowed: '%s (hypothèse de l’écran)',
+  splitOwn: 'Chaque support à son hypothèse ; ceux qui n’en portent pas prennent celle de l’écran.',
 
   /* --- L'effort d'épargne -------------------------------------------------
      La seule lecture actionnable du mode direct : « combien j'aurai » se

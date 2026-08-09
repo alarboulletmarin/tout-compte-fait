@@ -29,6 +29,7 @@
  * ==========================================================================*/
 
 import type { ISODate } from './date'
+import type { RateKind } from './projection'
 import { type Money, ZERO, add, sub } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { savingTotal, supportValue } from './saving'
@@ -62,6 +63,33 @@ export type ProjectionSource =
  * une, et le simulateur doit pouvoir dire lequel des deux il a sous la main
  * plutôt que de partir de zéro en silence.
  */
+/**
+ * Un support, tel que la projection le reprend.
+ *
+ * Il existe pour une seule raison : **projeter un portefeuille support par
+ * support**. Un Livret A à 3 % et un PEA à 6 % qui partent de capitaux
+ * différents et reçoivent des versements différents ne suivent pas la même
+ * courbe, et leur somme n'est celle d'aucun taux moyen. Le tableau de l'écran
+ * en donne une colonne chacun, et le total est la somme des colonnes — pas une
+ * projection de plus posée à côté.
+ *
+ * `rateBp` vaut `null` quand le support ne porte aucune hypothèse : c'est alors
+ * celle de l'écran qui s'applique, et l'écran seul le sait.
+ */
+export type ProjectionPart = {
+  supportId: string
+  /** Le nom du support, pour l'en-tête de sa colonne. */
+  label: string
+  /** Son capital estimé, ou `null` faute de relevé. */
+  capital: Money | null
+  /** Ce que ses règles récurrentes y versent, au mois, en net. */
+  monthly: Money
+  /** Son hypothèse de rendement, ou `null` — l'écran comble alors. */
+  rateBp: number | null
+  /** Ce que ce taux engage. `null` avec le taux. */
+  rateKind: RateKind | null
+}
+
 export type ProjectionStart = {
   /** Le capital estimé — dernier relevé plus les mouvements confirmés depuis. */
   capital: Money | null
@@ -84,6 +112,16 @@ export type ProjectionStart = {
    * zéro à sa place.
    */
   variable: boolean
+  /**
+   * Le détail par support, dans l'ordre du document.
+   *
+   * Vide en simulation libre — il n'y a pas de support —, et vide aussi quand
+   * les versements ne se rattachent à aucun compte : c'est la somme qui répond
+   * alors, et une colonne par support serait une colonne vide. Les totaux
+   * `capital` et `monthly` restent la vérité de l'écran ; les parts n'en sont
+   * que la décomposition, et elles s'y recomposent exactement.
+   */
+  parts: ProjectionPart[]
 }
 
 const EMPTY: ProjectionStart = {
@@ -94,6 +132,7 @@ const EMPTY: ProjectionStart = {
   rules: 0,
   ending: 0,
   variable: false,
+  parts: [],
 }
 
 /**
@@ -162,16 +201,16 @@ function recurringMonthly(
  * quelles règles sont assez durables pour entrer dans un versement constant.
  */
 export function supportStart(
-  supportId: string,
+  support: SavingSupport,
   valuations: readonly SavingValuation[],
   entries: readonly Entry[],
   recurrences: readonly Recurrence[],
   on: ISODate,
   until: ISODate,
 ): ProjectionStart {
-  const value = supportValue(supportId, valuations, entries, on)
+  const value = supportValue(support.id, valuations, entries, on)
   const { monthly, rules, ending, variable } = recurringMonthly(
-    recurrences.filter((recurrence) => recurrence.savingSupportId === supportId),
+    recurrences.filter((recurrence) => recurrence.savingSupportId === support.id),
     on,
     until,
   )
@@ -184,6 +223,19 @@ export function supportStart(
     rules,
     ending,
     variable,
+    /* Un support seul n'a pas besoin d'être décomposé — il *est* la
+       décomposition. La part existe quand même : c'est elle qui porte son taux,
+       et l'écran n'a ainsi qu'un seul chemin pour le lire. */
+    parts: [
+      {
+        supportId: support.id,
+        label: support.label,
+        capital: value.estimated,
+        monthly,
+        rateBp: support.rateBp ?? null,
+        rateKind: support.rateBp === undefined ? null : (support.rateKind ?? 'assumed'),
+      },
+    ],
   }
 }
 
@@ -221,6 +273,13 @@ export function memberStart(
     until,
   )
 
+  /* Le détail, un support à la fois, par la **même** fonction que l'origine
+     « un support » : deux façons de décomposer un portefeuille finiraient par
+     ne plus donner les mêmes colonnes que le total qu'elles surplombent. */
+  const parts = owned.map(
+    (support) => supportStart(support, valuations, entries, recurrences, on, until).parts[0],
+  )
+
   return {
     /* Aucun support relevé : il n'y a pas de capital à reprendre, et zéro n'en
        est pas un. Les versements, eux, restent vrais — on sait ce qui part
@@ -232,7 +291,34 @@ export function memberStart(
     rules,
     ending,
     variable,
+    parts: recomposes(parts, total.estimated, monthly) ? parts.filter(isPart) : [],
   }
+}
+
+const isPart = (part: ProjectionPart | undefined): part is ProjectionPart => part !== undefined
+
+/**
+ * Les parts redonnent-elles exactement le total ?
+ *
+ * Elles ne le font pas toujours, et c'est voulu : un versement d'épargne
+ * d'avant les supports ne désigne aucun compte, donc il pèse dans le total sans
+ * appartenir à aucune colonne. Un tableau dont les colonnes ne font pas le
+ * total est pire qu'un tableau absent — on cherche l'erreur, et il n'y en a
+ * pas. Dans ce cas l'écran s'en tient à la somme, et la décomposition se tait.
+ *
+ * Une égalité stricte, en centimes : ces deux chemins additionnent les mêmes
+ * entiers, et une tolérance ne servirait qu'à masquer un jour une vraie
+ * divergence.
+ */
+function recomposes(
+  parts: readonly (ProjectionPart | undefined)[],
+  capital: Money,
+  monthly: Money,
+): boolean {
+  if (parts.length === 0 || !parts.every(isPart)) return false
+  const capitals = parts.reduce((sum, part) => sum + (part.capital ?? ZERO), 0)
+  const monthlies = parts.reduce((sum, part) => sum + part.monthly, 0)
+  return capitals === capital && monthlies === monthly
 }
 
 /** L'origine vide — une simulation libre n'a rien à reprendre. */

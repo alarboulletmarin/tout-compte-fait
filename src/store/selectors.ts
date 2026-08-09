@@ -1062,7 +1062,12 @@ export function useProjectionStart(source: ProjectionSource, months: number): Pr
        mois d'arrivée a bien couru sur tout l'horizon. */
     const until = endOfMonth(addMonthsToYm(ymOf(on), Math.max(0, months)))
     if (source.kind === 'support') {
-      return supportStart(source.id, valuations, entries, recurrences, on, until)
+      const support = supports.find((one) => one.id === source.id)
+      /* Un support qui n'existe plus n'a rien à reprendre — l'écran retombe de
+         son côté en simulation libre, mais le sélecteur ne peut pas inventer un
+         support pour autant. */
+      if (support === undefined) return NO_START
+      return supportStart(support, valuations, entries, recurrences, on, until)
     }
     if (source.kind === 'member') {
       return memberStart(source.id, supports, valuations, entries, recurrences, kindOf, on, until)

@@ -12,7 +12,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 10
+export const CURRENT_SCHEMA_VERSION = 11
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -322,6 +322,28 @@ function toVersion10(doc: RawDocument): RawDocument {
   return { ...doc, schemaVersion: 10 }
 }
 
+/**
+ * L'hypothèse de rendement d'un support, à côté de sa cadence de relevé.
+ *
+ * **Rien à convertir, et surtout rien à deviner.** Un document d'avant la v11
+ * repart sans aucun taux sur aucun support, et c'est la seule conversion
+ * défendable : l'app ne connaît pas le contrat d'un livret, et poser 3 % « en
+ * attendant » ferait exactement ce que l'écran des projections passe son temps
+ * à refuser — annoncer le rendement d'un produit à la place de qui le détient
+ * (cahier §4.6 ter). Le champ reste vide tant que personne ne l'a rempli, et un
+ * support sans taux retombe sur l'hypothèse de l'écran.
+ *
+ * C'est aussi ce qui distingue ce champ de l'`expectedReturn` que le cahier §2
+ * refusait de poser « au cas où » : celui-là ne servait à rien, celui-ci est lu
+ * par la projection le jour même où il est écrit.
+ *
+ * La marche existe pour la raison qui a fait exister la v7, la v9 et la v10 :
+ * le pipeline veut une étape par incrément.
+ */
+function toVersion11(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 11 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -333,6 +355,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 8, migrate: toVersion8 },
   { to: 9, migrate: toVersion9 },
   { to: 10, migrate: toVersion10 },
+  { to: 11, migrate: toVersion11 },
 ]
 
 export class ImportError extends Error {

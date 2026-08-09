@@ -434,3 +434,91 @@ describe('quand la simulation part de l’épargne réelle', () => {
     expect(screen.getByLabelText(projection.source)).toHaveValue('free')
   })
 })
+
+describe('un portefeuille support par support', () => {
+  /** Deux comptes à deux taux : c'est la situation que la décomposition sert. */
+  function twoSupports() {
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({
+            id: 's-1',
+            memberId: 'm-1',
+            label: 'Livret A',
+            rateBp: 250,
+            rateKind: 'assumed',
+          }),
+          makeSavingSupport({ id: 's-2', memberId: 'm-1', label: 'PEL' }),
+        ],
+        savingValuations: [
+          ...data.savingValuations,
+          makeSavingValuation({
+            id: 'v-2',
+            supportId: 's-2',
+            amount: eur(300_000),
+            date: '2020-01-01',
+          }),
+        ],
+      },
+    })
+  }
+
+  it('donne une colonne à chaque support, plus le total', async () => {
+    const user = userEvent.setup()
+    twoSupports()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    await user.click(screen.getByText(projection.milestones))
+
+    const headers = within(milestones())
+      .getAllByRole('columnheader')
+      .map((cell) => said(cell.textContent ?? ''))
+    expect(headers[0]).toBe(projection.milestoneWhen)
+    expect(headers[1]).toContain('Livret A')
+    expect(headers[2]).toContain('PEL')
+    expect(headers.at(-1)).toBe(projection.splitTotal)
+  })
+
+  it('dit quelle colonne emprunte l’hypothèse de l’écran', async () => {
+    const user = userEvent.setup()
+    twoSupports()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    await user.click(screen.getByText(projection.milestones))
+
+    const headers = within(milestones())
+      .getAllByRole('columnheader')
+      .map((cell) => said(cell.textContent ?? ''))
+    // Le Livret A porte 2,5 % ; le PEL n'en porte aucun et le dit.
+    expect(headers[1]).not.toContain(said(tpl(projection.splitBorrowed, '')))
+    expect(headers[2]).toContain(said(tpl(projection.splitBorrowed, '')))
+  })
+
+  it('n’annonce plus un taux unique quand il y en a plusieurs', async () => {
+    const user = userEvent.setup()
+    twoSupports()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+
+    // « 3 %/an » sous le rendement serait faux, et faux dans le sens qui rassure.
+    expect(screen.getAllByText(projection.splitRates).length).toBeGreaterThan(0)
+  })
+
+  it('renonce à la décomposition dès qu’on compare deux hypothèses', async () => {
+    const user = userEvent.setup()
+    twoSupports()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    await user.click(screen.getByRole('button', { name: projection.scenarioAdd }))
+    await user.click(screen.getByText(projection.milestones))
+
+    expect(
+      within(milestones())
+        .getAllByRole('columnheader')
+        .map((cell) => said(cell.textContent ?? '')),
+    ).not.toContain(projection.splitTotal)
+  })
+})

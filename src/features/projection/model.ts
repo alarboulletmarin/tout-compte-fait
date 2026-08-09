@@ -232,9 +232,32 @@ export type ScenarioResult = {
   series: ProjectionSeries
 }
 
+/** La trajectoire d'un support, et le taux sous lequel elle a été calculée. */
+export type SupportSeries = {
+  supportId: string
+  label: string
+  rateBp: number
+  /** Le taux vient du support lui-même, et non de l'hypothèse de l'écran. */
+  own: boolean
+  series: ProjectionSeries
+}
+
 export type ProjectionResult = {
   months: number
   scenarios: ScenarioResult[]
+  /**
+   * La trajectoire de chaque support, quand le portefeuille se décompose.
+   *
+   * Vide en simulation libre, vide dès qu'on compare deux hypothèses, et vide
+   * quand les versements ne se rattachent à aucun compte : dans ces trois cas
+   * il n'existe pas de colonnes qui se somment au total, et un tableau dont les
+   * colonnes ne font pas le total est pire qu'un tableau absent.
+   *
+   * Quand il n'est pas vide, la somme de ses séries **est** celle de la
+   * première hypothèse — pas une lecture parallèle qu'il faudrait tenir
+   * d'accord (cahier §4.6 ter, « un seul moteur »).
+   */
+  split: SupportSeries[]
   /** Le capital du premier jour, que le résumé décompose à côté du versé. */
   initial: Money
   /** Le versement du mode direct. `null` en mode inverse : il y en a un par hypothèse. */
@@ -383,6 +406,9 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
         initial,
         monthly: null,
         target,
+        /* Le mode inverse cherche un versement, pas une répartition : il n'y a
+           rien à décomposer tant qu'on ne sait pas encore combien verser. */
+        split: [],
         contributed: null,
         targetReached: computed.every((scenario) => scenario.monthly === ZERO),
         inflationBp: erosion,
@@ -394,16 +420,46 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
     return { errors, result: null, missing: projection.nothingToPlot }
   }
 
-  const computed = scenarios.map((scenario) => ({
+  /* Le détail par support, quand il y en a un et qu'une seule hypothèse est
+     posée. Deux hypothèses veulent dire qu'on compare des portefeuilles
+     entiers ; les mélanger avec une décomposition par compte donnerait un
+     tableau à six colonnes dont trois ne se somment pas. */
+  const split =
+    scenarios.length === 1 && start.parts.length > 0
+      ? start.parts.map((part) => ({
+          part,
+          /* Le taux du support, ou celui de l'écran quand il n'en porte pas :
+             c'est la seule chose que l'hypothèse comble, et elle ne s'écrit
+             jamais sur le support. */
+          rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
+          series: projectSeries({
+            initial: part.capital ?? ZERO,
+            monthly: part.monthly,
+            months,
+            rateBp: part.rateBp ?? scenarios[0]?.rateBp ?? 0,
+            inflationBp: erosion,
+          }),
+        }))
+      : []
+
+  const computed = scenarios.map((scenario, index) => ({
     ...scenario,
     monthly,
-    series: projectSeries({
-      initial,
-      monthly,
-      months,
-      rateBp: scenario.rateBp,
-      inflationBp: erosion,
-    }),
+    /* Un portefeuille dont les supports ont chacun leur taux ne suit **aucun**
+       taux moyen : sa trajectoire est la somme des leurs, et il n'existe pas de
+       troisième calcul à côté. La première hypothèse lit donc la somme des
+       parts dès qu'il y en a ; les suivantes restent des taux globaux, ce qui
+       est précisément ce qu'on veut comparer — « et si tout rendait 5 % ? ». */
+    series:
+      index === 0 && split.length > 0
+        ? sumSeries(split.map((one) => one.series))
+        : projectSeries({
+            initial,
+            monthly,
+            months,
+            rateBp: scenario.rateBp,
+            inflationBp: erosion,
+          }),
   }))
 
   return {
@@ -415,6 +471,16 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
       initial,
       monthly,
       target: null,
+      split: split.map((one) => ({
+        supportId: one.part.supportId,
+        label: one.part.label,
+        rateBp: one.rateBp,
+        /* `null` quand le support ne portait pas de taux : la colonne dit alors
+           qu'elle emprunte celui de l'écran, au lieu de le faire passer pour le
+           sien. */
+        own: one.part.rateBp !== null,
+        series: one.series,
+      })),
       /* Le versé ne dépend pas du taux : les trois hypothèses partagent la même
          aire, et c'est ce qui rend l'écart entre elle et chaque courbe lisible
          comme « ce que le taux a produit ». */
@@ -428,6 +494,28 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
 /** Le prochain emplacement libre, ou `null` quand les trois sont pris. */
 export function nextSlot(scenarios: readonly ScenarioDraft[]): ScenarioId | null {
   return SCENARIO_SLOTS.find((slot) => !scenarios.some((s) => s.id === slot)) ?? null
+}
+
+/**
+ * La somme de plusieurs trajectoires, rang par rang.
+ *
+ * C'est ce qui fait qu'un portefeuille dont les supports ont chacun leur taux
+ * garde **un seul** moteur : sa courbe n'est pas recalculée à un taux moyen —
+ * qui n'existe pas —, elle est l'addition des courbes de ses supports. Le
+ * tableau par colonnes et le chiffre d'arrivée lisent donc littéralement les
+ * mêmes nombres.
+ *
+ * Les séries ont toutes le même nombre de points : elles sortent du même
+ * horizon, passé au même `projectSeries`.
+ */
+function sumSeries(all: readonly ProjectionSeries[]): ProjectionSeries {
+  const first = all[0]
+  if (first === undefined) return { balance: [], contributed: [] }
+  const add = (pick: (s: ProjectionSeries) => Money[]): Money[] =>
+    pick(first).map((_, rank) =>
+      money(all.reduce((total, one) => total + (pick(one)[rank] ?? ZERO), 0)),
+    )
+  return { balance: add((s) => [...s.balance]), contributed: add((s) => [...s.contributed]) }
 }
 
 /** Les intérêts : ce que le taux a produit, par différence. */
@@ -503,6 +591,18 @@ export type EffortRung = {
   current: boolean
 }
 
+/**
+ * Ce qu'un support reçoit par mois, relu sur sa propre série.
+ *
+ * Le versé cumulé compte le capital de départ à son rang zéro : la mensualité
+ * est donc l'écart entre deux rangs consécutifs, et non le premier point. La
+ * relire ici plutôt que de la reporter depuis `ProjectionStart` garde une seule
+ * source à la trajectoire d'un support — celle qui a servi à la tracer.
+ */
+function partMonthly(part: SupportSeries): number {
+  return (part.series.contributed[1] ?? ZERO) - (part.series.contributed[0] ?? ZERO)
+}
+
 /** Le pas d'arrondi d'un barreau : dix euros, cinquante, ou cent. */
 function rungStep(monthly: Money): number {
   if (monthly < 20_000) return 1_000
@@ -524,6 +624,44 @@ export function effortLadder(
   const seen = new Set<number>()
   const rungs: EffortRung[] = []
 
+  /**
+   * Ce que donne un versement donné, au même horizon.
+   *
+   * Sur un portefeuille décomposé, l'effort supplémentaire se répartit **au
+   * prorata** de ce que chaque support reçoit déjà, et chaque part garde son
+   * taux : verser 50 % de plus, c'est verser 50 % de plus partout. Recalculer
+   * le tout à un taux unique donnerait un chiffre que la ligne « Simulation en
+   * cours » ne retrouverait même pas.
+   */
+  const arrivalAt = (value: Money): Money => {
+    if (result.split.length > 0) {
+      const ratio = value / base
+      return money(
+        result.split.reduce(
+          (total, part) =>
+            total +
+            (projectSeries({
+              initial: part.series.contributed[0] ?? ZERO,
+              monthly: money(Math.round(partMonthly(part) * ratio)),
+              months: result.months,
+              rateBp: part.rateBp,
+              inflationBp: result.inflationBp,
+            }).balance.at(-1) ?? ZERO),
+          0,
+        ),
+      )
+    }
+    return (
+      projectSeries({
+        initial: result.initial,
+        monthly: value,
+        months: result.months,
+        rateBp: scenario.rateBp,
+        inflationBp: result.inflationBp,
+      }).balance.at(-1) ?? ZERO
+    )
+  }
+
   for (const factor of EFFORT_FACTORS) {
     /* Le barreau du milieu garde le montant exact : c'est celui qu'on simule,
        et l'arrondir ferait afficher une arrivée qui n'est pas celle du reste de
@@ -531,18 +669,7 @@ export function effortLadder(
     const value = factor === 1 ? base : money(Math.round((base * factor) / step) * step)
     if (value <= 0 || seen.has(value)) continue
     seen.add(value)
-    rungs.push({
-      monthly: value,
-      arrival:
-        projectSeries({
-          initial: result.initial,
-          monthly: value,
-          months: result.months,
-          rateBp: scenario.rateBp,
-          inflationBp: result.inflationBp,
-        }).balance.at(-1) ?? ZERO,
-      current: factor === 1,
-    })
+    rungs.push({ monthly: value, arrival: arrivalAt(value), current: factor === 1 })
   }
 
   return rungs.sort((a, b) => a.monthly - b.monthly)

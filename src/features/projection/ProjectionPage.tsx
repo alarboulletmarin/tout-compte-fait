@@ -155,7 +155,13 @@ export function ProjectionPage() {
       ? []
       : result.scenarios.map((scenario, index) => ({
           id: scenario.id,
-          label: rateLabel(scenario.rateBp, scenario.kind),
+          /* La première courbe est la somme des supports dès qu'ils ont chacun
+             leur taux : lui coller « 3 % » ferait passer l'hypothèse par défaut
+             de l'écran pour celle du portefeuille entier. */
+          label:
+            index === 0 && result.split.some((part) => part.own)
+              ? projection.splitRates
+              : rateLabel(scenario.rateBp, scenario.kind),
           color: SERIE_COLORS[index] ?? SERIE_COLORS[0],
           dashed: scenario.kind === 'assumed',
           values: scenario.series.balance,
@@ -168,35 +174,56 @@ export function ProjectionPage() {
      même versé ne s'empilent pas. */
   const single = result !== null && result.scenarios.length === 1
 
+  /* Trois formes de tableau, et une seule est vraie à la fois.
+     — Un portefeuille décomposé : une colonne par support, plus le total. C'est
+       la lecture la plus riche, et la seule qui dise *où* le capital est.
+     — Une hypothèse sur un capital indivis : versé, rendement, total.
+     — Plusieurs hypothèses : une colonne chacune, c'est la comparaison. */
   const columns: MilestoneColumn[] =
     result === null
       ? []
-      : single && first !== undefined
-        ? /* Une seule hypothèse laisse la place aux trois nombres qui comptent,
-             plutôt qu'à une colonne de totaux et rien d'autre : ce que j'ai mis,
-             ce que le taux a ajouté, ce que ça fait. */
-          [
+      : result.split.length > 0
+        ? [
+            ...result.split.map((part) => ({
+              id: part.supportId,
+              /* Le taux à côté du nom : sans lui, deux colonnes qui divergent
+                 n'ont pas d'explication visible. Marqué quand il est emprunté à
+                 l'écran, pour qu'un support sans hypothèse ne passe pas pour un
+                 support renseigné. */
+              label: part.own
+                ? `${part.label} · ${percent(part.rateBp)}`
+                : `${part.label} · ${tpl(projection.splitBorrowed, percent(part.rateBp))}`,
+              values: marks.map((mark) => part.series.balance[mark] ?? ZERO),
+            })),
             {
-              id: 'paid',
-              label: projection.contributedArea,
-              values: marks.map((mark) => first.series.contributed[mark] ?? ZERO),
-            },
-            {
-              id: 'interest',
-              label: projection.interest,
-              values: marks.map((mark) => breakdownOf(first.series, mark).interest),
-            },
-            {
-              id: 'total',
-              label: projection.breakdownTotal,
-              values: marks.map((mark) => first.series.balance[mark] ?? ZERO),
+              id: '__total__',
+              label: projection.splitTotal,
+              values: marks.map((mark) => first?.series.balance[mark] ?? ZERO),
             },
           ]
-        : result.scenarios.map((scenario) => ({
-            id: scenario.id,
-            label: rateLabel(scenario.rateBp, scenario.kind),
-            values: marks.map((mark) => scenario.series.balance[mark] ?? ZERO),
-          }))
+        : single && first !== undefined
+          ? [
+              {
+                id: 'paid',
+                label: projection.contributedArea,
+                values: marks.map((mark) => first.series.contributed[mark] ?? ZERO),
+              },
+              {
+                id: 'interest',
+                label: projection.interest,
+                values: marks.map((mark) => breakdownOf(first.series, mark).interest),
+              },
+              {
+                id: 'total',
+                label: projection.breakdownTotal,
+                values: marks.map((mark) => first.series.balance[mark] ?? ZERO),
+              },
+            ]
+          : result.scenarios.map((scenario) => ({
+              id: scenario.id,
+              label: rateLabel(scenario.rateBp, scenario.kind),
+              values: marks.map((mark) => scenario.series.balance[mark] ?? ZERO),
+            }))
 
   const arrival = (index: number): Money =>
     result?.scenarios[index]?.series.balance.at(-1) ?? ZERO
@@ -232,7 +259,12 @@ export function ProjectionPage() {
           draft.mode === 'target'
             ? exact(result.initial)
             : tpl(projection.perMonth, exact(result.monthly ?? ZERO)),
-          tpl(projection.perYear, percent(first.rateBp)),
+          /* Un portefeuille dont les supports ont chacun leur taux ne suit
+             *aucun* taux moyen : en annoncer un ici serait l'inventer, et
+             l'inventer dans le sens qui rassure. */
+          result.split.some((part) => part.own)
+            ? projection.splitRates
+            : tpl(projection.perYear, percent(first.rateBp)),
         )
 
   const rungs = result === null ? [] : effortLadder(result, first)
@@ -279,10 +311,17 @@ export function ProjectionPage() {
               ),
               formatDuration(result.months),
             )}
-            interestFrom={tpl(
-              projection.breakdownInterestFrom,
-              tpl(projection.perYear, percent(first?.rateBp ?? 0)),
-            )}
+            interestFrom={
+              /* Un portefeuille dont les supports ont chacun leur taux ne suit
+                 aucun taux moyen : annoncer « 3 %/an » sous le rendement y
+                 serait faux, et faux dans le sens qui rassure. */
+              result.split.some((part) => part.own)
+                ? projection.splitOwn
+                : tpl(
+                    projection.breakdownInterestFrom,
+                    tpl(projection.perYear, percent(first?.rateBp ?? 0)),
+                  )
+            }
             deflated={
               result.inflationBp > 0
                 ? tpl(projection.constantOn, percent(result.inflationBp))

@@ -37,6 +37,7 @@ import type {
   ThemeSetting,
 } from '@/domain/types'
 import { DEFAULT_LOCALE, DEFAULT_PALETTE, isLocale, isPaletteSetting } from '@/domain/types'
+import { MAX_RATE_PERCENT } from '@/domain/rate'
 import { defaultFamilies, fallbackFamilyId, repairedCategory } from './defaults'
 import { CURRENT_SCHEMA_VERSION } from './schema'
 
@@ -231,6 +232,23 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
   if (memberId === undefined) return 'noMember'
   const note = optionalStr(raw['note'])
   const pace = raw['pace']
+  /* Le taux est **omis** dès qu'il est illisible, jamais ramené à zéro ni à une
+     valeur d'attente : zéro pour cent est une hypothèse qu'on peut poser
+     volontairement — un compte courant, un fonds en perte —, et l'inventer à la
+     place d'un champ abîmé ferait dire à l'app ce qu'elle ne sait pas. Un
+     support sans taux retombe sur l'hypothèse de l'écran, ce qui est exactement
+     la bonne conduite. Les bornes sont celles de la saisie (`domain/rate.ts`) :
+     ce qui entre par un fichier passe le même filtre que ce qui entre par un
+     clavier. */
+  const storedRate = raw['rateBp']
+  const rateBp =
+    typeof storedRate === 'number' &&
+    Number.isInteger(storedRate) &&
+    storedRate >= 0 &&
+    storedRate <= MAX_RATE_PERCENT * 100
+      ? storedRate
+      : undefined
+  const rateKind = raw['rateKind']
   return {
     id: str(raw['id'], `saving-support-${String(index)}`),
     label: str(raw['label'], '—'),
@@ -238,6 +256,12 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
     categoryId: str(raw['categoryId'], ''),
     archived: bool(raw['archived'], false),
     ...(pace === 'yearly' || pace === 'quarterly' ? { pace } : {}),
+    ...(rateBp === undefined ? {} : { rateBp }),
+    /* La nature ne survit pas sans son taux : « garanti » tout seul ne qualifie
+       rien, et laisserait croire à un support renseigné qui ne l'est pas. */
+    ...(rateBp !== undefined && (rateKind === 'guaranteed' || rateKind === 'assumed')
+      ? { rateKind }
+      : {}),
     ...(note === undefined ? {} : { note }),
   }
 }

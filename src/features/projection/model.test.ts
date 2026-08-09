@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { eur } from '@/domain/fixtures'
-import type { ProjectionStart } from '@/domain/projectionStart'
+import type { ProjectionPart, ProjectionStart } from '@/domain/projectionStart'
 import { tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import {
@@ -254,6 +254,7 @@ describe('quand l’origine est l’épargne réelle', () => {
     rules: 1,
     ending: 0,
     variable: false,
+    parts: [],
     ...over,
   })
   const linked = draft({ source: { kind: 'member', id: 'm-1' } })
@@ -350,5 +351,108 @@ describe('l’échelle des efforts', () => {
     const { result } = analyse(draft({ mode: 'target', targetText: '100000' }))
     if (result === null) throw new Error('pas de résultat')
     expect(effortLadder(result, result.scenarios[0])).toEqual([])
+  })
+})
+
+describe('un portefeuille dont les supports ont chacun leur taux', () => {
+  const part = (over: Partial<ProjectionPart> = {}): ProjectionPart => ({
+    supportId: 's-1',
+    label: 'Livret A',
+    capital: eur(100_000),
+    monthly: eur(10_000),
+    rateBp: 200,
+    rateKind: 'assumed',
+    ...over,
+  })
+  const portfolio = (parts: ProjectionPart[]): ProjectionStart => ({
+    capital: eur(parts.reduce((n, p) => n + (p.capital ?? 0), 0)),
+    monthly: eur(parts.reduce((n, p) => n + p.monthly, 0)),
+    valued: parts.length,
+    unvalued: 0,
+    rules: parts.length,
+    ending: 0,
+    variable: false,
+    parts,
+  })
+  const linked = draft({ source: { kind: 'member', id: 'm-1' } })
+
+  it('trace une colonne par support, et leur somme est la courbe de l’écran', () => {
+    const { result } = analyse(
+      linked,
+      portfolio([part(), part({ supportId: 's-2', label: 'PEA', rateBp: 600 })]),
+    )
+    if (result === null) throw new Error('pas de résultat')
+
+    expect(result.split.map((one) => one.label)).toEqual(['Livret A', 'PEA'])
+    // Un seul moteur : le total *est* la somme des colonnes, rang par rang.
+    const summed = result.split.reduce(
+      (total, one) => total + (one.series.balance.at(-1) ?? 0),
+      0,
+    )
+    expect(result.scenarios[0]?.series.balance.at(-1)).toBe(summed)
+  })
+
+  it('ne suit aucun taux moyen : le portefeuille bat le taux le plus bas', () => {
+    const mixed = analyse(
+      linked,
+      portfolio([part({ rateBp: 200 }), part({ supportId: 's-2', rateBp: 600 })]),
+    )
+    const flat = analyse(
+      linked,
+      portfolio([part({ rateBp: 200 }), part({ supportId: 's-2', rateBp: 200 })]),
+    )
+    expect(mixed.result?.scenarios[0]?.series.balance.at(-1) ?? 0).toBeGreaterThan(
+      flat.result?.scenarios[0]?.series.balance.at(-1) ?? 0,
+    )
+  })
+
+  it('comble avec l’hypothèse de l’écran, et le signale', () => {
+    const { result } = analyse(
+      { ...linked, scenarios: [{ id: 'a', rateText: '7', kind: 'assumed' }] },
+      portfolio([part({ rateBp: null, rateKind: null })]),
+    )
+    expect(result?.split[0]?.rateBp).toBe(700)
+    // `own` dit que le taux est emprunté : la colonne ne le fera pas passer
+    // pour celui du support.
+    expect(result?.split[0]?.own).toBe(false)
+  })
+
+  it('renonce à décomposer dès qu’on compare deux hypothèses', () => {
+    // Deux hypothèses veulent dire qu'on compare des portefeuilles entiers ;
+    // les mélanger à une décomposition par compte donnerait un tableau dont la
+    // moitié des colonnes ne se somment pas.
+    const { result } = analyse(
+      {
+        ...linked,
+        scenarios: [
+          { id: 'a', rateText: '3', kind: 'assumed' },
+          { id: 'b', rateText: '6', kind: 'assumed' },
+        ],
+      },
+      portfolio([part()]),
+    )
+    expect(result?.split).toEqual([])
+  })
+
+  it('ne décompose rien en simulation libre', () => {
+    expect(analyse(draft({ monthlyText: '100' })).result?.split).toEqual([])
+  })
+
+  it('répartit l’effort supplémentaire au prorata, chaque support à son taux', () => {
+    const { result } = analyse(
+      linked,
+      portfolio([part({ rateBp: 200 }), part({ supportId: 's-2', rateBp: 600 })]),
+    )
+    if (result === null) throw new Error('pas de résultat')
+    const rungs = effortLadder(result, result.scenarios[0])
+
+    // Le barreau courant retrouve exactement la projection de l'écran : sans
+    // ça, « Simulation en cours » annoncerait un autre chiffre que le héros.
+    expect(rungs.find((rung) => rung.current)?.arrival).toBe(
+      result.scenarios[0]?.series.balance.at(-1),
+    )
+    for (let i = 1; i < rungs.length; i += 1) {
+      expect(rungs[i]?.arrival ?? 0).toBeGreaterThan(rungs[i - 1]?.arrival ?? 0)
+    }
   })
 })

@@ -12,6 +12,30 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Ajouté — une hypothèse de rendement par support, et une projection compte par compte
+
+*Migration de schéma : version 11.* Rien à convertir — aucun support existant ne
+reçoit de taux, et c'est la seule conversion défendable : l'app ne connaît pas
+ton contrat.
+
+- **Chaque support peut porter son hypothèse de rendement**, avec le même choix
+  qu'ailleurs — taux garanti ou rendement hypothétique. Facultative, sans valeur
+  par défaut, et sans effet nulle part ailleurs : ni sur ton capital, ni sur la
+  valeur estimée, ni sur la couverture, ni sur un total du mois. Un rendement
+  n'est pas un mouvement. Laissée vide, le simulateur applique l'hypothèse de
+  son propre écran ; posée à 0 %, elle dit que ce capital ne bouge pas — les
+  deux ne veulent pas dire la même chose.
+- **Le tableau du détail donne une colonne à chaque support, plus le total.**
+  Un Livret A à 2,5 % et un PEL garanti à 1,75 % qui partent de capitaux
+  différents ne suivent pas la même courbe, et leur somme n'est celle d'aucun
+  taux moyen : le portefeuille est projeté compte par compte, et le total est
+  l'addition des colonnes. Une colonne qui emprunte l'hypothèse de l'écran le
+  dit, pour ne pas passer pour un support renseigné.
+- La décomposition se retire quand ses colonnes ne feraient pas le total : en
+  simulation libre, dès qu'on compare deux hypothèses, et quand des versements
+  ne se rattachent à aucun compte. Un tableau dont les colonnes ne somment pas
+  est pire qu'un tableau absent — on y cherche une erreur qui n'existe pas.
+
 ### Modifié — les projections partent de ton épargne, et répondent avant de demander
 
 L'écran était une calculatrice posée à côté de l'app : il ne lisait rien du

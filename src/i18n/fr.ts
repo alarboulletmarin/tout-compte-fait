@@ -1708,6 +1708,22 @@ export const fr = {
       'Un livret ne bouge que de tes versements : un relevé par an suffit, et l’app calcule le reste. Un PEA, un compte-titres ou une assurance-vie en unités de compte bougent tout seuls.',
     paceYearly: 'Une fois par an',
     paceQuarterly: 'Chaque trimestre',
+    /* L'hypothèse de rendement — le seul champ du formulaire qui parle de
+       l'avenir, et le seul qui n'engage que celui qui le remplit. Il est
+       facultatif, et il le reste : l'app ne connaît aucun produit, ne lit aucun
+       cours, et ne posera jamais de chiffre à la place de personne. Il ne
+       change rien au capital ni à aucun total — il ne sert qu'aux projections
+       (cahier §4.6 ter). */
+    supportRate: 'Hypothèse de rendement',
+    supportRateHint:
+      'Facultatif, et seulement pour les projections : rien ici ne change ton capital ni tes totaux. Laissé vide, le simulateur applique l’hypothèse que tu poses sur son écran.',
+    supportRateKind: 'Type de taux',
+    supportRateGuaranteed: 'Taux garanti',
+    supportRateAssumed: 'Rendement hypothétique',
+    supportRateGuaranteedHint:
+      'À n’utiliser que si ce taux est contractuellement garanti sur toute la durée que tu simuleras. Le taux connu d’un livret réglementé ne l’est pas : il est révisé.',
+    rateInvalid: 'Entre 0 et %s %.',
+    ratePerYear: '%/an',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
     /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin

@@ -8,6 +8,11 @@
 
 import { type ISODate, type YearMonth, addMonthsToYm, startOfMonth, ymOf } from './date'
 import type { Money } from './money'
+/* `projection.ts` ne connaît pas `types.ts` — il ne dépend que de `money` —,
+   donc la flèche va dans un seul sens et il n'y a pas de cycle. La nature d'un
+   taux est définie là où elle est *expliquée*, à côté du calcul qu'elle ne
+   change pas. */
+import type { RateKind } from './projection'
 
 export type Direction = 'in' | 'out'
 
@@ -146,6 +151,28 @@ export type SavingSupport = {
   archived: boolean
   /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
   pace?: SavingPace
+  /**
+   * L'hypothèse de rendement annuel qu'on prête à ce support, en points de
+   * base. 300 = 3,00 %. Absente tant que personne ne l'a posée.
+   *
+   * **Saisie, jamais déduite.** L'app ne connaît aucun produit et ne lit aucun
+   * cours : ce champ ne contient que ce que son propriétaire a tapé, et il ne
+   * se remplit ni par défaut, ni à l'import, ni par une migration (cahier
+   * §4.6 ter). C'est ce qui le distingue de l'`expectedReturn` que le §2
+   * refusait de poser « au cas où » — celui-là n'aurait rien fait, celui-ci est
+   * lu par la projection le jour même où il est écrit.
+   *
+   * Il ne change **rien** ailleurs : ni le capital relevé, ni la valeur
+   * estimée, ni la couverture, ni un total du mois. Un rendement n'est pas un
+   * mouvement, et il ne fabrique aucun euro dans le document.
+   */
+  rateBp?: number
+  /**
+   * Ce que ce taux engage — la même distinction que le simulateur, et pour la
+   * même raison : elle ne change aucun calcul, elle change ce que le chiffre
+   * *promet*. Absente, le taux est une hypothèse.
+   */
+  rateKind?: RateKind
   note?: string
 }
 

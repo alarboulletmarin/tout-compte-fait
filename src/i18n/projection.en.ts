@@ -106,6 +106,11 @@ export const en: ProjectionStrings = {
   milestonesHint:
     'Rounded amounts: the precision shown doesn’t exceed the precision of the calculation.',
   milestoneWhen: 'Term',
+  splitTotal: 'Total capital',
+  splitRates: 'a rate per account',
+  splitBorrowed: '%s (screen assumption)',
+  splitOwn:
+    'Each account at its own assumption; those carrying none take the screen’s.',
 
   effort: 'What if I paid in more?',
   effortHint: 'At the first assumption, over the same term.',
