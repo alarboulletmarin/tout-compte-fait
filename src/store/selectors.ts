@@ -66,6 +66,7 @@ import {
   supportsDue,
   valuationsOf,
 } from '@/domain/saving'
+import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
 import { rateOn, ratesOf } from '@/domain/savingRate'
 import {
   NO_START,
@@ -943,6 +944,47 @@ export function useSupportValue(supportId: string | undefined): SupportValue | n
   )
 }
 
+/**
+ * Ce que le plafond d'un support autorise encore à une date — la lecture que la
+ * saisie oppose à un versement, et celle que la fiche affiche.
+ *
+ * La **même** que la fiche, et c'est tout l'intérêt de passer par un sélecteur
+ * unique : être arrêté à 150 € sous un écran qui vient d'annoncer 300 € de
+ * place ne s'explique pas. Elle ne compte donc que les mouvements confirmés,
+ * comme `supportValue` — la trajectoire, échéances prévues comprises, ne sert
+ * qu'à la génération d'un mois, qui n'a pas d'écran.
+ *
+ * Les archivés compris : un versement peut encore être corrigé sur un compte
+ * qu'on vient de clôturer, et son plafond n'a pas cessé d'exister pour autant.
+ */
+export function useCapState(
+  supportId: string | undefined,
+  on: ISODate = today(),
+  /**
+   * Le mouvement qu'on est en train de corriger, écarté du calcul.
+   *
+   * Sans lui, reprendre un versement de 200 € pour le passer à 210 € se
+   * comparerait à une place dont ces 200 € sont **déjà** retranchés : l'app
+   * refuserait une correction de 10 € en annonçant un dépassement de 200. Une
+   * modification remplace, elle n'ajoute pas.
+   */
+  exclude?: string,
+): CapState {
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  return useMemo(
+    () =>
+      capStateOf(
+        supports.find((one) => one.id === supportId),
+        valuations,
+        exclude === undefined ? entries : entries.filter((entry) => entry.id !== exclude),
+        on,
+      ),
+    [supports, valuations, entries, supportId, on, exclude],
+  )
+}
+
 /** L'historique de valeur d'un support, du plus récent au plus ancien. */
 export function useSupportValuations(supportId: string | undefined): SavingValuation[] {
   const valuations = useSavingValuations()
@@ -1290,6 +1332,15 @@ export type RecurrenceRow = {
   annual: Money | null
   priceChange: PriceChange | null
   stopped: boolean
+  /**
+   * La règle verse sur un support **plein** : elle ne pose plus d'échéance.
+   *
+   * Ce n'est pas un arrêt — la règle est intacte, et la place peut revenir
+   * d'une reprise. Mais sans ce drapeau, une ligne qui cesse silencieusement
+   * d'alimenter le mois serait indiscernable d'une panne : c'est la seule chose
+   * que l'écrêtage de `planMonth` ne peut pas dire tout seul.
+   */
+  capped: boolean
 }
 
 /**
@@ -1299,11 +1350,18 @@ export type RecurrenceRow = {
 export function useRecurrenceRows(): RecurrenceRow[] {
   const recurrences = useRecurrences()
   const entries = useEntries()
+  const supports = useSavingSupports()
+  const valuations = useSavingValuations()
+  const advances = useStore((s) => s.data.advances)
   const amountOf = useAmountOf()
   return useMemo(() => {
     const now = today()
+    /* Les règles qui reconstituent une avance sont hors plafond — voir
+       `month.restoresAdvance` : elles rendent ce que le support a avancé. */
+    const restoring = new Set(advances.map((advance) => advance.recurrenceId))
     const rows = recurrences.map((recurrence) => {
       const priced: Recurrence = { ...recurrence, amount: amountOf(recurrence) }
+      const support = supports.find((one) => one.id === recurrence.savingSupportId)
       return {
         recurrence,
         next: nextOccurrence(recurrence, now)?.date ?? null,
@@ -1315,6 +1373,14 @@ export function useRecurrenceRows(): RecurrenceRow[] {
         // d'échéance à venir — le compter encore actif jusqu'à demain laissait
         // « Arrêter » sans effet visible le jour même où on l'actionne.
         stopped: recurrence.endedOn !== undefined && recurrence.endedOn <= now,
+        /* Le calcul n'a lieu que là où un plafond existe : c'est une poignée de
+           règles sur un document entier, et `capStateOf` relit les mouvements
+           du support. */
+        capped:
+          recurrence.direction === 'out' &&
+          support?.depositCap !== undefined &&
+          !restoring.has(recurrence.id) &&
+          isFull(capStateOf(support, valuations, entries, now)),
       }
     })
     return rows.sort((a, b) => {
@@ -1322,7 +1388,7 @@ export function useRecurrenceRows(): RecurrenceRow[] {
       if (b.next === null) return -1
       return a.next < b.next ? -1 : a.next > b.next ? 1 : 0
     })
-  }, [recurrences, entries, amountOf])
+  }, [recurrences, entries, supports, valuations, advances, amountOf])
 }
 
 /* --- Historique -----------------------------------------------------------*/

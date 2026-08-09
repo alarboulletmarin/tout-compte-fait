@@ -30,9 +30,10 @@
 
 import type { ISODate } from './date'
 import type { RateKind } from './projection'
-import { type Money, ZERO, add, money, sub } from './money'
+import { type Money, ZERO, add, sub } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { savingTotal, supportValue } from './saving'
+import { roomLeft } from './savingCap'
 import { type RateStep, rateOn, rateSchedule } from './savingRate'
 import type { KindOf } from './stats'
 import type { Entry, Recurrence, SavingRate, SavingSupport, SavingValuation } from './types'
@@ -277,23 +278,10 @@ export function supportStart(
         rateKind: current?.kind ?? null,
         steps,
         cap: support.depositCap ?? null,
-        room: roomLeft(support.depositCap, value.estimated),
+        room: support.depositCap === undefined ? null : roomLeft(support.depositCap, value.estimated),
       },
     ],
   }
-}
-
-/**
- * La place qui reste sous le plafond — voir `ProjectionPart.room`.
- *
- * Sans plafond, `null` : rien à borner. Sans relevé, le capital est **inconnu**
- * et non nul ; la projection le compte alors pour zéro, et la place vaut le
- * plafond entier — c'est cohérent avec le reste du calcul, et l'écran dit déjà
- * qu'un support sans relevé ne compte pas dans le capital.
- */
-function roomLeft(cap: Money | undefined, capital: Money | null): Money | null {
-  if (cap === undefined) return null
-  return money(Math.max(0, cap - (capital ?? ZERO)))
 }
 
 /**

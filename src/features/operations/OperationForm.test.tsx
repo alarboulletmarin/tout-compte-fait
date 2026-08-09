@@ -4,11 +4,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { today } from '@/domain/date'
 import {
+  eur,
   makeCategory,
   makeData,
   makeFamily,
   makeMember,
   makeSavingSupport,
+  makeSavingValuation,
 } from '@/domain/fixtures'
 import { t } from '@/i18n/strings'
 import { ENTRY_NEW_PATH, RECURRENCE_NEW_PATH } from '@/app/routes'
@@ -388,5 +390,142 @@ describe('la saisie d’un mouvement d’épargne', () => {
 
     expect(field(t.entry.category)).toBeInTheDocument()
     expect(missing(t.savings.support)).not.toBeInTheDocument()
+  })
+})
+
+/* ============================================================================
+ * Le plafond de versements — ce que la saisie refuse, et comment on passe.
+ *
+ * Le plafond se saisissait sur le support et ne retenait rien : verser 50 € sur
+ * un livret plein passait sans un mot. Il arrête désormais l'enregistrement, et
+ * il laisse deux sorties nommées — verser la place restante, ou verser quand
+ * même —, parce que la place calculée est sous-estimée par construction et
+ * qu'un refus sans issue finirait par refuser un versement réel.
+ * ==========================================================================*/
+describe('le plafond d’un support à la saisie', () => {
+  /** Un livret plafonné à 22 950 €, relevé à 22 900 € : 50 € de place. */
+  const withCap = (relevé = 2_290_000): void => {
+    useStore.setState({
+      status: 'onboarding',
+      ym: TODAY.slice(0, 7),
+      data: makeData({
+        household: { name: '', members: [makeMember({ id: 'm-1', name: 'Andrea' })] },
+        families: [
+          makeFamily({ id: 'fam-home', label: 'Logement', kind: 'charge' }),
+          makeFamily({ id: 'fam-savings', label: 'Épargne', kind: 'saving' }),
+        ],
+        categories: [
+          ...CATEGORIES,
+          makeCategory({ id: 'passbook', label: 'Livrets', familyId: 'fam-savings' }),
+        ],
+        savingSupports: [
+          makeSavingSupport({
+            id: 's-1',
+            label: 'Livret A',
+            memberId: 'm-1',
+            categoryId: 'passbook',
+            depositCap: eur(2_295_000),
+          }),
+        ],
+        savingValuations: [
+          makeSavingValuation({
+            id: 'v-1',
+            supportId: 's-1',
+            amount: eur(relevé),
+            date: TODAY,
+          }),
+        ],
+      }),
+    })
+  }
+
+  const fillSaving = async (amount: string): Promise<void> => {
+    await userEvent.click(choice(t.entry.natureSaving))
+    await userEvent.type(field(t.entry.amount), amount)
+    await userEvent.selectOptions(field(t.savings.support), 's-1')
+    await userEvent.type(field(t.entry.label), 'Virement livret')
+  }
+
+  it('laisse passer un versement qui tient sous le plafond', async () => {
+    withCap()
+    fromEntryDoor()
+    await fillSaving('50')
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(1)
+  })
+
+  it('retient l’enregistrement quand le versement dépasse, et chiffre le dépassement', async () => {
+    withCap()
+    fromEntryDoor()
+    await fillSaving('120')
+
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    await userEvent.click(save())
+    expect(entries()).toHaveLength(0)
+  })
+
+  it('propose d’écrêter à la place restante', async () => {
+    withCap()
+    fromEntryDoor()
+    await fillSaving('120')
+    await userEvent.click(screen.getByRole('button', { name: /^Verser 50/ }))
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(1)
+    expect(entries()[0]?.amount).toBe(5_000)
+  })
+
+  /* La place calculée est sous-estimée : si la banque a accepté, l'app ne peut
+     pas être le dernier mot. Le geste est explicite, et il ne vaut que pour ce
+     montant-là. */
+  it('laisse verser quand même, une fois le dépassement assumé', async () => {
+    withCap()
+    fromEntryDoor()
+    await fillSaving('120')
+    await userEvent.click(screen.getByRole('button', { name: t.savings.capAnyway }))
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(1)
+    expect(entries()[0]?.amount).toBe(12_000)
+  })
+
+  it('repose la question dès que le montant change', async () => {
+    withCap()
+    fromEntryDoor()
+    await fillSaving('120')
+    await userEvent.click(screen.getByRole('button', { name: t.savings.capAnyway }))
+    await userEvent.type(field(t.entry.amount), '0')
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(0)
+    expect(screen.getByRole('button', { name: t.savings.capAnyway })).toBeInTheDocument()
+  })
+
+  /* Une reprise rend de la place : la borner reviendrait à interdire de vider
+     un compte plein. */
+  it('ne retient jamais une reprise', async () => {
+    withCap(2_400_000)
+    fromEntryDoor()
+    await userEvent.click(choice(t.entry.natureSaving))
+    await userEvent.click(choice(t.entry.savingOut))
+    await userEvent.type(field(t.entry.amount), '500')
+    await userEvent.selectOptions(field(t.savings.support), 's-1')
+    await userEvent.type(field(t.entry.label), 'Retrait livret')
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(1)
+  })
+
+  /* Sans relevé, la place restante est inconnue — pas nulle. Arrêter une saisie
+     sur une place qu'on ne sait pas calculer serait un refus tiré au sort. */
+  it('ne retient rien sur un support jamais relevé', async () => {
+    withCap()
+    useStore.setState((state) => ({ data: { ...state.data, savingValuations: [] } }))
+    fromEntryDoor()
+    await fillSaving('9000')
+    await userEvent.click(save())
+
+    expect(entries()).toHaveLength(1)
   })
 })

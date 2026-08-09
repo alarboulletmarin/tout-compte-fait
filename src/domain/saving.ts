@@ -297,6 +297,18 @@ export function supportValue(
   valuations: readonly SavingValuation[],
   entries: readonly Entry[],
   on: ISODate = today(),
+  /**
+   * Les seuls mouvements **confirmés**, et c'est la valeur de référence — celle
+   * du total, de la couverture, de la fiche.
+   *
+   * Le faux existe pour une lecture et une seule : la **trajectoire**, celle
+   * que suit la génération des échéances d'un mois (`planMonth`). Elle ne dit
+   * pas ce que le support vaut, mais ce qu'il vaudra si tout ce qui est déjà
+   * posé tombe — et sans elle, douze mois de versements prévus liraient tous la
+   * même place restante, donc aucun ne serait jamais écrêté. Elle ne s'affiche
+   * nulle part : une prévue n'a bougé aucun livret.
+   */
+  confirmedOnly = true,
 ): SupportValue {
   const latest = latestValuation(valuations, supportId, on)
   if (latest === null) return { known: null, knownOn: null, movedSince: ZERO, estimated: null }
@@ -309,7 +321,7 @@ export function supportValue(
     entries,
     supportId,
     { from: addDays(latest.date, 1), to: on },
-    true,
+    confirmedOnly,
   ).net
 
   return {

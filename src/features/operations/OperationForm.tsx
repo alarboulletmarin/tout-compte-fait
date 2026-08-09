@@ -3,6 +3,7 @@ import { t } from '@/i18n/strings'
 import { memberPatch } from '@/features/split/memberDraft'
 import { SharedField } from '@/features/split/SharedField'
 import { PeriodFields } from '@/features/recurrences/PeriodFields'
+import { CapAlert } from '@/features/savings/CapAlert'
 import { SupportCreateSheet, SupportSelect } from '@/features/savings/SupportSelect'
 import { useSupportCreateSheet } from '@/features/savings/supportDraft'
 import { useActiveSavingSupports, useMembers } from '@/store/selectors'
@@ -112,8 +113,19 @@ export function OperationForm({
 }: OperationFormProps) {
   const members = useMembers()
   const supports = useActiveSavingSupports()
-  const { draft, patch, errors, needsMember, optionalAmount, supportMode, firstDuePaid, build } =
-    useOperationForm(operation, defaults)
+  const {
+    draft,
+    patch,
+    errors,
+    needsMember,
+    optionalAmount,
+    supportMode,
+    firstDuePaid,
+    cap,
+    clipToRoom,
+    acceptCap,
+    build,
+  } = useOperationForm(operation, defaults)
   const guard = useLeaveGuard(draft, onDone)
   /* Le support créé revient présélectionné : c'est la seule façon que la
      création inline ne coûte pas une seconde manipulation. */
@@ -282,6 +294,14 @@ export function OperationForm({
             </Field>
           )}
 
+          {/* Ce que le plafond du support a à dire, juste sous la question à
+              laquelle il se rapporte — « où va l'argent ». Il porte les deux
+              lectures : le dépassement, qui retient l'enregistrement, et la
+              date à laquelle une règle remplira le compte, qui n'annonce. */}
+          {supportMode && (
+            <CapAlert cap={cap} onClip={clipToRoom} onAccept={acceptCap} />
+          )}
+
           {/* Un seul champ de date, dont le libellé suit le rythme : en
               récurrence, la date saisie est la première échéance. C'est elle
               aussi qui préremplit le jour du mois et le jour de la semaine —
@@ -402,7 +422,10 @@ export function OperationForm({
         {/* Le bouton nomme ce qui va être créé : c'est le dernier endroit où le
             dire, et le seul qui ne change plus rien après. En reprise, il n'y a
             rien à nommer — on enregistre ce qui existe déjà. */}
-        <Button type="submit" form="operation-form">
+        {/* Retenu tant que le dépassement n'est pas tranché : l'encadré
+            au-dessus porte les deux seules façons d'aller plus loin, et un
+            bouton qui reste actif au-dessus d'une alerte ne l'est pas. */}
+        <Button type="submit" form="operation-form" disabled={cap.blocking}>
           {operation !== null
             ? t.common.save
             : draft.recurring

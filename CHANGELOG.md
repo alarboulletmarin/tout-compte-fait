@@ -12,6 +12,50 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — le plafond de versements retient enfin la main
+
+*Aucune migration.* Le champ existait déjà (`depositCap`, version 10) : c'est ce
+qu'on en fait qui change.
+
+- **Un versement qui dépasse le plafond ne s'enregistre plus d'un doigt.** Il se
+  saisissait, s'affichait sur la fiche du support, et ne retenait rien : verser
+  50 € sur un Livret A déjà plein passait sans un mot, ce qui faisait du plafond
+  un réglage sans effet — pire que pas de champ du tout. La saisie chiffre
+  désormais le dépassement et **retient l'enregistrement**.
+- **Deux sorties nommées, jamais un refus sec** : verser la place restante — le
+  virement est écrêté, comme dans le simulateur — ou verser quand même. Le second
+  geste existe parce que la place que l'app calcule est **sous-estimée par
+  construction** : le plafond porte sur les versements cumulés depuis
+  l'ouverture, l'app ne connaît que le capital, intérêts acquis compris. Un
+  refus sans issue finirait par refuser un versement que la banque a accepté, et
+  le premier réflexe serait alors d'effacer le plafond — on aurait protégé le
+  chiffre en perdant l'information. Sans relevé, rien n'est retenu : une place
+  inconnue n'est pas une place nulle.
+- **Une règle cesse de verser sur un compte plein.** Les échéances à venir sont
+  écrêtées puis ne se posent plus — le prévisionnel annonçait jusqu'ici un
+  capital que la banque aurait refusé de recevoir. Ce qui est daté d'aujourd'hui
+  ou d'avant n'est pas touché : c'est un fait en attente de confirmation, pas une
+  prévision à corriger. Et la **reconstitution d'une avance** en est exemptée —
+  elle rend ce que le support a avancé, et l'écrêter piégerait l'avance dans un
+  reste dû qui ne bougerait plus jamais.
+- **L'écran dit quand ça arrivera, et quand c'est arrivé.** Le formulaire d'une
+  règle annonce la date à laquelle elle remplira le compte et le rang de
+  l'échéance ; la ligne d'une règle qui n'a plus de place porte « plafond
+  atteint · en attente de place » ; la fiche du support propose d'arrêter les
+  règles qui le visent encore. Une règle qui cesse en silence d'alimenter le mois
+  serait indiscernable d'une panne.
+
+### Modifié — le formulaire d'un support tient sur un écran
+
+- **Trois questions debout, le reste replié.** Le formulaire posait ses neuf
+  champs à plat, dont cinq facultatifs : sur un téléphone, ouvrir un livret
+  demandait deux écrans de défilement pour trois réponses obligatoires. Restent
+  visibles le nom, le titulaire et le type ; « Le contrat » (rythme des relevés,
+  rendement, plafond) et « Le premier relevé » se déplient. Chaque section porte
+  **en résumé ce qu'elle contient** — « Une fois par an · 3 %/an · plafond
+  22 950 € » —, si bien que replier ne cache rien, et une section qui porte une
+  erreur s'ouvre d'elle-même.
+
 ### Ajouté — une hypothèse de rendement par support, et une projection compte par compte
 
 *Migration de schéma : version 11.* Rien à convertir — aucun support existant ne

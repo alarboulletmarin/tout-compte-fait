@@ -101,8 +101,29 @@ const DIST = 'dist'
    La marge retombait à huit dixièmes, c'est-à-dire au plafond que ce fichier
    refuse deux fois plus haut. Elle revient à près de quatre — la même qu'avant
    ce chantier, ce qui est le seul repère honnête : une langue de plus ne doit
-   pas se payer sur la place qui reste aux suivantes. */
-const BUDGET_KIB = 224
+   pas se payer sur la place qui reste aux suivantes.
+
+   Relevé à 229 pour le **plafond qui retient**, et deux kibioctets en sont la
+   mesure : l'app pèse 223,1 avant, 225,0 après. Le plafond de versements
+   existait déjà dans le document et sur deux écrans qui, eux, se chargent à la
+   demande — la fiche d'un support l'affichait, le simulateur écrêtait ses
+   versements. Ce qui remonte ici, c'est qu'il **retient la saisie** : verser
+   50 € sur un livret plein passait sans un mot, et une règle mensuelle
+   continuait d'en poser au-delà de ce que le contrat autorise. Le refus vit
+   donc là où le geste se fait — le formulaire quotidien, qui est chargé
+   d'avance —, et avec lui la règle du domaine (`domain/savingCap.ts`),
+   l'écrêtage des échéances à la génération d'un mois, et l'encadré qui chiffre
+   le dépassement et porte ses deux sorties. Le reste est la prose : une
+   quinzaine de chaînes, que `fr.ts` porte avant le premier rendu.
+
+   Un plafond qu'on saisit et que rien ne fait respecter se lit comme un réglage
+   sans effet, ce qui est pire que pas de champ du tout : c'est la dépense que
+   ce chantier assume, et elle tombe sur l'écran le plus lu de l'app parce que
+   c'est le seul endroit où elle sert.
+
+   La marge était retombée à neuf dixièmes — le plafond que ce fichier refuse
+   deux fois plus haut. Elle revient à quatre. */
+const BUDGET_KIB = 229
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`
