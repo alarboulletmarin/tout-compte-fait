@@ -241,6 +241,14 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
      perd donc sans un mot — c'est écrit dans les coercitions silencieuses du
      document de schéma. Un document plus ancien, lui, passe par `toVersion12`,
      qui les convertit avant que cette lecture n'ait lieu. */
+  /* Le plafond est **omis** dès qu'il est illisible ou nul, jamais ramené à
+     zéro : un plafond de zéro dirait qu'on ne peut plus rien verser, ce qui
+     n'est pas une absence de plafond mais un compte fermé — et c'est
+     `archived` qui le dit. Un négatif n'est pas un plafond non plus. La ligne
+     n'est pas écartée pour autant : un support est un compte, et perdre le
+     compte parce que son plafond est abîmé serait hors de proportion. */
+  const cap = raw['depositCap']
+  const depositCap = isMoney(cap) && cap > 0 ? cap : undefined
   return {
     id: str(raw['id'], `saving-support-${String(index)}`),
     label: str(raw['label'], '—'),
@@ -248,6 +256,7 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
     categoryId: str(raw['categoryId'], ''),
     archived: bool(raw['archived'], false),
     ...(pace === 'yearly' || pace === 'quarterly' ? { pace } : {}),
+    ...(depositCap === undefined ? {} : { depositCap }),
     ...(note === undefined ? {} : { note }),
   }
 }

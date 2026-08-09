@@ -230,7 +230,27 @@ const fr = {
   supportRateBorrowed: 'Aucun taux posé : l’hypothèse ci-dessous s’applique.',
   supportRateSimulated: 'Modifié pour cette simulation',
   supportRateReset: 'Reprendre le taux du support',
-  screenRate: 'Hypothèse de l’écran',
+  /* La fourchette : deux taux sur un même compte. C'est la seule façon honnête
+     de projeter un placement qui fluctue — un PEA n'a pas *un* rendement, il en
+     a eu 3 % une décennie et 11 % une autre. Une fourchette ne promet rien,
+     elle montre l'écart. */
+  supportCompare: 'Comparer un second taux',
+  supportComparedRate: 'Second taux',
+  supportCompareDrop: 'Retirer la comparaison',
+  supportCompareHint: 'Mêmes versements, même durée : seul le rendement change.',
+  supportRange: 'de %s à %s',
+  comparedHeading: 'Avec les seconds taux',
+  comparedTotal: 'Capital comparé',
+  comparedGap: '%s d’écart. À versements égaux, tout l’écart vient du rendement.',
+  comparedLine: 'Seconds taux',
+  /* Le plafond : sur ce qui est versé, jamais sur le solde. Un livret plein
+     rapporte encore, et une courbe qui s'arrêterait à plat dirait l'inverse. */
+  supportCap: 'Plafond %s · reste %s à verser',
+  supportCapFull: 'Plafond %s · déjà atteint',
+  supportCapped:
+    'Les versements s’arrêtent au plafond pendant la durée simulée ; le capital, lui, continue de croître.',
+  capNote:
+    'La place restante est calculée sur le capital d’aujourd’hui : les intérêts déjà acquis y sont comptés comme des versements, donc elle est un peu sous-estimée.',
   screenRateHint: 'Elle s’applique aux supports qui ne portent aucun taux.',
 
   /* --- Le détail du point de départ ---------------------------------------*/

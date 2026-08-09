@@ -125,6 +125,21 @@ const BAND_COLORS = [
  */
 const MAX_STACK_POINTS = 48
 
+/**
+ * Un taux dans la forme d'un champ de saisie — « 2,5 ».
+ *
+ * `toRateInput` (`domain/rate.ts`) rendrait la chaîne vide pour zéro, ce qui
+ * convient à un crédit sans intérêts mais pas ici : 0 % est une hypothèse qu'on
+ * peut poser, et ouvrir la comparaison sur un champ vide ne comparerait rien.
+ */
+const rateInput = (rateBp: number): string => String(rateBp / 100).replace('.', ',')
+
+/**
+ * Deux montants rangés du plus bas au plus haut — une fourchette se lit dans ce
+ * sens, quel que soit l'ordre dans lequel les deux taux ont été tapés.
+ */
+const ordered = (a: Money, b: Money): [Money, Money] => (a <= b ? [a, b] : [b, a])
+
 function chartStops(months: number): number[] {
   const count = Math.min(MAX_STACK_POINTS, months + 1)
   if (count <= 1) return [0]
@@ -275,6 +290,19 @@ export function ProjectionPage() {
               label: projection.splitTotal,
               values: marks.map((mark) => first?.series.balance[mark] ?? ZERO),
             },
+            /* La colonne de la fourchette, quand un compte porte un second
+               taux. Une colonne et non une seconde par compte : c'est le total
+               qu'on compare — la ligne du compte, elle, porte déjà sa
+               fourchette dans la section des rendements. */
+            ...(result.compared === null
+              ? []
+              : [
+                  {
+                    id: '__compared__',
+                    label: projection.comparedTotal,
+                    values: marks.map((mark) => result.compared?.balance[mark] ?? ZERO),
+                  },
+                ]),
           ]
         : single && first !== undefined
           ? [
@@ -364,6 +392,27 @@ export function ProjectionPage() {
             : tpl(projection.perYear, percent(first.rateBp)),
         )
 
+  /* La fourchette du portefeuille : l'arrivée sous les seconds taux, et l'écart
+     qui la sépare de celle des taux posés. L'écart s'écrit en montant *et* en
+     rendement supplémentaire, parce que « 57 k€ de plus » ne dit pas d'où ça
+     vient — les versements, eux, n'ont pas bougé d'un centime. */
+  const comparedRead =
+    result === null || result.compared === null || first === undefined
+      ? null
+      : (() => {
+          const here = first.series.balance.at(-1) ?? ZERO
+          const there = result.compared.balance.at(-1) ?? ZERO
+          const gap = Math.abs(there - here) as Money
+          return {
+            total: approx(there),
+            /* Un seul chiffre : les versements sont identiques d'une
+               trajectoire à l'autre — même mensualité, même plafond, même
+               durée —, donc l'écart de capital **est** l'écart de rendement.
+               L'écrire deux fois se lirait comme une erreur. */
+            gap: tpl(projection.comparedGap, approx(gap)),
+          }
+        })()
+
   const rungs = result === null ? [] : effortLadder(result, first)
 
   return (
@@ -419,6 +468,7 @@ export function ProjectionPage() {
                     tpl(projection.perYear, percent(first?.rateBp ?? 0)),
                   )
             }
+            compared={comparedRead}
             deflated={
               result.inflationBp > 0
                 ? tpl(projection.constantOn, percent(result.inflationBp))
@@ -593,6 +643,25 @@ export function ProjectionPage() {
                     draft.supportRates.find((one) => one.supportId === part.supportId)?.rateText ??
                     ''
                   }
+                  comparedText={
+                    draft.supportRates.find((one) => one.supportId === part.supportId)
+                      ?.comparedText
+                  }
+                  comparedSeed={rateInput(part.rateBp)}
+                  /* Ce que ce compte donne à l'arrivée : un chiffre, ou la
+                     fourchette des deux taux. C'est la réponse à la question
+                     qu'on vient de poser en tapant un taux. */
+                  arrival={
+                    part.comparedSeries === null
+                      ? approx(part.series.balance.at(-1) ?? ZERO)
+                      : (() => {
+                          const [low, high] = ordered(
+                            part.series.balance.at(-1) ?? ZERO,
+                            part.comparedSeries.balance.at(-1) ?? ZERO,
+                          )
+                          return tpl(projection.supportRange, approx(low), approx(high))
+                        })()
+                  }
                   /* Le taux qui s'applique, quel qu'il soit : le champ fait deux
                      caractères de large, et « Hypothèse de l'écran » s'y
                      couperait au milieu. D'où il vient se lit en toutes lettres
@@ -613,6 +682,12 @@ export function ProjectionPage() {
             </div>
 
             <p className="t-label">{projection.supportRatesHint}</p>
+            {/* L'approximation de la place restante, dite une fois et là où
+                elle s'applique : elle se calcule sur le capital d'aujourd'hui,
+                intérêts acquis compris, donc elle est un peu sous-estimée. */}
+            {result.split.some((part) => part.cap !== null) && (
+              <p className="t-label">{projection.capNote}</p>
+            )}
           </Tile>
         )}
 
@@ -694,6 +769,20 @@ export function ProjectionPage() {
                   bands={stack}
                   ranks={chartRanks}
                   totalLabel={projection.chartTotal}
+                  {...(result.compared === null
+                    ? {}
+                    : {
+                        /* La fourchette en un trait par-dessus la pile : elle
+                           n'est pas une bande — elle ne s'ajoute à rien, elle
+                           *remplace* le sommet sous d'autres taux. Tireté,
+                           comme toute hypothèse de cet écran. */
+                        overlay: {
+                          label: projection.comparedLine,
+                          values: stackRanks.map(
+                            (rank) => result.compared?.balance[rank] ?? ZERO,
+                          ),
+                        },
+                      })}
                   label={projection.chartStack}
                   srText={tpl(
                     projection.srChartStack,
@@ -878,7 +967,7 @@ function Unit({ suffix, children }: { suffix: string; children: React.ReactNode 
 function setSupportRate(
   current: readonly SupportRateDraft[],
   part: SupportSeries,
-  next: { rateText?: string; kind?: RateKind },
+  next: { rateText?: string; kind?: RateKind; comparedText?: string | null },
 ): SupportRateDraft[] {
   const existing = current.find((one) => one.supportId === part.supportId)
   const merged: SupportRateDraft = {
@@ -887,7 +976,18 @@ function setSupportRate(
        doit pas faire tomber son taux à l'hypothèse de l'écran. */
     rateText: existing?.rateText ?? '',
     kind: existing?.kind ?? part.kind,
-    ...next,
+    /* `null` veut dire « retire la comparaison » : sous
+       `exactOptionalPropertyTypes`, une clef posée à `undefined` n'est pas la
+       même chose qu'une clef absente, et c'est bien l'absence qu'on veut. */
+    ...(next.comparedText === null
+      ? {}
+      : next.comparedText !== undefined
+        ? { comparedText: next.comparedText }
+        : existing?.comparedText === undefined
+          ? {}
+          : { comparedText: existing.comparedText }),
+    ...(next.rateText === undefined ? {} : { rateText: next.rateText }),
+    ...(next.kind === undefined ? {} : { kind: next.kind }),
   }
   return existing === undefined
     ? [...current, merged]
@@ -907,18 +1007,38 @@ function SupportRateFields({
   label,
   part,
   rateText,
+  comparedText,
+  comparedSeed,
   placeholder,
+  arrival,
   onChange,
   onReset,
 }: {
   label: string
   part: SupportSeries
   rateText: string
+  /**
+   * Le second taux, ou `undefined` quand on ne compare pas.
+   *
+   * La distinction porte sur la **présence** et non sur le contenu : un champ
+   * qu'on vide pour retaper son chiffre ne doit pas disparaître sous les
+   * doigts. Vide, il ne compare simplement rien.
+   */
+  comparedText: string | undefined
+  /** Ce que le second champ vaut quand on l'ouvre : le taux courant du compte. */
+  comparedSeed: string
   placeholder: string
-  onChange: (next: { rateText?: string; kind?: RateKind }) => void
+  /** Ce que le compte donne à l'arrivée — un chiffre, ou une fourchette. */
+  arrival: string
+  onChange: (next: { rateText?: string; kind?: RateKind; comparedText?: string | null }) => void
   onReset: () => void
 }) {
+  const currency = useCurrency()
+  /* Un plafond est un nombre écrit dans un contrat : il s'écrit **exact**, sans
+     « ≈ ». Ce qui s'arrondit ici est ce qui sort du modèle, pas ce qui y entre. */
+  const exact = (value: Money): string => formatMoney(value, currency, false)
   const simulated = part.origin === 'simulated'
+  const comparing = comparedText !== undefined
 
   return (
     <div className="flex flex-col gap-2">
@@ -940,12 +1060,54 @@ function SupportRateFields({
             </Unit>
           )}
         </Field>
+        {/* Le second taux vit à côté du premier : c'est une fourchette, pas une
+            seconde ligne de compte, et les séparer ferait chercher lequel des
+            deux s'applique. */}
+        {comparing && (
+          <Field label={projection.supportComparedRate} className="min-w-0">
+            {(id, describedBy) => (
+              <Unit suffix={projection.unitYear}>
+                <TextInput
+                  id={id}
+                  aria-describedby={describedBy}
+                  className="max-w-24"
+                  inputMode="decimal"
+                  value={comparedText ?? ''}
+                  onChange={(e) => {
+                    onChange({ comparedText: e.target.value })
+                  }}
+                />
+              </Unit>
+            )}
+          </Field>
+        )}
         {simulated && (
           <Button variant="secondary" size="sm" onClick={onReset}>
             {projection.supportRateReset}
           </Button>
         )}
       </div>
+
+      {/* Ce que ce compte donne, ici et pas seulement dans le tracé : c'est la
+          réponse à la question qu'on vient de poser en tapant un taux, et aller
+          la chercher deux blocs plus bas dans une légende obligerait à faire
+          l'aller-retour à chaque essai. */}
+      <p className="t-num-body tnum">{arrival}</p>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            /* Retirer, c'est **retirer la clef** — pas la vider : un champ
+               qu'on vide pour retaper son chiffre doit rester à l'écran. */
+            onChange({ comparedText: comparing ? null : comparedSeed })
+          }}
+        >
+          {comparing ? projection.supportCompareDrop : projection.supportCompare}
+        </Button>
+      </div>
+      {comparing && <p className="t-label">{projection.supportCompareHint}</p>}
 
       {/* La nature ne se demande que sur un taux qu'on a tapé : sur un taux
           repris, elle est celle de la fiche, et l'offrir ici ferait croire
@@ -972,6 +1134,18 @@ function SupportRateFields({
             : projection.supportRateOwn}
       </p>
       {!simulated && part.dated && <p className="t-label">{projection.supportRateDated}</p>}
+
+      {/* Le plafond du contrat, et ce qu'il en reste. Sur ce qui est **versé**,
+          jamais sur le solde : un livret plein rapporte encore, et la phrase le
+          dit plutôt que de laisser lire une courbe qui s'arrête. */}
+      {part.cap !== null && (
+        <p className="t-label">
+          {part.room === null || part.room <= ZERO
+            ? tpl(projection.supportCapFull, exact(part.cap))
+            : tpl(projection.supportCap, exact(part.cap), exact(part.room))}
+        </p>
+      )}
+      {part.capped && <p className="t-label">{projection.supportCapped}</p>}
     </div>
   )
 }

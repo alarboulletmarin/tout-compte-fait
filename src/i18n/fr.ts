@@ -1726,6 +1726,14 @@ export const fr = {
       'À n’utiliser que si ce taux est contractuellement garanti sur toute la durée que tu simuleras. Le taux connu d’un livret réglementé ne l’est pas : il est révisé.',
     rateInvalid: 'Entre 0 et %s %.',
     ratePerYear: '%/an',
+    /* Le plafond de versements — sur ce qu'on **verse**, jamais sur le solde.
+       Un Livret A est plafonné à 22 950 € versés, et son solde passe ensuite
+       au-dessus par les intérêts : un plafond de solde arrêterait la courbe à
+       plat là où la réalité continue de monter. */
+    supportCap: 'Plafond de versements',
+    supportCapHint:
+      'Facultatif. Ce que le contrat autorise à verser en tout — 22 950 € sur un Livret A, par exemple. Les intérêts, eux, peuvent passer au-dessus. À toi de le poser : l’app ne connaît aucun produit.',
+    capInvalid: 'Indique un plafond supérieur à zéro, ou laisse vide.',
     supportNote: 'Note',
     supportNotePlaceholder: 'Épargne de sécurité, trois mois de charges',
     /* La gestion d'un support — archiver, rouvrir, supprimer. Elle vit en fin
@@ -1799,51 +1807,15 @@ export const fr = {
        écraserait, quand le geste ajoute une ligne et laisse la précédente
        courir jusqu'à sa veille. C'est ce qui empêche l'évolution déjà tracée
        d'être recalculée à un taux qui n'y a jamais couru. */
-    rates: 'Rendement',
-    ratesEmpty:
-      'Aucun taux posé. Les projections appliqueront alors l’hypothèse de leur écran, et la courbe d’évolution ne comptera aucun intérêt.',
-    ratesMore: 'Voir les %s autres taux',
-    rateFrom: 'depuis le %s',
     /* Le taux converti depuis un document d'avant la v12 : il n'avait pas de
        date parce qu'il valait pour toute l'histoire du compte. « Depuis le
        1er janvier 1970 » ne voudrait rien dire à personne. */
-    rateFromOrigin: 'depuis l’origine',
-    rateUntil: 'jusqu’au %s',
-    rateAhead: 'à partir du %s',
-    rateAdd: 'Changer le taux',
-    rateFirst: 'Poser un taux',
-    rateEdit: 'Corriger le taux',
-    rateValue: 'Rendement annuel net',
-    rateDate: 'À partir du',
-    rateDateHint:
-      'Le taux précédent ne bouge pas : il court jusqu’à la veille. C’est ce qui laisse l’évolution déjà passée telle qu’elle a eu lieu.',
-    rateAdded: 'Taux enregistré',
-    rateUpdated: 'Taux corrigé',
-    rateRemoved: 'Taux supprimé',
-    rateRemove: 'Supprimer ce taux',
-    rateRemoveConfirm:
-      'Ce palier disparaît. Le taux d’avant reprend alors la période qu’il couvrait. Supprimer ?',
-    rateMethod:
-      'Un taux ne crée aucun euro dans le document : il ne compte ni dans ton capital relevé, ni dans les versements, ni dans un total du mois. Il sert aux projections et à la courbe d’évolution, qui annoncent toutes deux une estimation.',
 
     /* --- L'évolution, support par support ----------------------------------
        La seule lecture de l'écran qui capitalise, et elle le dit. Entre deux
        relevés, personne ne sait ce que valait le PEA : ce qui est tracé se
        dérive des mouvements confirmés et du taux en vigueur ce mois-là. Les
        mois relevés portent un point — ce sont les faits. */
-    evolution: 'Évolution de l’épargne',
-    evolutionEmpty:
-      'Rien à tracer pour l’instant : la courbe démarre au premier relevé, et il en faut deux mois pour qu’elle dise quelque chose.',
-    evolutionWindow: 'Période',
-    evolutionMonths: '%s mois',
-    evolutionYears: '%s ans',
-    evolutionTotal: 'Total',
-    evolutionWhen: 'Mois',
-    evolutionRest: '%s autres supports',
-    evolutionDetail: 'Voir le détail, mois par mois',
-    evolutionMethod:
-      'Estimation : les points sont tes relevés, le reste se dérive des mouvements confirmés et du taux en vigueur ce mois-là. Un support sans relevé n’y figure pas — sa valeur est inconnue, pas nulle.',
-    srEvolution: 'Épargne estimée de %s en %s à %s en %s, relevés compris.',
 
     /* --- Relever plusieurs supports d'un coup ------------------------------*/
     /* On ne relève pas ses comptes un par un : les chiffres arrivent ensemble,

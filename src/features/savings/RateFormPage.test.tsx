@@ -22,6 +22,7 @@ import {
 } from '@/domain/fixtures'
 import { RATE_ORIGIN } from '@/domain/savingRate'
 import { t } from '@/i18n/strings'
+import { supports } from '@/i18n/supports'
 import { formatDate, tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { RateFormPage } from './RateFormPage'
@@ -72,7 +73,7 @@ describe('poser un taux', () => {
     seed([makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 300, from: '2024-02-01' })])
     showForm()
 
-    await user.type(screen.getByLabelText(t.savings.rateValue, { exact: false }), '2,4')
+    await user.type(screen.getByLabelText(supports.rateValue, { exact: false }), '2,4')
     await user.click(screen.getByRole('button', { name: t.common.save }))
 
     const rates = useStore.getState().data.savingRates
@@ -99,7 +100,7 @@ describe('poser un taux', () => {
     seed()
     showForm()
 
-    await user.type(screen.getByLabelText(t.savings.rateValue, { exact: false }), '0')
+    await user.type(screen.getByLabelText(supports.rateValue, { exact: false }), '0')
     await user.click(screen.getByRole('button', { name: t.common.save }))
     expect(useStore.getState().data.savingRates[0]?.rateBp).toBe(0)
   })
@@ -114,7 +115,7 @@ describe('corriger un taux', () => {
     ])
     showForm('/epargne/s-1/taux/tx-2')
 
-    const field = screen.getByLabelText(t.savings.rateValue, { exact: false })
+    const field = screen.getByLabelText(supports.rateValue, { exact: false })
     await user.clear(field)
     await user.type(field, '1,7')
     await user.click(screen.getByRole('button', { name: t.common.save }))
@@ -133,7 +134,7 @@ describe('la liste des taux sur la fiche', () => {
        dire — pas « depuis le 1er janvier 1970 ». */
     seed([makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 250, from: RATE_ORIGIN })])
     showFiche()
-    expect(screen.getByText(t.savings.rateFromOrigin)).toBeInTheDocument()
+    expect(screen.getByText(supports.rateFromOrigin)).toBeInTheDocument()
   })
 
   it('annonce un palier à venir au futur, jamais au passé', () => {
@@ -141,16 +142,16 @@ describe('la liste des taux sur la fiche', () => {
        palier qui n'a pas encore commencé se dit « à partir du ». */
     seed([makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 180, from: '2099-01-01' })])
     showFiche()
-    expect(screen.getByText(tpl(t.savings.rateAhead, formatDate('2099-01-01')))).toBeInTheDocument()
+    expect(screen.getByText(tpl(supports.rateAhead, formatDate('2099-01-01')))).toBeInTheDocument()
     expect(
-      screen.queryByText(tpl(t.savings.rateFrom, formatDate('2099-01-01'))),
+      screen.queryByText(tpl(supports.rateFrom, formatDate('2099-01-01'))),
     ).not.toBeInTheDocument()
   })
 
   it('invite à poser un premier taux quand il n’y en a aucun', () => {
     seed()
     showFiche()
-    expect(screen.getByText(t.savings.ratesEmpty)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: t.savings.rateFirst })).toBeInTheDocument()
+    expect(screen.getByText(supports.ratesEmpty)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: supports.rateFirst })).toBeInTheDocument()
   })
 })

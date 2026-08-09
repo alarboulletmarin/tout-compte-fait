@@ -4,7 +4,7 @@ import { today } from '@/domain/date'
 import { type Money, ZERO, money } from '@/domain/money'
 import { type StockBand, stockBands, stockRange } from '@/domain/savingSeries'
 import type { SavingSupport } from '@/domain/types'
-import { t } from '@/i18n/strings'
+import { supports } from '@/i18n/supports'
 import { NO_VALUE, formatMoney, formatRoundedMoney, formatYearMonthShort, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
@@ -26,7 +26,7 @@ import { bandColors } from './bandColors'
  * le monde : le sélecteur y ferait entrer `domain/savingSeries.ts` et sa
  * capitalisation pour une lecture qui vit derrière un `lazy`.
  */
-function useStockBands(supports: readonly SavingSupport[], months: number): StockBand[] {
+function useStockBands(owned: readonly SavingSupport[], months: number): StockBand[] {
   const valuations = useSavingValuations()
   const rates = useSavingRates()
   const entries = useEntries()
@@ -35,13 +35,13 @@ function useStockBands(supports: readonly SavingSupport[], months: number): Stoc
     const on = today()
     const { from, to } = stockRange(months, on)
     return stockBands(
-      supports,
+      owned,
       { savingValuations: valuations, savingRates: rates, entries },
       from,
       to,
       on,
     )
-  }, [supports, months, valuations, rates, entries])
+  }, [owned, months, valuations, rates, entries])
 }
 
 /**
@@ -74,9 +74,9 @@ function useStockBands(supports: readonly SavingSupport[], months: number): Stoc
  * plutôt que d'être reconstruite à la lecture.
  */
 const WINDOWS = [
-  { value: '12', months: 12, label: () => tpl(t.savings.evolutionMonths, 12) },
-  { value: '60', months: 60, label: () => tpl(t.savings.evolutionYears, 5) },
-  { value: '120', months: 120, label: () => tpl(t.savings.evolutionYears, 10) },
+  { value: '12', months: 12, label: () => tpl(supports.evolutionMonths, 12) },
+  { value: '60', months: 60, label: () => tpl(supports.evolutionYears, 5) },
+  { value: '120', months: 120, label: () => tpl(supports.evolutionYears, 10) },
 ] as const
 type Window = (typeof WINDOWS)[number]['value']
 
@@ -84,14 +84,14 @@ type Window = (typeof WINDOWS)[number]['value']
 const YEARLY_ABOVE = 24
 
 export function EvolutionSection() {
-  const supports = useScopedSavingSupports()
+  const owned = useScopedSavingSupports()
   const categories = useCategoryMap()
   const currency = useCurrency()
   const [window, setWindow] = useState<Window>('12')
   const [detailed, setDetailed] = useState(false)
   const months = WINDOWS.find((one) => one.value === window)?.months ?? 12
 
-  const active = useMemo(() => supports.filter((support) => !support.archived), [supports])
+  const active = useMemo(() => owned.filter((support) => !support.archived), [owned])
   const bands = useStockBands(active, months)
   const colors = useMemo(() => bandColors(active, categories), [active, categories])
 
@@ -124,7 +124,7 @@ export function EvolutionSection() {
   if (rest.length > 0) {
     stacked.push({
       id: '__rest__',
-      label: tpl(t.savings.evolutionRest, rest.length),
+      label: tpl(supports.evolutionRest, rest.length),
       color: 'var(--cat-rest)',
       values: kept.map((index) =>
         rest.some((band) => at(band, index) === null)
@@ -154,8 +154,8 @@ export function EvolutionSection() {
   if (stacked.length === 0 || kept.length < 2) {
     return (
       <section className="flex flex-col gap-3">
-        <Eyebrow>{t.savings.evolution}</Eyebrow>
-        <p className="t-label">{t.savings.evolutionEmpty}</p>
+        <Eyebrow>{supports.evolution}</Eyebrow>
+        <p className="t-label">{supports.evolutionEmpty}</p>
       </section>
     )
   }
@@ -165,24 +165,24 @@ export function EvolutionSection() {
 
   return (
     <section className="flex flex-col gap-3">
-      <Eyebrow>{t.savings.evolution}</Eyebrow>
+      <Eyebrow>{supports.evolution}</Eyebrow>
 
       <Segmented
         options={WINDOWS.map((option) => ({ value: option.value, label: option.label() }))}
         value={window}
         onChange={setWindow}
-        label={t.savings.evolutionWindow}
+        label={supports.evolutionWindow}
         className="w-fit"
       />
 
       <StackedAreas
         bands={stacked}
         ranks={labels}
-        totalLabel={t.savings.evolutionTotal}
+        totalLabel={supports.evolutionTotal}
         dots={dots}
-        label={t.savings.evolution}
+        label={supports.evolution}
         srText={tpl(
-          t.savings.srEvolution,
+          supports.srEvolution,
           first === null ? NO_VALUE : formatRoundedMoney(first, currency),
           labels[0] ?? '',
           last === null ? NO_VALUE : formatRoundedMoney(last, currency),
@@ -192,7 +192,7 @@ export function EvolutionSection() {
 
       {/* La réserve, sous le tracé et jamais repliée : ce qui est estimé doit se
           dire là où on le lit. */}
-      <p className="t-label">{t.savings.evolutionMethod}</p>
+      <p className="t-label">{supports.evolutionMethod}</p>
 
       {/* Le tableau double le graphique au chiffre près — le cahier §5 le
           demande de tout graphique, et une courbe ne se lit jamais au centime.
@@ -200,14 +200,14 @@ export function EvolutionSection() {
       <Disclosure
         open={detailed}
         onOpenChange={setDetailed}
-        title={<span className="t-body">{t.savings.evolutionDetail}</span>}
+        title={<span className="t-body">{supports.evolutionDetail}</span>}
       >
         <div className="overflow-x-auto pt-3">
-          <table className="w-full border-collapse text-left" aria-label={t.savings.evolutionDetail}>
+          <table className="w-full border-collapse text-left" aria-label={supports.evolutionDetail}>
             <thead>
               <tr className="t-axis">
                 <th scope="col" className="py-2 pr-3 font-normal">
-                  {t.savings.evolutionWhen}
+                  {supports.evolutionWhen}
                 </th>
                 {stacked.map((band) => (
                   <th key={band.id} scope="col" className="py-2 pr-3 font-normal whitespace-nowrap">
@@ -215,7 +215,7 @@ export function EvolutionSection() {
                   </th>
                 ))}
                 <th scope="col" className="py-2 pr-3 font-normal whitespace-nowrap">
-                  {t.savings.evolutionTotal}
+                  {supports.evolutionTotal}
                 </th>
               </tr>
             </thead>

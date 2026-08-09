@@ -10,11 +10,12 @@ import {
   valuationNewPath,
 } from '@/app/routes'
 import { today } from '@/domain/date'
-import { ZERO } from '@/domain/money'
+import { type Money, ZERO, money } from '@/domain/money'
 import { isOrigin } from '@/domain/savingRate'
 import type { SavingSupport } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { formatDate, formatPercent, tpl } from '@/i18n/format'
+import { supports } from '@/i18n/supports'
+import { formatDate, formatMoney, formatPercent, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
   useMemberMap,
@@ -32,6 +33,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
+import { useCurrency } from '@/ui/currency'
 import { ValuationChart } from './ValuationChart'
 import { freshness } from './freshness'
 
@@ -83,6 +85,9 @@ function SupportView({ support }: { support: SavingSupport }) {
   const [allRates, setAllRates] = useState(false)
   const [allMovements, setAllMovements] = useState(false)
 
+  const currency = useCurrency()
+  /* Un plafond est un nombre écrit dans un contrat : il s'écrit exact. */
+  const exact = (amount: Money): string => formatMoney(amount, currency, false)
   const member = members.get(support.memberId)
   const category = categories.get(support.categoryId)
   const color = category?.color ?? 'var(--cat-rest)'
@@ -129,6 +134,28 @@ function SupportView({ support }: { support: SavingSupport }) {
             )}
           </>
         )}
+        {/* Le plafond du contrat, et ce qu'il en reste. Sur ce qui est
+            **versé** : un livret plein continue de rapporter, et la place
+            restante est calculée sur le capital d'aujourd'hui — donc un peu
+            sous-estimée, puisque les intérêts déjà acquis y sont comptés comme
+            des versements. Sans relevé, il n'y a rien à retrancher : le plafond
+            se lit, la place non.
+            En mots et sans couleur : un livret plein n'est pas une erreur, et
+            le DS §2.3 réserve l'alerte aux dépassements. */}
+        {support.depositCap !== undefined && (
+          <p className="t-label mt-2">
+            {known === null
+              ? tpl(supports.capUnknown, exact(support.depositCap))
+              : (value?.estimated ?? ZERO) >= support.depositCap
+                ? tpl(supports.capFull, exact(support.depositCap))
+                : tpl(
+                    supports.capLeft,
+                    exact(support.depositCap),
+                    exact(money(support.depositCap - (value?.estimated ?? ZERO))),
+                  )}
+          </p>
+        )}
+
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className="t-label inline-flex items-center gap-2">
             <Dot color={member?.color ?? 'var(--cat-rest)'} />
@@ -236,9 +263,9 @@ function SupportView({ support }: { support: SavingSupport }) {
           début et celle où le suivant lui succède, parce qu'un taux lu sans sa
           période ne dit pas s'il court encore. */}
       <Tile className="gap-3">
-        <Eyebrow>{t.savings.rates}</Eyebrow>
+        <Eyebrow>{supports.rates}</Eyebrow>
         {rates.length === 0 ? (
-          <p className="t-label">{t.savings.ratesEmpty}</p>
+          <p className="t-label">{supports.ratesEmpty}</p>
         ) : (
           <>
             <ul className="flex flex-col">
@@ -248,18 +275,18 @@ function SupportView({ support }: { support: SavingSupport }) {
                     color={color}
                     label={
                       isOrigin(rate.from)
-                        ? t.savings.rateFromOrigin
+                        ? supports.rateFromOrigin
                         : tpl(
                             /* Un palier daté dans l'avenir n'a pas encore
                                commencé : « depuis le 1er janvier 2027 » posé
                                en 2026 se lirait comme une erreur de saisie. */
-                            rate.from > today() ? t.savings.rateAhead : t.savings.rateFrom,
+                            rate.from > today() ? supports.rateAhead : supports.rateFrom,
                             formatDate(rate.from),
                           )
                     }
                     {...(index === 0
                       ? {}
-                      : { meta: tpl(t.savings.rateUntil, formatDate(rates[index - 1]?.from ?? '')) })}
+                      : { meta: tpl(supports.rateUntil, formatDate(rates[index - 1]?.from ?? '')) })}
                     trailing={
                       <span className="t-num-body tnum">
                         {`${formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)} · ${
@@ -285,7 +312,7 @@ function SupportView({ support }: { support: SavingSupport }) {
                   setAllRates((shown) => !shown)
                 }}
               >
-                {allRates ? t.common.less : tpl(t.savings.ratesMore, restRates)}
+                {allRates ? t.common.less : tpl(supports.ratesMore, restRates)}
               </Button>
             )}
           </>
@@ -298,7 +325,7 @@ function SupportView({ support }: { support: SavingSupport }) {
             void navigate(rateNewPath(support.id))
           }}
         >
-          {rates.length === 0 ? t.savings.rateFirst : t.savings.rateAdd}
+          {rates.length === 0 ? supports.rateFirst : supports.rateAdd}
         </Button>
       </Tile>
 

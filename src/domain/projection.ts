@@ -66,6 +66,22 @@ export type ProjectionInput = {
    * Zéro — le défaut — laisse les montants en euros courants.
    */
   inflationBp?: number
+  /**
+   * Ce qui reste à verser avant le plafond du contrat, capital de départ exclu.
+   * Absent — le défaut — ne borne rien.
+   *
+   * **Les versements s'arrêtent, le capital continue.** Un Livret A plein
+   * n'arrête pas de rapporter : son plafond porte sur ce qu'on y **verse**, et
+   * ses intérêts passent au-dessus. Une courbe qui s'arrêterait à plat au
+   * plafond dirait l'inverse de ce qui se passe.
+   *
+   * Le dernier versement est **écrêté** plutôt que refusé en entier : il reste
+   * 120 € de place et le virement est de 200 € — on verse les 120.
+   *
+   * Zéro est une réponse : la place est faite, plus rien ne rentre. C'est le cas
+   * d'un compte déjà au plafond, et il doit se calculer sans cas particulier.
+   */
+  room?: number
 }
 
 export type ProjectionSeries = {
@@ -136,6 +152,7 @@ export function projectSeries({
   months,
   rateBp,
   inflationBp = 0,
+  room,
 }: ProjectionInput): ProjectionSeries {
   const horizon = Math.max(0, Math.trunc(months))
   /* Le facteur de croissance du mois `k`. Un barème plat n'appelle `Math.pow`
@@ -160,14 +177,26 @@ export function projectSeries({
      de code, pas deux à tenir d'accord. */
   let paid: number = initial
   let discount = 1
+  /* La place restante se décompte en euros **courants** : un plafond de contrat
+     est un nombre écrit dans un contrat, il ne se déflate pas avec l'inflation.
+     D'où ce compteur à part, quand `paid` peut, lui, être en euros du jour
+     zéro.
+     Un versement négatif — un compte qu'on vide — ne consomme aucune place :
+     borner une reprise n'aurait aucun sens, et le `Math.min` s'en charge sans
+     cas particulier puisque la place ne descend jamais. */
+  let left = room === undefined ? Number.POSITIVE_INFINITY : Math.max(0, room)
 
   const balance: Money[] = [money(Math.round(capital))]
   const contributed: Money[] = [money(Math.round(paid))]
 
   for (let month = 1; month <= horizon; month += 1) {
-    capital = capital * growthAt(month - 1) + monthly
+    /* Le versement du mois, écrêté par ce qui reste de place. Le capital, lui,
+       continue de croître : un livret plein rapporte encore. */
+    const put = monthly > 0 ? Math.min(monthly, left) : monthly
+    if (put > 0) left -= put
+    capital = capital * growthAt(month - 1) + put
     discount /= erosion
-    paid += monthly * discount
+    paid += put * discount
     balance.push(money(Math.round(capital * discount)))
     contributed.push(money(Math.round(paid)))
   }

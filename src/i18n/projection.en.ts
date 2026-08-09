@@ -126,7 +126,21 @@ export const en: ProjectionStrings = {
   supportRateBorrowed: 'No rate set: the assumption below applies.',
   supportRateSimulated: 'Changed for this simulation',
   supportRateReset: 'Restore the account’s rate',
-  screenRate: 'Screen assumption',
+  supportCompare: 'Compare a second rate',
+  supportComparedRate: 'Second rate',
+  supportCompareDrop: 'Drop the comparison',
+  supportCompareHint: 'Same contributions, same term: only the return changes.',
+  supportRange: 'from %s to %s',
+  comparedHeading: 'With the second rates',
+  comparedTotal: 'Compared capital',
+  comparedGap: '%s apart. At equal contributions, the whole gap comes from the return.',
+  comparedLine: 'Second rates',
+  supportCap: 'Cap %s · %s left to pay in',
+  supportCapFull: 'Cap %s · already reached',
+  supportCapped:
+    'Contributions stop at the cap during the term simulated; the capital itself keeps growing.',
+  capNote:
+    'The room left is worked out from today’s capital: the interest already earned counts as contributions there, so it is slightly understated.',
   screenRateHint: 'It applies to accounts that carry no rate of their own.',
 
   sourceParts: 'Account by account',

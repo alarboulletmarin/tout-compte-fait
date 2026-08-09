@@ -30,7 +30,7 @@ import {
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
-import { t } from '@/i18n/strings'
+import { supports } from '@/i18n/supports'
 import { formatMoney } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { EvolutionSection } from './EvolutionSection'
@@ -86,7 +86,7 @@ const show = () => render(<EvolutionSection />)
 /** La dernière ligne du tableau replié — l'état d'aujourd'hui. */
 async function lastRow(): Promise<HTMLElement> {
   const user = userEvent.setup()
-  await user.click(screen.getByText(t.savings.evolutionDetail))
+  await user.click(screen.getByText(supports.evolutionDetail))
   const rows = within(screen.getByRole('table')).getAllByRole('row')
   const last = rows.at(-1)
   if (last === undefined) throw new Error('tableau vide')
@@ -106,7 +106,7 @@ describe('la pile', () => {
        tableau, qui est la lecture textuelle du même graphique. */
     expect(screen.getAllByText('Livret A')).toHaveLength(2)
     expect(screen.getAllByText('PEL')).toHaveLength(2)
-    expect(screen.getAllByText(t.savings.evolutionTotal)).toHaveLength(2)
+    expect(screen.getAllByText(supports.evolutionTotal)).toHaveLength(2)
   })
 
   it('somme exactement au total, dans le tableau comme dans la légende', async () => {
@@ -135,7 +135,7 @@ describe('la pile', () => {
   it('s’efface quand rien n’a jamais été relevé', () => {
     seed({ savingValuations: [] })
     show()
-    expect(screen.getByText(t.savings.evolutionEmpty)).toBeInTheDocument()
+    expect(screen.getByText(supports.evolutionEmpty)).toBeInTheDocument()
   })
 })
 
@@ -176,6 +176,6 @@ describe('la réserve', () => {
   it('dit que la courbe estime, et ne se replie pas', () => {
     seed()
     show()
-    expect(screen.getByText(t.savings.evolutionMethod)).toBeInTheDocument()
+    expect(screen.getByText(supports.evolutionMethod)).toBeInTheDocument()
   })
 })

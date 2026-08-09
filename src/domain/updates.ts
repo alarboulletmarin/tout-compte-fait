@@ -171,6 +171,11 @@ export type SavingSupportInput = {
   categoryId: string
   /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
   pace: SavingPace
+  /**
+   * Le plafond de versements du contrat. Voir `SavingSupport.depositCap` — il
+   * se pose **sur le support** et non à côté, parce qu'il ne réécrit rien.
+   */
+  depositCap?: Money
   note?: string
   /** Le capital du jour, s'il est connu, et la date à laquelle il l'est. */
   value?: { amount: Money; date: ISODate }

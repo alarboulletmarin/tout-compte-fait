@@ -71,7 +71,22 @@ export type ScenarioDraft = { id: ScenarioId; rateText: string; kind: RateKind }
  * rendait 4 % » ne peut pas cohabiter avec une révision datée qui viendrait
  * contredire au rang 14 ce qu'on vient de taper.
  */
-export type SupportRateDraft = { supportId: string; rateText: string; kind: RateKind }
+export type SupportRateDraft = {
+  supportId: string
+  rateText: string
+  kind: RateKind
+  /**
+   * Un **second** taux, pour comparer — « et si le PEA faisait 11 % ? ».
+   *
+   * C'est la seule façon honnête de projeter un placement qui fluctue. Un PEA
+   * n'a pas *un* rendement : il en a eu 3 % une décennie et 11 % une autre, et
+   * poser un chiffre unique fait de l'écran ce qu'il refuse d'être — un
+   * simulateur qui promet. Une fourchette ne promet rien : elle montre l'écart.
+   *
+   * Vide — le défaut — ne compare rien, et le résultat reste un chiffre.
+   */
+  comparedText?: string
+}
 
 export type ProjectionDraft = {
   mode: ProjectionMode
@@ -213,11 +228,15 @@ function supportRatesFrom(value: unknown): SupportRateDraft[] {
       if (typeof supportId !== 'string' || supportId === '' || supportId.length > 64) return []
       if (seen.has(supportId)) return []
       seen.add(supportId)
+      const { comparedText } = raw as Record<string, unknown>
       return [
         {
           supportId,
           rateText: text(rateText, ''),
           kind: kind === 'guaranteed' ? 'guaranteed' : 'assumed',
+          ...(typeof comparedText === 'string' && comparedText.length <= 24
+            ? { comparedText }
+            : {}),
         },
       ]
     })
@@ -326,6 +345,12 @@ export type SupportSeries = {
   origin: RateOrigin
   /** Vrai quand un changement de taux daté tombe dans l'horizon simulé. */
   dated: boolean
+  /** Le plafond de versements du contrat, ou `null` — personne n'en a posé. */
+  cap: Money | null
+  /** Ce qui restait à verser au départ, ou `null` sans plafond. */
+  room: Money | null
+  /** Le plafond a coupé des versements avant la fin de l'horizon. */
+  capped: boolean
   /**
    * Le barème qui a servi au tracé — scalaire, ou un taux par mois.
    *
@@ -336,6 +361,10 @@ export type SupportSeries = {
    */
   schedule: number | readonly number[]
   series: ProjectionSeries
+  /** Le second taux essayé sur ce compte, ou `null` — rien n'est comparé. */
+  comparedBp: number | null
+  /** Sa trajectoire, aux mêmes versements et au même plafond. `null` avec lui. */
+  comparedSeries: ProjectionSeries | null
 }
 
 export type ProjectionResult = {
@@ -354,6 +383,16 @@ export type ProjectionResult = {
    * d'accord (cahier §4.6 ter, « un seul moteur »).
    */
   split: SupportSeries[]
+  /**
+   * Le portefeuille sous les **seconds taux**, quand au moins un compte en
+   * porte un — la haute (ou la basse) de la fourchette.
+   *
+   * `null` quand rien n'est comparé, et c'est le cas par défaut : l'écran rend
+   * alors un chiffre, pas une fourchette. Elle n'existe que sur un portefeuille
+   * décomposé, pour la même raison que `split` : c'est le compte qui porte le
+   * taux, donc c'est lui qui porte la comparaison.
+   */
+  compared: ProjectionSeries | null
   /** Le capital du premier jour, que le résumé décompose à côté du versé. */
   initial: Money
   /** Le versement du mode direct. `null` en mode inverse : il y en a un par hypothèse. */
@@ -416,6 +455,31 @@ function amount(value: string): Money | null {
  * projeter à plat un compte sur une faute de frappe — la règle des hypothèses
  * de l'écran, appliquée un cran plus bas.
  */
+/**
+ * Le plafond va-t-il couper quelque chose avant la fin ?
+ *
+ * Un versement nul ou négatif — un compte qu'on vide — ne consomme aucune
+ * place : il ne rencontre jamais le plafond, et le signaler ferait chercher une
+ * coupe qui n'a pas eu lieu. Une place à zéro, elle, coupe dès le premier mois,
+ * et c'est ce qu'il faut dire d'un compte déjà plein.
+ */
+function wouldExceed(monthly: Money, months: number, room: Money): boolean {
+  return monthly > 0 && monthly * months > room
+}
+
+/**
+ * Le second taux d'un support, ou `null` — il n'y a rien à comparer.
+ *
+ * Un champ vide ou illisible ne compare rien : il ne vaut pas zéro, qui ferait
+ * apparaître une fourchette « de 0 % à 3 % » que personne n'a demandée. C'est
+ * la règle de tous les taux de l'écran, un cran plus bas.
+ */
+function comparedRateOf(part: ProjectionPart, tried: readonly SupportRateDraft[]): number | null {
+  const text = tried.find((one) => one.supportId === part.supportId)?.comparedText ?? ''
+  if (text.trim() === '') return null
+  return parseRateBp(text)
+}
+
 type ResolvedRate = {
   rateBp: number
   kind: RateKind
@@ -566,8 +630,10 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
         monthly: null,
         target,
         /* Le mode inverse cherche un versement, pas une répartition : il n'y a
-           rien à décomposer tant qu'on ne sait pas encore combien verser. */
+           rien à décomposer tant qu'on ne sait pas encore combien verser — donc
+           rien à comparer compte par compte non plus. */
         split: [],
+        compared: null,
         contributed: null,
         targetReached: computed.every((scenario) => scenario.monthly === ZERO),
         inflationBp: erosion,
@@ -589,16 +655,28 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
     scenarios.length === 1 && start.parts.length > 0
       ? start.parts.map((part) => {
           const rate = rateOf(part, draft.supportRates, { rateBp: screenBp, kind: screenKind }, months)
-          return {
-            part,
-            rate,
-            series: projectSeries({
+          const run = (schedule: number | readonly number[]): ProjectionSeries =>
+            projectSeries({
               initial: part.capital ?? ZERO,
               monthly: part.monthly,
               months,
-              rateBp: rate.schedule,
+              rateBp: schedule,
               inflationBp: erosion,
-            }),
+              /* Le plafond du contrat, quand il y en a un : les versements
+                 s'arrêtent quand la place est faite, le capital continue. */
+              ...(part.room === null ? {} : { room: part.room }),
+            })
+          const compared = comparedRateOf(part, draft.supportRates)
+          return {
+            part,
+            rate,
+            compared,
+            series: run(rate.schedule),
+            /* La même trajectoire au second taux — mêmes versements, même
+               plafond, même horizon : seul le rendement change, ce qui est la
+               condition pour que l'écart se lise comme « ce que le taux
+               produirait ». */
+            comparedSeries: compared === null ? null : run(compared),
           }
         })
       : []
@@ -644,8 +722,25 @@ export function analyse(draft: ProjectionDraft, start: ProjectionStart = NO_STAR
         origin: one.rate.origin,
         dated: one.rate.dated,
         schedule: one.rate.schedule,
+        cap: one.part.cap,
+        room: one.part.room,
+        /* Le plafond a-t-il coupé quelque chose ? La question se pose sur la
+           série, pas sur les nombres d'entrée : un versement mensuel nul, un
+           horizon court ou une reprise nette laissent un plafond sans effet, et
+           l'annoncer ferait chercher une coupe qui n'a pas eu lieu. */
+        capped: one.part.room !== null && wouldExceed(one.part.monthly, months, one.part.room),
         series: one.series,
+        comparedBp: one.compared,
+        comparedSeries: one.comparedSeries,
       })),
+      /* La trajectoire du portefeuille **avec les seconds taux substitués là où
+         il y en a**, et telle quelle ailleurs. Une seule variante, et non deux
+         puissance N : ce qu'on veut lire est « et si mes hypothèses hautes se
+         réalisaient », pas la combinatoire de tous les comptes. `null` quand
+         personne n'a rien comparé. */
+      compared: split.some((one) => one.comparedSeries !== null)
+        ? sumSeries(split.map((one) => one.comparedSeries ?? one.series))
+        : null,
       /* Le versé ne dépend pas du taux : les trois hypothèses partagent la même
          aire, et c'est ce qui rend l'écart entre elle et chaque courbe lisible
          comme « ce que le taux a produit ». */
@@ -833,6 +928,11 @@ export function effortLadder(
                une arrivée que la courbe ne connaît pas. */
             rateBp: part.schedule,
             inflationBp: result.inflationBp,
+            /* Le plafond tient aussi ici, et c'est ce qui rend l'échelle
+               honnête : verser deux fois plus sur un livret presque plein ne
+               donne pas deux fois plus, et une échelle qui l'ignorerait
+               promettrait un capital que le contrat refuse. */
+            ...(part.room === null ? {} : { room: part.room }),
           }).balance.at(-1) ?? ZERO,
       }
     })

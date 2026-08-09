@@ -1,14 +1,14 @@
 /* ============================================================================
  * D'où part une projection quand elle part de l'épargne réelle.
  *
- * Ce module répond à **deux** des quatre nombres du simulateur — le capital et
- * le versement mensuel — et il s'arrête là. Il ne rend **aucun taux**, et c'est
- * la règle qui le tient tout entier : un Livret A dont le taux du jour est connu
- * n'est pas un « rendement garanti sur dix ans », et prêter à un PEA le
- * rendement de sa dernière décennie serait exactement le tour de passe-passe des
- * simulateurs de vente (cahier §4.6 ter). Le capital et le versement sont des
- * **faits** que l'app connaît déjà ; le rendement est une **hypothèse**, et elle
- * reste à la personne qui la pose.
+ * Ce module rend ce que le document **sait** d'un portefeuille : le capital, les
+ * versements récurrents, les paliers de taux posés sur chaque compte et leur
+ * plafond de versements. Il ne **devine** rien, et c'est la règle qui le tient
+ * tout entier : un Livret A dont le taux du jour est connu n'est pas un
+ * « rendement garanti sur dix ans », et prêter à un PEA le rendement de sa
+ * dernière décennie serait exactement le tour de passe-passe des simulateurs de
+ * vente (cahier §4.6 ter). Ce qu'il transporte, quelqu'un l'a écrit ; ce qu'il
+ * ne transporte pas, l'écran comble en le disant.
  *
  * **Il lit, il n'écrit rien.** C'est la nuance qui a fait bouger le cahier :
  * l'écran ne posait aucun `Entry`, aucun relevé — il ne le fait toujours pas —,
@@ -30,7 +30,7 @@
 
 import type { ISODate } from './date'
 import type { RateKind } from './projection'
-import { type Money, ZERO, add, sub } from './money'
+import { type Money, ZERO, add, money, sub } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { savingTotal, supportValue } from './saving'
 import { type RateStep, rateOn, rateSchedule } from './savingRate'
@@ -101,6 +101,25 @@ export type ProjectionPart = {
    * c'est l'écran qui comble.
    */
   steps: readonly RateStep[]
+  /** Le plafond de versements du contrat, ou `null` si personne n'en a posé. */
+  cap: Money | null
+  /**
+   * Ce qui reste à verser avant le plafond, ou `null` sans plafond.
+   *
+   * **`plafond − capital estimé`, et c'est une approximation qu'il faut dire.**
+   * Le plafond porte sur les versements **cumulés depuis l'ouverture**, que
+   * l'app ne connaît pas : elle connaît le capital d'aujourd'hui, qui contient
+   * aussi les intérêts déjà capitalisés. La place réelle est donc un peu plus
+   * grande que celle-ci — l'écart vaut exactement les intérêts acquis.
+   *
+   * Se tromper dans ce sens-là est le seul défendable : entre deux conventions,
+   * l'app prend celle qui promet le moins (`projection.ts`), et une place
+   * surestimée ferait projeter des versements que le contrat refuserait.
+   *
+   * Jamais négatif : un compte déjà au-dessus de son plafond a zéro de place,
+   * pas une place négative qui viendrait retrancher des versements.
+   */
+  room: Money | null
 }
 
 export type ProjectionStart = {
@@ -257,9 +276,24 @@ export function supportStart(
         rateBp: current?.rateBp ?? null,
         rateKind: current?.kind ?? null,
         steps,
+        cap: support.depositCap ?? null,
+        room: roomLeft(support.depositCap, value.estimated),
       },
     ],
   }
+}
+
+/**
+ * La place qui reste sous le plafond — voir `ProjectionPart.room`.
+ *
+ * Sans plafond, `null` : rien à borner. Sans relevé, le capital est **inconnu**
+ * et non nul ; la projection le compte alors pour zéro, et la place vaut le
+ * plafond entier — c'est cohérent avec le reste du calcul, et l'écran dit déjà
+ * qu'un support sans relevé ne compte pas dans le capital.
+ */
+function roomLeft(cap: Money | undefined, capital: Money | null): Money | null {
+  if (cap === undefined) return null
+  return money(Math.max(0, cap - (capital ?? ZERO)))
 }
 
 /**

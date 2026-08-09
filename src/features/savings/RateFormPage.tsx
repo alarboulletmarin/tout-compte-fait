@@ -5,6 +5,7 @@ import { parseRateBp } from '@/domain/rate'
 import { isOrigin } from '@/domain/savingRate'
 import type { SavingRate } from '@/domain/types'
 import { t } from '@/i18n/strings'
+import { supports } from '@/i18n/supports'
 import { formatDate, formatPercent, tpl } from '@/i18n/format'
 import { addSavingRate, removeSavingRate, replaceSavingRate, undoable } from '@/store/actions'
 import { useSavingSupport, useSupportRates } from '@/store/selectors'
@@ -89,10 +90,10 @@ function RateForm({
     const next = { supportId, rateBp, kind: draft.kind, from: draft.from }
     if (rateId === undefined) {
       addSavingRate(next)
-      toast(t.savings.rateAdded)
+      toast(supports.rateAdded)
     } else {
       replaceSavingRate(rateId, next)
-      toast(t.savings.rateUpdated)
+      toast(supports.rateUpdated)
     }
     back()
   }
@@ -100,7 +101,7 @@ function RateForm({
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <PageTitle
-        title={rateId === undefined ? t.savings.rateAdd : t.savings.rateEdit}
+        title={rateId === undefined ? supports.rateAdd : supports.rateEdit}
         onBack={guard.request}
       />
       <p className="t-label">{supportLabel}</p>
@@ -114,7 +115,7 @@ function RateForm({
       >
         <Tile className="gap-4">
           <Field
-            label={t.savings.rateValue}
+            label={supports.rateValue}
             required
             {...(showError && error !== undefined ? { error } : {})}
           >
@@ -161,7 +162,7 @@ function RateForm({
             )}
           </div>
 
-          <Field label={t.savings.rateDate} required hint={t.savings.rateDateHint}>
+          <Field label={supports.rateDate} required hint={supports.rateDateHint}>
             {(fieldId, describedBy) => (
               <DateInput
                 id={fieldId}
@@ -184,8 +185,8 @@ function RateForm({
             <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
               <span className="t-label min-w-0 flex-1 truncate">
                 {isOrigin(previous.from)
-                  ? t.savings.rateFromOrigin
-                  : tpl(t.savings.rateFrom, formatDate(previous.from))}
+                  ? supports.rateFromOrigin
+                  : tpl(supports.rateFrom, formatDate(previous.from))}
               </span>
               <span className="t-num-body tnum shrink-0">
                 {formatPercent(previous.rateBp / 10_000, previous.rateBp % 100 === 0 ? 0 : 2)}
@@ -208,7 +209,7 @@ function RateForm({
           pas une façon de sortir de l'écran, c'est une suppression. */}
       {rateId !== undefined && (
         <Tile className="gap-3">
-          <p className="t-label">{t.savings.rateMethod}</p>
+          <p className="t-label">{supports.rateMethod}</p>
           <Button
             variant="ghost"
             className="w-fit"
@@ -216,22 +217,22 @@ function RateForm({
               setRemoving(true)
             }}
           >
-            {t.savings.rateRemove}
+            {supports.rateRemove}
           </Button>
         </Tile>
       )}
 
       <ConfirmDialog
         open={removing}
-        title={t.savings.rateRemove}
-        steps={[{ question: t.savings.rateRemoveConfirm, action: t.common.delete }]}
+        title={supports.rateRemove}
+        steps={[{ question: supports.rateRemoveConfirm, action: t.common.delete }]}
         onCancel={() => {
           setRemoving(false)
         }}
         onConfirm={() => {
           setRemoving(false)
           if (rateId === undefined) return
-          undoable(t.savings.rateRemoved, () => {
+          undoable(supports.rateRemoved, () => {
             removeSavingRate(rateId)
           })
           back()

@@ -50,6 +50,18 @@ export type SupportDraft = {
    */
   rateText: string
   rateKind: RateKind
+  /**
+   * Le plafond de versements du contrat, tel qu'on le tape — « 22950 », ou rien.
+   *
+   * Vide veut dire « je n'en pose pas », jamais « zéro » : un plafond de zéro
+   * dirait qu'on ne peut plus rien verser, ce qui est un compte fermé et non un
+   * compte plafonné — et c'est l'archivage qui le dit.
+   *
+   * Contrairement au taux et au relevé, **il se modifie ici**. Un plafond ne
+   * s'empile pas : il ne réécrit aucun passé, il ne borne que ce qui reste à
+   * verser. Le corriger n'a donc pas de conséquence rétroactive à protéger.
+   */
+  capText: string
   note: string
   /** Facultatif : vide veut dire « je ne connais pas », jamais « zéro ». */
   amountText: string
@@ -57,7 +69,7 @@ export type SupportDraft = {
 }
 
 export type SupportErrors = Partial<
-  Record<'label' | 'member' | 'category' | 'amount' | 'rate', string>
+  Record<'label' | 'member' | 'category' | 'amount' | 'rate' | 'cap', string>
 >
 
 export type SupportDefaults = {
@@ -77,6 +89,7 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
        désigne aucun compte. */
     rateText: '',
     rateKind: 'assumed',
+    capText: '',
     note: '',
     amountText: '',
     valueDate: today(),
@@ -103,6 +116,9 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     pace: paceOf(support),
     rateText: '',
     rateKind: 'assumed',
+    /* Le plafond, lui, se relit : il n'a pas de passé à protéger, et le taire
+       ferait disparaître un plafond posé à la première correction de libellé. */
+    capText: support.depositCap === undefined ? '' : toAmountInput(support.depositCap),
     note: support.note ?? '',
     amountText: '',
     valueDate: today(),
@@ -126,6 +142,8 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
   const typedAmount = draft.amountText.trim() !== ''
   const rateBp: number | null = useMemo(() => parseRateBp(draft.rateText), [draft.rateText])
   const typedRate = draft.rateText.trim() !== ''
+  const cap: Money | null = useMemo(() => parseAmount(draft.capText), [draft.capText])
+  const typedCap = draft.capText.trim() !== ''
 
   const errors: SupportErrors = useMemo(() => {
     const found: SupportErrors = {}
@@ -141,8 +159,23 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
        découvre des mois plus tard, devant une projection qui ne l'a jamais
        pris. Vide passe — c'est l'absence d'hypothèse, et elle est légitime. */
     if (typedRate && rateBp === null) found.rate = tpl(t.savings.rateInvalid, MAX_RATE_PERCENT)
+    /* Un plafond doit être **strictement positif** : zéro dirait qu'on ne peut
+       plus rien verser, ce qui est un compte fermé — et c'est l'archivage qui le
+       dit. Le refuser ici plutôt que de l'enregistrer évite un support qui
+       n'accepterait plus aucun versement sans que rien ne l'explique. */
+    if (typedCap && (cap === null || cap <= 0)) found.cap = t.savings.capInvalid
     return found
-  }, [draft.label, draft.memberId, draft.categoryId, typedAmount, amount, typedRate, rateBp])
+  }, [
+    draft.label,
+    draft.memberId,
+    draft.categoryId,
+    typedAmount,
+    amount,
+    typedRate,
+    rateBp,
+    typedCap,
+    cap,
+  ])
 
   return {
     draft,
@@ -158,6 +191,7 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         memberId: draft.memberId,
         categoryId: draft.categoryId,
         pace: draft.pace,
+        ...(typedCap && cap !== null && cap > 0 ? { depositCap: cap } : {}),
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null
           ? { value: { amount, date: draft.valueDate } }

@@ -1361,6 +1361,12 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      /* Le plafond réel d'un Livret A, et le seul du jeu qui soit **atteint** :
+         le capital d'Alix le dépasse, ce qui est exactement ce qui arrive dans
+         la vraie vie — le plafond porte sur les versements, et les intérêts
+         passent au-dessus. C'est la situation que l'écran doit savoir dire sans
+         la présenter comme une erreur. */
+      depositCap: money(2_295_000),
       note: 'Vidé pour l’achat, refait depuis : cinq ans tiennent dans sa courbe.',
     },
     {
@@ -1370,6 +1376,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      depositCap: money(2_295_000),
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
     {
@@ -1379,6 +1386,10 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      /* 1 600 €, et le versement de Sacha le remplit pendant la durée simulée :
+         c'est le compte sur lequel la projection montre une courbe qui cesse de
+         recevoir sans cesser de monter. */
+      depositCap: money(160_000),
     },
     {
       id: PEL_ALIX,
@@ -1387,6 +1398,7 @@ function withSupports(data: Data): Data {
       categoryId: 'plans',
       archived: false,
       pace: 'yearly',
+      depositCap: money(6_120_000),
     },
     {
       id: ASSURANCE_VIE,

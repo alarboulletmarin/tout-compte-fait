@@ -679,3 +679,129 @@ describe('le tracé décomposé', () => {
     expect(screen.queryByRole('img', { name: projection.chartStack })).toBeNull()
   })
 })
+
+/* ============================================================================
+ * La fourchette, et le plafond.
+ *
+ * Deux lectures qui n'existent que sur un portefeuille, et deux règles qu'aucun
+ * composant ne dit seul : le chiffre héros reste **un** chiffre — la fourchette
+ * est une lecture de plus, pas une seconde vérité —, et un compte plein cesse de
+ * recevoir sans cesser de croître.
+ * ==========================================================================*/
+
+describe('deux taux sur un compte', () => {
+  async function portfolio() {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [makeSavingSupport({ id: 's-1', memberId: 'm-1', label: 'PEA' })],
+        savingRates: [
+          makeSavingRate({ id: 'tx-1', supportId: 's-1', rateBp: 300, from: '2020-01-01' }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('ne montre aucune fourchette tant que rien n’est comparé', async () => {
+    await portfolio()
+    expect(screen.queryByText(projection.comparedHeading)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: projection.supportCompare })).toBeInTheDocument()
+  })
+
+  it('ouvre le second champ sur le taux du compte, puis compare', async () => {
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+
+    const second = screen.getByLabelText(projection.supportComparedRate, { exact: false })
+    expect(second).toHaveValue('3')
+
+    await user.clear(second)
+    await user.type(second, '11')
+    expect(screen.getByText(projection.comparedHeading)).toBeInTheDocument()
+  })
+
+  it('garde un seul chiffre héros : la fourchette ne le remplace pas', async () => {
+    const user = await portfolio()
+    const hero = (): string => said(document.querySelector('.t-hero-fit')?.textContent ?? '')
+    const before = hero()
+
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    const second = screen.getByLabelText(projection.supportComparedRate, { exact: false })
+    await user.clear(second)
+    await user.type(second, '11')
+
+    // Le chiffre du haut reste celui des taux posés : la comparaison est en
+    // dessous, nommée, et n'écrase rien.
+    expect(hero()).toBe(before)
+  })
+
+  it('retire la comparaison quand on la retire', async () => {
+    const user = await portfolio()
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    await user.click(screen.getByRole('button', { name: projection.supportCompareDrop }))
+    expect(screen.queryByText(projection.comparedHeading)).not.toBeInTheDocument()
+  })
+
+  it('n’écrit rien dans le document', async () => {
+    const user = await portfolio()
+    const before = JSON.stringify(useStore.getState().data)
+    await user.click(screen.getByRole('button', { name: projection.supportCompare }))
+    expect(JSON.stringify(useStore.getState().data)).toBe(before)
+  })
+})
+
+describe('un compte plafonné', () => {
+  async function capped(cap: number) {
+    const user = userEvent.setup()
+    seed()
+    const data = useStore.getState().data
+    useStore.setState({
+      data: {
+        ...data,
+        savingSupports: [
+          makeSavingSupport({
+            id: 's-1',
+            memberId: 'm-1',
+            label: 'Livret A',
+            depositCap: eur(cap),
+          }),
+        ],
+      },
+    })
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
+    return user
+  }
+
+  it('dit ce qu’il reste à verser, et que les versements s’arrêteront', async () => {
+    // Le livret vaut 8 450 € ; plafond 10 000 € : 1 550 € de place, et
+    // 350 €/mois les remplissent bien avant dix ans.
+    await capped(1_000_000)
+    expect(
+      screen.getByText((text) => said(text).startsWith(said(projection.supportCap.slice(0, 8)))),
+    ).toBeInTheDocument()
+    expect(screen.getByText(projection.supportCapped)).toBeInTheDocument()
+  })
+
+  it('dit « déjà atteint » sur un compte plein, sans en faire une erreur', async () => {
+    /* Un livret plein n'est pas une faute : c'est ce qui arrive à tout livret
+       qu'on a fini de remplir, et les intérêts continuent de le faire monter. */
+    await capped(100_000)
+    expect(
+      screen.getByText((text) =>
+        said(text).startsWith(said(projection.supportCapFull.slice(0, 8))),
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('ne dit rien quand le plafond ne coupe rien', async () => {
+    await capped(90_000_000)
+    expect(screen.queryByText(projection.supportCapped)).not.toBeInTheDocument()
+  })
+})

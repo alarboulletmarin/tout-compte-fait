@@ -13,7 +13,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 12
+export const CURRENT_SCHEMA_VERSION = 13
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -404,6 +404,23 @@ function toVersion12(doc: RawDocument): RawDocument {
   }
 }
 
+/**
+ * Le plafond de versements d'un support (`depositCap`).
+ *
+ * **Rien à convertir, et rien à écrire.** Aucun document antérieur ne dit ce
+ * qu'un contrat plafonne, et poser 22 950 € sous « Livret A » ferait ce que
+ * l'app refuse partout : annoncer le barème d'un produit à la place de qui le
+ * détient. Un support sans plafond n'en a pas, ce qui n'est pas « plafond
+ * infini » non plus — c'est simplement une question à laquelle personne n'a
+ * répondu, et la projection ne borne alors rien.
+ *
+ * La marche existe pour la raison qui a fait exister la v7, la v9 et la v11 :
+ * le pipeline veut une étape par incrément.
+ */
+function toVersion13(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 13 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -417,6 +434,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 10, migrate: toVersion10 },
   { to: 11, migrate: toVersion11 },
   { to: 12, migrate: toVersion12 },
+  { to: 13, migrate: toVersion13 },
 ]
 
 export class ImportError extends Error {

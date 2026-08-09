@@ -32,7 +32,7 @@ import { cn } from '@/lib/cn'
 import { useCurrency } from '@/ui/currency'
 import { ChartAxis, type AxisTick } from './ChartAxis'
 import { ChartCursor } from './ChartCursor'
-import { bandPath } from './path'
+import { bandPath, polylinePath } from './path'
 
 const HEIGHT = 120
 const WIDTH = 240
@@ -69,6 +69,19 @@ export type StackedBand = {
 /** Un fait posé sur le haut de la pile : un relevé, à son rang. */
 export type StackedDot = { rank: number }
 
+/**
+ * Un trait posé **par-dessus** la pile, qui ne s'y ajoute pas.
+ *
+ * Une bande dit « et ça, en plus » ; celui-ci dit « et si c'était ça, à la
+ * place ». C'est ce qui le distingue d'une septième bande, et c'est pourquoi il
+ * est tireté : cet écran réserve le trait plein à ce qui est garanti, et le
+ * tireté à ce qui est supposé.
+ */
+export type StackedOverlay = {
+  label: string
+  values: readonly (Money | null)[]
+}
+
 export type StackedAreasProps = {
   bands: readonly StackedBand[]
   /** Le libellé de chaque rang — le curseur et la lecture accessible le lisent. */
@@ -81,6 +94,8 @@ export type StackedAreasProps = {
    * montrerait pas ses points d'appui se croirait sur parole.
    */
   dots?: readonly StackedDot[]
+  /** Une lecture de plus, tracée par-dessus la pile sans s'y ajouter. */
+  overlay?: StackedOverlay
   /** Le nom du graphique, pour l'oreille. */
   label: string
   srText: string
@@ -105,6 +120,7 @@ export function StackedAreas({
   ranks,
   totalLabel,
   dots = [],
+  overlay,
   label,
   srText,
   className,
@@ -140,7 +156,13 @@ export function StackedAreas({
   }
 
   const totals = tops.at(-1) ?? ranks.map(() => null)
-  const max = Math.max(1, ...totals.filter((value): value is number => value !== null))
+  /* L'échelle tient compte du trait posé par-dessus : une fourchette haute qui
+     sortirait du cadre se lirait comme une pile arrêtée net. */
+  const max = Math.max(
+    1,
+    ...totals.filter((value): value is number => value !== null),
+    ...(overlay?.values ?? []).filter((value): value is Money => value !== null),
+  )
 
   const xOf = (rank: number): number =>
     ranks.length <= 1 ? WIDTH / 2 : (rank / (ranks.length - 1)) * WIDTH
@@ -215,6 +237,23 @@ export function StackedAreas({
             <span className="t-label min-w-0 truncate text-text">{totalLabel}</span>
             <span className="t-num-body tnum">{money(totals[at] ?? null)}</span>
           </div>
+          {overlay !== undefined && (
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex min-w-0 items-center gap-1.5">
+                {/* Un trait tireté, et non un carré : ce qu'il désigne n'est
+                    pas une aire — c'est une seconde lecture du même sommet. */}
+                <span
+                  className="h-0.5 w-4 shrink-0 rounded-chip"
+                  style={{
+                    backgroundImage:
+                      'repeating-linear-gradient(90deg, var(--text) 0 5px, transparent 5px 9px)',
+                  }}
+                />
+                <span className="t-label min-w-0 truncate">{overlay.label}</span>
+              </span>
+              <span className="t-num-body tnum">{money(overlay.values[at] ?? null)}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -260,6 +299,27 @@ export function StackedAreas({
                   />
                 ))
               })}
+
+              {/* Le trait posé par-dessus la pile, quand il y en a un. Tracé
+                  avant les points de relevé, pour qu'un fait reste au-dessus
+                  d'une hypothèse. */}
+              {overlay !== undefined && (
+                <path
+                  d={polylinePath(
+                    ranks.map((_, rank) => {
+                      const value = overlay.values[rank] ?? null
+                      return value === null ? null : { x: xOf(rank), y: yOf(value) }
+                    }),
+                  )}
+                  fill="none"
+                  stroke="var(--text)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
 
               {/* Les relevés, posés sur le sommet : ce sont les faits, et ils
                   doivent rester visibles sur une courbe qui, entre eux, estime. */}

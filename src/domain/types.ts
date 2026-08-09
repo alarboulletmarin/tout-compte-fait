@@ -154,6 +154,27 @@ export type SavingSupport = {
   archived: boolean
   /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
   pace?: SavingPace
+  /**
+   * Le plafond de **versements cumulés** du contrat, en centimes. Absent tant
+   * que personne ne l'a posé.
+   *
+   * **Sur ce qui est versé, jamais sur le solde**, et c'est la seule lecture
+   * juste : un Livret A est plafonné à 22 950 € *versés*, et son solde passe
+   * ensuite au-dessus par les intérêts capitalisés. Un plafond de solde
+   * arrêterait la courbe à plat là où la réalité continue de monter.
+   *
+   * **Un champ simple, pas une pile datée** — contrairement au taux
+   * (`SavingRate`). Un plafond ne réécrit rien : il ne borne que ce qui reste à
+   * verser, donc l'avenir. Le jour où le barème change, l'ancien plafond n'a
+   * jamais rendu faux un versement passé, alors qu'un ancien taux, lui, avait
+   * bel et bien couru.
+   *
+   * **Saisi, jamais déduit.** L'app ne connaît aucun produit : elle ne propose
+   * pas 22 950 € sous « Livret A », parce qu'un barème figé dans le code est
+   * faux dès qu'il change — le plafond du Livret A est passé de 15 300 € à
+   * 22 950 € —, et qu'un plafond périmé se lit comme un calcul faux.
+   */
+  depositCap?: Money
   note?: string
 }
 

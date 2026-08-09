@@ -332,3 +332,58 @@ describe('un taux qui change en cours de route', () => {
     expect(empty).toEqual(projectSeries({ ...base, rateBp: 0 }))
   })
 })
+
+/* ============================================================================
+ * Le plafond de versements.
+ *
+ * Il porte sur ce qui est **versé**, jamais sur le solde : un Livret A plein
+ * continue de rapporter, et une courbe qui s'arrêterait à plat au plafond
+ * dirait l'inverse de ce qui se passe.
+ * ==========================================================================*/
+
+describe('un plafond de versements', () => {
+  const base = { initial: eur(0), monthly: eur(10_000), months: 12, rateBp: 0 }
+
+  it('ne borne rien tant qu’il n’est pas posé', () => {
+    expect(projectSeries(base).balance.at(-1)).toBe(120_000)
+  })
+
+  it('arrête les versements quand la place est faite', () => {
+    // 100 €/mois, 350 € de place : trois versements pleins, puis un écrêté.
+    const capped = projectSeries({ ...base, room: 35_000 })
+    expect(capped.balance.at(-1)).toBe(35_000)
+    expect(capped.contributed.at(-1)).toBe(35_000)
+  })
+
+  it('écrête le dernier versement au lieu de le refuser en entier', () => {
+    const capped = projectSeries({ ...base, months: 1, room: 4_000 })
+    expect(capped.balance.at(-1)).toBe(4_000)
+  })
+
+  it('laisse le capital croître une fois le plafond atteint', () => {
+    /* La règle qui fait tout : les versements s'arrêtent, le capital non. */
+    const capped = projectSeries({ ...base, initial: eur(100_000), rateBp: 1_000, room: 0 })
+    expect(capped.balance.at(-1)).toBeGreaterThan(100_000)
+    // Et rien n'a été versé : le versé cumulé reste le capital de départ.
+    expect(capped.contributed.at(-1)).toBe(100_000)
+  })
+
+  it('lit une place nulle comme un compte plein, sans cas particulier', () => {
+    expect(projectSeries({ ...base, room: 0 }).contributed.at(-1)).toBe(0)
+  })
+
+  it('ne borne pas une reprise : on ne plafonne pas ce qui sort', () => {
+    const draining = projectSeries({ ...base, initial: eur(1_000_000), monthly: eur(-10_000), room: 0 })
+    expect(draining.balance.at(-1)).toBe(1_000_000 - 12 * 10_000)
+  })
+
+  it('ne se déflate pas avec l’inflation : un plafond est un nombre de contrat', () => {
+    /* Le plafond vaut 22 950 € dans le contrat, quels que soient les euros dans
+       lesquels on lit la courbe. */
+    const courants = projectSeries({ ...base, room: 35_000 })
+    const constants = projectSeries({ ...base, room: 35_000, inflationBp: 200 })
+    // Même nombre de versements écrêtés : seule la lecture change.
+    expect(constants.contributed.at(-1)).toBeLessThan(courants.contributed.at(-1) ?? 0)
+    expect(constants.balance.at(-1)).toBeLessThan(courants.balance.at(-1) ?? 0)
+  })
+})

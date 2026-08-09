@@ -214,6 +214,29 @@ export function SupportFields({
         </>
       )}
 
+      {/* Le plafond, lui, s'affiche **aussi en modification** — contrairement au
+          taux et au relevé, qui s'empilent. Un plafond ne réécrit rien : il ne
+          borne que ce qui reste à verser, donc l'avenir, et le corriger n'a
+          aucune conséquence rétroactive à protéger. */}
+      <Field
+        label={t.savings.supportCap}
+        optional
+        hint={t.savings.supportCapHint}
+        {...(errors.cap === undefined ? {} : { error: errors.cap })}
+      >
+        {(id, describedBy) => (
+          <AmountInput
+            id={id}
+            aria-describedby={describedBy}
+            value={draft.capText}
+            invalid={errors.cap !== undefined}
+            onChange={(event) => {
+              patch({ capText: event.target.value })
+            }}
+          />
+        )}
+      </Field>
+
       {/* Le premier relevé est facultatif, et son absence a un sens : on ne
           connaît pas le capital. Le laisser vide n'écrit rien — surtout pas
           zéro, qui dirait « ce livret est vide ».

@@ -1015,6 +1015,10 @@ export const en: Strings = {
       'Only use this if the rate is contractually guaranteed for the whole term you will simulate. The rate known today for a regulated savings account is not: it gets revised.',
     rateInvalid: 'Between 0 and %s%.',
     ratePerYear: '%/year',
+    supportCap: 'Contribution cap',
+    supportCapHint:
+      'Optional. What the contract allows you to pay in altogether — €22,950 on a Livret A, say. Interest can go above it. You set it: the app knows no product.',
+    capInvalid: 'Enter a cap above zero, or leave it empty.',
     supportNote: 'Note',
     supportNotePlaceholder: 'Emergency fund, three months of costs',
     manage: 'Managing the pot',
@@ -1048,43 +1052,7 @@ export const en: Strings = {
     historyOne: 'The curve appears from the second valuation.',
     historyMore: 'See the %s other valuations',
 
-    rates: 'Return',
-    ratesEmpty:
-      'No rate set. Projections will use the assumption from their own screen, and the growth curve will count no interest.',
-    ratesMore: 'See the %s other rates',
-    rateFrom: 'since %s',
-    rateFromOrigin: 'from the start',
-    rateUntil: 'until %s',
-    rateAhead: 'from %s',
-    rateAdd: 'Change the rate',
-    rateFirst: 'Set a rate',
-    rateEdit: 'Correct the rate',
-    rateValue: 'Net annual return',
-    rateDate: 'Starting from',
-    rateDateHint:
-      'The previous rate doesn’t move: it runs until the day before. That’s what leaves the growth already recorded exactly as it happened.',
-    rateAdded: 'Rate saved',
-    rateUpdated: 'Rate corrected',
-    rateRemoved: 'Rate deleted',
-    rateRemove: 'Delete this rate',
-    rateRemoveConfirm:
-      'This step disappears. The rate before it takes back the period it covered. Delete?',
-    rateMethod:
-      'A rate creates no money in your document: it counts neither in your recorded capital, nor in contributions, nor in any monthly total. It feeds the projections and the growth curve, both of which state an estimate.',
 
-    evolution: 'Savings over time',
-    evolutionEmpty:
-      'Nothing to plot yet: the curve starts at your first valuation, and it takes two months before it says anything.',
-    evolutionWindow: 'Period',
-    evolutionMonths: '%s months',
-    evolutionYears: '%s years',
-    evolutionTotal: 'Total',
-    evolutionWhen: 'Month',
-    evolutionRest: '%s other pots',
-    evolutionDetail: 'See the month-by-month detail',
-    evolutionMethod:
-      'An estimate: the dots are your valuations, the rest is derived from confirmed movements and the rate in force that month. A pot with no valuation isn’t plotted — its value is unknown, not zero.',
-    srEvolution: 'Savings estimated from %s in %s to %s in %s, valuations included.',
 
     valuesUpdate: 'Update the valuations',
     valuesDueOne: '1 valuation to do',

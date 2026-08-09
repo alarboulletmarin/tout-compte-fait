@@ -49,6 +49,12 @@ export type ResultTileProps = {
   paidFrom: string
   interestFrom: string
   /**
+   * Le portefeuille sous les seconds taux, quand au moins un compte en porte
+   * un. `null` — le cas par défaut — ne montre rien : l'écran rend un chiffre,
+   * et une fourchette n'apparaît que si quelqu'un l'a demandée.
+   */
+  compared: { total: string; gap: string } | null
+  /**
    * La lecture en euros d'aujourd'hui, quand elle est active. Elle vit **ici**,
    * avec les chiffres qu'elle change, et non plus sous le graphique : 616 €/mois
    * pendant dix ans font 74 k€, l'écran en annonce 67, et sans cette phrase à
@@ -65,6 +71,7 @@ export function ResultTile({
   target,
   paidFrom,
   interestFrom,
+  compared,
   deflated,
 }: ResultTileProps) {
   const currency = useCurrency()
@@ -138,6 +145,23 @@ export function ResultTile({
           elle, 616 €/mois pendant dix ans qui donnent 67 k€ et non 74 sont
           inexplicables. */}
       {deflated !== null && <p className="t-label">{deflated}</p>}
+
+      {/* La fourchette, quand un compte porte un second taux. Sous la
+          décomposition et non à sa place : le chiffre héros reste **un**
+          chiffre — celui des taux posés —, et la comparaison est une lecture de
+          plus, pas une seconde vérité qui viendrait le remplacer.
+          Un cadre plutôt qu'une ligne : c'est une autre projection, et la poser
+          au fil des autres phrases la ferait lire comme une précision sur
+          celle du dessus. */}
+      {compared !== null && (
+        <div className="flex flex-col gap-0.5 border-t border-border pt-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="t-body min-w-0 flex-1 truncate">{projection.comparedHeading}</span>
+            <span className="t-num-body tnum shrink-0">{compared.total}</span>
+          </div>
+          <p className="t-label">{compared.gap}</p>
+        </div>
+      )}
 
       {/* Ce que le rendement pèse dans l'arrivée — la lecture qui donne son sens
           au chiffre, et que rien d'autre ne donne. Muette quand il n'y a rien à
