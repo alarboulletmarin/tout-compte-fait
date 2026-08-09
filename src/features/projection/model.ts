@@ -900,10 +900,73 @@ function partMonthly(part: SupportSeries): number {
 }
 
 /** Le pas d'arrondi d'un barreau : dix euros, cinquante, ou cent. */
-function rungStep(monthly: Money): number {
+export function rungStep(monthly: Money): number {
   if (monthly < 20_000) return 1_000
   if (monthly < 100_000) return 5_000
   return 10_000
+}
+
+/**
+ * Ce que donnerait un versement donné, au même horizon — pour un barreau de
+ * l'échelle comme pour n'importe quel montant qu'on fait glisser.
+ *
+ * Sur un portefeuille décomposé, l'effort supplémentaire se répartit **au
+ * prorata** de ce que chaque support reçoit déjà, et chaque part garde son
+ * taux : verser 50 % de plus, c'est verser 50 % de plus partout. Recalculer le
+ * tout à un taux unique donnerait un chiffre que la ligne « Simulation en
+ * cours » ne retrouverait même pas.
+ *
+ * Séparée d'`effortLadder` pour que le curseur — qui explore un continu, pas
+ * quatre barreaux — appelle exactement le même calcul : les deux doivent
+ * retomber sur la même arrivée au même montant, sans quoi glisser jusqu'à un
+ * barreau et lire le tableau donneraient deux chiffres.
+ */
+export function effortAt(
+  result: ProjectionResult,
+  scenario: ScenarioResult,
+  value: Money,
+): { arrival: Money; parts: EffortPart[] } {
+  const base = result.monthly
+  if (base === null || base <= 0) return { arrival: ZERO, parts: [] }
+
+  const ratio = value / base
+  const parts: EffortPart[] = result.split.map((part) => {
+    const monthly = money(Math.round(partMonthly(part) * ratio))
+    return {
+      supportId: part.supportId,
+      label: part.label,
+      monthly,
+      arrival:
+        projectSeries({
+          initial: part.series.contributed[0] ?? ZERO,
+          monthly,
+          months: result.months,
+          /* Le **barème** du compte, et non son taux de départ : reprojeter à
+             taux constant un support dont le taux change au rang 14 donnerait
+             une arrivée que la courbe ne connaît pas. */
+          rateBp: part.schedule,
+          inflationBp: result.inflationBp,
+          /* Le plafond tient aussi ici, et c'est ce qui rend le calcul
+             honnête : verser deux fois plus sur un livret presque plein ne
+             donne pas deux fois plus, et un chiffre qui l'ignorerait
+             promettrait un capital que le contrat refuse. */
+          ...(part.room === null ? {} : { room: part.room }),
+        }).balance.at(-1) ?? ZERO,
+    }
+  })
+
+  const arrival =
+    parts.length > 0
+      ? money(parts.reduce((total, part) => total + part.arrival, 0))
+      : (projectSeries({
+          initial: result.initial,
+          monthly: value,
+          months: result.months,
+          rateBp: scenario.rateBp,
+          inflationBp: result.inflationBp,
+        }).balance.at(-1) ?? ZERO)
+
+  return { arrival, parts }
 }
 
 export function effortLadder(
@@ -920,58 +983,6 @@ export function effortLadder(
   const seen = new Set<number>()
   const rungs: EffortRung[] = []
 
-  /**
-   * Ce que donne un versement donné, au même horizon.
-   *
-   * Sur un portefeuille décomposé, l'effort supplémentaire se répartit **au
-   * prorata** de ce que chaque support reçoit déjà, et chaque part garde son
-   * taux : verser 50 % de plus, c'est verser 50 % de plus partout. Recalculer
-   * le tout à un taux unique donnerait un chiffre que la ligne « Simulation en
-   * cours » ne retrouverait même pas.
-   */
-  const partsAt = (value: Money): EffortPart[] => {
-    const ratio = value / base
-    return result.split.map((part) => {
-      const monthly = money(Math.round(partMonthly(part) * ratio))
-      return {
-        supportId: part.supportId,
-        label: part.label,
-        monthly,
-        arrival:
-          projectSeries({
-            initial: part.series.contributed[0] ?? ZERO,
-            monthly,
-            months: result.months,
-            /* Le **barème** du compte, et non son taux de départ : reprojeter à
-               taux constant un support dont le taux change au rang 14 donnerait
-               une arrivée que la courbe ne connaît pas. */
-            rateBp: part.schedule,
-            inflationBp: result.inflationBp,
-            /* Le plafond tient aussi ici, et c'est ce qui rend l'échelle
-               honnête : verser deux fois plus sur un livret presque plein ne
-               donne pas deux fois plus, et une échelle qui l'ignorerait
-               promettrait un capital que le contrat refuse. */
-            ...(part.room === null ? {} : { room: part.room }),
-          }).balance.at(-1) ?? ZERO,
-      }
-    })
-  }
-
-  const arrivalAt = (value: Money, parts: readonly EffortPart[]): Money => {
-    if (parts.length > 0) {
-      return money(parts.reduce((total, part) => total + part.arrival, 0))
-    }
-    return (
-      projectSeries({
-        initial: result.initial,
-        monthly: value,
-        months: result.months,
-        rateBp: scenario.rateBp,
-        inflationBp: result.inflationBp,
-      }).balance.at(-1) ?? ZERO
-    )
-  }
-
   for (const factor of EFFORT_FACTORS) {
     /* Le barreau du milieu garde le montant exact : c'est celui qu'on simule,
        et l'arrondir ferait afficher une arrivée qui n'est pas celle du reste de
@@ -979,8 +990,8 @@ export function effortLadder(
     const value = factor === 1 ? base : money(Math.round((base * factor) / step) * step)
     if (value <= 0 || seen.has(value)) continue
     seen.add(value)
-    const parts = partsAt(value)
-    rungs.push({ monthly: value, arrival: arrivalAt(value, parts), current: factor === 1, parts })
+    const { arrival, parts } = effortAt(result, scenario, value)
+    rungs.push({ monthly: value, arrival, current: factor === 1, parts })
   }
 
   return rungs.sort((a, b) => a.monthly - b.monthly)

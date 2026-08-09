@@ -5,8 +5,14 @@ import { isCostly } from '@/domain/priceHistory'
 import { t } from '@/i18n/strings'
 import { formatDate, formatMoney, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
-import { removeRecurrence, resumeRecurrence, stopRecurrence, undoable } from '@/store/actions'
-import { useKindOf, useRecurrenceRow } from '@/store/selectors'
+import {
+  convertRecurrenceToEntry,
+  removeRecurrence,
+  resumeRecurrence,
+  stopRecurrence,
+  undoable,
+} from '@/store/actions'
+import { useKindOf, useRecurrenceConvertibility, useRecurrenceRow } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
@@ -36,10 +42,11 @@ function Line({ label, children }: { label: string; children: ReactNode }) {
 export function RecurrenceDetailPage() {
   const { id } = useParams()
   const row = useRecurrenceRow(id)
+  const convertibility = useRecurrenceConvertibility(id)
   const navigate = useNavigate()
   const currency = useCurrency()
   const kindOf = useKindOf()
-  const [confirming, setConfirming] = useState<'stop' | 'remove' | null>(null)
+  const [confirming, setConfirming] = useState<'stop' | 'remove' | 'convert' | null>(null)
   const close = (): void => {
     setConfirming(null)
   }
@@ -153,6 +160,30 @@ export function RecurrenceDetailPage() {
 
       <p className="t-label">{t.recurrences.stopHint}</p>
 
+      {/* Le geste inverse d'« Ajouter une récurrence » : on découvre qu'une
+          règle ne se répète pas. Pas là où « Arrêter » vit — arrêter garde la
+          règle, celui-ci la défait — mais à côté de « Supprimer », l'autre
+          geste qu'on ne fait qu'une fois dans la vie d'une ligne.
+          Sans bouton plutôt que désactivé quand la règle pose une mensualité :
+          la raison se lit, elle ne se devine pas à un bouton grisé. */}
+      {convertibility !== null && convertibility.kind !== 'linked' && (
+        <div className="border-t border-border pt-4">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setConfirming('convert')
+            }}
+          >
+            {t.recurrences.convertToOneTime}
+          </Button>
+        </div>
+      )}
+      {convertibility?.kind === 'linked' && (
+        <p className="t-label border-t border-border pt-4">
+          {t.recurrences.convertToOneTimeBlocked}
+        </p>
+      )}
+
       <div className="border-t border-border pt-4">
         <Button
           variant="ghost"
@@ -186,6 +217,28 @@ export function RecurrenceDetailPage() {
           close()
           undoable(t.recurrences.deleted, () => {
             removeRecurrence(recurrence.id)
+          })
+          void navigate(RECURRENCES_PATH, { replace: true })
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirming === 'convert'}
+        title={t.recurrences.convertToOneTime}
+        steps={[
+          {
+            question:
+              convertibility?.kind === 'single'
+                ? t.recurrences.convertToOneTimeConfirmSingle
+                : t.recurrences.convertToOneTimeConfirmHistory,
+            action: t.recurrences.convertToOneTimeAction,
+          },
+        ]}
+        onCancel={close}
+        onConfirm={() => {
+          close()
+          undoable(t.recurrences.convertedToEntry, () => {
+            convertRecurrenceToEntry(recurrence.id)
           })
           void navigate(RECURRENCES_PATH, { replace: true })
         }}

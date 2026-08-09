@@ -160,6 +160,8 @@ export const en: ProjectionStrings = {
   effortCurrent: 'Current simulation',
   effortParts: 'Of which: %s',
   effortApply: 'Simulate with %s',
+  effortSlider: 'Try another contribution',
+  effortSliderArrival: 'would give %s',
 
   constant: 'Account for inflation',
   constantHint: 'Shows the equivalent purchasing power, in today’s money.',

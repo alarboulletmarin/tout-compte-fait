@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { SAVINGS_PATH, PEOPLE_PATH, supportPath } from '@/app/routes'
+import { SAVINGS_PATH, PEOPLE_PATH, rateNewPath, supportPath } from '@/app/routes'
+import { isOrigin } from '@/domain/savingRate'
 import type { SavingSupport } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { tpl } from '@/i18n/format'
+import { supports } from '@/i18n/supports'
+import { formatDate, formatPercent, tpl } from '@/i18n/format'
 import {
   addSavingSupport,
   archiveSavingSupport,
@@ -12,7 +14,13 @@ import {
   unarchiveSavingSupport,
   undoable,
 } from '@/store/actions'
-import { isSupportEmpty, useMembers, useSavingSupport, useSupportUsage } from '@/store/selectors'
+import {
+  isSupportEmpty,
+  useMembers,
+  useSavingSupport,
+  useSupportRate,
+  useSupportUsage,
+} from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { EmptyState } from '@/ui/EmptyState'
@@ -150,10 +158,57 @@ function SupportForm({ support }: { support?: SavingSupport }) {
           relevé avec un mouvement. Elle vit là où la confusion est réelle — la
           légende du calcul et les deux formulaires de relevé. */}
 
+      {editing && <RateManagement supportId={support.id} />}
       {editing && <SupportManagement support={support} />}
 
       <ConfirmDialog {...guard.dialog} />
     </div>
+  )
+}
+
+/**
+ * Le rendement, depuis l'écran où l'on vient justement corriger le compte.
+ *
+ * Le taux ne se saisit pas ici — voir `SupportFields` : il s'empile daté, et le
+ * reprendre depuis un formulaire qui écrase ce qu'il touche réécrirait le passé
+ * du compte. Mais l'absence totale de tout renvoi vers lui, sur l'écran même où
+ * l'on vient « modifier le support », le rendait introuvable à qui ne savait pas
+ * déjà que la fiche porte une section à part. La fiche reste la seule à poser un
+ * palier ou à en corriger un ancien ; ce bloc-ci ne fait qu'y mener, avec ce que
+ * le compte sert aujourd'hui pour ne pas y renvoyer à l'aveugle.
+ */
+function RateManagement({ supportId }: { supportId: string }) {
+  const navigate = useNavigate()
+  const rate = useSupportRate(supportId)
+
+  return (
+    <Tile className="gap-3">
+      <Eyebrow>{supports.rates}</Eyebrow>
+      {rate === null ? (
+        <p className="t-label">{supports.ratesEmpty}</p>
+      ) : (
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="t-label min-w-0 flex-1 truncate">
+            {isOrigin(rate.from) ? supports.rateFromOrigin : tpl(supports.rateFrom, formatDate(rate.from))}
+          </span>
+          <span className="t-num-body tnum shrink-0">
+            {`${formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)} · ${
+              rate.kind === 'guaranteed' ? t.savings.supportRateGuaranteed : t.savings.supportRateAssumed
+            }`}
+          </span>
+        </div>
+      )}
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-fit"
+        onClick={() => {
+          void navigate(rateNewPath(supportId))
+        }}
+      >
+        {rate === null ? supports.rateFirst : supports.rateAdd}
+      </Button>
+    </Tile>
   )
 }
 

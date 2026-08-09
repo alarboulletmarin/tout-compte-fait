@@ -107,6 +107,7 @@ export function MonthPage() {
       {!isEmpty && (
         <div className="mb-4 hidden flex-wrap items-center gap-2 lg:flex">
           <Button
+            variant="secondary"
             title={t.a11y.newEntryKey}
             onClick={() => {
               create('out')
@@ -154,7 +155,7 @@ export function MonthPage() {
               </Button>
             )}
             <Button
-              variant={hasRecurrence ? 'primary' : 'secondary'}
+              variant="secondary"
               onClick={() => {
                 create('out')
               }}

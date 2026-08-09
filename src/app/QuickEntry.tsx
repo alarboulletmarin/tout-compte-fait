@@ -93,7 +93,7 @@ export function QuickEntry() {
   }
 
   const doors = [
-    { label: t.entry.newOut, path: entryNewPath({ direction: 'out' }), variant: 'primary' as const },
+    { label: t.entry.newOut, path: entryNewPath({ direction: 'out' }), variant: 'secondary' as const },
     { label: t.entry.newIn, path: entryNewPath({ direction: 'in' }), variant: 'secondary' as const },
     {
       label: t.entry.newSaving,

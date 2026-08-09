@@ -1404,6 +1404,25 @@ export const fr = {
     removeConfirm:
       'La récurrence disparaît avec ses échéances à venir. Celles déjà confirmées restent dans l’historique.',
     stopHint: 'Les échéances déjà confirmées restent dans l’historique.',
+
+    /* Le geste inverse de « Ajouter une récurrence » : on découvre qu'une
+       règle posée par erreur, ou devenue sans objet, ne se répète pas. Deux
+       issues bien distinctes, et la question le dit avant qu'on la pose —
+       voir `updates.convertsToSingleEntry`. */
+    convertToOneTime: 'Changer en ponctuel',
+    convertToOneTimeConfirmSingle:
+      'Elle devient une ligne ponctuelle, à la même date et au même montant. Rien d’autre ne change.',
+    convertToOneTimeConfirmHistory:
+      'La récurrence s’arrête. Les échéances déjà confirmées deviennent des lignes ponctuelles indépendantes ; celles seulement prévues disparaissent.',
+    convertToOneTimeAction: 'Changer',
+    convertedToEntry: 'Devenue ponctuelle',
+    /* Pourquoi le bouton n'est pas là : la règle se lit, elle ne se devine pas
+       à son absence — même principe que `savings.removeBlocked`. */
+    convertToOneTimeBlocked:
+      'Elle pose la mensualité d’un crédit ou reconstitue une avance : elle se change depuis cette fiche-là.',
+    /* Le geste inverse : une entrée ponctuelle qu'on a saisie une fois, mais
+       qui en réalité se répète. */
+    convertedFromEntry: 'Devenue récurrence',
     /* Ce que la périodicité seule demande. Tout le reste du formulaire — le
        libellé, le montant, la catégorie, le membre, la note et leurs messages —
        vit sous `entry` : la saisie n'a qu'un écran, elle n'a donc qu'un jeu de

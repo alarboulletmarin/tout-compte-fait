@@ -146,6 +146,7 @@ export function CalendarPage() {
           <EmptyState message={t.calendar.empty}>
             <div className="flex flex-wrap justify-center gap-2">
               <Button
+                variant="secondary"
                 onClick={() => {
                   create('out')
                 }}

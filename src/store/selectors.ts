@@ -68,6 +68,7 @@ import {
 } from '@/domain/saving'
 import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
 import { rateOn, ratesOf } from '@/domain/savingRate'
+import { convertsToSingleEntry } from '@/domain/updates'
 import {
   NO_START,
   type ProjectionSource,
@@ -1420,6 +1421,31 @@ export function useRecurrenceRow(id: string | undefined): RecurrenceRow | null {
     () => (id === undefined ? null : (rows.find((row) => row.recurrence.id === id) ?? null)),
     [rows, id],
   )
+}
+
+export type RecurrenceConvertibility =
+  /** Pose la mensualité d'un crédit, ou reconstitue une avance : le lien se
+   *  couperait sans rien pour le dire ensuite — le geste reste à ces
+   *  écrans-là, pas à la fiche générique d'une récurrence. */
+  | { kind: 'linked' }
+  /** Voir `updates.convertsToSingleEntry` : devient une ligne unique. */
+  | { kind: 'single' }
+  /** A déjà des échéances confirmées : chacune se détache, indépendante. */
+  | { kind: 'history' }
+
+/**
+ * Ce que « Changer en ponctuel » va faire, avant qu'on l'actionne. `null` si
+ * la récurrence n'existe pas ou plus.
+ */
+export function useRecurrenceConvertibility(id: string | undefined): RecurrenceConvertibility | null {
+  const data = useStore((s) => s.data)
+  return useMemo(() => {
+    if (id === undefined || data.recurrences.find((r) => r.id === id) === undefined) return null
+    if (data.debts.some((d) => d.recurrenceId === id) || data.advances.some((a) => a.recurrenceId === id)) {
+      return { kind: 'linked' }
+    }
+    return { kind: convertsToSingleEntry(data, id) ? 'single' : 'history' }
+  }, [data, id])
 }
 
 export function useMonthBounds(): MonthBounds {

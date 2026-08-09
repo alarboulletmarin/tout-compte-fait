@@ -547,6 +547,51 @@
       transition-delay: 0ms !important;
     }
   }
+
+  /* --- EffortSlider — « et si je verse davantage ? », en continu ---------
+     Le curseur natif porte déjà le clavier, la sémantique `slider` et
+     l'anneau de focus (`base.css`) ; ce qui suit n'habille que la piste et le
+     pouce, dans les couleurs sémantiques de l'app plutôt que le gris système
+     par défaut, qu'aucun des deux thèmes ne réclame. */
+  .effort-slider {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .effort-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+
+  .effort-slider::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-top: -7px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+  }
+
+  .effort-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+
+  .effort-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+  }
 }
 
 @layer components {
