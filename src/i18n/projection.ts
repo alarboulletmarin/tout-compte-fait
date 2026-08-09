@@ -25,7 +25,11 @@ import { currentLocale, subscribeLocale } from './strings'
 import type { Widen } from './widen'
 
 const fr = {
-  title: 'Projections',
+  /* « Simulation » et non « Projections » : le mot dit un outil qu'on ouvre pour
+     essayer quelque chose, quand le pluriel nommait une section — c'est-à-dire
+     un endroit où l'on rangerait des projections, ce que cet écran ne fait pas.
+     Le jour où l'app garde une trajectoire, elle la garde sur un objectif. */
+  title: 'Simulation',
 
   /* --- La réserve ---------------------------------------------------------
      Elle ne s'écarte pas et ne se replie pas : c'est la seule chose de cet
@@ -121,28 +125,35 @@ const fr = {
   capacityLeft: 'Capacité d’épargne restante ce mois-ci : %s',
   capacityUse: 'Utiliser %s',
 
-  /* --- Les hypothèses -----------------------------------------------------
-     Trois au plus, et la limite est dure : au-delà, les courbes superposées
-     ne se lisent plus sur un téléphone, et un quatrième trait n'ajoute pas une
-     information — il en retire trois. */
-  scenarios: 'Hypothèses de rendement',
-  scenariosHint:
-    'Jusqu’à trois, aux mêmes versements. Compare plusieurs hypothèses plutôt que de prendre un taux pour une prévision.',
-  /* Trois points de départ pour la première hypothèse, jamais un profil : le
-     champ reste éditable juste après, et aucun des trois n'est calé sur un
-     produit précis. Un chiffre retapé n'en coche simplement plus aucun. */
-  presetAxis: 'Hypothèse de départ',
-  presetCautious: 'Prudent',
-  presetCentral: 'Central',
-  presetDynamic: 'Dynamique',
-  /* Le rendement par compte et l'inflation sont tous deux facultatifs, tous
-     deux avancés — l'écran répond déjà sans eux — et tous deux repliés
-     derrière la même porte plutôt que deux Tiles ouvertes en permanence. */
-  customize: 'Personnaliser les hypothèses',
-  scenarioRate: 'Rendement annuel net',
-  scenarioAdd: 'Comparer une hypothèse',
-  scenarioRemove: 'Retirer l’hypothèse à %s',
-  scenarioLabel: 'Hypothèse à %s',
+  /* --- La fourchette de rendement ----------------------------------------
+     Un seul mécanisme, là où il y en avait quatre : trois hypothèses libres,
+     trois présélections, un taux par compte et un second taux « comparé » par
+     compte. Un placement n'a pas trois rendements, il a une fourchette — et
+     trois courbes obligent à choisir laquelle on croit, quand une aire montre
+     l'écart sans rien promettre.
+     Elle ne s'applique qu'aux comptes muets : celui dont le taux est posé sur
+     sa fiche vaut la même chose dans les deux bornes, parce que son
+     propriétaire a dit ce qu'il en attend. */
+  rate: 'Rendement',
+  rangeAxis: 'Fourchette de rendement',
+  rangeLow: 'Au plus bas',
+  rangeHigh: 'Au plus haut',
+  rangeHint:
+    'Deux hypothèses, et l’écart entre elles est la réponse honnête : personne ne connaît le rendement des années à venir.',
+  rangeHintSplit:
+    'Elle ne s’applique qu’aux comptes sans taux. Un compte dont le taux est posé sur sa fiche vaut la même chose des deux côtés — c’est toi qui l’as dit.',
+  /* Le gabarit d'une fourchette, partout où elle s'écrit : le résultat, la
+     légende du tracé, la ligne d'un compte, l'écart d'un effort. Un seul
+     endroit, parce que quatre tirets différents à quatre endroits se lisent
+     comme quatre notions. */
+  rangeShort: '%s – %s',
+  rangeGap: '%s d’écart entre les deux hypothèses.',
+  /* Tant que rien ne se calcule, la rangée ne peut pas dire quels taux courent :
+     elle dit qu'elle ne le sait pas encore, plutôt qu'un « 0 % » qui serait une
+     réponse. */
+  rangeUnknown: 'À régler',
+  rangeLowColumn: 'Au plus bas',
+  rangeHighColumn: 'Au plus haut',
   /* La nature du taux : une distinction de sens, pas de calcul. Elle se lit
      dans le mot et dans la forme du trait, jamais dans la seule couleur.
      « Garanti / Hypothèse » laissait entendre que l'app savait lequel des deux
@@ -151,12 +162,6 @@ const fr = {
   kindAxis: 'Type de taux',
   kindGuaranteed: 'Taux garanti',
   kindAssumed: 'Rendement hypothétique',
-  /* Un Livret A n'est pas « garanti à dix ans » parce que son taux du jour est
-     connu : il est révisé au 1er février et au 1er août. C'est exactement la
-     confusion que cette phrase existe pour empêcher. */
-  kindGuaranteedHint:
-    'À n’utiliser que si ce taux est contractuellement garanti sur toute la durée simulée. Un taux connu aujourd’hui — celui d’un livret réglementé — ne l’est pas : il est révisé.',
-  kindAssumedHint: 'Rien n’est promis — actions, unités de compte. Le taux n’engage que toi.',
 
   /* --- Le résultat --------------------------------------------------------
      Il est en tête d'écran, avant les paramètres, et c'est le seul changement
@@ -170,40 +175,34 @@ const fr = {
   /* La décomposition sous le chiffre : un capital projeté est trois choses, et
      un nombre seul les confond. */
   resultSplit: '%s versés · %s de rendement',
-  resultBasis: 'Simulation avec %s · %s',
   perMonth: '%s/mois',
   perYear: '%s/an',
-  interestShare: 'Le rendement représente ≈ %s du capital final.',
   /* Le mode inverse répond par un versement, pas par un capital : c'est lui le
      chiffre héros, et la cible passe en surtitre. */
   targetHeading: 'Pour atteindre %s dans %s',
-  requiredMonthly: 'Versement requis',
-  totalPaid: 'Versé en tout',
   targetReached: 'Le capital actuel suffit déjà : il n’y a rien à verser.',
   targetMissing: 'Indique un objectif pour savoir combien verser.',
   nothingToPlot: 'Indique un versement mensuel ou un capital actuel.',
 
-  /* Chaque ligne dit ce qu'elle est, et la suivante d'où elle sort. « Versements
-     ≈ 67 k€ » ne répond pas à « c'est le total sur dix ans, ça ? » — alors que
-     « 616 €/mois pendant 10 ans » y répond sans qu'on ait à poser la question. */
-  breakdownInitial: 'Capital de départ',
-  breakdownInitialFrom: 'Ce que tu as déjà, aujourd’hui.',
-  breakdownPaid: 'Versements',
-  breakdownPaidFrom: '%s pendant %s.',
-  breakdownInterest: 'Rendement',
-  breakdownInterestFrom: '%s, composé chaque mois.',
+  /* Ce qui reste de la décomposition en quatre lignes : le nom du total, que le
+     tableau des paliers porte en tête de colonne. Les trois autres lignes
+     vivaient dans une tuile sous le résultat ; la décomposition tient
+     désormais en une phrase — « ≈ 12 000 € versés · ≈ 1 900 € de rendement » —
+     posée sous le chiffre, là où elle se lit en trois secondes. */
   breakdownTotal: 'Capital projeté',
 
   /* --- Le tracé -----------------------------------------------------------*/
-  chart: 'Projection',
   chartLabel: 'Projection du capital sur %s',
   chartAt: 'Dans %s',
   chartCursor: 'Lecture de la projection',
-  /* Les deux bandes empilées : le haut de la pile est le capital. C'est ce qui
-     rend visible d'un coup d'œil quelle part vient de la poche et quelle part
-     vient du taux — la seule pédagogie que cet écran ait à donner. */
+  /* Les deux aires empilées : le versé en bas, le rendement au-dessus, et le
+     haut de la pile est la borne basse du capital. C'est ce qui rend visible
+     d'un coup d'œil quelle part vient de la poche et quelle part vient du taux
+     — la seule pédagogie que cet écran ait à donner. La fourchette s'ouvre
+     par-dessus, et dit ce que le calcul ne sait pas. */
   contributedArea: 'Versements',
-  interest: 'Rendement',
+  chartCapital: 'Capital projeté',
+  chartRange: 'Fourchette',
   start: 'Aujourd’hui',
 
   /* --- Le détail ----------------------------------------------------------
@@ -214,52 +213,20 @@ const fr = {
   milestones: 'Voir le détail dans le temps',
   milestonesHint: 'Montants arrondis : la précision affichée ne dépasse pas celle du calcul.',
   milestoneWhen: 'Durée',
-  /* La décomposition par support : une colonne par compte, plus le total. Un
-     Livret A à 3 % et un PEA à 6 % qui partent de capitaux différents ne
-     suivent pas la même courbe, et leur somme n'est celle d'aucun taux moyen —
-     c'est la seule lecture qui dise *où* le capital se trouve. */
-  splitTotal: 'Capital total',
-  splitRates: 'un taux par support',
-  /* Un support sans hypothèse emprunte celle de l'écran, et la colonne le dit :
-     sans cette marque, il passerait pour un support renseigné. */
-  splitBorrowed: '%s (hypothèse de l’écran)',
-  splitSimulated: '%s (simulé)',
-  splitDated: '%s (taux daté)',
-  splitOwn: 'Chaque support à son hypothèse ; ceux qui n’en portent pas prennent celle de l’écran.',
-  /* Le tracé décomposé : une bande par compte, et le haut de la pile *est* le
-     total. On n'empile que ce qui s'additionne — deux supports, oui ; deux
-     hypothèses de rendement posées sur le même versé, jamais. */
-  chartStack: 'Capital par support',
-  chartTotal: 'Total',
-  srChartStack: 'De %s à %s en %s, réparti sur %s supports.',
-
-  /* --- Le rendement, support par support ----------------------------------
+  /* --- Le rendement, compte par compte ------------------------------------
      Projeter tout le portefeuille d'une personne sous un taux unique n'a aucun
      sens : deux comptes ne suivent pas la même courbe, et leur somme n'est
      celle d'aucun taux moyen. Ce qui se tape ici ne vaut que pour la
      simulation — la fiche du support reste le seul endroit où un taux
      s'enregistre, daté. */
-  supportRates: 'Rendement par support',
+  supportRates: 'Compte par compte',
   supportRatesHint:
-    'Chaque compte part du taux posé sur sa fiche. Ce que tu changes ici ne vaut que pour cette simulation, et ne modifie pas ton épargne.',
-  supportRateOwn: 'Posé sur ce support',
+    'Chaque compte part du taux posé sur sa fiche, et la fourchette ne s’applique qu’à ceux qui n’en portent pas. Ce que tu changes ici ne vaut que pour cette simulation, et ne modifie pas ton épargne.',
+  supportRateOwn: 'Posé sur ce support : la fourchette ne s’y applique pas.',
   supportRateDated: 'Un changement de taux est prévu pendant la durée simulée.',
-  supportRateBorrowed: 'Aucun taux posé : l’hypothèse ci-dessous s’applique.',
+  supportRateBorrowed: 'Aucun taux posé : c’est la fourchette qui s’applique.',
   supportRateSimulated: 'Modifié pour cette simulation',
   supportRateReset: 'Reprendre le taux du support',
-  /* La fourchette : deux taux sur un même compte. C'est la seule façon honnête
-     de projeter un placement qui fluctue — un PEA n'a pas *un* rendement, il en
-     a eu 3 % une décennie et 11 % une autre. Une fourchette ne promet rien,
-     elle montre l'écart. */
-  supportCompare: 'Comparer un second taux',
-  supportComparedRate: 'Second taux',
-  supportCompareDrop: 'Retirer la comparaison',
-  supportCompareHint: 'Mêmes versements, même durée : seul le rendement change.',
-  supportRange: 'de %s à %s',
-  comparedHeading: 'Avec les seconds taux',
-  comparedTotal: 'Capital comparé',
-  comparedGap: '%s d’écart. À versements égaux, tout l’écart vient du rendement.',
-  comparedLine: 'Seconds taux',
   /* Le plafond : sur ce qui est versé, jamais sur le solde. Un livret plein
      rapporte encore, et une courbe qui s'arrêterait à plat dirait l'inverse. */
   supportCap: 'Plafond %s · reste %s à verser',
@@ -268,7 +235,6 @@ const fr = {
     'Les versements s’arrêtent au plafond pendant la durée simulée ; le capital, lui, continue de croître.',
   capNote:
     'La place restante est calculée sur le capital d’aujourd’hui : les intérêts déjà acquis y sont comptés comme des versements, donc elle est un peu sous-estimée.',
-  screenRateHint: 'Elle s’applique aux supports qui ne portent aucun taux.',
 
   /* --- Le détail du point de départ ---------------------------------------*/
   sourceParts: 'Compte par compte',
@@ -276,35 +242,30 @@ const fr = {
   sourcePartMonthly: 'Versements',
   sourcePartTotal: 'Total',
 
-  /* --- L'effort d'épargne -------------------------------------------------
-     La seule lecture actionnable du mode direct : « combien j'aurai » se
-     contemple, « ce que 150 € de plus changeraient » se décide. */
-  effort: 'Et si je verse davantage ?',
-  effortHint: 'À la première hypothèse, sur la même durée.',
-  effortCurrent: 'Simulation en cours',
-  /* Sur un portefeuille décomposé, l'effort se répartit au prorata : sans le
-     détail, on saurait combien verser sans savoir où. */
-  effortParts: 'Dont : %s',
-  /* Un barreau se clique pour l'essayer, jamais pour l'adopter : c'est la même
-     bascule que « Modifier pour cette simulation » (`source`), déclenchée
-     depuis une ligne plutôt que depuis le panneau d'origine. L'échelle ne
-     recommande toujours rien — cliquer n'est pas plus une préconisation que la
-     lire ne l'était. */
+  /* --- « Et si je versais… » ----------------------------------------------
+     La seule lecture actionnable de l'écran : « combien j'aurai » se contemple,
+     « ce que 50 € de plus changeraient » se décide. Elle avait deux
+     dispositifs — un tableau de quatre barreaux et un curseur qui explorait le
+     continu entre eux —, dont le second contenait strictement le premier. Il
+     n'en reste qu'un réglage d'une ligne : moins, plus, et ce que ça change. */
+  effort: 'Et si je versais…',
+  effortHint: 'À la même durée et à la même fourchette.',
+  effortLess: 'Retirer %s',
+  effortMore: 'Ajouter %s',
+  /* L'écart, et non l'arrivée : « 208 k€ » ne dit pas ce que le geste a changé,
+     et le comparer de tête au chiffre lu en haut de l'écran est précisément le
+     calcul que cette ligne existe pour éviter. */
+  effortGap: '%s à l’arrivée.',
+  effortArrival: 'soit %s',
+  /* Reprendre, c'est **essayer** — jamais adopter : le bouton recopie le montant
+     dans la simulation, et rien n'est enregistré nulle part. */
   effortApply: 'Simuler avec %s',
-  /* Le curseur explore un continu, sans rien adopter — le tap sur un barreau
-     applique, le curseur regarde seulement. Les quatre barreaux du tableau
-     restent des repères, pas les seuls montants qu'on puisse essayer. */
-  effortSlider: 'Essayer un autre versement',
-  effortSliderArrival: 'donnerait %s',
 
   /* --- Euros constants ----------------------------------------------------*/
   constant: 'Tenir compte de l’inflation',
   constantHint: 'Affiche le pouvoir d’achat équivalent, en euros d’aujourd’hui.',
   inflation: 'Inflation annuelle',
   constantOn: 'Montants en euros d’aujourd’hui, inflation à %s.',
-  /* Ce que l'option change, sur les chiffres qu'on a sous les yeux : la phrase
-     abstraite ne suffisait pas à faire comprendre l'intérêt de la case. */
-  constantExample: '%s dans %s correspondraient à environ %s d’aujourd’hui.',
 
   /* --- Ce qu'il faut savoir, à la demande ---------------------------------
      Sept paragraphes vivaient dans le flux de l'écran. Chacun était juste ;
@@ -334,8 +295,11 @@ const fr = {
      Ce qui se lit à l'œil se lit à l'oreille, ou l'un des deux ment. Le
      tableau porte déjà les chiffres ligne à ligne : le graphique n'a donc
      qu'à dire ce qu'il trace et où il arrive. */
-  srChart: '%s : de %s aujourd’hui à %s dans %s.',
-  srScenario: 'Hypothèse à %s, %s',
+  srChart: 'De %s aujourd’hui à %s dans %s.',
+  /* Deux gabarits et non un avec un morceau conditionnel : une fourchette et un
+     chiffre unique ne se disent pas dans le même ordre à l'oreille, et coudre
+     les deux donnerait une phrase qui se lit comme une liste. */
+  srChartRange: 'De %s aujourd’hui à une fourchette de %s à %s dans %s.',
   srContributed: 'Versements cumulés : %s à l’arrivée.',
 
   /* --- La durée, en toutes lettres ----------------------------------------
@@ -350,12 +314,6 @@ const fr = {
      côté. */
   yearsAndMonths: '%s %s',
 
-  /* --- L'étage suivant ----------------------------------------------------
-     Nommé et non promis : comparer mois après mois le simulé au réel est un
-     chantier à part (cahier §4.6 ter), et un écran qui annoncerait une date se
-     tromperait. */
-  plansAhead:
-    'Comparer une hypothèse à ce qui est réellement versé, mois après mois, viendra plus tard : pour l’instant l’écran lit ton épargne, il ne la suit pas.',
 } as const
 
 export type ProjectionStrings = Widen<typeof fr>

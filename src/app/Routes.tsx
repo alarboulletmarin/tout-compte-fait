@@ -28,6 +28,7 @@ import {
   DATA_PATH,
   FAMILY_NEW_PATH,
   LANDING_PATH,
+  LEGACY_PROJECTION_PATH,
   LEGACY_SETTINGS_PATH,
   LEGAL_NOTICE_PATH,
   MEMBER_NEW_PATH,
@@ -115,7 +116,7 @@ const SupportsPage = lazy(async () => ({ default: (await savings()).SupportsPage
 const AnalysisPage = lazy(async () => ({ default: (await savings()).AnalysisPage }))
 
 /**
- * Le simulateur de projections, à la demande.
+ * Le simulateur, à la demande.
  *
  * Il emporte son propre tracé SVG, sa prose — qui est longue, parce que ce
  * qu'il refuse de calculer demande plus de mots que ce qu'il calcule — et son
@@ -224,8 +225,14 @@ export function AppRoutes() {
           <Route path={ADVANCES_PATH} element={<AdvancesPage />} />
           <Route path={ADVANCE_NEW_PATH} element={<AdvanceFormPage />} />
           {/* Sous l'épargne par l'intention, à la racine par l'URL — voir
-              `PROJECTION_PATH` dans `routes.ts`. */}
+              `PROJECTION_PATH` dans `routes.ts`. L'ancienne adresse, au pluriel,
+              se redirige plutôt que de disparaître : elle a pu être mise en
+              signet, exactement comme `/abonnements`. */}
           <Route path={PROJECTION_PATH} element={<ProjectionPage />} />
+          <Route
+            path={`${LEGACY_PROJECTION_PATH}/*`}
+            element={<Navigate to={PROJECTION_PATH} replace />}
+          />
           <Route path="/historique" element={<HistoryPage />} />
           {/* Le quatrième onglet. Pas de découpage à la demande : l'écran n'est
               qu'une liste de rangées, et il est sur le chemin de la navigation

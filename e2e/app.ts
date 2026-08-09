@@ -100,6 +100,6 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
      « ≈ 202 k€ » dès qu'on compare trois hypothèses — il défile dans son cadre,
      et c'est exactement le genre de chose qui pousse les murs quand le cadre
      manque. */
-  { path: '/projections', heading: /projections/i },
+  { path: '/simulation', heading: /simulation/i },
   { path: '/plus', heading: /plus/i },
 ]

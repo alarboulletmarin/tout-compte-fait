@@ -13,7 +13,7 @@
 import type { ProjectionStrings } from './projection'
 
 export const en: ProjectionStrings = {
-  title: 'Projections',
+  title: 'Simulation',
 
   caveat:
     'Constant-rate simulation. This result is indicative: it is neither a promise nor investment advice.',
@@ -61,113 +61,79 @@ export const en: ProjectionStrings = {
   capacityLeft: 'Saving capacity still available this month: %s',
   capacityUse: 'Use %s',
 
-  scenarios: 'Return assumptions',
-  scenariosHint:
-    'Up to three, at the same contributions. Compare several assumptions rather than taking one rate for a forecast.',
-  presetAxis: 'Starting point',
-  presetCautious: 'Cautious',
-  presetCentral: 'Central',
-  presetDynamic: 'Dynamic',
-  customize: 'Customize the assumptions',
-  scenarioRate: 'Net annual return',
-  scenarioAdd: 'Compare an assumption',
-  scenarioRemove: 'Remove the assumption at %s',
-  scenarioLabel: 'Assumption at %s',
+  rate: 'Return',
+  rangeAxis: 'Return range',
+  rangeLow: 'At the low end',
+  rangeHigh: 'At the high end',
+  rangeHint:
+    'Two assumptions, and the gap between them is the honest answer: nobody knows the return of the years ahead.',
+  rangeHintSplit:
+    'It only applies to accounts with no rate. An account whose rate is set on its own page is worth the same on both sides — you said so yourself.',
+  rangeShort: '%s – %s',
+  rangeGap: '%s between the two assumptions.',
+  rangeUnknown: 'To be set',
+  rangeLowColumn: 'At the low end',
+  rangeHighColumn: 'At the high end',
   kindAxis: 'Kind of rate',
   kindGuaranteed: 'Guaranteed rate',
   kindAssumed: 'Assumed return',
-  kindGuaranteedHint:
-    'Only use this if the rate is contractually guaranteed for the whole term simulated. A rate known today — that of a regulated savings account — is not: it gets revised.',
-  kindAssumedHint: 'Nothing is promised — shares, unit-linked funds. The rate binds only you.',
 
   approx: '≈ %s',
   resultIn: 'In %s',
   resultSplit: '%s paid in · %s of return',
-  resultBasis: 'Simulated with %s · %s',
   perMonth: '%s/month',
   perYear: '%s/year',
-  interestShare: 'The return makes up ≈ %s of the final capital.',
   targetHeading: 'To reach %s in %s',
-  requiredMonthly: 'Contribution required',
-  totalPaid: 'Paid in all',
   targetReached: 'The capital today is already enough: there’s nothing to pay in.',
   targetMissing: 'Enter a goal to find out how much to pay in.',
   nothingToPlot: 'Enter a monthly contribution or a capital today.',
 
-  breakdownInitial: 'Starting capital',
-  breakdownInitialFrom: 'What you already have, today.',
-  breakdownPaid: 'Contributions',
-  breakdownPaidFrom: '%s for %s.',
-  breakdownInterest: 'Return',
-  breakdownInterestFrom: '%s, compounded monthly.',
   breakdownTotal: 'Capital projected',
 
-  chart: 'Projection',
   chartLabel: 'Capital projected over %s',
   chartAt: 'In %s',
   chartCursor: 'Reading the projection',
   contributedArea: 'Contributions',
-  interest: 'Return',
+  chartCapital: 'Capital projected',
+  chartRange: 'Range',
   start: 'Today',
 
   milestones: 'See how it unfolds',
   milestonesHint:
     'Rounded amounts: the precision shown doesn’t exceed the precision of the calculation.',
   milestoneWhen: 'Term',
-  splitTotal: 'Total capital',
-  splitRates: 'a rate per account',
-  splitBorrowed: '%s (screen assumption)',
-  splitSimulated: '%s (simulated)',
-  splitDated: '%s (dated rate)',
-  splitOwn:
-    'Each account at its own assumption; those carrying none take the screen’s.',
-  chartStack: 'Capital per account',
-  chartTotal: 'Total',
-  srChartStack: 'From %s to %s in %s, spread across %s accounts.',
-
-  supportRates: 'Return per account',
+  supportRates: 'Account by account',
   supportRatesHint:
-    'Each account starts from the rate set on its own page. What you change here only applies to this simulation, and doesn’t alter your savings.',
-  supportRateOwn: 'Set on this account',
+    'Each account starts from the rate set on its own page, and the range only applies to those carrying none. What you change here only applies to this simulation, and doesn’t alter your savings.',
+  supportRateOwn: 'Set on this account: the range doesn’t apply to it.',
   supportRateDated: 'A rate change is scheduled during the simulated term.',
-  supportRateBorrowed: 'No rate set: the assumption below applies.',
+  supportRateBorrowed: 'No rate set: the range applies.',
   supportRateSimulated: 'Changed for this simulation',
   supportRateReset: 'Restore the account’s rate',
-  supportCompare: 'Compare a second rate',
-  supportComparedRate: 'Second rate',
-  supportCompareDrop: 'Drop the comparison',
-  supportCompareHint: 'Same contributions, same term: only the return changes.',
-  supportRange: 'from %s to %s',
-  comparedHeading: 'With the second rates',
-  comparedTotal: 'Compared capital',
-  comparedGap: '%s apart. At equal contributions, the whole gap comes from the return.',
-  comparedLine: 'Second rates',
   supportCap: 'Cap %s · %s left to pay in',
   supportCapFull: 'Cap %s · already reached',
   supportCapped:
     'Contributions stop at the cap during the term simulated; the capital itself keeps growing.',
   capNote:
     'The room left is worked out from today’s capital: the interest already earned counts as contributions there, so it is slightly understated.',
-  screenRateHint: 'It applies to accounts that carry no rate of their own.',
 
   sourceParts: 'Account by account',
   sourcePartCapital: 'Capital',
   sourcePartMonthly: 'Contributions',
   sourcePartTotal: 'Total',
 
-  effort: 'What if I paid in more?',
-  effortHint: 'At the first assumption, over the same term.',
-  effortCurrent: 'Current simulation',
-  effortParts: 'Of which: %s',
+  effort: 'What if I paid in…',
+  effortHint: 'Over the same term, at the same range.',
+  effortLess: 'Take away %s',
+  effortMore: 'Add %s',
+  effortGap: '%s on arrival.',
+  effortArrival: 'that is %s',
   effortApply: 'Simulate with %s',
-  effortSlider: 'Try another contribution',
-  effortSliderArrival: 'would give %s',
 
   constant: 'Account for inflation',
   constantHint: 'Shows the equivalent purchasing power, in today’s money.',
   inflation: 'Annual inflation',
   constantOn: 'Amounts in today’s money, inflation at %s.',
-  constantExample: '%s in %s would be worth about %s of today’s money.',
 
   explain: 'Understanding this projection',
   explainRate: 'A constant rate isn’t a trajectory',
@@ -189,8 +155,8 @@ export const en: ProjectionStrings = {
   explainDataBody:
     'It can read an account’s capital and the contributions your recurring rules pay into it, so you don’t retype them. The reading goes one way only: nothing you simulate here is saved, enters a month, or leaves in an export. The return is never taken from an account — you are the one who sets it.',
 
-  srChart: '%s: from %s today to %s in %s.',
-  srScenario: 'Assumption at %s, %s',
+  srChart: 'From %s today to %s in %s.',
+  srChartRange: 'From %s today to a range of %s to %s in %s.',
   srContributed: 'Contributions to date: %s on arrival.',
 
   yearOne: '1 year',
@@ -198,7 +164,4 @@ export const en: ProjectionStrings = {
   monthOne: '1 month',
   months: '%s months',
   yearsAndMonths: '%s %s',
-
-  plansAhead:
-    'Comparing an assumption with what is actually paid in, month after month, will come later: for now the screen reads your savings, it doesn’t track them.',
 }

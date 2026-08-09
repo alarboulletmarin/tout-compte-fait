@@ -196,7 +196,7 @@ export const rateEditPath = (supportId: string, rateId: string): string =>
   `${SAVINGS_PATH}/${supportId}/taux/${rateId}`
 
 /**
- * Le simulateur de projections — à la racine, et sous l'écran Épargne.
+ * Le simulateur — à la racine, et rangé sous « Simuler ».
  *
  * **Il n'est pas un cinquième rang de « Gérer », et il a deux portes.** « Gérer »
  * range ce qui *décide de ce que le budget calcule* ; un simulateur ne décide
@@ -222,7 +222,19 @@ export const rateEditPath = (supportId: string, rateId: string): string =>
  * pas, ce qui coûte plus qu'un segment d'URL. `/avances` est déjà à la racine
  * pour la même raison.
  */
-export const PROJECTION_PATH = '/projections'
+export const PROJECTION_PATH = '/simulation'
+
+/**
+ * L'ancienne adresse, gardée pour ce qui pointe encore dessus.
+ *
+ * Même filet que `/reglages` et `/abonnements`, et même motif : une URL qu'on a
+ * pu mettre en signet ne se supprime pas, elle se redirige. Le singulier est le
+ * changement de fond — « Projections » nommait une section, c'est-à-dire un
+ * endroit où l'on rangerait des projections, ce que cet écran ne fait pas : il
+ * ne produit rien qui reste. Ce qui reste, désormais, est un **objectif**, et il
+ * vit sous `/epargne`.
+ */
+export const LEGACY_PROJECTION_PATH = '/projections'
 
 /* Les avances ont leur écran, pour la raison qui donne le sien aux crédits :
    elles vivent sous les récurrences — leur mensualité en est une — mais ce

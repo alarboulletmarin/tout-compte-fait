@@ -248,8 +248,11 @@ export const fr = {
        `i18n/projection.ts`, qui voyage avec lui.
        Le libellé ne promet aucun rendement, et la phrase dit exactement ce que
        l'écran fait : un calcul sous une hypothèse qu'on pose soi-même. */
-    projections: 'Projections',
-    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
+    /* Le singulier : c'est un outil qu'on ouvre pour essayer quelque chose,
+       pas une section où l'on rangerait des projections. Ce qui reste d'une
+       simulation adoptée est un objectif, et il vit sous l'épargne. */
+    projections: 'Simulation',
+    projectionsHint: 'Ce qu’un versement régulier devient, sous une fourchette de rendement.',
     /* Ce que chaque rangée de « Gérer » dit d'elle-même : sur un écran qui n'est
        qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir.
        Les rangées des trois autres groupes n'en ont pas besoin — elles disent

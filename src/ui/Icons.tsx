@@ -42,6 +42,7 @@ import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
 import { PiggyBank } from '@phosphor-icons/react/dist/csr/PiggyBank'
 import { Plus as PhPlus } from '@phosphor-icons/react/dist/csr/Plus'
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { Minus as PhMinus } from '@phosphor-icons/react/dist/csr/Minus'
 import { Money } from '@phosphor-icons/react/dist/csr/Money'
 import { Receipt } from '@phosphor-icons/react/dist/csr/Receipt'
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
@@ -84,6 +85,11 @@ export const ChevronLeft = adapt(CaretLeft)
 export const ChevronRight = adapt(CaretRight)
 export const ChevronDown = adapt(CaretDown)
 export const Plus = adapt(PhPlus)
+/* Il n'existe que par paire avec `Plus`, sur le réglage d'effort du
+   simulateur : « les deux sens sont deux boutons, jamais un seul » (DS §7), et
+   un « − » typographique posé dans un bouton n'aurait ni la graisse ni la boîte
+   du glyphe d'en face. */
+export const Minus = adapt(PhMinus)
 export const Close = adapt(X)
 export const Check = adapt(PhCheck)
 export const Warning = adapt(WarningCircle)

@@ -137,6 +137,25 @@ export function formatSignedMoney(value: Money, currency: string): string {
   return prefix + formatMoney(value, currency)
 }
 
+/**
+ * L'écart entre deux sorties de modèle : « +26 k€ ».
+ *
+ * Le signe de `formatSignedMoney` posé sur l'arrondi de `formatRoundedMoney`,
+ * et non l'un ou l'autre seul. Un écart entre deux projections **est** une
+ * sortie de modèle : l'écrire au centime — « +1 325,97 € de plus dans quinze
+ * ans » — donne à une hypothèse la précision d'une mesure, ce qui est
+ * exactement ce que l'arrondi existe pour empêcher. Mais il est aussi un
+ * écart, donc son signe se lit, ce qu'un arrondi seul ne dit que pour les
+ * négatifs.
+ *
+ * Ici et non dans un composant, comme les deux autres : la place du signe est
+ * une règle de langue, pas une décision d'écran.
+ */
+export function formatSignedRoundedMoney(value: Money, currency: string): string {
+  const prefix = value > 0 ? '+' : ''
+  return prefix + formatRoundedMoney(value, currency)
+}
+
 /* Une décimale au plus, et jamais imposée : `formatDecimal` en force une pour
    que « 4 mois » ne se lise pas comme un compte exact, mais ici le nombre est
    déjà annoncé comme approché — « 7,0 k€ » posé sous « 14 k€ » sur un axe n'y
