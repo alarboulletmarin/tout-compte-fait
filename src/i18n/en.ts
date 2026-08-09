@@ -534,7 +534,7 @@ export const en: Strings = {
 
     capacity: 'Saving capacity',
     capacityHint: 'income − costs − loans',
-    savingLeft: '%s left to put aside',
+    savingLeft: '%s still available',
     savingPlaced: '%s put aside over the month',
     savingWithdrawn: '%s taken back from savings',
     showSavings: 'See where to put %s',
@@ -980,6 +980,10 @@ export const en: Strings = {
     netMonth: 'Movements this month',
 
     supports: 'My pots',
+    analysis: 'Analysis',
+    analysisHint: 'See the analysis',
+    analysisPreview: '%s in %s · %s vs %s',
+    analysisPreviewOnly: '%s in %s',
     supportsEmpty:
       'No savings pot. Add an account, a plan or any other pot to track its value and your contributions.',
     supportsNoMember: 'Add a person to track your savings: a pot always belongs to someone.',
@@ -1172,7 +1176,7 @@ export const en: Strings = {
     placedUnassigned:
       'A contribution left “shared” goes into nobody’s savings. Attribute it so that it counts.',
 
-    left: 'Left to set aside',
+    left: 'Still available',
     leftNone: 'The whole capacity is set aside.',
     over: 'Overshoot',
     overHint: 'contributions exceed the capacity by %s',

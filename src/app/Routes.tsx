@@ -38,7 +38,9 @@ import {
   PROJECTION_PATH,
   RECURRENCES_PATH,
   RECURRENCE_NEW_PATH,
+  SAVINGS_ANALYSIS_PATH,
   SAVINGS_PATH,
+  SAVINGS_SUPPORTS_PATH,
   STORAGE_PATH,
   SUPPORT_NEW_PATH,
   TERMS_PATH,
@@ -109,6 +111,8 @@ const SupportFormPage = lazy(async () => ({ default: (await savings()).SupportFo
 const ValuationFormPage = lazy(async () => ({ default: (await savings()).ValuationFormPage }))
 const RateFormPage = lazy(async () => ({ default: (await savings()).RateFormPage }))
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
+const SupportsPage = lazy(async () => ({ default: (await savings()).SupportsPage }))
+const AnalysisPage = lazy(async () => ({ default: (await savings()).AnalysisPage }))
 
 /**
  * Le simulateur de projections, à la demande.
@@ -200,6 +204,10 @@ export function AppRoutes() {
           <Route path="/credits/:id" element={<CreditFormPage />} />
           <Route path="/repartition" element={<SplitPage />} />
           <Route path={SAVINGS_PATH} element={<SavingsPage />} />
+          {/* Les deux sous-vues, en segments fixes classés avant `:id` par
+              React Router — comme `/nouveau` juste dessous. */}
+          <Route path={SAVINGS_SUPPORTS_PATH} element={<SupportsPage />} />
+          <Route path={SAVINGS_ANALYSIS_PATH} element={<AnalysisPage />} />
           {/* Le segment fixe est classé avant `:id` par React Router : un
               support ne peut donc pas éclipser le formulaire de création. */}
           <Route path={SUPPORT_NEW_PATH} element={<SupportFormPage />} />

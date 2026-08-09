@@ -125,8 +125,7 @@ au premier `npm update`, et c'est celle qu'on ne relit jamais qui reste fausse.
 
 ## Accessibilité
 
-Le [cahier des charges](docs/CAHIER-DES-CHARGES.md#5-contraintes-techniques)
-vise le niveau **AA** : contraste sur tout texte, focus clavier visible,
+Le projet vise le niveau **AA** : contraste sur tout texte, focus clavier visible,
 `prefers-reduced-motion` respecté, graphiques doublés d'une lecture textuelle.
 Les écarts sont mesurés, tabulés et justifiés dans
 [l'architecture](docs/ARCHITECTURE.md#écarts-au-design-system) — un contraste
@@ -141,13 +140,12 @@ conformité subie.
 
 | Document | Répond à |
 |---|---|
-| [Cahier des charges](docs/CAHIER-DES-CHARGES.md) | Ce que l'app fait, et ce qu'elle ne fera pas |
 | [Design system](docs/DESIGN-SYSTEM.md) | De quoi elle a l'air |
 | [Architecture](docs/ARCHITECTURE.md) | Comment le code est rangé, et pourquoi |
 | [Déploiement](docs/DEPLOIEMENT.md) | Comment la mettre en ligne |
 
-Le cahier des charges et le design system sont la **source de vérité** : le code
-leur obéit, et un écart est un bug. Les écarts assumés sont listés, mesurés et
+Le design system est la **source de vérité** de l'apparence : le code lui
+obéit, et un écart est un bug. Les écarts assumés sont listés, mesurés et
 justifiés dans [l'architecture](docs/ARCHITECTURE.md#écarts-au-design-system).
 
 ## Contribuer

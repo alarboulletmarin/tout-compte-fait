@@ -5,13 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Avant d'écrire quoi que ce soit, deux lectures qui font gagner du temps :
+        Avant d'écrire quoi que ce soit, une lecture qui fait gagner du temps :
 
-        - le [cahier des charges](https://github.com/alarboulletmarin/tout-compte-fait/blob/main/docs/CAHIER-DES-CHARGES.md)
-          dit ce qui est dans la v1, et sa **section 2** dit explicitement ce qui
-          n'y est pas — comptes bancaires multiples, import de relevés, budgets
-          par enveloppe, multi-devise. Ces exclusions sont des décisions, pas des
-          oublis ;
         - [CONTRIBUTING.md](https://github.com/alarboulletmarin/tout-compte-fait/blob/main/CONTRIBUTING.md)
           rappelle que c'est un projet personnel dont le code est ouvert : une
           proposition peut être refusée sur le périmètre, même excellente.

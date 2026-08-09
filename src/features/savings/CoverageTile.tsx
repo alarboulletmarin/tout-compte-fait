@@ -19,12 +19,13 @@ import { Tile } from '@/ui/Tile'
  * « 10 450 € » est une anecdote : l'appli de la banque le dit mieux, plus vite,
  * et sans qu'on recopie un nombre lu trente secondes plus tôt.
  *
- * **Le même rang que le capital, sur une surface plus calme.** Le capital garde
- * l'accent — c'est lui l'ancre, et il porte le nom de la personne —, mais pas la
- * taille à lui seul : un chiffre de décision imprimé plus petit que le chiffre
- * d'inventaire posé juste au-dessus reproduirait exactement ce que cet écran
- * cherche à corriger. Les deux se lisent d'un coup d'œil, dans l'ordre où les
- * questions se posent — « combien j'ai », puis « est-ce que ça tient ».
+ * **Un rang sous le capital, pas à côté de lui.** C'est une lecture
+ * secondaire — elle qualifie le chiffre du dessus, elle ne rivalise pas avec
+ * lui : deux chiffres imprimés à la même taille dans le même écran se
+ * disputent l'œil, et l'un des deux perd toujours. Le capital reste l'ancre,
+ * avec le nom de la personne ; l'autonomie se lit juste après, dans le même
+ * ordre que les deux questions se posent — « combien j'ai », puis « est-ce
+ * que ça tient » —, mais sur une surface plus calme.
  *
  * **Il ne s'affiche pas faute de relevé** : sans capital, il n'y a pas de
  * numérateur, et la tuile Capital dit déjà l'absence. Deux fois la même absence
@@ -55,7 +56,7 @@ export function CoverageTile() {
         </p>
       ) : (
         <>
-          <p className="t-hero-fit tnum">
+          <p className="t-tile-num tnum">
             {tpl(t.savings.coverageValue, formatDecimal(coverage.covered))}
           </p>
           <span className="t-label">{t.savings.coverageHint}</span>

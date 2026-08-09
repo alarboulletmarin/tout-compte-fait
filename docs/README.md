@@ -1,12 +1,11 @@
 # Documentation
 
-Quatre documents, quatre questions. Chacun fait autorité sur la sienne : quand
+Trois documents, trois questions. Chacun fait autorité sur la sienne : quand
 le code et l'un d'eux divergent, c'est un bug — dans le code ou dans le
 document, mais c'est un bug.
 
 | Document | Répond à |
 |---|---|
-| [Cahier des charges](CAHIER-DES-CHARGES.md) | Qu'est-ce que l'app fait, et qu'est-ce qu'elle ne fait pas ? Périmètre, modèle de données, fonctionnalités, critères de sortie. |
 | [Design system](DESIGN-SYSTEM.md) | De quoi elle a l'air. Couleur, typographie, grille, composants, plancher de qualité. |
 | [Architecture](ARCHITECTURE.md) | Comment le code est rangé, et pourquoi. Les décisions structurantes et leurs raisons. |
 | [Déploiement](DEPLOIEMENT.md) | Comment la mettre en ligne, chez Vercel ou ailleurs. |

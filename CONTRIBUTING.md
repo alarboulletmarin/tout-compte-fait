@@ -18,9 +18,8 @@ Ce n'est pas un projet communautaire cherchant à s'agrandir. Concrètement :
 - **Les questions sont les bienvenues** — sur le fonctionnement de l'app comme
   sur un choix de code.
 - **Les pull requests ne sont pas activement recherchées.** Elles ne sont pas
-  refusées par principe, mais le périmètre est fixé par le
-  [cahier des charges](docs/CAHIER-DES-CHARGES.md) et l'apparence par le
-  [design system](docs/DESIGN-SYSTEM.md). Une PR qui les contredit sera refusée,
+  refusées par principe, mais l'apparence est fixée par le
+  [design system](docs/DESIGN-SYSTEM.md). Une PR qui le contredit sera refusée,
   même bien écrite — d'où la règle qui suit.
 - **Le fork est légitime et encouragé.** Si ta vision diverge, la licence est là
   pour ça : forke, renomme, pars. C'est un usage parfaitement normal, pas un

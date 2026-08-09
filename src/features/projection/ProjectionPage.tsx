@@ -39,10 +39,11 @@ import { StackedAreas, type StackedBand } from '@/charts/StackedAreas'
 import { type Money, ZERO, toAmountInput } from '@/domain/money'
 import { type RateKind, inflate, milestoneMonths } from '@/domain/projection'
 import type { ProjectionSource } from '@/domain/projectionStart'
+import { savingLeft } from '@/domain/stats'
 import { currencySymbol, formatMoney, formatPercent, formatRoundedMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import { t } from '@/i18n/strings'
-import { useActiveSavingSupports, useMembers, useProjectionStart } from '@/store/selectors'
+import { useActiveSavingSupports, useKindTotals, useMembers, useProjectionStart } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { Disclosure } from '@/ui/Disclosure'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -62,6 +63,8 @@ import { formatDuration } from './duration'
 import {
   type ProjectionDraft,
   type ProjectionMode,
+  type RatePreset,
+  RATE_PRESETS,
   type SupportRateDraft,
   type SupportSeries,
   YEAR_PRESETS,
@@ -70,6 +73,7 @@ import {
   effortLadder,
   isPreset,
   nextSlot,
+  presetOf,
   readDraft,
   writeDraft,
 } from './model'
@@ -162,6 +166,17 @@ const kinds = (): { value: RateKind; label: string }[] => [
 ]
 
 /**
+ * Trois points de départ, pas un quatrième profil : « personnalisé » n'est
+ * jamais une option qu'on choisit, c'est ce qu'on lit quand aucune des trois
+ * ne correspond plus au chiffre tapé.
+ */
+const presets = (): { value: RatePreset | 'custom'; label: string }[] => [
+  { value: 'cautious', label: projection.presetCautious },
+  { value: 'central', label: projection.presetCentral },
+  { value: 'dynamic', label: projection.presetDynamic },
+]
+
+/**
  * L'origine gardée, confrontée à ce qui existe encore.
  *
  * Un identifiant survit à ce qu'il désigne : le support a pu être supprimé, la
@@ -191,6 +206,7 @@ export function ProjectionPage() {
   const [draft, setDraft] = useState<ProjectionDraft>(readDraft)
   const [explaining, setExplaining] = useState(false)
   const [detailed, setDetailed] = useState(false)
+  const [customizing, setCustomizing] = useState(false)
 
   const members = useMembers()
   const supports = useActiveSavingSupports()
@@ -198,6 +214,12 @@ export function ProjectionPage() {
   /* L'horizon avant l'origine, et non l'inverse : c'est lui qui décide quelles
      règles sont assez durables pour entrer dans un versement constant. */
   const start = useProjectionStart(source, draft.years * 12)
+  /* La capacité d'épargne restante du mois — la même donnée que l'écran
+     Épargne et le tableau de bord, sous le même filtre : reprise, jamais
+     recalculée. Elle n'entre dans aucune simulation d'elle-même, mais un
+     versement libre peut la reprendre d'un geste plutôt que d'être retapé. */
+  const totals = useKindTotals(true)
+  const capacityLeft = savingLeft(totals)
 
   useEffect(() => {
     writeDraft(draft)
@@ -588,6 +610,28 @@ export function ProjectionPage() {
                 )}
           </div>
 
+          {/* Le versement libre peut reprendre la capacité restante du mois —
+              la même donnée que l'écran Épargne et le tableau de bord, sous le
+              même filtre — plutôt que d'être retapé. Elle ne s'affiche que là
+              où le champ est éditable, et seulement s'il reste quelque chose à
+              reprendre : à zéro ou en dépassement, il n'y a rien à proposer. */}
+          {draft.mode === 'forecast' && source.kind === 'free' && capacityLeft > ZERO && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="t-label">
+                {tpl(projection.capacityLeft, tpl(projection.perMonth, exact(capacityLeft)))}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  patch({ monthlyText: toAmountInput(capacityLeft) })
+                }}
+              >
+                {tpl(projection.capacityUse, exact(capacityLeft))}
+              </Button>
+            </div>
+          )}
+
           {/* Les quatre raccourcis règlent le champ, ils ne le remplacent pas :
               sans lui, un horizon de sept ans serait inatteignable. Mais il ne
               s'affiche plus en permanence — deux contrôles pour une même donnée,
@@ -649,7 +693,16 @@ export function ProjectionPage() {
             poser un taux unique sur un Livret A et un PEA — ce qu'aucun des
             deux ne fait, et ce dont la somme n'est celle d'aucun taux moyen. */}
         {result !== null && result.split.length > 0 && (
-          <Tile className="gap-4">
+          <Tile className="gap-2">
+            {/* Repliée : un compte muet ou renseigné se lit sans avoir à
+                ouvrir la porte, mais le détail — un champ par compte, avec sa
+                fourchette — n'a pas besoin de rester en vue en permanence. */}
+            <Disclosure
+              open={customizing}
+              onOpenChange={setCustomizing}
+              title={<span className="t-body">{projection.customize}</span>}
+            >
+            <div className="flex flex-col gap-4 pt-3">
             <Eyebrow>{projection.supportRates}</Eyebrow>
 
             <div className="flex flex-col gap-4 [&>*+*]:border-t [&>*+*]:border-border [&>*+*]:pt-4">
@@ -707,6 +760,8 @@ export function ProjectionPage() {
             {result.split.some((part) => part.cap !== null) && (
               <p className="t-label">{projection.capNote}</p>
             )}
+            </div>
+            </Disclosure>
           </Tile>
         )}
 
@@ -718,6 +773,28 @@ export function ProjectionPage() {
               écraserait les précédents. */}
           {result !== null && result.split.length > 0 && (
             <p className="t-label">{projection.screenRateHint}</p>
+          )}
+
+          {/* Trois points de départ pour la première hypothèse — jamais un
+              profil qu'on adopte : le champ reste éditable juste après, et un
+              chiffre retapé n'en coche simplement plus aucun. */}
+          {draft.scenarios[0] !== undefined && (
+            <Segmented
+              options={presets()}
+              value={presetOf(draft.scenarios[0].rateText) ?? 'custom'}
+              onChange={(preset) => {
+                if (preset === 'custom') return
+                patch({
+                  scenarios: draft.scenarios.map((scenario, index) =>
+                    index === 0
+                      ? { ...scenario, rateText: RATE_PRESETS[preset], kind: 'assumed' }
+                      : scenario,
+                  ),
+                })
+              }}
+              label={projection.presetAxis}
+              className="w-fit"
+            />
           )}
 
           <div className="flex flex-col gap-4 [&>*+*]:border-t [&>*+*]:border-border [&>*+*]:pt-4">
