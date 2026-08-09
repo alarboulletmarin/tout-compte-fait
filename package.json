@@ -39,6 +39,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "//e2e": "Les scénarios de bout en bout, dans Chromium, sur l'app construite et le jeu d'exemple. Hors de `verify` à dessein : c'est la seule vérification du dépôt qui exige un navigateur installé (`npm run e2e:install`, ~150 Mio), et faire dépendre la porte de sortie locale d'un téléchargement de cette taille la rendrait inutilisable là où elle sert le plus — sur une machine qui vient de cloner. La CI la joue dans un second travail, avec la même commande qu'ici.",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium",
+    "e2e:ui": "playwright test --ui",
     "size": "node scripts/size.mjs",
     "//licences": "Les notices des paquets qui voyagent dans le build, dont deux fontes sous OFL 1.1 — qui exige d'être distribuée avec elles.",
     "licences": "node scripts/licences.mjs",
@@ -61,6 +65,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",

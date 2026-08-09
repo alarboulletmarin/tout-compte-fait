@@ -79,6 +79,12 @@ npm run dev
 | `npm run size` | ce que pèse le premier chargement, et son budget |
 | `npm run licences` | régénère les notices des paquets qui voyagent dans le build |
 | `npm run verify` | les six d'un coup — c'est la porte de sortie |
+| `npm run e2e:install` | télécharge Chromium, une fois (~150 Mio) |
+| `npm run e2e` | les scénarios de bout en bout, sur l'app construite |
+
+`verify` ne demande que Node ; `e2e` demande en plus un navigateur, et reste donc
+à côté plutôt que dedans. La CI joue les deux, en parallèle, avec ces
+commandes-là et pas d'autres.
 
 Rien à configurer : aucune variable d'environnement, aucune clé d'API. Pour voir
 l'app pleine plutôt que vide, **Plus → Exporter / importer → Jeu d'exemple →

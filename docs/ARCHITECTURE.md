@@ -582,6 +582,42 @@ est préparé à l'affichage de son contrôle — écrire dans le presse-papiers
 de rester dans la tâche du clic, qu'un `await` au milieu du gestionnaire perdrait
 sur Safari.
 
+**Et c'est lui qui a rendu les tests de bout en bout possibles.** Un scénario
+joué dans un vrai navigateur a besoin d'un document complet ; il n'existait
+jusqu'ici aucun moyen d'en obtenir un sans le saisir écran par écran,
+c'est-à-dire sans écrire en préambule de chaque scénario un second jeu de
+données à maintenir — qui aurait divergé du premier au premier changement de
+modèle. Le bouton « Charger l'exemple » est ce préambule, déjà écrit, déjà
+testé, déterministe. `e2e/` en tient onze, dans Chromium, sur `dist/` :
+
+- **Ce que jsdom ne peut pas voir.** Les 1 400 tests de `src/**` montent des
+  composants dans jsdom, avec `fake-indexeddb` là où le stockage compte. C'est
+  la bonne granularité pour presque tout, et elle ne dit rien de quatre choses :
+  le **chargement paresseux** — l'exemple, le schéma, la présentation et les
+  courbes cumulées arrivent tous par `import()`, qu'un test jsdom court-circuite
+  en important le module directement —, la **mise en page**, que jsdom rend à
+  zéro pixel, le **stockage réel**, dont `fake-indexeddb` est une
+  réimplémentation, et la **taille du document**, qui ne pèse que si on l'a
+  vraiment.
+- **Aucune assertion sur un calcul.** Les chiffres sont vérifiés par les tests
+  du domaine, qui le font mieux et mille fois plus vite. Les scénarios
+  vérifient qu'ils arrivent jusqu'à l'écran, et rien d'autre — un test de bout
+  en bout qui recalculerait un prorata serait un test lent et fragile pour une
+  réponse qu'on a déjà.
+- **Rien n'est figé sur une valeur.** Le jeu est ancré sur la date du jour :
+  fixer « 4 709,14 € » périmerait le test au mois suivant. On lit donc des
+  formes — un montant plutôt qu'un tiret, `n / m` avec `n < m`, trois crédits
+  soldés — et jamais des montants.
+- **Les animations sont éteintes.** `reducedMotion: 'reduce'`, la même décision
+  que `src/test/setup.ts` prend pour jsdom : les montants de l'app se comptent en
+  montant à l'écran, et deux lectures du même écran n'auraient sinon jamais le
+  même chiffre.
+- **Hors de `verify`, à dessein.** C'est la seule vérification du dépôt qui
+  exige un navigateur installé. La faire dépendre d'un téléchargement de 150 Mio
+  rendrait la porte de sortie inutilisable là où elle sert le plus — sur une
+  machine qui vient de cloner. La CI la joue dans un second travail, en
+  parallèle, avec la même commande qu'en local.
+
 **Graphiques.** Aucune librairie. L'anneau, les barres empilées et les courbes
 sont des composants SVG maison, dans `src/ui/Ring.tsx` et `src/charts/`.
 

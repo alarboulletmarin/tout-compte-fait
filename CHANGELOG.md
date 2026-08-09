@@ -154,6 +154,58 @@ pas à trancher, et la location longue durée, qui est justement celle qu'on
 archive. Le document pèse environ 2 500 échéances et 500 kio sérialisés, monté en
 une fraction de seconde à chaque chargement.
 
+### Ajouté — onze scénarios dans un vrai navigateur, que le jeu d'exemple rend possibles
+
+Le dépôt avait mille quatre cents tests et aucun ne lançait l'app. Ils montent
+des composants dans jsdom, avec `fake-indexeddb` là où le stockage compte : la
+bonne granularité pour presque tout, et un angle mort pour quatre choses qui ne
+cassent qu'en production — le **chargement paresseux** (l'exemple, le schéma, la
+présentation arrivent par `import()`, qu'un test jsdom court-circuite en
+important le module directement), la **mise en page** (jsdom rend tout à zéro
+pixel : « ça déborde » n'y veut rien dire), le **stockage réel** (`fake-indexeddb`
+est une réimplémentation) et la **taille du document**.
+
+Ce qui manquait pour les combler n'était pas un outil, c'était un **document**.
+Un scénario de bout en bout a besoin de données complètes, et il aurait fallu les
+saisir écran par écran — donc écrire, en préambule de chaque scénario, un second
+jeu de données à maintenir, qui aurait divergé du premier au premier changement
+de modèle. Le jeu d'exemple passé à cinq ans est ce préambule : un clic, un
+document déterministe, tous les états peuplés.
+
+`npm run e2e` joue donc onze scénarios dans Chromium, sur `dist/` — sur ce qui
+serait déployé, jamais sur ce qu'un serveur de développement assemble à la volée.
+
+- **Chaque écran s'ouvre sans une erreur** : console, exceptions et requêtes
+  échouées sont collectées du premier octet, et la liste doit être vide. Une
+  requête qui échoue est un bundle qu'on n'a pas su aller chercher, et c'est
+  exactement ce qu'aucun test jsdom ne peut voir puisqu'il n'en demande aucun.
+- **Le document survit à un rechargement, et à un second onglet.** C'est la
+  promesse de la première ligne du README, vérifiée contre IndexedDB plutôt que
+  contre sa réimplémentation. L'export produit un fichier qui pèse ce que pèsent
+  cinq ans.
+- **Aucun écran ne déborde à 320 points de large**, jeu d'exemple chargé — la
+  borne basse que le design system s'impose, et la vérification qu'aucune
+  relecture ne fait de façon fiable. Le document vide ne débordait jamais : ce
+  sont les montants à sept chiffres et les listes à quinze lignes qui poussent
+  les murs.
+- **Les états que seuls cinq ans produisent sont lus à l'écran** : trois crédits
+  soldés à zéro, la même avance répétée quatre années de suite, deux supports
+  d'épargne qui réclament un relevé pendant que six se taisent, trois parts
+  inégales dont la somme vaut le total.
+
+Deux décisions valent d'être dites. **Aucune assertion ne porte sur un calcul** :
+les chiffres sont vérifiés par les tests du domaine, qui le font mieux et mille
+fois plus vite ; ici on vérifie qu'ils arrivent jusqu'à l'écran. Et **rien n'est
+figé sur une valeur** — le jeu est ancré sur la date du jour, donc on lit des
+formes (un montant plutôt qu'un tiret, « n / m » avec n < m) et jamais des
+montants, sans quoi le test se périmerait au mois suivant.
+
+`e2e` reste **hors de `verify`** : c'est la seule vérification du dépôt qui exige
+un navigateur, et faire dépendre la porte de sortie d'un téléchargement de
+150 Mio la rendrait inutilisable là où elle sert le plus — sur une machine qui
+vient de cloner. La CI la joue dans un second travail, en parallèle, avec la même
+commande qu'en local ; aucune commande n'existe que dans le fichier de CI.
+
 ### Corrigé — « Comparer » dit enfin ce que ses chiffres comptent
 
 Les deux comparaisons de l'historique posaient trois montants sans jamais nommer
