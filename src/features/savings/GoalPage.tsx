@@ -21,7 +21,7 @@
  * ==========================================================================*/
 
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { SAVINGS_PATH, goalEditPath, supportPath } from '@/app/routes'
+import { SAVINGS_PATH, goalEditPath, projectionPath, supportPath } from '@/app/routes'
 import { ymOf, today } from '@/domain/date'
 import { GOAL_HORIZON_MONTHS, goalTrajectory } from '@/domain/goal'
 import { ZERO } from '@/domain/money'
@@ -206,7 +206,42 @@ export function GoalPage() {
 
       <p className="t-label">{supports.goalRateHint}</p>
 
+      {/* **La porte du simulateur est ici**, et nulle part ailleurs sur
+          l'épargne : c'est le seul endroit où la question « et si je versais
+          autrement ? » se pose sur quelque chose de précis — cette cible, cette
+          échéance, ces comptes. La rangée qui vivait en fin d'écran d'épargne
+          ouvrait le simulateur sur rien du tout ; « Plus » garde son entrée pour
+          qui vient sans objectif.
+          Le simulateur sait d'où il vient : sa sortie cesse d'être « en faire un
+          objectif » pour devenir « adopter ce rythme », qui repose le versement
+          sur celui-ci. C'est ce qui referme la boucle. */}
       <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            void navigate(
+              projectionPath({
+                goalId: goal.id,
+                target: goal.target,
+                /* L'horizon en années, arrondi au supérieur : le simulateur
+                   raisonne en années pleines, et rogner l'échéance ferait
+                   répondre à une question plus courte que celle qu'on pose. */
+                ...(goal.targetOn === undefined
+                  ? {}
+                  : { years: Math.max(1, Math.ceil(monthsTo(month, goal.targetOn) / 12)) }),
+                /* Un seul compte : le simulateur part de lui. Plusieurs :
+                   il part de toute l'épargne de la personne — il n'existe pas
+                   d'origine « ces trois comptes-là », et en inventer une pour
+                   un aller simple coûterait plus qu'elle ne rapporte. */
+                source:
+                  linked.length === 1 && linked[0] !== undefined
+                    ? `support:${linked[0].id}`
+                    : `member:${goal.memberId}`,
+              }),
+            )
+          }}
+        >
+          {t.savings.goalSimulate}
+        </Button>
         <Button
           variant="secondary"
           onClick={() => {

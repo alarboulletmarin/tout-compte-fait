@@ -40,11 +40,17 @@
  * ==========================================================================*/
 
 import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { type Money, ZERO, toAmountInput } from '@/domain/money'
 import { milestoneMonths } from '@/domain/projection'
 import type { RateKind } from '@/domain/projection'
 import type { ProjectionSource } from '@/domain/projectionStart'
 import { savingLeft } from '@/domain/stats'
+import { GOAL_PARAM, goalNewPath, goalPath } from '@/app/routes'
+import { addMonthsToYm, today, ymOf } from '@/domain/date'
+import { replaceSavingGoal } from '@/store/actions'
+import { toast } from '@/ui/toast'
+import { t } from '@/i18n/strings'
 import { currencySymbol, formatMoney, formatPercent, formatRoundedMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import {
@@ -52,6 +58,7 @@ import {
   useKindTotals,
   useMembers,
   useProjectionStart,
+  useSavingGoal,
 } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { Disclosure } from '@/ui/Disclosure'
@@ -76,6 +83,8 @@ import {
   type ProjectionMode,
   type SupportRateDraft,
   type SupportSeries,
+  MAX_YEARS,
+  MIN_YEARS,
   YEAR_PRESETS,
   analyse,
   breakdownOf,
@@ -86,6 +95,41 @@ import {
 
 /** La valeur du cinquième segment de durée — celui qui ouvre le champ. */
 const CUSTOM_YEARS = 'custom'
+
+/**
+ * Ce qu'un objectif préfixe dans le simulateur, relu et borné.
+ *
+ * La même méfiance que `readDraft` applique au brouillon local : une URL vient
+ * du dehors, et un « duree=abc » n'a pas à casser l'écran. Ce qui ne se lit pas
+ * est simplement absent, et le brouillon gardé reste tel quel sur ce champ-là.
+ *
+ * Le **mode** bascule sur l'objectif dès qu'une cible arrive : on n'ouvre pas le
+ * simulateur depuis un objectif pour savoir ce qu'on aura, mais pour savoir
+ * combien il faudrait verser.
+ *
+ * Rend un correctif éventuellement vide plutôt que `null` : il est étalé sur le
+ * brouillon relu, et un objet vide n'y change rien — c'est une branche de moins
+ * chez l'appelant pour la même chose.
+ */
+function presetFrom(params: URLSearchParams): Partial<ProjectionDraft> {
+  const target = Number(params.get('cible'))
+  const years = Number(params.get('duree'))
+  const origin = params.get('origine')
+  const seed: Partial<ProjectionDraft> = {}
+
+  if (Number.isInteger(target) && target > 0) {
+    seed.mode = 'target'
+    seed.targetText = toAmountInput(target as Money)
+  }
+  if (Number.isInteger(years) && years >= MIN_YEARS && years <= MAX_YEARS) seed.years = years
+  if (origin !== null) {
+    const [kind, id] = origin.split(':')
+    if ((kind === 'member' || kind === 'support') && id !== undefined && id !== '') {
+      seed.source = { kind, id }
+    }
+  }
+  return seed
+}
 
 const modes = (): { value: ProjectionMode; label: string }[] => [
   { value: 'forecast', label: projection.modeForecast },
@@ -145,9 +189,23 @@ function setSupportRate(
 
 export function ProjectionPage() {
   const currency = useCurrency()
+  const navigate = useNavigate()
+  const [params] = useSearchParams()
+  /* L'objectif d'où l'on vient, s'il y en a un. C'est lui qui décide de la
+     sortie de l'écran : « adopter ce rythme » plutôt que « en faire un
+     objectif ». Un identifiant qui ne désigne plus rien rend `null`, et l'écran
+     retombe sur la sortie ordinaire — la règle de toutes les origines mortes. */
+  const from = useSavingGoal(params.get(GOAL_PARAM) ?? undefined)
   /* Les derniers réglages sont relus une seule fois, au montage : ils sont le
-     point de départ de la saisie, pas une source qui la piloterait. */
-  const [draft, setDraft] = useState<ProjectionDraft>(readDraft)
+     point de départ de la saisie, pas une source qui la piloterait.
+     Le préréglage d'un objectif se pose **par-dessus**, dans l'initialisateur et
+     non dans un effet : il ne doit s'appliquer qu'une fois — rejoué à chaque
+     rendu, il empêcherait de toucher au moindre champ — et un état initial est
+     exactement l'endroit où React exprime « une fois ». */
+  const [draft, setDraft] = useState<ProjectionDraft>(() => ({
+    ...readDraft(),
+    ...presetFrom(params),
+  }))
   const [explaining, setExplaining] = useState(false)
   const [rating, setRating] = useState(false)
   const [detailed, setDetailed] = useState(false)
@@ -279,6 +337,55 @@ export function ProjectionPage() {
   }
 
   const showYearsField = customYears || !isPreset(draft.years)
+
+  /**
+   * Les trois chiffres qu'on vient de décider, prêts pour le formulaire d'un
+   * objectif : ce qu'on vise, pour quand, à quel rythme.
+   *
+   * La cible est l'arrivée de la **borne basse** en mode direct — celle qui
+   * promet le moins —, et l'objectif tapé en mode inverse : on ne transforme pas
+   * en cap un chiffre qui suppose que tout s'est bien passé.
+   *
+   * Le versement ne voyage **que** depuis une simulation libre. Branché sur
+   * l'épargne réelle, il vient déjà des règles posées sur les comptes, et
+   * l'objectif saura le relire tout seul : l'écrire en dur ferait une seconde
+   * vérité que la première augmentation ferait diverger.
+   */
+  const seedForGoal = (): Parameters<typeof goalNewPath>[0] => {
+    if (result === null) return {}
+    const owner = source.kind === 'member' ? source.id : undefined
+    const accounts = result.split.map((part) => part.supportId)
+    return {
+      target: result.target ?? lastLow,
+      targetOn: addMonthsToYm(ymOf(today()), result.months),
+      ...(source.kind === 'free' && result.monthly !== null && result.monthly > ZERO
+        ? { monthly: result.monthly }
+        : {}),
+      ...(accounts.length === 0 ? {} : { supportIds: accounts }),
+      ...(owner === undefined ? {} : { memberId: owner }),
+    }
+  }
+
+  /**
+   * Reposer sur l'objectif d'où l'on vient le rythme qu'on vient d'essayer.
+   *
+   * Le **versement**, et rien d'autre : ni la cible ni l'échéance ne se
+   * changent ici — elles se corrigent sur le formulaire de l'objectif, qui est
+   * leur écran. Ce qu'on adopte est un rythme, pas un cap.
+   *
+   * En mode inverse c'est le versement requis de la borne haute — la plus
+   * exigeante des deux — qui est adopté : adopter la borne basse serait adopter
+   * le rendement le plus flatteur, et manquer la date de peu.
+   */
+  const adopt = (): void => {
+    if (from === null || result === null) return
+    const monthly = result.monthly ?? result.high.monthly
+    if (monthly <= ZERO) return
+    const { id: _dropped, ...rest } = from
+    replaceSavingGoal(from.id, { ...rest, monthly })
+    toast(t.savings.goalAdopted)
+    void navigate(goalPath(from.id))
+  }
 
   return (
     <>
@@ -575,6 +682,33 @@ export function ProjectionPage() {
             }}
           />
         </RowGroup>
+
+        {/* **La sortie**, et c'est elle qui fait cesser le cul-de-sac. On réglait
+            quatre choses, on regardait une courbe, on partait : rien n'était
+            retenu, rien n'était décidé, rien ne revenait. Le brouillon
+            `localStorage` sauvait la saisie, pas l'intention.
+
+            Ce qui sort n'est pas la simulation — un taux essayé reste dehors,
+            c'est la règle qui tient tout l'écran — mais **une intention adoptée
+            par un geste explicite**, ce qui est un fait du foyer exactement
+            comme un crédit souscrit. Elle passe par le formulaire d'un objectif,
+            préréglé : rien ne s'écrit sans qu'on ait vu ce qu'on écrit.
+
+            Venu d'un objectif, le même bouton dit l'autre moitié de la boucle :
+            reposer sur lui le rythme qu'on vient d'essayer. */}
+        {result !== null && (
+          <Button
+            onClick={() => {
+              if (from !== null) {
+                adopt()
+                return
+              }
+              void navigate(goalNewPath(seedForGoal()))
+            }}
+          >
+            {from === null ? t.savings.goalFromSimulation : t.savings.goalAdopt}
+          </Button>
+        )}
       </div>
 
       <RateSheet

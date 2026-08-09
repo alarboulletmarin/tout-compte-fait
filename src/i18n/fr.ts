@@ -1860,6 +1860,17 @@ export const fr = {
     goalsEmpty:
       'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
     goalAdd: 'Ajouter un objectif',
+    /* La sortie du simulateur, et la porte de retour vers lui. Ces deux mots
+       sont la boucle : ce qu'on essaie devient un cap, et un cap qu'on rouvre
+       repart en simulation. Sans eux, on règle quatre choses, on regarde une
+       courbe, on part — et rien n'est retenu.
+       « En faire un objectif » et non « Enregistrer » : ce qui entre dans le
+       document n'est pas la simulation mais l'intention qu'on en tire, et le
+       verbe doit dire lequel des deux. */
+    goalFromSimulation: 'En faire un objectif',
+    goalSimulate: 'Simuler autrement',
+    goalAdopt: 'Adopter ce rythme',
+    goalAdopted: 'Rythme adopté',
     /* Le formulaire. Trois questions, et c'est tout ce qu'un objectif stocke :
        le capital, le rendement et le versement se lisent sur les comptes. */
     /* La gestion, en fin de formulaire comme pour un support : ranger, reprendre,

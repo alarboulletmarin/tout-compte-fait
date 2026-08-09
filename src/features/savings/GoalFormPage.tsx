@@ -21,8 +21,10 @@
  * ==========================================================================*/
 
 import { useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PEOPLE_PATH, SAVINGS_PATH, goalPath } from '@/app/routes'
+import { isValidYm } from '@/domain/date'
+import { money, toAmountInput } from '@/domain/money'
 import type { SavingGoal } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { supports } from '@/i18n/supports'
@@ -43,21 +45,56 @@ import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { toast } from '@/ui/toast'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
-import { emptyGoalDraft, goalDraftFrom, useGoalDraft } from './goalDraft'
+import { type GoalDraft, emptyGoalDraft, goalDraftFrom, useGoalDraft } from './goalDraft'
 
 export function GoalFormPage() {
   const { id } = useParams()
   const goal = useSavingGoal(id)
+  const [params] = useSearchParams()
 
   // Supprimé depuis un autre onglet, ou URL fausse.
   if (id !== undefined && goal === null) return <Navigate to={SAVINGS_PATH} replace />
 
   /* La clef porte l'identité : le brouillon vit en état local, et passer d'un
      objectif à l'autre sans remonter le composant y laisserait le précédent. */
-  return <GoalForm key={goal?.id ?? 'nouveau'} {...(goal === null ? {} : { goal })} />
+  return (
+    <GoalForm
+      key={goal?.id ?? 'nouveau'}
+      {...(goal === null ? {} : { goal })}
+      seed={seedFrom(params)}
+    />
+  )
 }
 
-function GoalForm({ goal }: { goal?: SavingGoal }) {
+/**
+ * Ce que le simulateur envoie, relu et borné — parce qu'une URL vient du dehors.
+ *
+ * La même méfiance que `readDraft` applique au brouillon local et que
+ * `validate.ts` applique à un document importé : un lien s'édite dans la barre
+ * d'adresse, et un montant illisible n'a pas à faire d'un formulaire un écran
+ * cassé. Ce qui ne se lit pas est simplement absent, et le champ reste vide.
+ */
+function seedFrom(params: URLSearchParams): Partial<GoalDraft> {
+  const cents = (value: string | null): number | null => {
+    const parsed = Number(value)
+    return value !== null && Number.isInteger(parsed) && parsed > 0 ? parsed : null
+  }
+  const target = cents(params.get('cible'))
+  const monthly = cents(params.get('versement'))
+  const targetOn = params.get('echeance')
+  const supportIds = (params.get('comptes') ?? '').split(',').filter((one) => one !== '')
+  const memberId = params.get('titulaire')
+
+  return {
+    ...(target === null ? {} : { targetText: toAmountInput(money(target)) }),
+    ...(monthly === null ? {} : { monthlyText: toAmountInput(money(monthly)) }),
+    ...(targetOn !== null && isValidYm(targetOn) ? { targetOn } : {}),
+    ...(supportIds.length === 0 ? {} : { supportIds }),
+    ...(memberId === null ? {} : { memberId }),
+  }
+}
+
+function GoalForm({ goal, seed }: { goal?: SavingGoal; seed: Partial<GoalDraft> }) {
   const navigate = useNavigate()
   const members = useMembers()
   /* `accounts` et non `supports` : le catalogue de chaînes porte déjà ce nom
@@ -67,10 +104,17 @@ function GoalForm({ goal }: { goal?: SavingGoal }) {
   const editing = goal !== undefined
   const [removing, setRemoving] = useState(false)
 
+  /* Le préréglage ne s'applique qu'à la **création** : rouvrir un objectif
+     existant avec une URL qui porte une cible réécrirait ce qu'on vient
+     corriger, et c'est exactement ce qu'un formulaire de modification ne doit
+     pas faire. */
   const { draft, patch, errors, build } = useGoalDraft(
     editing
       ? goalDraftFrom(goal)
-      : emptyGoalDraft(members.length === 1 ? { memberId: members[0]?.id ?? '' } : {}),
+      : {
+          ...emptyGoalDraft(members.length === 1 ? { memberId: members[0]?.id ?? '' } : {}),
+          ...seed,
+        },
   )
 
   const back = (): void => {

@@ -183,6 +183,41 @@ export const SAVINGS_SUPPORTS_PATH = `${SAVINGS_PATH}/supports`
  */
 export const GOALS_PATH = `${SAVINGS_PATH}/objectifs`
 export const GOAL_NEW_PATH = `${GOALS_PATH}/nouveau`
+
+/**
+ * Le formulaire d'un objectif, préréglé par ce qui l'envoie.
+ *
+ * C'est la sortie du simulateur, et c'est ce qui le fait cesser d'être un
+ * cul-de-sac : on réglait quatre choses, on regardait une courbe, on partait, et
+ * rien n'était retenu. Ce qui voyage ici n'est **pas** une simulation — un taux
+ * essayé reste en `localStorage` — mais les trois chiffres qu'on vient de
+ * décider : ce qu'on vise, pour quand, à quel rythme.
+ *
+ * En clair dans l'URL, comme le sens et la nature d'une saisie
+ * (`entryNewPath`) : un lien qu'on peut lire est un lien qu'on peut corriger,
+ * et le formulaire revalide de toute façon tout ce qu'il en tire.
+ */
+export function goalNewPath(
+  seed: {
+    /** En centimes, comme partout. */
+    target?: number
+    targetOn?: string
+    monthly?: number
+    supportIds?: readonly string[]
+    memberId?: string
+  } = {},
+): string {
+  const params = new URLSearchParams()
+  if (seed.target !== undefined) params.set('cible', String(seed.target))
+  if (seed.targetOn !== undefined) params.set('echeance', seed.targetOn)
+  if (seed.monthly !== undefined) params.set('versement', String(seed.monthly))
+  if (seed.supportIds !== undefined && seed.supportIds.length > 0) {
+    params.set('comptes', seed.supportIds.join(','))
+  }
+  if (seed.memberId !== undefined) params.set('titulaire', seed.memberId)
+  const query = params.toString()
+  return query === '' ? GOAL_NEW_PATH : `${GOAL_NEW_PATH}?${query}`
+}
 export const goalPath = (id: string): string => `${GOALS_PATH}/${id}`
 export const goalEditPath = (id: string): string => `${GOALS_PATH}/${id}/modifier`
 export const SAVINGS_ANALYSIS_PATH = `${SAVINGS_PATH}/analyse`
@@ -262,6 +297,33 @@ export const PROJECTION_PATH = '/simulation'
  * vit sous `/epargne`.
  */
 export const LEGACY_PROJECTION_PATH = '/projections'
+
+/**
+ * Le simulateur, préréglé sur un objectif — et sachant à qui il doit revenir.
+ *
+ * C'est l'autre moitié de la boucle. « Simuler autrement » ouvre le simulateur
+ * sur la question de l'objectif — cette cible, cette échéance, ces comptes — et
+ * `objectif` dit d'où l'on vient : la sortie de l'écran cesse alors d'être
+ * « en faire un objectif » pour devenir « adopter ce rythme », qui repose le
+ * versement sur celui qu'on avait déjà.
+ *
+ * Sans lui, revenir d'une simulation demanderait de retrouver son objectif à la
+ * main et d'y retaper un chiffre qu'on vient de lire — c'est-à-dire exactement
+ * le cul-de-sac qu'on retire.
+ */
+export const GOAL_PARAM = 'objectif'
+
+export function projectionPath(
+  seed: { goalId?: string; target?: number; years?: number; source?: string } = {},
+): string {
+  const params = new URLSearchParams()
+  if (seed.goalId !== undefined) params.set(GOAL_PARAM, seed.goalId)
+  if (seed.target !== undefined) params.set('cible', String(seed.target))
+  if (seed.years !== undefined) params.set('duree', String(seed.years))
+  if (seed.source !== undefined) params.set('origine', seed.source)
+  const query = params.toString()
+  return query === '' ? PROJECTION_PATH : `${PROJECTION_PATH}?${query}`
+}
 
 /* Les avances ont leur écran, pour la raison qui donne le sien aux crédits :
    elles vivent sous les récurrences — leur mensualité en est une — mais ce

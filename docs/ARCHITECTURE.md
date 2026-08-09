@@ -298,7 +298,25 @@ arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans
 et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
 d'affichage. C'est le motif de `remainingPrincipal`.
 
-**Le simulateur n'écrit rien, et il lit dans un seul sens.** Rien n'en ressort
+**La boucle se referme, et c'est la règle qu'il a fallu reformuler.** « Rien
+n'entre dans le document » tenait toujours, mais elle était énoncée au mauvais
+niveau : ce qui doit rester dehors, c'est l'**hypothèse** — un taux essayé, un
+capital tapé pour voir. Ce qui entre est une **intention adoptée par un geste
+explicite**, ce qui est un fait du foyer exactement comme un crédit souscrit. Le
+simulateur a donc une sortie — « en faire un objectif » —, et elle passe par le
+formulaire d'un objectif plutôt que par une écriture directe : rien ne s'écrit
+sans qu'on ait vu ce qu'on écrit. Le taux, lui, n'entre toujours que par la fiche
+d'un compte, et daté.
+
+Le chemin de retour existe pour la même raison. La fiche d'un objectif ouvre le
+simulateur préréglé sur *sa* question — cette cible, cette échéance, ces
+comptes —, et lui passe son identifiant : la sortie de l'écran devient alors
+« adopter ce rythme », qui repose le versement sur l'objectif d'où l'on vient.
+Tout voyage en clair dans l'URL, comme le sens et la nature d'une saisie
+(`entryNewPath`), et tout est revalidé à l'arrivée — une URL vient du dehors,
+exactement comme `localStorage` et comme un document importé.
+
+**Le simulateur n'écrit rien de lui-même, et il lit dans un seul sens.** Rien n'en ressort
 dans le document, donc rien dans les exports ni dans le schéma qu'on donne à un
 assistant. Une projection est une **question qu'on pose**, pas un fait du
 foyer — et un `expectedReturn` posé sur un support « au cas où » serait

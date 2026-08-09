@@ -31,6 +31,7 @@ import {
   makeSavingValuation,
 } from '@/domain/fixtures'
 import { projection } from '@/i18n/projection'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatRoundedMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { ScreenTitleProvider } from '@/ui/ScreenTitleProvider'
@@ -684,5 +685,40 @@ describe('le tableau des paliers', () => {
         .getAllByRole('columnheader')
         .map((cell) => said(cell.textContent ?? '')),
     ).toEqual([projection.milestoneWhen, projection.contributedArea, projection.breakdownTotal])
+  })
+})
+
+/* ============================================================================
+ * La sortie — et c'est elle qui fait cesser le cul-de-sac.
+ *
+ * On réglait quatre choses, on regardait une courbe, on partait : rien n'était
+ * retenu, rien n'était décidé, rien ne revenait. Ce qui sort n'est pas la
+ * simulation — un taux essayé reste dehors — mais l'intention qu'on en tire, et
+ * elle passe par un formulaire : rien ne s'écrit sans qu'on ait vu ce qu'on
+ * écrit.
+ * ==========================================================================*/
+
+describe('ce que le simulateur produit', () => {
+  it('propose d’en faire un objectif, et n’écrit rien au passage', async () => {
+    const user = userEvent.setup()
+    const before = useStore.getState().data
+    show()
+
+    const exit = screen.getByRole('button', { name: t.savings.goalFromSimulation })
+    await user.click(exit)
+
+    // Le geste ouvre un formulaire : le document ne bouge pas d'un octet.
+    expect(useStore.getState().data).toBe(before)
+  })
+
+  /* Le simulateur reste un outil : il ne propose de conclure que lorsqu'il a
+     quelque chose à conclure. */
+  it('ne propose rien tant qu’il n’y a rien à tracer', async () => {
+    const user = userEvent.setup()
+    show()
+    const monthly = screen.getByLabelText(new RegExp(projection.monthly))
+    await user.clear(monthly)
+
+    expect(screen.queryByRole('button', { name: t.savings.goalFromSimulation })).toBeNull()
   })
 })
