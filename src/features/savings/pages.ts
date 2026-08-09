@@ -18,3 +18,8 @@ export { SupportFormPage } from './SupportFormPage'
 export { RateFormPage } from './RateFormPage'
 export { ValuationFormPage } from './ValuationFormPage'
 export { ValuationsFormPage } from './ValuationsFormPage'
+/* La gestion complète des supports et l'analyse de leur évolution : deux
+   sous-vues qu'on descend chercher, pas le chemin quotidien de la tuile
+   Capacité du mois — voir `SavingsPage`, qui n'en garde qu'un aperçu. */
+export { SupportsPage } from './SupportsPage'
+export { AnalysisPage } from './AnalysisPage'

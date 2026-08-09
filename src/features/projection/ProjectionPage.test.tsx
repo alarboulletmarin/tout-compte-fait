@@ -21,6 +21,7 @@ import {
   eur,
   makeCategory,
   makeData,
+  makeEntry,
   makeFamily,
   makeMember,
   makeRecurrence,
@@ -29,7 +30,7 @@ import {
   makeSavingValuation,
 } from '@/domain/fixtures'
 import { projection } from '@/i18n/projection'
-import { tpl } from '@/i18n/format'
+import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { ScreenTitleProvider } from '@/ui/ScreenTitleProvider'
 import { PROJECTION_STORAGE_KEY } from './model'
@@ -259,6 +260,127 @@ describe('l’écran des projections', () => {
     // Rien de ce qu'on tape ici n'est un fait du foyer : le document ne bouge pas.
     expect(useStore.getState().data).toBe(before)
   })
+
+  it('applique un barreau de l’échelle d’effort au versement simulé', async () => {
+    const user = userEvent.setup()
+    show()
+    // 100 €/mois par défaut, pas à 10 € : le barreau ×2 vaut donc 200 €/mois.
+    // L'espace est fine (`NBSP_NARROW`, `i18n/format.ts`), comme partout ailleurs
+    // dans un montant.
+    await user.click(
+      screen.getByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '200 €')),
+      }),
+    )
+    expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('200,00')
+  })
+
+  it('ne rend pas cliquable le barreau déjà simulé', () => {
+    show()
+    expect(
+      screen.queryByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '100 €')),
+      }),
+    ).toBeNull()
+    expect(screen.getByText(projection.effortCurrent)).toBeInTheDocument()
+  })
+})
+
+describe('la première hypothèse a un point de départ', () => {
+  it('coche le préréglage qui correspond au taux tapé', () => {
+    show()
+    // 3 % par défaut : c'est « Central », et lui seul.
+    expect(screen.getByRole('radio', { name: projection.presetCentral })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.getByRole('radio', { name: projection.presetCautious })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+  })
+
+  it('pose le taux du préréglage dans le champ, éditable ensuite', async () => {
+    const user = userEvent.setup()
+    show()
+
+    await user.click(screen.getByRole('radio', { name: projection.presetCautious }))
+
+    const fields = screen.getAllByRole('textbox', { name: projection.scenarioRate })
+    expect(fields[0]).toHaveValue('1,5')
+  })
+
+  it('ne coche plus aucun préréglage une fois le taux retapé', async () => {
+    const user = userEvent.setup()
+    show()
+
+    const field = screen.getAllByRole('textbox', { name: projection.scenarioRate })[0]
+    if (field === undefined) throw new Error('pas de champ de taux')
+    await user.clear(field)
+    await user.type(field, '4,2')
+
+    for (const preset of [
+      projection.presetCautious,
+      projection.presetCentral,
+      projection.presetDynamic,
+    ]) {
+      expect(screen.getByRole('radio', { name: preset })).toHaveAttribute('aria-checked', 'false')
+    }
+  })
+})
+
+describe('le versement libre peut reprendre la capacité restante', () => {
+  function seedCapacity() {
+    useStore.setState({
+      filter: ALL_FILTER,
+      data: makeData({
+        household: { name: '', members: [makeMember({ id: 'm-1', name: 'Andrea' })] },
+        families: [makeFamily({ id: 'fam-res', label: 'Ressources', kind: 'resource' })],
+        categories: [
+          makeCategory({ id: 'salaire', label: 'Salaire', familyId: 'fam-res', direction: 'in' }),
+        ],
+        entries: [
+          makeEntry({
+            id: 'sal',
+            date: `${ymOf(today())}-01`,
+            direction: 'in',
+            amount: eur(150_000),
+            categoryId: 'salaire',
+            memberId: 'm-1',
+          }),
+        ],
+      }),
+    })
+  }
+
+  // Le même gabarit que `exact()` sur l'écran : sans centimes, comme un
+  // montant qui entre dans le calcul plutôt que d'en sortir.
+  const exactAmount = (cents: number): string => formatMoney(eur(cents), 'EUR', false)
+
+  it('propose la capacité restante en simulation libre, jamais ailleurs', () => {
+    seedCapacity()
+    show()
+
+    const hint = screen.getByText(/Capacité d’épargne restante/)
+    expect(hint.textContent).toContain(exactAmount(150_000))
+  })
+
+  it('ne se propose pas sans capacité restante', () => {
+    show()
+    expect(screen.queryByText(/Capacité d’épargne restante/)).not.toBeInTheDocument()
+  })
+
+  it('pose le montant dans le champ de versement, d’un geste', async () => {
+    const user = userEvent.setup()
+    seedCapacity()
+    show()
+
+    await user.click(
+      screen.getByRole('button', { name: tpl(projection.capacityUse, exactAmount(150_000)) }),
+    )
+
+    expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('1500,00')
+  })
 })
 
 describe('quand la simulation part de l’épargne réelle', () => {
@@ -399,6 +521,28 @@ describe('quand la simulation part de l’épargne réelle', () => {
     expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('350,00')
     expect(screen.getByLabelText(new RegExp(projection.initial))).toHaveValue('8450,00')
     expect(screen.getByLabelText(projection.source)).toHaveValue('free')
+  })
+
+  it('coupe le lien en appliquant un barreau, comme « Modifier pour cette simulation »', async () => {
+    const user = userEvent.setup()
+    seed()
+    show()
+    await user.selectOptions(screen.getByLabelText(projection.source), 'support:s-1')
+
+    // 350 €/mois repris de l'épargne réelle, pas de 50 € : le barreau ×1,5
+    // vaut donc 550 €/mois.
+    await user.click(
+      screen.getByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '550 €')),
+      }),
+    )
+
+    // Le lien se coupe en recopiant ce qu'il apportait — même geste que
+    // « Modifier pour cette simulation » — puis le versement essayé remplace
+    // celui que l'épargne lisait.
+    expect(screen.getByLabelText(projection.source)).toHaveValue('free')
+    expect(screen.getByLabelText(new RegExp(projection.initial))).toHaveValue('8450,00')
+    expect(screen.getByLabelText(new RegExp(projection.monthly))).toHaveValue('550,00')
   })
 
   it('n’écrit rien dans le document en lisant l’épargne', async () => {
@@ -572,6 +716,14 @@ describe('le rendement par support', () => {
     await user.selectOptions(screen.getByLabelText(projection.source), 'member:m-1')
     return user
   }
+
+  it('replie le détail par compte derrière « Personnaliser les hypothèses »', async () => {
+    const user = await portfolio()
+    expect(rateField('Livret A')).not.toBeVisible()
+
+    await user.click(screen.getByText(projection.customize))
+    expect(rateField('Livret A')).toBeVisible()
+  })
 
   it('donne une ligne à chaque compte, préremplie de ce que sa fiche porte', async () => {
     await portfolio()

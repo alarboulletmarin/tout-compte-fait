@@ -192,18 +192,19 @@ describe('l’écran range chaque question dans sa zone', () => {
     expect(row).toHaveTextContent(spoken(1_200_000))
   })
 
-  /* Relever ses comptes et en ouvrir un sont deux gestes de gestion : ils
-     vivent sur la section des supports, pas au même rang que « Je place ». */
-  it('range les gestes du patrimoine avec les supports', () => {
+  /* Relever ses comptes et en ouvrir un sont deux gestes de gestion : ils ne
+     vivent plus sur la vue d'ensemble, mais sur l'écran dédié
+     (`/epargne/supports`, voir `SupportsPage.test.tsx`) vers lequel « Gérer »
+     renvoie. */
+  it('renvoie vers la gestion des supports, sans la porter elle-même', () => {
     seed()
     open()
 
     const section = screen.getByText(t.savings.supports).closest('section')
     expect(section).toContainElement(screen.getByRole('link', { name: /Livret A/ }))
-    expect(section).toContainElement(
-      screen.getByRole('button', { name: t.savings.valuesUpdate }),
-    )
-    expect(section).toContainElement(screen.getByRole('button', { name: t.savings.supportAdd }))
+    expect(section).toContainElement(screen.getByRole('button', { name: t.nav.manage }))
+    expect(screen.queryByRole('button', { name: t.savings.valuesUpdate })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.savings.supportAdd })).not.toBeInTheDocument()
   })
 
   /* Les trois chiffres qui s'additionnent — capacité, versé, reste — dans un
@@ -275,6 +276,19 @@ describe('l’écran range chaque question dans sa zone', () => {
     const supports = within(assertElement(screen.getByText(t.savings.supports).closest('section')))
     expect(supports.queryByText(/Andrea/)).not.toBeInTheDocument()
     expect(supports.queryByText(/Marie/)).not.toBeInTheDocument()
+  })
+
+  /* Le tracé et le cumul de l'année vivent sur `/epargne/analyse` ; la vue
+     d'ensemble n'en garde que ce qu'ils répondent, en un aperçu qui y renvoie. */
+  it('renvoie vers l’analyse avec un aperçu, jamais le tracé', () => {
+    seed()
+    open()
+
+    const link = screen.getByRole('link', { name: new RegExp(t.savings.analysis) })
+    expect(link).toHaveAttribute('href', '/epargne/analyse')
+    // 200 € versés par Andrea en juillet 2026, rien l'année précédente.
+    expect(link).toHaveTextContent(spoken(20_000))
+    expect(screen.queryByText(t.savings.yearsCumulative)).not.toBeInTheDocument()
   })
 
   /* La section disparaissait quand la personne n'avait aucun support — y

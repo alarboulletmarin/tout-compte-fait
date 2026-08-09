@@ -160,7 +160,6 @@ describe('l’écran ne réclame un relevé qu’à la cadence du support', () =
     open()
 
     expect(screen.queryByText(t.savings.valuesDueOne)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: t.savings.valuesUpdate })).toBeInTheDocument()
   })
 
   /* Le même relevé, le même jour, sur un support que le marché refait : là, il
@@ -178,20 +177,5 @@ describe('l’écran ne réclame un relevé qu’à la cadence du support', () =
     open()
 
     expect(screen.getByText(t.savings.valuesDueOne)).toBeInTheDocument()
-  })
-})
-
-describe('ce que l’année a accumulé', () => {
-  /* Du flux pur : aucun relevé n'y entre, et la question ne se posait nulle
-     part — l'app est une machine à mois, et l'épargne est la seule notion qui
-     n'ait aucun sens à l'intérieur d'un mois. */
-  /* La section arrive par le réseau : elle emporte les lignes cumulées, que le
-     premier chargement n'a pas à porter pour un bloc qui vit sous le pli. */
-  it('trace le cumul des versements, année contre année', async () => {
-    seed()
-    open()
-
-    expect(await screen.findByText(t.savings.years)).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: t.savings.yearsCumulative })).toBeInTheDocument()
   })
 })

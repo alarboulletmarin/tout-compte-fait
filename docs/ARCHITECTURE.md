@@ -1,8 +1,7 @@
 # Architecture
 
 Comment le code est rangé, et pourquoi il l'est comme ça. Ce document explique
-les décisions ; le [cahier des charges](CAHIER-DES-CHARGES.md) dit ce que l'app
-doit faire, et le [design system](DESIGN-SYSTEM.md) de quoi elle a l'air.
+les décisions ; le [design system](DESIGN-SYSTEM.md) dit de quoi l'app a l'air.
 
 ## Repères
 

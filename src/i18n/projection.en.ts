@@ -58,10 +58,17 @@ export const en: ProjectionStrings = {
   amountInvalid: 'Unreadable amount.',
   rateInvalid: 'Between 0 and %s%.',
   unitYear: '%/year',
+  capacityLeft: 'Saving capacity still available this month: %s',
+  capacityUse: 'Use %s',
 
   scenarios: 'Return assumptions',
   scenariosHint:
     'Up to three, at the same contributions. Compare several assumptions rather than taking one rate for a forecast.',
+  presetAxis: 'Starting point',
+  presetCautious: 'Cautious',
+  presetCentral: 'Central',
+  presetDynamic: 'Dynamic',
+  customize: 'Customize the assumptions',
   scenarioRate: 'Net annual return',
   scenarioAdd: 'Compare an assumption',
   scenarioRemove: 'Remove the assumption at %s',
@@ -152,6 +159,7 @@ export const en: ProjectionStrings = {
   effortHint: 'At the first assumption, over the same term.',
   effortCurrent: 'Current simulation',
   effortParts: 'Of which: %s',
+  effortApply: 'Simulate with %s',
 
   constant: 'Account for inflation',
   constantHint: 'Shows the equivalent purchasing power, in today’s money.',

@@ -851,7 +851,7 @@ export const fr = {
     /* La seconde lecture porte le reste à placer, et non le taux d'épargne : le
        taux décrit le mois passé, le reste appelle un geste — c'est lui qui fait
        ouvrir l'écran. Le taux s'y lit, à côté de sa ventilation. */
-    savingLeft: 'reste %s à placer',
+    savingLeft: '%s encore disponibles',
     /* Ce que le mois verse, dit avec ou sans filtre. La condition tombe : elle
        valait pour le *reste à placer*, qui appelle un geste et se décide sur un
        compte à la fois — à plusieurs, la somme de deux restes ne se décide
@@ -1671,6 +1671,15 @@ export const fr = {
        à un mot près pour le stock et pour le flux — c'est-à-dire pour les deux
        notions que cet écran existe pour séparer. */
     supports: 'Mes supports',
+    /* Le titre de `/epargne/analyse`, distinct de « Ce que tu mets de côté »
+       (`years`) : celui-ci nomme l'écran entier — trajectoire et cumul —,
+       l'autre une seule de ses deux sections. */
+    analysis: 'Analyse',
+    analysisHint: 'Voir l’analyse',
+    /* L'aperçu de `/epargne` : deux chiffres, jamais le tracé — celui-ci vit
+       sur l'écran dédié, qu'on descend chercher pour s'y arrêter. */
+    analysisPreview: '%s en %s · %s vs %s',
+    analysisPreviewOnly: '%s en %s',
     supportsEmpty:
       'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
@@ -2031,7 +2040,12 @@ export const fr = {
     placedUnassigned:
       'Un versement laissé « en commun » n’entre dans l’épargne de personne. Attribue-le pour qu’il compte.',
 
-    left: 'Reste à placer',
+    /* Ni « reste à placer » ni « reste à vivre » : les deux se ressemblent
+       trop pour vivre sous des noms voisins, alors qu'ils ne mesurent pas la
+       même chose — l'un est la part de la capacité d'épargne pas encore
+       versée, l'autre le solde de trésorerie avant la prochaine rentrée
+       d'argent. « Encore disponible » ne prête à aucune des deux confusions. */
+    left: 'Encore disponible',
     /* « capacité − versements » ne se dit plus : les deux rangées au-dessus
        *sont* la soustraction, et l'écrire à côté la commente au lieu de
        l'expliquer. */

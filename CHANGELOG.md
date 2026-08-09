@@ -12,6 +12,38 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — l'épargne se lit d'abord, se gère ensuite ; les projections répondent avant de demander
+
+*Aucune migration.* Rien ne change dans le modèle de données — seulement dans
+ce que chaque écran en montre par défaut, et dans ce qu'on peut y faire d'un
+geste.
+
+- **`/epargne` redevient une vue d'ensemble.** Relever ses comptes et en
+  ouvrir un vivent désormais sur un écran dédié, `/epargne/supports` — la vue
+  d'ensemble n'en garde qu'un aperçu et un lien « Gérer ». Le tracé support par
+  support et le cumul de l'année vivent sur `/epargne/analyse` — la vue
+  d'ensemble n'en garde que deux chiffres et un lien. Aucun des deux écrans
+  n'est un focus screen : ce sont des destinations pleines, comme `/epargne`
+  elle-même.
+- **« Reste à placer » devient « Encore disponible »**, sur l'écran de
+  l'épargne comme sur la tuile du tableau de bord. Le terme voisinait de trop
+  près « Reste à vivre », qui mesure autre chose — un solde de trésorerie, pas
+  une part de capacité d'épargne pas encore versée.
+- **Un barreau de l'échelle d'effort s'essaie d'un tap.** « Et si je verse
+  davantage ? » n'était qu'une lecture ; cliquer un barreau non courant
+  applique désormais ce versement à la simulation, en coupant le lien vers
+  l'épargne réelle si elle en dépendait — le geste de « Modifier pour cette
+  simulation », déclenché depuis une ligne du tableau.
+- **La première hypothèse a trois points de départ** — prudent, central,
+  dynamique — au-dessus des champs de taux libres, qui restent l'échappatoire :
+  un chiffre retapé n'en coche simplement plus aucun.
+- **Le rendement par compte se replie** derrière « Personnaliser les
+  hypothèses » : la ligne par compte reste disponible dès qu'un portefeuille
+  est décomposé, mais n'occupe plus l'écran en permanence.
+- **Le versement libre peut reprendre la capacité d'épargne restante** du
+  mois — la même donnée que l'écran Épargne et le tableau de bord, sous le même
+  filtre — d'un bouton, plutôt que d'être retapé.
+
 ### Modifié — le plafond de versements retient enfin la main
 
 *Aucune migration.* Le champ existait déjà (`depositCap`, version 10) : c'est ce

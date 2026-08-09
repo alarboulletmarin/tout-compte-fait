@@ -1,67 +1,106 @@
-import { Suspense, lazy } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { PROJECTION_PATH, SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
-import { ZERO, add } from '@/domain/money'
+import {
+  PROJECTION_PATH,
+  SAVINGS_ANALYSIS_PATH,
+  SUPPORT_NEW_PATH,
+  entryNewPath,
+} from '@/app/routes'
+import { coveredYears, yearHorizon } from '@/domain/history'
+import { ZERO, add, sub } from '@/domain/money'
 import { savingCapacity, savingLeft, savingRate } from '@/domain/stats'
 import { t } from '@/i18n/strings'
+import { formatSignedMoney, tpl } from '@/i18n/format'
 import {
+  useEntries,
   useKindTotals,
   useMemberMap,
   useMembers,
+  useSavingYearSeries,
   useScopedSavingSupports,
 } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
-import { ForecastIcon } from '@/ui/Icons'
+import { ForecastIcon, YearsIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row, RowGroup } from '@/ui/RowGroup'
+import { useCurrency } from '@/ui/currency'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
 import { MonthTile } from './MonthTile'
 import { PlacedSection } from './PlacedSection'
-import { SupportsSection } from './SupportsSection'
+import { SupportsOverview } from './SupportsSection'
 import { useIndividualScope } from './individualScope'
 
-/**
- * Le cumul de l'année arrive à la demande — et c'est le seul bloc de cet écran
- * dans ce cas.
- *
- * Il emporte les lignes cumulées, l'axe et le curseur de `src/charts`, que seul
- * l'historique servait jusqu'ici et qui vivent pour cette raison dans son
- * morceau (`Routes.tsx`). Cet écran-ci, lui, est sur le chemin quotidien : il se
- * charge avec le mois, donc tout ce qu'il importe statiquement pèse sur le
- * premier chargement de tout le monde — mesuré, quatre kibioctets compressés, de
- * quoi passer le budget de `npm run size`.
- *
- * Le repli est **vide** plutôt qu'une ligne d'attente : la section est la
- * dernière de la page, donc sous le pli sur un téléphone, et un « chargement… »
- * qui clignote sous le pli n'est vu de personne — sauf de qui descend pile à ce
- * moment-là, à qui il ne dit rien de plus que le graphique qui le remplace.
- */
-const YearSection = lazy(async () => ({
-  default: (await import('./YearSection')).YearSection,
-}))
+/** L'année lue quand le document n'en couvre aucune — voir `YearSection`. */
+const EMPTY_YEAR = 1
 
 /**
- * L'évolution de l'épargne arrive à la demande, pour la raison qui vaut déjà
- * pour le cumul de l'année : elle emporte un graphique entier — les aires
- * empilées, l'axe, le curseur — et cet écran-ci est sur le chemin quotidien.
+ * Ce que l'année a accumulé, en deux chiffres et un lien — jamais le tracé.
+ *
+ * La trajectoire support par support et le cumul de l'année contre l'année
+ * d'avant sont les deux seules lectures de cet écran qui **capitalisent**, et
+ * elles ont longtemps vécu ici, en bas de page, avec leur graphique entier.
+ * Elles n'y agissent jamais — on ne décide rien en les regardant, on regarde —
+ * et c'est ce qui les envoie sur `/epargne/analyse` : la vue d'ensemble n'a
+ * besoin que de leur réponse, pas de leur tracé.
+ *
+ * Les deux chiffres sont ceux que `YearSection` calcule déjà, au même mois
+ * d'arrêt qu'elle — un seul moteur, deux lectures.
  */
-const EvolutionSection = lazy(async () => ({
-  default: (await import('./EvolutionSection')).EvolutionSection,
-}))
+function AnalysisPreview() {
+  const entries = useEntries()
+  const currency = useCurrency()
+  const years = useMemo(() => coveredYears(entries), [entries])
+  const year = years.at(-1)
+
+  const current = useSavingYearSeries(year ?? EMPTY_YEAR)
+  const previous = useSavingYearSeries((year ?? EMPTY_YEAR) - 1)
+
+  if (year === undefined) return null
+
+  const horizon = yearHorizon(current)
+  if (horizon === -1) return null
+
+  const cumulated = current[horizon]?.cumulative ?? ZERO
+  const hasPrevious = previous.some((point) => point.hasData)
+  const before = hasPrevious ? previous[horizon]?.cumulative ?? null : null
+
+  const description =
+    before === null
+      ? tpl(t.savings.analysisPreviewOnly, formatSignedMoney(cumulated, currency), String(year))
+      : tpl(
+          t.savings.analysisPreview,
+          formatSignedMoney(cumulated, currency),
+          String(year),
+          formatSignedMoney(sub(cumulated, before), currency),
+          String(year - 1),
+        )
+
+  return (
+    <RowGroup>
+      <Row
+        label={t.savings.analysis}
+        description={description}
+        icon={YearsIcon}
+        to={SAVINGS_ANALYSIS_PATH}
+      />
+    </RowGroup>
+  )
+}
 
 /**
  * L'écran de l'épargne — celui qu'ouvre la tuile Capacité du mois.
  *
- * **Une question, une zone, un chiffre, une action.** Les blocs se suivent dans
- * l'ordre où les questions se posent : ce que je possède, **combien de temps ça
- * tient**, où c'est placé, ce que le mois me permet d'y mettre, où c'est parti,
- * et ce que l'année a accumulé. Tout était déjà là — le même calcul, les mêmes
- * `Entry`, les mêmes relevés — mais en sept cadres de même poids, dont une
- * grille de tuiles pleine largeur : sur un téléphone, six écrans de défilement,
- * et rien pour dire dans quel ordre les lire.
+ * **Une vue d'ensemble, pas l'écran exhaustif de tout ce qui concerne
+ * l'épargne.** Elle répond en quelques secondes à quatre questions — combien
+ * j'ai, combien de temps ça tient, où c'est placé, ce que le mois me permet
+ * d'y mettre — et renvoie le reste à deux sous-vues : la gestion complète des
+ * supports (`/epargne/supports`) et l'analyse de leur évolution
+ * (`/epargne/analyse`). Les deux vivaient ici, en pleine page, avec leurs
+ * gestes de patrimoine et leur graphique : le stock s'y lisait bien, mais
+ * l'écran ne savait plus dire *dans quel ordre* le lire, ni où s'arrêter.
  *
  * **L'écran ne concourt pas sur « combien j'ai ».** La banque y répond mieux,
  * plus vite et sans qu'on recopie quoi que ce soit ; ce que l'app est seule à
@@ -83,12 +122,10 @@ const EvolutionSection = lazy(async () => ({
  * il s'assure qu'une est choisie (`useIndividualScope`). Le stock et le flux
  * suivent la même personne, par le même filtre.
  *
- * **Les gestes sont rangés par nature, pas alignés en tête d'écran.** Trois
- * boutons y tenaient le même rang — ouvrir un compte, verser, reprendre — quand
- * le premier se fait une fois et les deux autres tous les mois. Placer et
- * reprendre suivent donc le chiffre qui les appelle, sous « reste à placer » ;
- * relever ses comptes et en ouvrir un vivent dans la section des supports, dont
- * ils sont la gestion.
+ * **Les gestes sont rangés par nature, pas alignés en tête d'écran.** Placer et
+ * reprendre suivent le chiffre qui les appelle, sous « Encore disponible » ;
+ * relever ses comptes et en ouvrir un vivent désormais sur l'écran dédié des
+ * supports, dont ils sont la gestion.
  */
 export function SavingsPage() {
   const navigate = useNavigate()
@@ -135,7 +172,9 @@ export function SavingsPage() {
               le capital parce qu'elle en est la lecture : « combien j'ai » n'a
               d'intérêt que par « est-ce que ça tient ». */}
           <CoverageTile />
-          <SupportsSection />
+          {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
+              fait sur l'écran dédié, vers lequel ce bloc renvoie. */}
+          <SupportsOverview />
 
           {/* Puis le mois : ce qu'il dégage, ce qu'on y a mis, ce qu'il reste. */}
           <MonthTile capacity={capacity} saved={totals.saving} left={left} rate={rate} />
@@ -165,18 +204,10 @@ export function SavingsPage() {
           <PlacedSection saved={totals.saving} />
 
           {/* « Où c'est parti ce mois-ci » appelle immédiatement « et est-ce
-              que ça monte, au fond ? ». C'est la seule lecture de l'écran qui
-              capitalise, et elle le dit sous son tracé. */}
-          <Suspense fallback={null}>
-            <EvolutionSection />
-          </Suspense>
-
-          {/* En dernier, et c'est sa place : le mois se décide en tête d'écran,
-              l'année se contemple. C'est aussi la seule lecture d'ici qui ne
-              demande rien — ni relevé, ni saisie de plus. */}
-          <Suspense fallback={null}>
-            <YearSection />
-          </Suspense>
+              que ça monte, au fond ? » — mais la réponse s'y arrête, elle ne
+              s'y décide pas : un aperçu et un lien vers `/epargne/analyse`,
+              où vivent le tracé, sa fenêtre et le cumul de l'année. */}
+          <AnalysisPreview />
 
           {/* Et après l'année, les années. Cette porte-ci est celle du
               contexte — on est en train de regarder ce qu'on place, et la
@@ -185,10 +216,7 @@ export function SavingsPage() {
               parce qu'un écran qu'on n'atteint qu'en descendant tout un autre
               écran n'a pas d'adresse. Ce que le simulateur n'a toujours pas,
               c'est un rang dans « Gérer » — il ne décide de rien (voir
-              `PROJECTION_PATH` dans `app/routes.ts`).
-              Elle ne dépend pas de la section d'année, qui arrive par le
-              réseau : une porte qui n'apparaîtrait qu'une fois le graphique
-              chargé serait une porte qu'on rate. */}
+              `PROJECTION_PATH` dans `app/routes.ts`). */}
           <RowGroup>
             <Row
               label={t.nav.projections}

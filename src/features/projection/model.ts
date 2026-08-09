@@ -179,6 +179,25 @@ export const DEFAULT_DRAFT: ProjectionDraft = {
   inflationText: '2',
 }
 
+/**
+ * Trois points de départ pour l'hypothèse centrale, jamais un profil imposé.
+ *
+ * L'écran comparait déjà jusqu'à trois hypothèses libres, ce qui reste — un
+ * preset ne fait qu'écrire un chiffre de départ dans le premier champ, exactement
+ * ce qu'on y aurait tapé à la main. Rien de plus ne se déduit du choix : la
+ * nature du taux reste `assumed`, et le champ reste éditable juste après. Les
+ * trois valeurs sont modestes et espacées, pas calées sur un produit précis —
+ * ce que l'écran refuse de faire ailleurs (cahier de l'app).
+ */
+export const RATE_PRESETS = { cautious: '1,5', central: '3', dynamic: '6' } as const
+export type RatePreset = keyof typeof RATE_PRESETS
+
+/** Le preset que ce texte égale, ou `null` — un chiffre retapé est un chiffre à soi. */
+export function presetOf(rateText: string): RatePreset | null {
+  const entry = Object.entries(RATE_PRESETS).find(([, value]) => value === rateText.trim())
+  return entry === undefined ? null : (entry[0] as RatePreset)
+}
+
 /* --- Le confort local ------------------------------------------------------*/
 
 export const PROJECTION_STORAGE_KEY = 'tout-compte-fait.projection'

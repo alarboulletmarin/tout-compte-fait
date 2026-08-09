@@ -114,6 +114,12 @@ const fr = {
      de la devise (`perMonth`) — l'app ne convertit rien, mais elle n'écrit pas
      « € » en dur non plus. */
   unitYear: '%/an',
+  /* Le pont vers la capacité d'épargne réelle : la même donnée que l'écran
+     Épargne et le tableau de bord, sous le même filtre — reprise, jamais
+     recalculée. Elle ne dit rien que ces deux écrans ne disent déjà ; elle
+     évite seulement de retaper un chiffre qu'on vient de vérifier là-bas. */
+  capacityLeft: 'Capacité d’épargne restante ce mois-ci : %s',
+  capacityUse: 'Utiliser %s',
 
   /* --- Les hypothèses -----------------------------------------------------
      Trois au plus, et la limite est dure : au-delà, les courbes superposées
@@ -122,6 +128,17 @@ const fr = {
   scenarios: 'Hypothèses de rendement',
   scenariosHint:
     'Jusqu’à trois, aux mêmes versements. Compare plusieurs hypothèses plutôt que de prendre un taux pour une prévision.',
+  /* Trois points de départ pour la première hypothèse, jamais un profil : le
+     champ reste éditable juste après, et aucun des trois n'est calé sur un
+     produit précis. Un chiffre retapé n'en coche simplement plus aucun. */
+  presetAxis: 'Hypothèse de départ',
+  presetCautious: 'Prudent',
+  presetCentral: 'Central',
+  presetDynamic: 'Dynamique',
+  /* Le rendement par compte et l'inflation sont tous deux facultatifs, tous
+     deux avancés — l'écran répond déjà sans eux — et tous deux repliés
+     derrière la même porte plutôt que deux Tiles ouvertes en permanence. */
+  customize: 'Personnaliser les hypothèses',
   scenarioRate: 'Rendement annuel net',
   scenarioAdd: 'Comparer une hypothèse',
   scenarioRemove: 'Retirer l’hypothèse à %s',
@@ -268,6 +285,12 @@ const fr = {
   /* Sur un portefeuille décomposé, l'effort se répartit au prorata : sans le
      détail, on saurait combien verser sans savoir où. */
   effortParts: 'Dont : %s',
+  /* Un barreau se clique pour l'essayer, jamais pour l'adopter : c'est la même
+     bascule que « Modifier pour cette simulation » (`source`), déclenchée
+     depuis une ligne plutôt que depuis le panneau d'origine. L'échelle ne
+     recommande toujours rien — cliquer n'est pas plus une préconisation que la
+     lire ne l'était. */
+  effortApply: 'Simuler avec %s',
 
   /* --- Euros constants ----------------------------------------------------*/
   constant: 'Tenir compte de l’inflation',

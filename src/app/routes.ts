@@ -163,6 +163,13 @@ export const SPLIT_PATH = '/repartition'
    versé ou repris. Les fiches de support s'ouvrent sous lui : un support est un
    objet de l'épargne, pas un réglage. */
 export const SAVINGS_PATH = '/epargne'
+/* Les deux sous-vues de l'épargne : la gestion complète des supports, et
+   l'analyse de son évolution. La page `/epargne` reste une vue d'ensemble —
+   ce qu'on a, ce que le mois permet, où c'est placé, en un coup d'œil — et
+   renvoie vers elles pour tout ce qui demande de s'y arrêter. Segments fixes,
+   comme `/nouveau` : React Router les classe avant `:id`. */
+export const SAVINGS_SUPPORTS_PATH = `${SAVINGS_PATH}/supports`
+export const SAVINGS_ANALYSIS_PATH = `${SAVINGS_PATH}/analyse`
 /* Segment fixe avant `:id`, comme partout ailleurs : React Router le classe
    d'abord, un support ne peut donc pas éclipser le formulaire de création. */
 export const SUPPORT_NEW_PATH = `${SAVINGS_PATH}/nouveau`
@@ -432,10 +439,13 @@ export function isFocusScreen(pathname: string): boolean {
   return (
     pathname.startsWith(ENTRY_NEW_PATH) ||
     pathname.startsWith(ADVANCE_NEW_PATH) ||
-    /* Les fiches et saisies de l'épargne, et non la page qui les liste : celle-
-       ci reste une destination pleine, avec son bouton d'ajout et son rappel
-       d'export. */
-    (pathname.startsWith(`${SAVINGS_PATH}/`) && pathname !== `${SAVINGS_PATH}/`) ||
+    /* Les fiches et saisies de l'épargne, et non les pages qui les listent ou
+       les analysent : celles-ci restent des destinations pleines, avec leur
+       bouton d'ajout ou leur sélecteur de fenêtre, et leur propre retour. */
+    (pathname.startsWith(`${SAVINGS_PATH}/`) &&
+      pathname !== `${SAVINGS_PATH}/` &&
+      pathname !== SAVINGS_SUPPORTS_PATH &&
+      pathname !== SAVINGS_ANALYSIS_PATH) ||
     (pathname.startsWith(`${RECURRENCES_PATH}/`) && pathname !== `${RECURRENCES_PATH}/`) ||
     (pathname.startsWith(`${CREDITS_PATH}/`) && pathname !== `${CREDITS_PATH}/`) ||
     /* Les cinq vues que « Plus » ouvre, et non « Plus » lui-même. Le bouton
