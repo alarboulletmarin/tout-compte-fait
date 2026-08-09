@@ -1349,6 +1349,14 @@ function withCatalogue(data: Data): Data {
  * avec les marchés, donc au trimestre. Le PEL, relevé il y a douze mois pile,
  * est celui que l'écran réclame ; les autres se taisent.
  *
+ * **Les trois rôles sont servis, et l'absence de rôle aussi** — c'est-à-dire les
+ * quatre états du champ. Deux Livrets A identiques de catégorie et de cadence
+ * portent des rôles différents (précaution pour Camille, précaution pour Alix,
+ * projet pour le livret jeune de Sacha) : c'est précisément ce qu'aucun autre
+ * champ ne savait dire. Le PEE en cours n'en porte aucun, et il est là pour ça :
+ * l'autonomie doit savoir se taire sur un compte dont personne n'a dit à quoi il
+ * sert, plutôt que de le compter comme une réserve mobilisable.
+ *
  * Aucun capital n'est écrit ici : il vit dans les valorisations, et nulle part
  * ailleurs.
  */
@@ -1361,6 +1369,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'buffer',
       /* Le plafond réel d'un Livret A, et le seul du jeu qui soit **atteint** :
          le capital d'Alix le dépasse, ce qui est exactement ce qui arrive dans
          la vraie vie — le plafond porte sur les versements, et les intérêts
@@ -1376,6 +1385,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'buffer',
       depositCap: money(2_295_000),
       note: 'C’est lui qui encaisse les coups durs : l’avance des lunettes en vient.',
     },
@@ -1386,6 +1396,7 @@ function withSupports(data: Data): Data {
       categoryId: 'passbook',
       archived: false,
       pace: 'yearly',
+      role: 'project',
       /* 1 600 €, et le versement de Sacha le remplit pendant la durée simulée :
          c'est le compte sur lequel la projection montre une courbe qui cesse de
          recevoir sans cesser de monter. */
@@ -1398,6 +1409,7 @@ function withSupports(data: Data): Data {
       categoryId: 'plans',
       archived: false,
       pace: 'yearly',
+      role: 'project',
       depositCap: money(6_120_000),
     },
     {
@@ -1407,6 +1419,7 @@ function withSupports(data: Data): Data {
       categoryId: 'life-insurance',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Aucun versement programmé : sa valeur bouge avec les marchés.',
     },
     {
@@ -1416,6 +1429,7 @@ function withSupports(data: Data): Data {
       categoryId: 'retirement',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Ouvert ce trimestre. Aucun relevé reçu : sa valeur est inconnue, pas nulle.',
     },
     {
@@ -1425,6 +1439,7 @@ function withSupports(data: Data): Data {
       categoryId: 'company-savings',
       archived: false,
       pace: 'quarterly',
+      role: 'growth',
       note: 'Entreprise quittée : le plan est fermé, l’épargne reste.',
     },
     {
@@ -1434,6 +1449,10 @@ function withSupports(data: Data): Data {
       categoryId: 'company-savings',
       archived: false,
       pace: 'quarterly',
+      /* Aucun rôle, et c'est l'état qu'il porte : le plan vient d'être ouvert
+         chez le nouvel employeur, et personne n'a encore dit ce qu'on en
+         attend. L'autonomie doit se taire dessus plutôt que de le compter — un
+         rôle deviné est exactement ce que ce champ existe pour empêcher. */
     },
   ]
   /* Archivé par la mutation, jamais par le littéral — comme `archiveCategory`

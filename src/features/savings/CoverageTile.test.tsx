@@ -28,7 +28,7 @@ import {
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
-import type { SavingPace } from '@/domain/types'
+import type { SavingPace, SavingRole } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { formatDecimal, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
@@ -50,13 +50,29 @@ const ANDREA = makeMember({ id: 'm-1', name: 'Andrea' })
  * Chaque mois porte un salaire, un loyer, une mensualité de crédit et un
  * versement d'épargne : les trois sorties se confondent en trésorerie, et c'est
  * exactement ce que la couverture doit savoir démêler.
+ *
+ * Le compte est de **précaution** par défaut, parce que c'est la seule
+ * configuration où la couverture a un chiffre à dire : elle ne divise que ce
+ * qui est mobilisable. Le rôle est un paramètre pour que les cas contraires —
+ * un plan qu'on ne touche pas, un compte dont personne n'a dit à quoi il sert —
+ * se posent explicitement, et non par omission du seed.
  */
 function seed({
   months = 4,
   capital = 1_000_000,
   pace = 'yearly',
+  role = 'buffer',
   valuedOn = today(),
-}: { months?: number; capital?: number; pace?: SavingPace; valuedOn?: string } = {}) {
+}: {
+  months?: number
+  capital?: number
+  pace?: SavingPace
+  /* `null` et non `undefined` : la valeur par défaut du déstructurage
+     reprendrait la main sur un `undefined` explicite, et le cas « aucun rôle »
+     se jouerait alors sur un compte de précaution. */
+  role?: SavingRole | null
+  valuedOn?: string
+} = {}) {
   const lived = Array.from({ length: months }, (_, index) => index + 1).flatMap((back) => [
     makeEntry({ id: `sal-${String(back)}`, date: dayIn(back, 1), direction: 'in', amount: eur(250_000), categoryId: 'salaire', memberId: 'm-1' }),
     makeEntry({ id: `loy-${String(back)}`, date: dayIn(back, 5), amount: eur(80_000), categoryId: 'loyer', memberId: 'm-1' }),
@@ -81,7 +97,15 @@ function seed({
         makeCategory({ id: 'credit', label: 'Prêt auto', familyId: 'fam-credits' }),
         makeCategory({ id: 'passbook', label: 'Livrets', familyId: 'fam-savings' }),
       ],
-      savingSupports: [makeSavingSupport({ id: 's-1', label: 'Livret A', memberId: 'm-1', pace })],
+      savingSupports: [
+        makeSavingSupport({
+          id: 's-1',
+          label: 'Livret A',
+          memberId: 'm-1',
+          pace,
+          ...(role === null ? {} : { role }),
+        }),
+      ],
       savingValuations: [
         makeSavingValuation({ id: 'v-1', supportId: 's-1', amount: eur(capital), date: valuedOn }),
       ],
@@ -148,6 +172,30 @@ describe('combien de temps le capital tient', () => {
     open()
 
     expect(screen.getByText(tpl(t.savings.coverageOver, 3))).toBeInTheDocument()
+  })
+
+  /* Le défaut que le rôle existe pour corriger, et il était toujours dans le
+     sens qui flatte : un plan d'actions ne se dénoue pas dans la semaine, et le
+     compter promettait dix mois de réserve là où il n'y en a aucune. */
+  it('ne compte pas un compte de long terme', () => {
+    seed({ role: 'growth' })
+    open()
+
+    expect(
+      screen.queryByText(tpl(t.savings.coverageValue, formatDecimal(10))),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(t.savings.coverageNoBuffer)).toBeInTheDocument()
+  })
+
+  /* Un rôle absent n'est pas « précaution » : c'est un silence, et le lire
+     comme une réponse referait le chiffre faux dans l'autre sens. L'écran
+     demande, il ne devine pas. */
+  it('demande plutôt que de deviner quand aucun rôle n’est posé', () => {
+    seed({ role: null })
+    open()
+
+    expect(screen.getByText(t.savings.coverageNoBuffer)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.coverageSetRoles)).toBeInTheDocument()
   })
 })
 

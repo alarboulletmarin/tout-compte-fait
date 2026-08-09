@@ -1016,6 +1016,20 @@ export const en: Strings = {
     supportKind: 'Type',
     supportKindHint: 'Used to classify the pot.',
     supportKindRequired: 'Choose a type.',
+    supportRole: 'What it’s for',
+    supportRoleHint:
+      'Only rainy-day savings count towards “how long I last”: a share plan doesn’t unwind within the week, and counting it would promise a buffer that isn’t there.',
+    supportRoleNone: 'I haven’t decided yet',
+    roleLabel: {
+      buffer: 'Rainy day',
+      project: 'Project',
+      growth: 'Long term',
+    },
+    roleHint: {
+      buffer: 'Available tomorrow, for the rough patches',
+      project: 'An amount to put together for something',
+      growth: 'Invested for the long run, not meant to be touched',
+    },
     supportPace: 'Valuation rhythm',
     supportPaceHint:
       'A savings account only moves with your contributions: one valuation a year is enough, and the app works out the rest. A share plan, a securities account or a unit-linked policy move on their own.',
@@ -1108,11 +1122,14 @@ export const en: Strings = {
 
     coverage: 'How long I last',
     coverageValue: '%s months',
-    coverageHint: 'with no income, at an average month’s costs',
+    coverageHint: 'with no income, on your rainy-day savings',
     coverageNoMonth: 'It will take a whole month to say: this one isn’t over.',
     coverageNoCharge: 'No cost over the period: there’s nothing to divide.',
+    coverageNoBuffer:
+      'Say which of your accounts is your rainy-day money: it’s the only cash that holds when the income stops.',
+    coverageSetRoles: 'Sort my accounts',
     coverageMethod: 'What this figure counts',
-    coverageCapital: 'Estimated capital',
+    coverageCapital: 'Rainy-day capital',
     coverageMonthly: 'An average month’s costs',
     coverageOverOne: 'average over 1 month',
     coverageOver: 'average over %s months',
@@ -1122,6 +1139,12 @@ export const en: Strings = {
       'The current month doesn’t count: it hasn’t spent everything yet, and it would make the costs look lighter than they are.',
     coverageMethodUnvalued:
       'A pot with no valuation doesn’t go into the capital: the app doesn’t know what it’s worth, and counting it as zero would be as wrong as inventing it.',
+    coverageMethodBuffer:
+      'Only accounts marked “rainy day” count: a share plan takes days to unwind, is taxed before five years, and isn’t worth today what it will be worth the day you’d have to sell.',
+    coverageMethodUnroledOne:
+      'One account has no role yet: it doesn’t count here until someone says what it’s for.',
+    coverageMethodUnroled:
+      '%s accounts have no role yet: they don’t count here until someone says what they’re for.',
 
     years: 'What you set aside',
     year: 'Year',

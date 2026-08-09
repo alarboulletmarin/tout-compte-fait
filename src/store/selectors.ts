@@ -54,6 +54,7 @@ import {
   type SavingCoverage,
   type SavingYearPoint,
   activeSupports,
+  bufferSupports,
   isSupportEmpty,
   savingCoverage,
   savingTotal,
@@ -63,7 +64,9 @@ import {
   supportMonthFlows,
   supportUsage,
   supportValue,
+  supportsByAttention,
   supportsDue,
+  supportsWithoutRole,
   valuationsOf,
 } from '@/domain/saving'
 import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
@@ -869,12 +872,48 @@ export function useSavingTotal(): SavingTotal {
 }
 
 /**
- * Combien de mois de charges le capital de la lecture courante couvre.
+ * Ce que valent les comptes de **précaution** de la lecture courante.
  *
- * Le capital vient de `useSavingTotal` — donc du même calcul que la tuile
- * Capital, au centime — et les charges de la portée du mois, celle qui
- * proratise le commun : sans elle, quelqu'un se lirait sans loyer et tiendrait
- * trois fois plus longtemps qu'il ne tient.
+ * Le même moteur que `useSavingTotal`, sur une liste plus courte : c'est ce qui
+ * garantit que le capital de l'autonomie et celui de la tuile Capital sont le
+ * même calcul, à la sélection près, et non deux additions à tenir d'accord.
+ */
+export function useBufferTotal(): SavingTotal {
+  const supports = useScopedSavingSupports()
+  const valuations = useSavingValuations()
+  const entries = useEntries()
+  return useMemo(
+    () => savingTotal(bufferSupports(supports), valuations, entries),
+    [supports, valuations, entries],
+  )
+}
+
+/**
+ * Les comptes de la lecture courante dont personne n'a dit à quoi ils servent.
+ *
+ * Ils ne comptent nulle part, et c'est l'écran qui pose la question — une fois,
+ * là où elle change quelque chose. Voir `supportsWithoutRole`.
+ */
+export function useSupportsWithoutRole(): SavingSupport[] {
+  const supports = useScopedSavingSupports()
+  return useMemo(() => supportsWithoutRole(supports), [supports])
+}
+
+/**
+ * Combien de mois de charges l'épargne de précaution de la lecture courante
+ * couvre.
+ *
+ * **Le capital n'est plus celui de la tuile Capital**, et c'est la correction
+ * du seul chiffre franchement trompeur de l'app : il divisait tout — livrets,
+ * PEA, assurance-vie en unités de compte — par les charges d'un mois, et
+ * annonçait donc une réserve dont l'essentiel n'était mobilisable ni dans la
+ * semaine, ni à sa valeur du jour. Seuls les comptes de rôle `buffer` entrent
+ * ici (`useBufferTotal`), et un compte sans rôle n'y entre pas non plus : voir
+ * `SavingRole`.
+ *
+ * Les charges, elles, viennent de la portée du mois, celle qui proratise le
+ * commun : sans elle, quelqu'un se lirait sans loyer et tiendrait trois fois
+ * plus longtemps qu'il ne tient.
  *
  * `estimated` et non `known` : c'est la meilleure réponse que l'app ait à
  * « combien j'ai aujourd'hui », et diviser un chiffre volontairement périmé
@@ -885,12 +924,12 @@ export function useSavingTotal(): SavingTotal {
  * patrimoine ne change pas parce qu'on est allé regarder mars.
  */
 export function useSavingCoverage(): SavingCoverage {
-  const total = useSavingTotal()
+  const buffer = useBufferTotal()
   const { entries } = useMonthScope()
   const kindOf = useKindOf()
   return useMemo(
-    () => savingCoverage(total.estimated, entries, kindOf),
-    [total.estimated, entries, kindOf],
+    () => savingCoverage(buffer.estimated, entries, kindOf),
+    [buffer.estimated, entries, kindOf],
   )
 }
 
@@ -933,6 +972,19 @@ export function useScopedSavingSupports(): SavingSupport[] {
     if (filter.kind === 'common') return []
     return supports.filter((support) => support.memberId === filter.memberId)
   }, [supports, filter])
+}
+
+/**
+ * Les comptes de la lecture courante, rangés par ce qu'ils demandent.
+ *
+ * Ceux dont le relevé est attendu remontent — c'est la seule notification que
+ * l'app puisse honnêtement produire, et la raison de rouvrir l'écran. Le reste
+ * garde l'ordre du document : voir `supportsByAttention`.
+ */
+export function useSupportsByAttention(): SavingSupport[] {
+  const supports = useScopedSavingSupports()
+  const valuations = useSavingValuations()
+  return useMemo(() => supportsByAttention(supports, valuations), [supports, valuations])
 }
 
 /** Ce qu'on sait du capital d'un support, et ce qu'on en déduit. */

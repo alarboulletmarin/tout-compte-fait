@@ -1729,6 +1729,38 @@ export const fr = {
        champ, c'est de savoir à quoi il sert, pas ce qu'il ne fait pas. */
     supportKindHint: 'Sert à classer le support.',
     supportKindRequired: 'Choisis un type.',
+    /* --- À quoi ce compte sert ---------------------------------------------
+       Le seul classement que ni le type ni la cadence ne portent : le type dit
+       la nature — « Livrets » —, la cadence dit à quel rythme on le relève, le
+       rôle dit ce qu'on attend de l'argent qui est dessus. Deux Livrets A
+       identiques n'ont pas le même rôle si l'un est le matelas et l'autre
+       l'apport d'un appartement.
+       Il change un chiffre, et un seul, ce que l'aide dit sans détour : ce
+       qu'on tient sans revenus ne se compte que sur ce qui est mobilisable
+       demain. Annoncer quatorze mois dont douze sont en unités de compte est la
+       seule chose franchement fausse que l'app savait dire. */
+    supportRole: 'À quoi il sert',
+    supportRoleHint:
+      'Seule l’épargne de précaution compte dans « combien de temps je tiens » : un plan d’actions ne se dénoue pas dans la semaine, et le compter promettrait une réserve qui n’existe pas.',
+    /* Vide n'est pas « aucun rôle » mais « je n'ai pas répondu », et le libellé
+       le dit : le compte ne pèse alors dans aucune autonomie, ce qui est la
+       lecture prudente — jamais un rôle deviné. */
+    supportRoleNone: 'Je ne l’ai pas encore décidé',
+    /* Les trois rôles, nommés par la question à laquelle chacun répond, et non
+       par un jargon de gestion de patrimoine. « Précaution » se comprend seul,
+       « allocation d'actifs » non. */
+    roleLabel: {
+      buffer: 'Précaution',
+      project: 'Projet',
+      growth: 'Long terme',
+    },
+    /* Ce que chacun promet, en une ligne — lu sous la rangée des comptes, où
+       le nom seul ne suffirait pas à décider. */
+    roleHint: {
+      buffer: 'Mobilisable demain, pour les coups durs',
+      project: 'Une somme à réunir pour quelque chose',
+      growth: 'Placé pour longtemps, qu’on ne compte pas toucher',
+    },
     /* La cadence des relevés — le seul champ du formulaire qui parle du temps,
        et il ne projette rien : il dit quand l'app réclamera un relevé, et
        surtout quand elle se taira. Deux réponses, parce qu'il n'en existe que
@@ -1929,12 +1961,22 @@ export const fr = {
     /* Le nombre porte son unité et rien d'autre : la condition se lit sous lui,
        où elle ne coupe pas le chiffre en deux. */
     coverageValue: '%s mois',
-    coverageHint: 'sans revenus, aux charges d’un mois moyen',
+    /* La condition dit désormais les **deux** bouts du quotient : sur quoi il
+       est calculé autant que ce qu'il suppose. Il ne disait que le second, et
+       laissait croire que tout le capital tenait la promesse — PEA compris. */
+    coverageHint: 'sans revenus, sur ton épargne de précaution',
     /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien dire.
        L'écran dit alors ce qui manque, plutôt qu'un chiffre qu'il faudrait
        corriger de tête. */
     coverageNoMonth: 'Il faudra un mois entier pour le dire : celui-ci n’est pas fini.',
     coverageNoCharge: 'Aucune charge sur la période : il n’y a rien à diviser.',
+    /* Le numérateur peut manquer lui aussi, et pour une raison qui se répare :
+       personne n'a encore dit lequel de ces comptes est le matelas. On demande
+       plutôt que de deviner — deviner rendrait le chiffre faux dans le sens qui
+       flatte, ce que ce champ existe précisément pour empêcher. */
+    coverageNoBuffer:
+      'Dis lequel de tes comptes est ton épargne de précaution : c’est le seul argent qui tient quand les revenus s’arrêtent.',
+    coverageSetRoles: 'Ranger mes comptes',
     /* La vérification, repliée comme celle de la capacité : c'est ce qu'on
        ouvre une fois pour comprendre d'où sort le chiffre, pas ce qu'on relit
        chaque mois.
@@ -1944,7 +1986,7 @@ export const fr = {
        d'ailleurs ce qu'on vient y chercher — quelles sorties entrent dans le
        dénominateur, question à laquelle aucun autre écran ne répond. */
     coverageMethod: 'Ce que ce chiffre compte',
-    coverageCapital: 'Capital estimé',
+    coverageCapital: 'Capital de précaution',
     coverageMonthly: 'Charges d’un mois moyen',
     coverageOverOne: 'moyenne sur 1 mois',
     coverageOver: 'moyenne sur %s mois',
@@ -1956,6 +1998,16 @@ export const fr = {
       'Le mois en cours ne compte pas : il n’a pas encore tout dépensé, et il ferait paraître les charges plus légères qu’elles ne sont.',
     coverageMethodUnvalued:
       'Un support sans relevé n’entre pas dans le capital : l’app ne sait pas ce qu’il vaut, et le compter à zéro serait aussi faux que l’inventer.',
+    /* La quatrième décision, et la seule qui soit nouvelle : le numérateur ne
+       compte que ce qui est mobilisable. C'est le pendant exact de la phrase
+       sur le dénominateur — l'une écarte des sorties, l'autre écarte du
+       capital, et les deux le disent en toutes lettres. */
+    coverageMethodBuffer:
+      'Seuls les comptes marqués « précaution » comptent : un plan d’actions se dénoue en plusieurs jours, est fiscalisé avant cinq ans, et ne vaut pas aujourd’hui ce qu’il vaudra le jour où il faudrait le vendre.',
+    coverageMethodUnroledOne:
+      'Un compte n’a pas encore de rôle : il ne compte pas ici tant que personne n’a dit à quoi il sert.',
+    coverageMethodUnroled:
+      '%s comptes n’ont pas encore de rôle : ils ne comptent pas ici tant que personne n’a dit à quoi ils servent.',
 
     /* --- L'accumulation, année après année ---------------------------------
        « Combien j'ai versé cette année » est du flux pur : aucune donnée

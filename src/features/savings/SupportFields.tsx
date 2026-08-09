@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { parseAmount } from '@/domain/money'
-import type { SavingPace } from '@/domain/types'
+import { SAVING_ROLES, type SavingPace, type SavingRole } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { formatDate, formatMoney, tpl } from '@/i18n/format'
 import { useCategoriesByFamily, useMembers } from '@/store/selectors'
@@ -27,7 +27,12 @@ const SECTIONS = ['contract', 'value'] as const
  * catégorie du catalogue, celle-là même sous laquelle les mouvements du support
  * se rangeront, et non un second classement à tenir d'accord avec le premier.
  *
- * **Trois questions debout, le reste replié — et pourquoi pas des étapes.**
+ * Le **rôle** vient juste après, et il est le seul champ facultatif à rester
+ * debout : les trois premiers disent ce qu'est le compte, lui dit ce qu'on en
+ * attend, et c'est de lui que dépend l'autonomie affichée sur l'écran d'épargne.
+ * Un champ dont un chiffre dépend ne se replie pas.
+ *
+ * **Quatre questions debout, le reste replié — et pourquoi pas des étapes.**
  * Le formulaire posait ses neuf champs à plat, dont cinq facultatifs : sur un
  * téléphone, ouvrir un livret demandait deux écrans de défilement pour trois
  * réponses obligatoires. Un assistant en quatre écrans aurait supprimé le
@@ -188,6 +193,37 @@ export function SupportFields({
                   </option>
                 ))}
               </optgroup>
+            ))}
+          </Select>
+        )}
+      </Field>
+
+      {/* **Le quatrième champ debout, et le seul qu'on ait ajouté ici.** Les
+          trois au-dessus disent ce qu'est le compte ; celui-ci dit ce qu'on en
+          attend, et c'est la seule chose que ni le type ni la cadence ne savent
+          dire — deux Livrets A identiques n'ont pas le même rôle si l'un est le
+          matelas et l'autre l'apport.
+          Il n'est pas replié parce qu'il **change un chiffre affiché** :
+          l'autonomie ne divise que la précaution. Un champ dont dépend une
+          lecture de l'écran d'accueil ne peut pas vivre sous un pli qu'on
+          n'ouvre jamais — c'est exactement pour ça que le plafond, lui, y vit :
+          il ne fait que retenir une saisie future.
+          Et rien n'y est présélectionné : voir `SupportDraft.role`. */}
+      <Field label={t.savings.supportRole} optional hint={t.savings.supportRoleHint}>
+        {(id, describedBy) => (
+          <Select
+            id={id}
+            aria-describedby={describedBy}
+            value={draft.role}
+            onChange={(event) => {
+              patch({ role: event.target.value as SavingRole | '' })
+            }}
+          >
+            <option value="">{t.savings.supportRoleNone}</option>
+            {SAVING_ROLES.map((role) => (
+              <option key={role} value={role}>
+                {t.savings.roleLabel[role]}
+              </option>
             ))}
           </Select>
         )}

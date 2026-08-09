@@ -281,6 +281,32 @@ describe('les supports d’épargne', () => {
     expect(reasons(notices)).toEqual(['unknownMember', 'unknownSupport'])
   })
 
+  /* Le rôle décide de ce que l'autonomie divise : un rôle abîmé qui
+     retomberait sur « précaution » ferait entrer un plan d'actions dans la
+     réserve de secours, sans que personne l'ait dit. Il devient donc absent,
+     et l'absence n'a pas de valeur de repli. */
+  it('retire un rôle illisible plutôt que de le ramener à un défaut', () => {
+    const document = raw(makeData(savings())) as Record<string, unknown>
+    document['savingSupports'] = [
+      { ...makeSavingSupport({ id: 's1', memberId: 'm1', categoryId: 'passbook' }), role: 'coussin' },
+    ]
+    const { data } = normalizeDocument(document)
+    expect(data.savingSupports[0]).not.toHaveProperty('role')
+  })
+
+  it('garde un rôle connu tel quel', () => {
+    const document = raw(
+      makeData({
+        ...savings(),
+        savingSupports: [
+          makeSavingSupport({ id: 's1', memberId: 'm1', categoryId: 'passbook', role: 'growth' }),
+        ],
+      }),
+    )
+    const { data } = normalizeDocument(document)
+    expect(data.savingSupports[0]?.role).toBe('growth')
+  })
+
   it('écarte un support que personne ne porte du tout', () => {
     const { memberId: _dropped, ...orphan } = makeSavingSupport({ id: 's1', memberId: 'm1' })
     const document = raw(makeData(savings())) as Record<string, unknown>

@@ -738,6 +738,21 @@ describe('ce que le domaine sait en tirer', () => {
     expect(new Set(passbooks.map((s) => s.memberId)).size).toBe(3)
   })
 
+  /* Les quatre états du rôle, dont l'absence — sans elle, l'écran d'autonomie
+     n'aurait jamais à se taire, et le cas qu'il gère le plus mal passerait pour
+     impossible. Deux livrets de même catégorie et de même cadence portent des
+     rôles différents : c'est ce qu'aucun autre champ ne sait dire. */
+  it('sert les trois rôles, et un compte qui n’en porte aucun', () => {
+    const roles = data.savingSupports.map((support) => support.role)
+    for (const role of ['buffer', 'project', 'growth']) {
+      expect(roles).toContain(role)
+    }
+    expect(roles).toContain(undefined)
+
+    const passbooks = data.savingSupports.filter((s) => s.categoryId === 'passbook')
+    expect(new Set(passbooks.map((s) => s.role)).size).toBeGreaterThan(1)
+  })
+
   it('relie chaque mouvement d’épargne à un support existant', () => {
     const ids = new Set(data.savingSupports.map((support) => support.id))
     const savings = data.entries.filter((entry) => kindOf(entry.categoryId) === 'saving')

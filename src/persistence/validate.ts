@@ -37,7 +37,13 @@ import type {
   Settings,
   ThemeSetting,
 } from '@/domain/types'
-import { DEFAULT_LOCALE, DEFAULT_PALETTE, isLocale, isPaletteSetting } from '@/domain/types'
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_PALETTE,
+  isLocale,
+  isPaletteSetting,
+  isSavingRole,
+} from '@/domain/types'
 import { MAX_RATE_PERCENT } from '@/domain/rate'
 import { defaultFamilies, fallbackFamilyId, repairedCategory } from './defaults'
 import { CURRENT_SCHEMA_VERSION } from './schema'
@@ -229,6 +235,11 @@ function debt(raw: unknown, index: number): Read<Debt> {
  * manque : un document d'avant le champ n'a jamais répondu à la question, et
  * écrire « annuel » à sa place ferait passer un silence pour un choix. C'est le
  * domaine qui retombe sur `DEFAULT_PACE` à la lecture, en un seul endroit.
+ *
+ * Le rôle suit la même règle, en plus strict encore : rien ne retombe sur une
+ * valeur par défaut à la lecture non plus. Un rôle inventé ferait entrer un
+ * compte dans l'autonomie — ou l'en sortirait — sans que personne l'ait dit,
+ * c'est-à-dire produirait exactement le chiffre faux que ce champ corrige.
  */
 function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
   if (!isRecord(raw)) return 'shape'
@@ -249,6 +260,7 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
      compte parce que son plafond est abîmé serait hors de proportion. */
   const cap = raw['depositCap']
   const depositCap = isMoney(cap) && cap > 0 ? cap : undefined
+  const role = raw['role']
   return {
     id: str(raw['id'], `saving-support-${String(index)}`),
     label: str(raw['label'], '—'),
@@ -256,6 +268,7 @@ function savingSupport(raw: unknown, index: number): Read<SavingSupport> {
     categoryId: str(raw['categoryId'], ''),
     archived: bool(raw['archived'], false),
     ...(pace === 'yearly' || pace === 'quarterly' ? { pace } : {}),
+    ...(isSavingRole(role) ? { role } : {}),
     ...(depositCap === undefined ? {} : { depositCap }),
     ...(note === undefined ? {} : { note }),
   }

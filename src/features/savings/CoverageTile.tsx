@@ -1,9 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { SAVINGS_SUPPORTS_PATH } from '@/app/routes'
 import { ZERO } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatDecimal, tpl } from '@/i18n/format'
-import { useSavingCoverage, useSavingTotal } from '@/store/selectors'
+import {
+  useBufferTotal,
+  useSavingCoverage,
+  useSavingTotal,
+  useSupportsWithoutRole,
+} from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
+import { Button } from '@/ui/Button'
 import { Disclosure } from '@/ui/Disclosure'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { SavingsIcon } from '@/ui/Icons'
@@ -19,6 +27,12 @@ import { Tile } from '@/ui/Tile'
  * « 10 450 € » est une anecdote : l'appli de la banque le dit mieux, plus vite,
  * et sans qu'on recopie un nombre lu trente secondes plus tôt.
  *
+ * **Il ne divise que l'épargne de précaution, et c'est une correction.** Il
+ * divisait tout — le PEA compris —, et annonçait donc une réserve dont
+ * l'essentiel n'était mobilisable ni dans la semaine, ni à sa valeur du jour.
+ * C'était le seul chiffre franchement trompeur de l'app, et il l'était toujours
+ * dans le sens qui flatte. Voir `SavingRole` et `bufferSupports`.
+ *
  * **Un rang sous le capital, pas à côté de lui.** C'est une lecture
  * secondaire — elle qualifie le chiffre du dessus, elle ne rivalise pas avec
  * lui : deux chiffres imprimés à la même taille dans le même écran se
@@ -32,22 +46,46 @@ import { Tile } from '@/ui/Tile'
  * se lit comme deux absences.
  *
  * Le calcul se replie, comme celui de la capacité : c'est une vérification qu'on
- * ouvre une fois, et les trois décisions qui font la justesse du chiffre — le
- * crédit compté, le versement exclu, le mois en cours écarté — ne se devinent
- * sur aucun autre écran.
+ * ouvre une fois, et les quatre décisions qui font la justesse du chiffre — le
+ * seul capital mobilisable au numérateur, le crédit compté et le versement exclu
+ * au dénominateur, le mois en cours écarté — ne se devinent sur aucun autre
+ * écran.
  */
 export function CoverageTile() {
+  const navigate = useNavigate()
   const total = useSavingTotal()
+  const buffer = useBufferTotal()
   const coverage = useSavingCoverage()
+  const unroled = useSupportsWithoutRole()
   const [open, setOpen] = useState(false)
 
   if (total.valued === 0) return null
+
+  /* Le numérateur peut manquer, et cette absence-là se répare : personne n'a
+     encore dit lequel de ces comptes est le matelas. On pose la question au
+     lieu de deviner — un rôle deviné referait, dans l'autre sens, le chiffre
+     faux que ce champ existe pour corriger. */
+  const noBuffer = buffer.valued === 0
 
   return (
     <Tile className="gap-2">
       <Eyebrow icon={SavingsIcon}>{t.savings.coverage}</Eyebrow>
 
-      {coverage.covered === null ? (
+      {noBuffer ? (
+        <>
+          <p className="t-body">{t.savings.coverageNoBuffer}</p>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-fit"
+            onClick={() => {
+              void navigate(SAVINGS_SUPPORTS_PATH)
+            }}
+          >
+            {t.savings.coverageSetRoles}
+          </Button>
+        </>
+      ) : coverage.covered === null ? (
         /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien
            dire. On nomme donc ce qui manque, plutôt que d'écrire « 0 mois »
            sous une étiquette qui promet une durée. */
@@ -96,12 +134,23 @@ export function CoverageTile() {
               </span>
             )}
 
+            {/* Le numérateur d'abord : c'est ce qui a changé, et c'est le
+                pendant exact de la phrase sur le dénominateur — l'une écarte du
+                capital, l'autre écarte des sorties. */}
+            <p className="t-label">{t.savings.coverageMethodBuffer}</p>
             <p className="t-label">{t.savings.coverageMethodDenominator}</p>
             <p className="t-label">{t.savings.coverageMethodMonths}</p>
-            {/* La réserve n'a de sens que s'il manque quelque chose : dite
-                toujours, elle deviendrait le bruit qu'on saute. */}
+            {/* Les réserves n'ont de sens que s'il manque quelque chose : dites
+                toujours, elles deviendraient le bruit qu'on saute. */}
+            {unroled.length > 0 && (
+              <p className="t-label">
+                {unroled.length === 1
+                  ? t.savings.coverageMethodUnroledOne
+                  : tpl(t.savings.coverageMethodUnroled, unroled.length)}
+              </p>
+            )}
             {total.unvalued > 0 && <p className="t-label">{t.savings.coverageMethodUnvalued}</p>}
-            {total.movedSince !== ZERO && <p className="t-label">{t.savings.estimatedWarning}</p>}
+            {buffer.movedSince !== ZERO && <p className="t-label">{t.savings.estimatedWarning}</p>}
           </div>
         </Disclosure>
       </div>

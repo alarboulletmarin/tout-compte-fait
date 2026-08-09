@@ -21,6 +21,7 @@ import type {
   Member,
   Recurrence,
   SavingPace,
+  SavingRole,
   SavingRate,
   SavingSupport,
   SavingValuation,
@@ -171,6 +172,15 @@ export type SavingSupportInput = {
   categoryId: string
   /** À quel rythme un relevé est attendu. Voir `SavingPace`. */
   pace: SavingPace
+  /**
+   * Ce à quoi le compte sert. Voir `SavingRole`.
+   *
+   * Facultatif jusqu'ici — contrairement à `pace`, qui a une réponse par défaut.
+   * Un rôle qu'on ne pose pas reste absent du document, et le compte ne pèse
+   * alors dans aucune autonomie : c'est la seule lecture prudente, et l'écran a
+   * de quoi poser la question quand elle change quelque chose.
+   */
+  role?: SavingRole
   /**
    * Le plafond de versements du contrat. Voir `SavingSupport.depositCap` — il
    * se pose **sur le support** et non à côté, parce qu'il ne réécrit rien.

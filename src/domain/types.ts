@@ -114,6 +114,36 @@ export type Period = {
 export type SavingPace = 'yearly' | 'quarterly'
 
 /**
+ * Ce à quoi un compte **sert**, et non ce qu'il est.
+ *
+ * C'est le seul classement que ni la catégorie ni la cadence ne portent : la
+ * catégorie dit la nature — « Livrets » —, `pace` dit à quel rythme on le
+ * relève, le rôle dit ce qu'on attend de l'argent qui est dessus. Deux Livrets A
+ * identiques de catégorie et de cadence n'ont pas le même rôle si l'un est le
+ * matelas de secours et l'autre l'apport d'un appartement.
+ *
+ * - `buffer` — la précaution. C'est le seul argent **mobilisable demain**, donc
+ *   le seul que l'autonomie ait le droit de diviser (`domain/saving.ts`).
+ * - `project` — une somme qu'on constitue pour quelque chose de daté.
+ * - `growth` — le long terme, qu'on ne compte pas toucher.
+ *
+ * **Saisi, jamais déduit**, exactement pour la raison qui vaut déjà pour
+ * `pace` : le catalogue de catégories est libre, et un rôle déduit du classement
+ * se tromperait silencieusement. **Absent, il reste absent** : aucune migration
+ * ne le devine. Un support d'avant le champ n'a jamais répondu à la question, et
+ * lui prêter « précaution » gonflerait l'autonomie de tout ce qui n'en est pas —
+ * c'est-à-dire referait, dans l'autre sens, le chiffre faux qu'il corrige.
+ */
+export type SavingRole = 'buffer' | 'project' | 'growth'
+
+/** L'ordre fait foi : c'est celui du champ, et celui des groupes de comptes. */
+export const SAVING_ROLES: readonly SavingRole[] = ['buffer', 'project', 'growth']
+
+export function isSavingRole(value: unknown): value is SavingRole {
+  return SAVING_ROLES.includes(value as SavingRole)
+}
+
+/**
  * Un support d'épargne — le livret, le plan, le contrat : **où** l'argent est
  * placé, et **à qui** il est.
  *
@@ -154,6 +184,15 @@ export type SavingSupport = {
   archived: boolean
   /** Absent sur un document d'avant le champ : voir `DEFAULT_PACE`. */
   pace?: SavingPace
+  /**
+   * Ce à quoi ce compte sert. Voir `SavingRole`.
+   *
+   * **Absent est une valeur**, et la seule honnête tant que personne n'a
+   * répondu : contrairement à `pace`, aucune lecture ne retombe sur un défaut.
+   * L'autonomie ne compte alors pas ce support, et l'écran demande — une fois,
+   * en douceur — plutôt que d'inventer.
+   */
+  role?: SavingRole
   /**
    * Le plafond de **versements cumulés** du contrat, en centimes. Absent tant
    * que personne ne l'a posé.

@@ -21,6 +21,7 @@ import type {
   Recurrence,
   SavingPace,
   SavingRate,
+  SavingRole,
   SavingSupport,
   SavingValuation,
 } from '@/domain/types'
@@ -40,6 +41,18 @@ export type SupportDraft = {
    * et c'est ce champ-là qui reste facultatif.
    */
   pace: SavingPace
+  /**
+   * À quoi ce compte sert. La chaîne vide est une réponse à part entière :
+   * « je n'ai pas répondu ».
+   *
+   * Contrairement à la cadence, **rien n'est présélectionné** — et c'est la
+   * différence de fond entre les deux champs. La cadence a une bonne réponse par
+   * défaut, qui ne fausse rien si on la laisse ; le rôle décide, lui, de ce que
+   * l'autonomie divise, et le présélectionner ferait entrer un compte dans une
+   * réserve de précaution sans que personne l'ait dit. Vide reste vide dans le
+   * document (voir `SavingRole`).
+   */
+  role: SavingRole | ''
   /**
    * L'hypothèse de rendement, telle qu'on la tape — « 3 », « 1,5 », ou rien.
    *
@@ -83,6 +96,10 @@ export function emptySupportDraft(defaults: SupportDefaults = {}): SupportDraft 
     memberId: defaults.memberId ?? '',
     categoryId: defaults.categoryId ?? '',
     pace: DEFAULT_PACE,
+    /* Aucun rôle par défaut, pour la raison exacte qui interdit un taux par
+       défaut : ce serait répondre à la place de quelqu'un, sur le champ dont
+       dépend un chiffre affiché. */
+    role: '',
     /* Aucun taux par défaut, et surtout pas 3 % : préremplir reviendrait à
        annoncer le rendement d'un produit que l'app ne connaît pas (cahier
        §4.6 ter). Le simulateur, lui, a le droit d'avoir un défaut — il ne
@@ -114,6 +131,10 @@ export function supportDraftFrom(support: SavingSupport): SupportDraft {
     /* Un support d'avant le champ n'en porte aucune : c'est la lecture du
        domaine qui décide, et jamais une seconde valeur par défaut posée ici. */
     pace: paceOf(support),
+    /* Un support d'avant le champ n'en porte aucun non plus — et ici rien ne
+       décide à la lecture : l'absence se relit vide, et se réenregistre vide
+       tant que personne n'a répondu. */
+    role: support.role ?? '',
     rateText: '',
     rateKind: 'assumed',
     /* Le plafond, lui, se relit : il n'a pas de passé à protéger, et le taire
@@ -191,6 +212,7 @@ export function useSupportDraft(initial: SupportDraft): SupportDraftState {
         memberId: draft.memberId,
         categoryId: draft.categoryId,
         pace: draft.pace,
+        ...(draft.role === '' ? {} : { role: draft.role }),
         ...(typedCap && cap !== null && cap > 0 ? { depositCap: cap } : {}),
         ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
         ...(typedAmount && amount !== null

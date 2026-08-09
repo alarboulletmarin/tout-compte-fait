@@ -9,7 +9,7 @@ import {
   useCategoryMap,
   useSavingValuations,
   useSavingsBySupport,
-  useScopedSavingSupports,
+  useSupportsByAttention,
   useSupportsDue,
 } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -22,9 +22,16 @@ import { freshness } from './freshness'
 
 /**
  * Les rangées elles-mêmes, partagées entre la vue d'ensemble et l'écran
- * dédié : un nom, une pastille, l'âge du dernier relevé, la dernière valeur et
- * ce que le mois y a mis en net. Deux lectures du même stock ne doivent pas
- * pouvoir diverger sur ce qu'une rangée affiche.
+ * dédié : un nom, une pastille, ce à quoi le compte sert, l'âge du dernier
+ * relevé, la dernière valeur et ce que le mois y a mis en net. Deux lectures du
+ * même stock ne doivent pas pouvoir diverger sur ce qu'une rangée affiche.
+ *
+ * **Le rôle passe devant l'âge du relevé** dans la description, et c'est
+ * l'ordre des deux questions : à quoi sert ce compte se lit avant depuis quand
+ * on ne l'a pas revu. Un compte sans rôle ne dit rien — pas « aucun rôle », qui
+ * ferait d'un silence une catégorie : la question se pose sur le formulaire et
+ * dans la tuile d'autonomie, là où elle change un chiffre, et pas une fois par
+ * ligne.
  */
 function SupportRows({
   supports,
@@ -43,13 +50,18 @@ function SupportRows({
         const latest = latestValuation(valuations, support.id)
         const net = netOf.get(support.id) ?? ZERO
         const color = categories.get(support.categoryId)?.color ?? 'var(--cat-rest)'
+        const age = freshness(latest?.date ?? null, support.pace)
 
         return (
           <Row
             key={support.id}
             leading={<Dot color={color} />}
             label={support.label}
-            description={freshness(latest?.date ?? null, support.pace)}
+            description={
+              support.role === undefined
+                ? age
+                : `${t.savings.roleLabel[support.role]} · ${age}`
+            }
             trailing={
               <span className="flex flex-col items-end gap-0.5">
                 {/* « — » et jamais « 0 € » : zéro est une information
@@ -80,7 +92,7 @@ function SupportRows({
  */
 export function SupportsOverview() {
   const navigate = useNavigate()
-  const supports = useScopedSavingSupports()
+  const supports = useSupportsByAttention()
   const valuations = useSavingValuations()
   const slices = useSavingsBySupport()
   const due = useSupportsDue()
@@ -176,7 +188,7 @@ export function SupportsSection({
   heading?: boolean
 } = {}) {
   const navigate = useNavigate()
-  const supports = useScopedSavingSupports()
+  const supports = useSupportsByAttention()
   const valuations = useSavingValuations()
   const slices = useSavingsBySupport()
   const due = useSupportsDue()
