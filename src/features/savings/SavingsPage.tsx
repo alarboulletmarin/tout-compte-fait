@@ -4,7 +4,7 @@ import { MonthHeader } from '@/app/MonthHeader'
 import { PROJECTION_PATH, SUPPORT_NEW_PATH, entryNewPath } from '@/app/routes'
 import { ZERO, add } from '@/domain/money'
 import { savingCapacity, savingLeft, savingRate } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   useKindTotals,
   useMemberMap,
@@ -99,16 +99,16 @@ export function SavingsPage() {
 
   return (
     <>
-      <PageTitle title={fr.savings.title} />
+      <PageTitle title={t.savings.title} />
       <MonthHeader prorataNote personsOnly />
 
       {nothing ? (
         <EmptyState
-          message={members.length === 0 ? fr.savings.supportsNoMember : fr.savings.supportsEmpty}
+          message={members.length === 0 ? t.savings.supportsNoMember : t.savings.supportsEmpty}
           {...(members.length === 0
             ? {}
             : {
-                actionLabel: fr.savings.supportAdd,
+                actionLabel: t.savings.supportAdd,
                 onAction: () => {
                   void navigate(SUPPORT_NEW_PATH)
                 },
@@ -141,7 +141,7 @@ export function SavingsPage() {
                 void navigate(entryNewPath({ direction: 'out', saving: true }))
               }}
             >
-              {fr.entry.savingIn}
+              {t.entry.savingIn}
             </Button>
             <Button
               variant="secondary"
@@ -149,7 +149,7 @@ export function SavingsPage() {
                 void navigate(entryNewPath({ direction: 'in', saving: true }))
               }}
             >
-              {fr.entry.savingOut}
+              {t.entry.savingOut}
             </Button>
           </div>
 
@@ -175,8 +175,8 @@ export function SavingsPage() {
               chargé serait une porte qu'on rate. */}
           <RowGroup>
             <Row
-              label={fr.nav.projections}
-              description={fr.nav.projectionsHint}
+              label={t.nav.projections}
+              description={t.nav.projectionsHint}
               icon={ForecastIcon}
               to={PROJECTION_PATH}
             />

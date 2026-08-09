@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { currentYm } from '@/domain/date'
 import { latestValuation, savingTotal } from '@/domain/saving'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { SupportFields } from '@/features/savings/SupportFields'
 import {
@@ -73,8 +73,8 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="t-section">{fr.onboarding.savingsTitle}</h1>
-        <p className="t-label">{fr.onboarding.savingsHint}</p>
+        <h1 className="t-section">{t.onboarding.savingsTitle}</h1>
+        <p className="t-label">{t.onboarding.savingsHint}</p>
       </div>
 
       {supports.length > 0 && (
@@ -90,7 +90,7 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
                   meta={member?.name ?? ''}
                   trailing={
                     latest === null ? (
-                      <span className="t-label">{fr.savings.valueNever}</span>
+                      <span className="t-label">{t.savings.valueNever}</span>
                     ) : (
                       <Amount value={latest.amount} />
                     )
@@ -106,9 +106,9 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
         <div key={round} className="flex flex-col gap-4">
           <SupportFields draft={draft} patch={patch} errors={errors} autoFocus />
           <Field
-            label={fr.savings.contribution}
+            label={t.savings.contribution}
             optional
-            hint={fr.savings.contributionHint}
+            hint={t.savings.contributionHint}
           >
             {(id) => (
               <AmountInput
@@ -123,7 +123,7 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
           </Field>
           <div className="flex flex-wrap gap-2">
             <Button type="button" onClick={add}>
-              {fr.savings.supportAdd}
+              {t.savings.supportAdd}
             </Button>
             {supports.length > 0 && (
               <Button
@@ -133,7 +133,7 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
                   setAdding(false)
                 }}
               >
-                {fr.common.cancel}
+                {t.common.cancel}
               </Button>
             )}
           </div>
@@ -148,7 +148,7 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
           }}
         >
           <Plus size={18} />
-          {fr.savings.supportAdd}
+          {t.savings.supportAdd}
         </Button>
       )}
 
@@ -156,10 +156,10 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
           cahier §4.1 met à l'existence d'une étape facultative. */}
       <div className="flex flex-col gap-2">
         <Button type="button" full onClick={onSubmit}>
-          {fr.onboarding.start}
+          {t.onboarding.start}
         </Button>
         <Button type="button" variant="ghost" full onClick={onSkip}>
-          {fr.onboarding.savingsSkip}
+          {t.onboarding.savingsSkip}
         </Button>
       </div>
     </div>
@@ -181,7 +181,7 @@ export function SavingsPreview() {
   if (supports.length === 0) {
     return (
       <Tile className="gap-3">
-        <p className="t-label">{fr.onboarding.previewSavingsEmpty}</p>
+        <p className="t-label">{t.onboarding.previewSavingsEmpty}</p>
       </Tile>
     )
   }
@@ -194,13 +194,13 @@ export function SavingsPreview() {
 
   return (
     <Tile className="gap-3">
-      <p className="t-label">{fr.savings.total}</p>
+      <p className="t-label">{t.savings.total}</p>
       <Amount value={total.known} size="tile" />
       {total.unvalued > 0 && (
         <p className="t-label">
           {total.unvalued === 1
-            ? fr.savings.totalMissingOne
-            : tpl(fr.savings.totalMissing, total.unvalued)}
+            ? t.savings.totalMissingOne
+            : tpl(t.savings.totalMissing, total.unvalued)}
         </p>
       )}
       <ul className="flex flex-col gap-1">

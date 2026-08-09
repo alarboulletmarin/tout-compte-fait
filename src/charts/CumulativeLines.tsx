@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import type { Money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { NO_VALUE, formatMoney, monthName, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
@@ -101,7 +101,7 @@ export function CumulativeLines({
   const span = max - min || 1
   const yOf = (value: number): number => PAD + (1 - (value - min) / span) * (HEIGHT - 2 * PAD)
 
-  const months = series[0]?.values.length ?? fr.calendarNames.monthsShort.length
+  const months = series[0]?.values.length ?? t.calendarNames.monthsShort.length
   const valueAt = (serie: Serie, index: number): number | null => serie.values[index] ?? null
 
   /* Le dernier mois que sait chiffrer l'**année choisie**, et non n'importe
@@ -255,12 +255,12 @@ export function CumulativeLines({
               labels={labels}
               shown={shown}
               onShow={setActive}
-              label={fr.a11y.chartCursor}
+              label={t.a11y.chartCursor}
             />
           </div>
 
           <div className="chart-months flex" aria-hidden="true">
-            {fr.calendarNames.monthsShort.slice(0, months).map((name) => (
+            {t.calendarNames.monthsShort.slice(0, months).map((name) => (
               <span key={name} className="t-axis min-w-0 flex-1 text-center">
                 <span className="chart-month-short">{name.slice(0, 1).toUpperCase()}</span>
                 <span className="chart-month-long">{name}</span>

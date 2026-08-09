@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from '
 import { isValidISO } from '@/domain/date'
 import type { Entry } from '@/domain/types'
 import { DIRECTION_PARAM, NATURE_PARAM, directionFromParam, natureFromParam } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { removeEntry, unconfirmEntry, undoable } from '@/store/actions'
 import { useCurrentYm, useEntry, useKindOf } from '@/store/selectors'
 import { Button } from '@/ui/Button'
@@ -32,11 +32,11 @@ function EntryActions({ entry, onDone }: { entry: Entry; onDone: () => void }) {
       variant="secondary"
       onClick={() => {
         unconfirmEntry(entry.id)
-        toast(fr.month.unconfirmed)
+        toast(t.month.unconfirmed)
         onDone()
       }}
     >
-      {fr.month.unconfirm}
+      {t.month.unconfirm}
     </Button>
   )
 }
@@ -46,10 +46,10 @@ function RemoveEntry({ entry, onDone }: { entry: Entry; onDone: () => void }) {
   const kindOf = useKindOf()
   const saving = kindOf(entry.categoryId) === 'saving'
   const removed = saving
-    ? fr.entry.removedSaving
+    ? t.entry.removedSaving
     : entry.direction === 'in'
-      ? fr.entry.removedIn
-      : fr.entry.removedOut
+      ? t.entry.removedIn
+      : t.entry.removedOut
 
   return (
     <div className="border-t border-border pt-4">
@@ -59,12 +59,12 @@ function RemoveEntry({ entry, onDone }: { entry: Entry; onDone: () => void }) {
           setConfirming(true)
         }}
       >
-        {fr.entry.remove}
+        {t.entry.remove}
       </Button>
       <ConfirmDialog
         open={confirming}
-        title={fr.entry.remove}
-        steps={[{ question: fr.entry.removeConfirm, action: fr.common.delete }]}
+        title={t.entry.remove}
+        steps={[{ question: t.entry.removeConfirm, action: t.common.delete }]}
         onCancel={() => {
           setConfirming(false)
         }}

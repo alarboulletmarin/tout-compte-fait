@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { supportPath } from '@/app/routes'
 import { type Money, ZERO } from '@/domain/money'
 import { UNLINKED_SUPPORT } from '@/domain/saving'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatPercent } from '@/i18n/format'
 import {
   useCategoryMap,
@@ -54,10 +54,10 @@ export function PlacedSection({ saved }: { saved: Money }) {
           au-dessus, et il se disait une troisième fois ici. Le même montant sous
           trois libellés apprend surtout qu'on ne sait pas lequel lire — et à
           320px il poussait l'étiquette à la ligne pour rien. */}
-      <Eyebrow>{fr.savings.placed}</Eyebrow>
+      <Eyebrow>{t.savings.placed}</Eyebrow>
 
       {slices.length === 0 ? (
-        <p className="t-label">{fr.savings.placedEmpty}</p>
+        <p className="t-label">{t.savings.placedEmpty}</p>
       ) : (
         <ul className="flex flex-col">
           {slices.map((slice) => {
@@ -85,7 +85,7 @@ export function PlacedSection({ saved }: { saved: Money }) {
               <li key={slice.supportId}>
                 <ListRow
                   color={color}
-                  label={support?.label ?? fr.savings.unlinked}
+                  label={support?.label ?? t.savings.unlinked}
                   {...(meta === '' ? {} : { meta })}
                   trailing={<Amount value={slice.total} signed />}
                   {...(support === undefined
@@ -106,7 +106,7 @@ export function PlacedSection({ saved }: { saved: Money }) {
           comptent bien dans le mois — ce sont des `Entry` comme les autres —,
           mais la ventilation ne peut pas les placer. */}
       {unlinked.length > 0 && slices.some((slice) => slice.supportId === UNLINKED_SUPPORT) && (
-        <p className="t-label border-t border-border pt-3">{fr.savings.unlinkedHint}</p>
+        <p className="t-label border-t border-border pt-3">{t.savings.unlinkedHint}</p>
       )}
 
       {/* Un versement resté « en commun » n'est à personne, et l'épargne ne se
@@ -116,7 +116,7 @@ export function PlacedSection({ saved }: { saved: Money }) {
           entier, filtre ou non. C'est le pendant du salaire non attribué de
           l'écran Répartition. */}
       {unassigned.length > 0 && (
-        <p className="t-label border-t border-border pt-3">{fr.savings.placedUnassigned}</p>
+        <p className="t-label border-t border-border pt-3">{t.savings.placedUnassigned}</p>
       )}
     </Tile>
   )

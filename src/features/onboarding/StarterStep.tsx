@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Button } from '@/ui/Button'
 import { AmountInput, Field } from '@/ui/Field'
 import type { StarterLine } from './starter'
@@ -43,8 +43,8 @@ export function StarterStep({
       }}
     >
       <div className="flex flex-col gap-2">
-        <h1 className="t-section">{fr.onboarding.starterTitle}</h1>
-        <p className="t-label">{fr.onboarding.starterHint}</p>
+        <h1 className="t-section">{t.onboarding.starterTitle}</h1>
+        <p className="t-label">{t.onboarding.starterHint}</p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -70,7 +70,7 @@ export function StarterStep({
         ))}
       </div>
 
-      <p className="t-label">{fr.onboarding.starterDayNote}</p>
+      <p className="t-label">{t.onboarding.starterDayNote}</p>
 
       {/* Le second bouton est aussi visible que le premier, et c'est la
           condition que le cahier §4.1 met à l'existence de cette étape. Il
@@ -81,10 +81,10 @@ export function StarterStep({
           l'ouverture de l'app mentirait d'un écran. */}
       <div className="flex flex-col gap-2">
         <Button type="submit" full>
-          {fr.common.next}
+          {t.common.next}
         </Button>
         <Button type="button" variant="ghost" full onClick={onSkip}>
-          {fr.onboarding.starterSkip}
+          {t.onboarding.starterSkip}
         </Button>
       </div>
     </form>

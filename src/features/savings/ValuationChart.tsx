@@ -1,6 +1,6 @@
 import type { SavingValuation } from '@/domain/types'
 import { formatDate, formatMoney, tpl } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { polylinePath } from '@/charts/path'
 import { useCurrency } from '@/ui/currency'
 
@@ -64,7 +64,7 @@ export function ValuationChart({
         className="h-24 w-full"
         role="img"
         aria-label={tpl(
-          fr.savings.srHistory,
+          t.savings.srHistory,
           formatMoney(first.amount, currency, false),
           formatDate(first.date),
           formatMoney(last.amount, currency, false),

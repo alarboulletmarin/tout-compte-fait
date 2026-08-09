@@ -6,7 +6,7 @@ import { sum } from '@/domain/money'
 import { coveredMonths } from '@/domain/month'
 import type { KindOf } from '@/domain/stats'
 import { isSpending } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { formatDelta, formatYearMonthShort, tpl } from '@/i18n/format'
 import { useCategoryMap, useEntries, useKindOf, useMonthScope } from '@/store/selectors'
@@ -148,7 +148,7 @@ function MonthCompareBody({
   const colorOf = (categoryId: string): string =>
     categories.get(categoryId)?.color ?? 'var(--cat-rest)'
   const labelOf = (categoryId: string): string =>
-    categories.get(categoryId)?.label ?? fr.common.other
+    categories.get(categoryId)?.label ?? t.common.other
 
   return (
     <div className="flex flex-col gap-4">

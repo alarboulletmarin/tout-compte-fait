@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { type ISODate, type YearMonth, addDays, addMonthsToYm, currentYm, startOfMonth, today } from '@/domain/date'
 import { eur, makeCategory, makeData, makeEntry } from '@/domain/fixtures'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, formatMoney, formatWeekdayDate, formatYearMonth, tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { CalendarPage } from './CalendarPage'
@@ -43,7 +43,7 @@ function setup(ym: YearMonth, entries: Entry[] = []): void {
 
 function grid(ym: YearMonth): HTMLElement {
   return screen.getByRole('group', {
-    name: tpl(fr.calendar.gridLabel, de(formatYearMonth(ym))),
+    name: tpl(t.calendar.gridLabel, de(formatYearMonth(ym))),
   })
 }
 
@@ -77,8 +77,8 @@ describe('CalendarPage — la grille ne change plus de hauteur', () => {
     const cells = within(grid(currentYm())).getAllByRole('button')
 
     expect(named(anchorOf(currentYm()))).toContain(formatWeekdayDate(today()))
-    expect(named(anchorOf(currentYm()))).toContain(fr.calendar.dayToday)
-    expect(cells.some((cell) => named(cell).includes(fr.calendar.dayOutside))).toBe(true)
+    expect(named(anchorOf(currentYm()))).toContain(t.calendar.dayToday)
+    expect(cells.some((cell) => named(cell).includes(t.calendar.dayOutside))).toBe(true)
   })
 })
 
@@ -183,7 +183,7 @@ describe('CalendarPage — le jour ouvert', () => {
         .find((cell) => named(cell).startsWith(formatWeekdayDate(jour))) as HTMLElement,
     )
 
-    expect(screen.getByText(fr.calendar.dayTotal)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.dayTotal)).toBeInTheDocument()
     /* Sans normalisation : les montants portent une espace fine insécable, que
        le normaliseur par défaut de la bibliothèque ramènerait à une espace
        ordinaire d'un seul côté de la comparaison. */
@@ -196,7 +196,7 @@ describe('CalendarPage — le jour ouvert', () => {
   it('mène à son mois quand on ouvre un jour voisin', async () => {
     setup('2026-08')
     const voisin = within(grid('2026-08')).getAllByRole('button')[0] as HTMLElement
-    expect(named(voisin)).toContain(fr.calendar.dayOutside)
+    expect(named(voisin)).toContain(t.calendar.dayOutside)
 
     await userEvent.click(voisin)
 
@@ -214,8 +214,8 @@ describe('CalendarPage — le jour ouvert', () => {
       .getAllByRole('button')
       .find((cell) => named(cell).startsWith(formatWeekdayDate(jour))) as HTMLElement
 
-    expect(named(case_)).toContain(tpl(fr.calendar.someEntries, 3))
-    expect(named(case_)).toContain(fr.calendar.onePlanned)
+    expect(named(case_)).toContain(tpl(t.calendar.someEntries, 3))
+    expect(named(case_)).toContain(t.calendar.onePlanned)
   })
 
   it('rend le focus à sa case en se refermant', async () => {
@@ -225,7 +225,7 @@ describe('CalendarPage — le jour ouvert', () => {
       .find((cell) => named(cell).startsWith(formatWeekdayDate(jour))) as HTMLElement
 
     await userEvent.click(case_)
-    await userEvent.click(screen.getByRole('button', { name: fr.common.close }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.close }))
 
     expect(named(document.activeElement)).toContain(formatWeekdayDate(jour))
   })
@@ -242,12 +242,12 @@ describe('CalendarPage — la légende', () => {
       makeEntry({ id: 'confirmee', date: today() }),
     ])
 
-    expect(screen.getByText(fr.calendar.legendDone)).toBeInTheDocument()
-    expect(screen.getByText(fr.calendar.legendPlanned)).toBeInTheDocument()
-    expect(screen.getByText(fr.calendar.legendToday)).toBeInTheDocument()
-    expect(screen.getByText(fr.calendar.legendDots)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendDone)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendPlanned)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendToday)).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendDots)).toBeInTheDocument()
     // Deux échéances tiennent dans la case : rien à expliquer du « + ».
-    expect(screen.queryByText(fr.calendar.legendMore, { exact: false })).not.toBeInTheDocument()
+    expect(screen.queryByText(t.calendar.legendMore, { exact: false })).not.toBeInTheDocument()
   })
 
   /* Cinq échéances le même jour, quatre pastilles : le « +1 » apparaît, et la
@@ -260,22 +260,22 @@ describe('CalendarPage — la légende', () => {
       ),
     )
 
-    expect(screen.getByText(fr.calendar.legendMore, { exact: false })).toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendMore, { exact: false })).toBeInTheDocument()
   })
 
   /* Une légende qui nomme des marques absentes est du bruit : elle explique ce
      qui est à l'écran, et rien d'autre. */
   it('ne dit rien d’une fenêtre sans aucune pastille', () => {
     setup(currentYm())
-    expect(screen.queryByText(fr.calendar.legendDots)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.calendar.legendDots)).not.toBeInTheDocument()
   })
 
   it('ne nomme pas le cadre du jour sur un mois qui ne le montre pas', () => {
     const ym = addMonthsToYm(currentYm(), -3)
     setup(ym, [makeEntry({ id: 'ailleurs', date: `${ym}-15` })])
 
-    expect(screen.getByText(fr.calendar.legendDone)).toBeInTheDocument()
-    expect(screen.queryByText(fr.calendar.legendToday)).not.toBeInTheDocument()
+    expect(screen.getByText(t.calendar.legendDone)).toBeInTheDocument()
+    expect(screen.queryByText(t.calendar.legendToday)).not.toBeInTheDocument()
   })
 
   /* Le bouton qui portait ce mot est parti. Il apparaissait quand l'ancre du
@@ -287,7 +287,7 @@ describe('CalendarPage — la légende', () => {
     setup(ym, [makeEntry({ id: 'ailleurs', date: `${ym}-15` })])
 
     expect(
-      screen.queryByRole('button', { name: fr.calendar.legendToday }),
+      screen.queryByRole('button', { name: t.calendar.legendToday }),
     ).not.toBeInTheDocument()
   })
 })

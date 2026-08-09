@@ -9,7 +9,7 @@ import {
   memberPath,
 } from '@/app/routes'
 import type { MemberIncome } from '@/domain/split'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 import { setHouseholdName } from '@/store/actions'
 import {
@@ -51,9 +51,9 @@ function incomeOf(
     if (shareBp === undefined) return amount
     return `${amount} · ${formatPercent(shareBp / 10_000, 1)}`
   }
-  if (read?.gap === 'unpriced') return fr.settings.memberIncomeUnpriced
-  if (read?.gap === 'zero') return fr.settings.memberIncomeZero
-  return fr.settings.memberNoIncome
+  if (read?.gap === 'unpriced') return t.settings.memberIncomeUnpriced
+  if (read?.gap === 'zero') return t.settings.memberIncomeZero
+  return t.settings.memberNoIncome
 }
 
 /**
@@ -88,18 +88,18 @@ export function PeoplePage() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <PageTitle
-        title={fr.settings.household}
+        title={t.settings.household}
         onBack={() => {
           void navigate(MORE_PATH)
         }}
       />
 
       <Tile>
-        <Field label={fr.settings.householdName} hint={fr.settings.householdHint} optional>
+        <Field label={t.settings.householdName} hint={t.settings.householdHint} optional>
           {(id) => (
             <TextInput
               id={id}
-              placeholder={fr.settings.householdPlaceholder}
+              placeholder={t.settings.householdPlaceholder}
               maxLength={40}
               {...householdDraft}
             />
@@ -108,10 +108,10 @@ export function PeoplePage() {
       </Tile>
 
       <Tile className="gap-3">
-        <Eyebrow icon={PeopleIcon}>{fr.settings.members}</Eyebrow>
+        <Eyebrow icon={PeopleIcon}>{t.settings.members}</Eyebrow>
 
         {members.length === 0 ? (
-          <p className="t-label">{fr.settings.membersEmpty}</p>
+          <p className="t-label">{t.settings.membersEmpty}</p>
         ) : (
           /* La liste déborde du cadre de la tuile de ce que la rangée reprend en
              marge intérieure : la pastille tombe alors sur la ligne de
@@ -142,8 +142,8 @@ export function PeoplePage() {
             <p className="t-label">
               {tpl(
                 unassigned.length > 1
-                  ? fr.settings.incomeUnassignedMany
-                  : fr.settings.incomeUnassignedOne,
+                  ? t.settings.incomeUnassignedMany
+                  : t.settings.incomeUnassignedOne,
                 unassigned.map((recurrence) => recurrence.label).join(', '),
               )}
             </p>
@@ -157,7 +157,7 @@ export function PeoplePage() {
               }
               className="t-label underline underline-offset-2"
             >
-              {fr.settings.incomeUnassignedFix}
+              {t.settings.incomeUnassignedFix}
             </Link>
           </div>
         )}
@@ -169,7 +169,7 @@ export function PeoplePage() {
             void navigate(MEMBER_NEW_PATH)
           }}
         >
-          {fr.settings.memberAdd}
+          {t.settings.memberAdd}
         </Button>
 
         {/* D'où vient le revenu de chacun, et où se vérifie ce qu'il en
@@ -179,9 +179,9 @@ export function PeoplePage() {
             seconde est la seule porte permanente vers la répartition. */}
         <div className="flex flex-col gap-3 border-t border-border pt-4">
           <p className="t-label">
-            {fr.settings.memberIncomeHint}{' '}
+            {t.settings.memberIncomeHint}{' '}
             <Link to={RECURRENCE_NEW_PATH} className="underline underline-offset-2">
-              {fr.settings.memberIncomeLink}
+              {t.settings.memberIncomeLink}
             </Link>
           </p>
           {/* Sans membre il n'y a personne à qui donner une part, et l'écran
@@ -192,7 +192,7 @@ export function PeoplePage() {
               to={SPLIT_PATH}
               className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
             >
-              {fr.settings.splitLink}
+              {t.settings.splitLink}
             </Link>
           )}
         </div>

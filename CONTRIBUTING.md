@@ -54,25 +54,41 @@ Une bonne proposition dit le **problème** avant la solution : « je n'arrive pa
 
 ## Si tu ouvres quand même une pull request
 
-Elle doit tenir sur quatre points.
+Elle doit tenir sur cinq points.
 
 1. **`npm run verify` passe.** Typecheck, lint, tests, build, et le budget de
    taille du premier chargement. C'est la porte de sortie, et l'intégration
    continue la rejoue à l'identique.
 2. **Elle respecte les deux documents.** Le cahier des charges pour le
    comportement, le design system pour l'apparence. Aucun `var(--pine-500)` dans
-   un composant, aucun texte en dur hors de `src/i18n/fr.ts`, aucun import direct
-   de Phosphor hors de `src/ui/Icons.tsx`.
-3. **La logique métier est testée.** Tout ce qui touche à `src/domain/` est du
+   un composant, aucun texte en dur hors des catalogues de `src/i18n/`, aucun
+   import direct de Phosphor hors de `src/ui/Icons.tsx`.
+3. **Une chaîne ajoutée l'est dans les deux langues.** `src/i18n/fr.ts` décrit la
+   forme d'un catalogue — le type en est dérivé —, donc une clé qui manque à
+   `src/i18n/en.ts` ne compile pas, et tu le sauras avant de pousser. Deux règles
+   que le compilateur ne peut pas tenir à ta place : **rien ne lit `t` à
+   l'évaluation d'un module** (un tableau de libellés construit au chargement
+   fige la langue du démarrage — voir `src/i18n/strings.ts`), et ce qui n'est pas
+   un mot mais une **règle de langue** — séparateur décimal, place du symbole,
+   ordinal d'un jour — va dans `src/i18n/format.ts`, jamais dans une chaîne.
+4. **La logique métier est testée.** Tout ce qui touche à `src/domain/` est du
    calcul pur : ça se teste, et ça se teste avant d'être écrit si tu veux.
-4. **Elle fait une seule chose.** Une PR qui corrige un bug *et* refactorise
+5. **Elle fait une seule chose.** Une PR qui corrige un bug *et* refactorise
    deux modules ne se relit pas.
 
 ### Conventions
 
-- **Tout est en français** : le code, les commentaires, les commits, les issues,
-  l'interface. Les identifiants de code restent en anglais quand c'est l'usage
-  (`direction`, `money`, `openMonth`) — c'est la prose qui est française.
+- **Tout est en français** : le code, les commentaires, les commits, les issues.
+  Les identifiants de code restent en anglais quand c'est l'usage (`direction`,
+  `money`, `openMonth`) — c'est la prose qui est française. Cela vaut aussi dans
+  `src/i18n/en.ts` : le catalogue anglais porte des commentaires français, comme
+  le reste du dépôt.
+- **L'interface, elle, se dit dans les deux langues.** Le français est celle par
+  défaut et celle qui fait référence : c'est `src/i18n/fr.ts` qui porte, clé par
+  clé, *pourquoi* telle formule a été choisie plutôt qu'une autre. La traduction
+  ne recopie pas ce rationale — ces raisons valent pour les deux langues, et les
+  redire en ferait deux exemplaires dont l'un finirait faux. On ne commente en
+  anglais que ce qui est propre à l'anglais.
 - **Le message de commit dit ce que le commit change pour l'utilisateur**, à
   l'indicatif présent, sans préfixe de type. L'historique existant donne le ton :
   « Supprimer supprime, confirmer se défait, et le mois arrête de mentir »,

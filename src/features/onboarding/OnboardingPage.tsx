@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { currentYm } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { isKnownFragile, useStorageHealth } from '@/persistence/health'
 import { addMember, addRecurrence, removeMember, renameMember } from '@/store/actions'
 import { useCategoryMap, useMembers } from '@/store/selectors'
@@ -150,7 +150,7 @@ export function OnboardingPage() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <p className="t-label">{fr.onboarding.privacy}</p>
+        <p className="t-label">{t.onboarding.privacy}</p>
         {/* La contrepartie du local-first, à la dernière étape : elle ne se
             découvrait qu'au bout de trente jours, par un bandeau. Ici parce que
             c'est le moment où la promesse de la ligne au-dessus est faite, et
@@ -159,7 +159,7 @@ export function OnboardingPage() {
             s'engageait pas — et là seulement : voir `isKnownFragile`. */}
         {step === LAST_STEP && (
           <p className="t-label">
-            {fragile ? fr.onboarding.backupFragile : fr.onboarding.backup}
+            {fragile ? t.onboarding.backupFragile : t.onboarding.backup}
           </p>
         )}
       </div>

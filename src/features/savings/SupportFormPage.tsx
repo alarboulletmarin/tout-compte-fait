@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SAVINGS_PATH, PEOPLE_PATH, supportPath } from '@/app/routes'
 import type { SavingSupport } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import {
   addSavingSupport,
@@ -84,12 +84,12 @@ function SupportForm({ support }: { support?: SavingSupport }) {
         archived: support.archived,
         ...(note === undefined ? {} : { note }),
       })
-      toast(fr.savings.supportUpdated)
+      toast(t.savings.supportUpdated)
       void navigate(supportPath(support.id))
       return
     }
     const created = addSavingSupport(input)
-    toast(fr.savings.supportAdded)
+    toast(t.savings.supportAdded)
     void navigate(supportPath(created.id), { replace: true })
   }
 
@@ -99,10 +99,10 @@ function SupportForm({ support }: { support?: SavingSupport }) {
   if (members.length === 0) {
     return (
       <div className="flex max-w-xl flex-col gap-5">
-        <PageTitle title={fr.savings.supportNew} onBack={back} />
+        <PageTitle title={t.savings.supportNew} onBack={back} />
         <EmptyState
-          message={fr.savings.supportsNoMember}
-          actionLabel={fr.split.goToSettings}
+          message={t.savings.supportsNoMember}
+          actionLabel={t.split.goToSettings}
           onAction={() => {
             void navigate(PEOPLE_PATH)
           }}
@@ -114,7 +114,7 @@ function SupportForm({ support }: { support?: SavingSupport }) {
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <PageTitle
-        title={editing ? fr.savings.supportEdit : fr.savings.supportNew}
+        title={editing ? t.savings.supportEdit : t.savings.supportNew}
         onBack={guard.request}
       />
 
@@ -138,10 +138,10 @@ function SupportForm({ support }: { support?: SavingSupport }) {
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" form="support-form">
-          {editing ? fr.common.save : fr.savings.supportAdd}
+          {editing ? t.common.save : t.savings.supportAdd}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
-          {fr.common.cancel}
+          {t.common.cancel}
         </Button>
       </div>
 
@@ -180,23 +180,23 @@ function SupportManagement({ support }: { support: SavingSupport }) {
   return (
     <>
       <Tile className="gap-3">
-        <Eyebrow>{fr.savings.manage}</Eyebrow>
-        <p className="t-label">{fr.savings.archivedHint}</p>
+        <Eyebrow>{t.savings.manage}</Eyebrow>
+        <p className="t-label">{t.savings.archivedHint}</p>
         {/* Pourquoi le bouton « Supprimer » n'est pas là : la règle se lit, elle
             ne se devine pas à l'absence d'un bouton. */}
-        {!support.archived && !deletable && <p className="t-label">{fr.savings.removeBlocked}</p>}
+        {!support.archived && !deletable && <p className="t-label">{t.savings.removeBlocked}</p>}
         <div className="flex flex-wrap gap-2">
           {support.archived ? (
             <Button
               variant="ghost"
               className="w-fit"
               onClick={() => {
-                undoable(fr.savings.supportUnarchived, () => {
+                undoable(t.savings.supportUnarchived, () => {
                   unarchiveSavingSupport(support.id)
                 })
               }}
             >
-              {fr.savings.unarchive}
+              {t.savings.unarchive}
             </Button>
           ) : (
             <Button
@@ -206,7 +206,7 @@ function SupportManagement({ support }: { support: SavingSupport }) {
                 setArchiving(true)
               }}
             >
-              {fr.savings.archive}
+              {t.savings.archive}
             </Button>
           )}
           {deletable && (
@@ -217,7 +217,7 @@ function SupportManagement({ support }: { support: SavingSupport }) {
                 setRemoving(true)
               }}
             >
-              {fr.savings.remove}
+              {t.savings.remove}
             </Button>
           )}
         </div>
@@ -228,19 +228,19 @@ function SupportManagement({ support }: { support: SavingSupport }) {
           bouton fait les deux gestes d'un coup. */}
       <ConfirmDialog
         open={archiving}
-        title={fr.savings.archive}
+        title={t.savings.archive}
         steps={[
           {
             question:
               running === 0
-                ? fr.savings.archiveConfirm
-                : `${running === 1 ? fr.savings.archiveRunningOne : tpl(fr.savings.archiveRunning, running)} ${fr.savings.archiveConfirm}`,
+                ? t.savings.archiveConfirm
+                : `${running === 1 ? t.savings.archiveRunningOne : tpl(t.savings.archiveRunning, running)} ${t.savings.archiveConfirm}`,
             action:
               running === 0
-                ? fr.savings.archive
+                ? t.savings.archive
                 : running === 1
-                  ? fr.savings.archiveAndStop
-                  : fr.savings.archiveAndStopMany,
+                  ? t.savings.archiveAndStop
+                  : t.savings.archiveAndStopMany,
           },
         ]}
         onCancel={() => {
@@ -248,7 +248,7 @@ function SupportManagement({ support }: { support: SavingSupport }) {
         }}
         onConfirm={() => {
           setArchiving(false)
-          undoable(fr.savings.supportArchived, () => {
+          undoable(t.savings.supportArchived, () => {
             archiveSavingSupport(support.id, { stopRecurrences: running > 0 })
           })
           toSavings()
@@ -257,14 +257,14 @@ function SupportManagement({ support }: { support: SavingSupport }) {
 
       <ConfirmDialog
         open={removing}
-        title={fr.savings.remove}
-        steps={[{ question: fr.savings.removeConfirm, action: fr.common.delete }]}
+        title={t.savings.remove}
+        steps={[{ question: t.savings.removeConfirm, action: t.common.delete }]}
         onCancel={() => {
           setRemoving(false)
         }}
         onConfirm={() => {
           setRemoving(false)
-          undoable(fr.savings.supportRemoved, () => {
+          undoable(t.savings.supportRemoved, () => {
             removeSavingSupport(support.id)
           })
           toSavings()

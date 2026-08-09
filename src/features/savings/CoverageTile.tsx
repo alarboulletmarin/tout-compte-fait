@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ZERO } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDecimal, tpl } from '@/i18n/format'
 import { useSavingCoverage, useSavingTotal } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -44,21 +44,21 @@ export function CoverageTile() {
 
   return (
     <Tile className="gap-2">
-      <Eyebrow icon={SavingsIcon}>{fr.savings.coverage}</Eyebrow>
+      <Eyebrow icon={SavingsIcon}>{t.savings.coverage}</Eyebrow>
 
       {coverage.covered === null ? (
         /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien
            dire. On nomme donc ce qui manque, plutôt que d'écrire « 0 mois »
            sous une étiquette qui promet une durée. */
         <p className="t-body">
-          {coverage.months === 0 ? fr.savings.coverageNoMonth : fr.savings.coverageNoCharge}
+          {coverage.months === 0 ? t.savings.coverageNoMonth : t.savings.coverageNoCharge}
         </p>
       ) : (
         <>
           <p className="t-hero-fit tnum">
-            {tpl(fr.savings.coverageValue, formatDecimal(coverage.covered))}
+            {tpl(t.savings.coverageValue, formatDecimal(coverage.covered))}
           </p>
-          <span className="t-label">{fr.savings.coverageHint}</span>
+          <span className="t-label">{t.savings.coverageHint}</span>
         </>
       )}
 
@@ -67,19 +67,19 @@ export function CoverageTile() {
           className="-mx-3"
           open={open}
           onOpenChange={setOpen}
-          title={<span className="t-body">{fr.savings.coverageMethod}</span>}
+          title={<span className="t-body">{t.savings.coverageMethod}</span>}
         >
           <div className="flex flex-col gap-3 px-3 pt-3 pb-1">
             <ul className="flex flex-col gap-1.5">
               <li className="flex items-baseline gap-3">
                 <span className="t-label min-w-0 flex-1 truncate">
-                  {fr.savings.coverageCapital}
+                  {t.savings.coverageCapital}
                 </span>
                 <Amount value={coverage.capital} size="body" className="shrink-0" />
               </li>
               <li className="flex items-baseline gap-3">
                 <span className="t-label min-w-0 flex-1 truncate">
-                  {fr.savings.coverageMonthly}
+                  {t.savings.coverageMonthly}
                 </span>
                 <Amount value={coverage.monthly} size="body" className="shrink-0" />
               </li>
@@ -90,17 +90,17 @@ export function CoverageTile() {
             {coverage.months > 0 && (
               <span className="t-label">
                 {coverage.months === 1
-                  ? fr.savings.coverageOverOne
-                  : tpl(fr.savings.coverageOver, coverage.months)}
+                  ? t.savings.coverageOverOne
+                  : tpl(t.savings.coverageOver, coverage.months)}
               </span>
             )}
 
-            <p className="t-label">{fr.savings.coverageMethodDenominator}</p>
-            <p className="t-label">{fr.savings.coverageMethodMonths}</p>
+            <p className="t-label">{t.savings.coverageMethodDenominator}</p>
+            <p className="t-label">{t.savings.coverageMethodMonths}</p>
             {/* La réserve n'a de sens que s'il manque quelque chose : dite
                 toujours, elle deviendrait le bruit qu'on saute. */}
-            {total.unvalued > 0 && <p className="t-label">{fr.savings.coverageMethodUnvalued}</p>}
-            {total.movedSince !== ZERO && <p className="t-label">{fr.savings.estimatedWarning}</p>}
+            {total.unvalued > 0 && <p className="t-label">{t.savings.coverageMethodUnvalued}</p>}
+            {total.movedSince !== ZERO && <p className="t-label">{t.savings.estimatedWarning}</p>}
           </div>
         </Disclosure>
       </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Period } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   LAST_DAY,
   type PeriodDraft,
@@ -73,7 +73,7 @@ describe('l’aller-retour formulaire ↔ modèle', () => {
 describe('describePeriod', () => {
   it('nomme le dernier jour du mois au lieu d’annoncer un 31 qui ne tombe pas', () => {
     const summary = describePeriod({ unit: 'month', every: 1, anchorDay: LAST_DAY }, START)
-    expect(summary).toContain(fr.recurrences.summary.lastDay)
+    expect(summary).toContain(t.recurrences.summary.lastDay)
     expect(summary).not.toContain('31')
   })
 

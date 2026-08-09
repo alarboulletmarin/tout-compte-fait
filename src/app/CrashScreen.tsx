@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { today } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { download } from '@/lib/download'
 import { canClearAppCaches, clearAppCaches } from '@/lib/reinstall'
 import { loadRawDocument } from '@/persistence/db'
@@ -31,13 +31,13 @@ export function CrashScreen() {
     try {
       const raw = await loadRawDocument()
       if (raw === undefined || raw === null) {
-        setMessage(fr.storage.crashExportEmpty)
+        setMessage(t.storage.crashExportEmpty)
         return
       }
       download(toRawBlob(raw), exportFilename(today()))
       setMessage(null)
     } catch {
-      setMessage(fr.storage.crashExportFailed)
+      setMessage(t.storage.crashExportFailed)
     }
   }
 
@@ -47,10 +47,10 @@ export function CrashScreen() {
       className="mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center gap-5 px-4 py-10"
     >
       <div className="flex flex-col gap-2">
-        <span className="t-eyebrow text-muted">{fr.app.name}</span>
-        <h1 className="t-section">{fr.storage.crashTitle}</h1>
+        <span className="t-eyebrow text-muted">{t.app.name}</span>
+        <h1 className="t-section">{t.storage.crashTitle}</h1>
       </div>
-      <p className="t-body">{fr.storage.crashBody}</p>
+      <p className="t-body">{t.storage.crashBody}</p>
 
       <div className="flex flex-col gap-3">
         <Button
@@ -59,7 +59,7 @@ export function CrashScreen() {
             void rescue()
           }}
         >
-          {fr.storage.crashExport}
+          {t.storage.crashExport}
         </Button>
         {message !== null && <p className="t-label text-danger-text">{message}</p>}
       </div>
@@ -72,7 +72,7 @@ export function CrashScreen() {
             location.reload()
           }}
         >
-          {fr.storage.crashReload}
+          {t.storage.crashReload}
         </Button>
       </div>
 
@@ -80,7 +80,7 @@ export function CrashScreen() {
           un bouton qui ne peut rien faire inquiète pour rien. */}
       {canClearAppCaches() && (
         <div className="flex flex-col gap-3 border-t border-border pt-5">
-          <p className="t-label">{fr.storage.crashCachesHint}</p>
+          <p className="t-label">{t.storage.crashCachesHint}</p>
           <Button
             variant="ghost"
             className="w-fit"
@@ -90,7 +90,7 @@ export function CrashScreen() {
               })
             }}
           >
-            {fr.storage.crashCaches}
+            {t.storage.crashCaches}
           </Button>
         </div>
       )}

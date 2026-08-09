@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ADVANCE_NEW_PATH, RECURRENCES_PATH } from '@/app/routes'
 import type { AdvanceStatus } from '@/domain/advance'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatYearMonth, tpl } from '@/i18n/format'
 import { removeAdvance, undoable } from '@/store/actions'
 import { useAdvanceStatuses, useCategoryMap, useMemberMap } from '@/store/selectors'
@@ -45,11 +45,11 @@ function AdvanceCard({ status, onRemove }: { status: AdvanceStatus; onRemove: ()
         <Amount value={status.monthly} size="body" direction="out" />
       </div>
       <span className="t-axis">
-        {tpl(fr.advances.monthlyOf, formatMoney(status.monthly, currency, false), status.months)}
+        {tpl(t.advances.monthlyOf, formatMoney(status.monthly, currency, false), status.months)}
       </span>
 
       <div className="flex flex-col gap-1 border-t border-border pt-3">
-        <Eyebrow>{status.settled ? fr.advances.settled : fr.advances.remaining}</Eyebrow>
+        <Eyebrow>{status.settled ? t.advances.settled : t.advances.remaining}</Eyebrow>
         <Amount
           value={status.remaining}
           size="tile"
@@ -57,15 +57,15 @@ function AdvanceCard({ status, onRemove }: { status: AdvanceStatus; onRemove: ()
           className="mt-1"
         />
         <span className="t-axis mt-1">
-          {`${fr.advances.restored} ${formatMoney(status.restored, currency)}`}
+          {`${t.advances.restored} ${formatMoney(status.restored, currency)}`}
         </span>
         <span className="t-axis">
-          {tpl(fr.advances.over, formatYearMonth(advance.from), formatYearMonth(advance.to))}
+          {tpl(t.advances.over, formatYearMonth(advance.from), formatYearMonth(advance.to))}
         </span>
         <span className="t-axis">
           {[
             members.get(advance.memberId)?.name,
-            categories.get(advance.categoryId)?.label ?? fr.common.other,
+            categories.get(advance.categoryId)?.label ?? t.common.other,
           ]
             .filter((part) => part !== undefined && part !== '')
             .join(' · ')}
@@ -73,7 +73,7 @@ function AdvanceCard({ status, onRemove }: { status: AdvanceStatus; onRemove: ()
       </div>
 
       <Button size="sm" variant="ghost" className="self-start" onClick={onRemove}>
-        {fr.advances.remove}
+        {t.advances.remove}
       </Button>
     </Tile>
   )
@@ -108,7 +108,7 @@ export function AdvancesPage() {
       {/* L'état vide porte déjà le même bouton : le garder en titre l'afficherait
           deux fois dans le même écran. */}
       <PageTitle
-        title={fr.advances.title}
+        title={t.advances.title}
         onBack={() => {
           void navigate(RECURRENCES_PATH)
         }}
@@ -116,19 +116,19 @@ export function AdvancesPage() {
         {statuses.length > 0 && (
           <Button size="sm" className="ml-auto" onClick={openCreate}>
             <Plus size={18} />
-            {fr.common.add}
+            {t.common.add}
           </Button>
         )}
       </PageTitle>
 
       {/* Ce que le mot recouvre, dit une fois et en tête : « avance » est le
           seul terme de l'app qu'on ne devine pas à sa seule lecture. */}
-      <p className="t-label">{fr.advances.sectionHint}</p>
+      <p className="t-label">{t.advances.sectionHint}</p>
 
       {statuses.length === 0 ? (
         <EmptyState
-          message={fr.advances.emptyInvite}
-          actionLabel={fr.advances.add}
+          message={t.advances.emptyInvite}
+          actionLabel={t.advances.add}
           onAction={openCreate}
         />
       ) : (
@@ -150,8 +150,8 @@ export function AdvancesPage() {
           elle vise, et n'en monte pas une par ligne dans le DOM. */}
       <ConfirmDialog
         open={confirming !== null}
-        title={fr.advances.remove}
-        steps={[{ question: fr.advances.removeConfirm, action: fr.common.delete }]}
+        title={t.advances.remove}
+        steps={[{ question: t.advances.removeConfirm, action: t.common.delete }]}
         onCancel={() => {
           setConfirming(null)
         }}
@@ -159,7 +159,7 @@ export function AdvancesPage() {
           const id = confirming
           setConfirming(null)
           if (id === null) return
-          undoable(fr.advances.deleted, () => {
+          undoable(t.advances.deleted, () => {
             removeAdvance(id)
           })
         }}

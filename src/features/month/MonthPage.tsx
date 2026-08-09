@@ -7,7 +7,7 @@ import { type Metric, MetricInfo } from '@/features/dashboard/MetricInfo'
 import { SituationGrid } from '@/features/dashboard/SituationGrid'
 import { SituationSection } from '@/features/dashboard/SituationSection'
 import { UpcomingSection } from '@/features/dashboard/UpcomingSection'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useScopedMonthEntries } from '@/store/selectors'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
@@ -91,7 +91,7 @@ export function MonthPage() {
       {/* Le bandeau dit déjà quel mois on lit : le titre existe pour les
           lecteurs d'écran et pour l'annonce du changement d'écran, il ne
           s'affiche pas. */}
-      <PageTitle title={fr.month.title} hidden />
+      <PageTitle title={t.month.title} hidden />
       <MonthHeader prorataNote />
 
       {/* Les deux sens sont deux boutons, jamais un seul. Passer par « Ajouter
@@ -107,13 +107,13 @@ export function MonthPage() {
       {!isEmpty && (
         <div className="mb-4 hidden flex-wrap items-center gap-2 lg:flex">
           <Button
-            title={fr.a11y.newEntryKey}
+            title={t.a11y.newEntryKey}
             onClick={() => {
               create('out')
             }}
           >
             <Plus size={18} />
-            {fr.entry.newOut}
+            {t.entry.newOut}
           </Button>
           <Button
             variant="secondary"
@@ -122,11 +122,11 @@ export function MonthPage() {
             }}
           >
             <Plus size={18} />
-            {fr.entry.newIn}
+            {t.entry.newIn}
           </Button>
           <Button variant="secondary" onClick={createSaving}>
             <Plus size={18} />
-            {fr.entry.newSaving}
+            {t.entry.newSaving}
           </Button>
         </div>
       )}
@@ -142,7 +142,7 @@ export function MonthPage() {
           rangée en flux est masquée sur un mois vide, et cet état-ci est alors
           la seule porte de saisie de l'écran. */}
       {isEmpty ? (
-        <EmptyState message={hasRecurrence ? fr.month.empty : fr.month.emptyStart}>
+        <EmptyState message={hasRecurrence ? t.month.empty : t.month.emptyStart}>
           <div className="flex flex-wrap justify-center gap-2">
             {!hasRecurrence && (
               <Button
@@ -150,7 +150,7 @@ export function MonthPage() {
                   void navigate(RECURRENCE_NEW_PATH)
                 }}
               >
-                {fr.recurrences.add}
+                {t.recurrences.add}
               </Button>
             )}
             <Button
@@ -159,7 +159,7 @@ export function MonthPage() {
                 create('out')
               }}
             >
-              {fr.entry.addOut}
+              {t.entry.addOut}
             </Button>
             <Button
               variant="secondary"
@@ -167,7 +167,7 @@ export function MonthPage() {
                 create('in')
               }}
             >
-              {fr.entry.addIn}
+              {t.entry.addIn}
             </Button>
           </div>
         </EmptyState>

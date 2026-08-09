@@ -118,6 +118,77 @@ sous un filtre par membre, elle se posait et rien à l'écran n'y répondait.
 - Le nom du membre vivait dans la lecture parlée de l'anneau : il passe dans le
   nom de la région, que rien d'autre ne portait.
 
+### Ajouté — l'app se dit en anglais, et une traduction ne s'arrête pas aux mots
+
+**Migration de schéma : v9 → v10.** Un champ `Settings.locale` s'ajoute —
+`"fr"` ou `"en"` —, à côté du thème et de la palette. Un document d'avant le
+champ repart en **français**, et surtout pas dans la langue du navigateur qui
+l'ouvre : c'est la valeur écrite dans le document qui fait foi, et la deviner
+ferait changer de langue un même fichier selon l'appareil. Rien d'autre ne bouge.
+
+L'app ne parlait que français, et le disait jusque dans ses conventions. Elle
+parle désormais les deux, et le choix se fait sur une rangée de « Plus », à côté
+de la devise — un `Segmented` et non un sélecteur replié, parce qu'on ouvre cet
+écran-là *précisément parce qu'on ne lit pas* ce qui est affiché : les deux
+langues sont visibles ensemble, et chacune se nomme dans la sienne, « Français »
+et « English ».
+
+- **Il n'y a pas d'option « Système »**, contrairement au thème. La langue du
+  navigateur est lue une fois, au tout premier lancement, et devient une valeur
+  écrite dans le document. La suivre en permanence ferait changer de langue un
+  fichier exporté selon l'appareil qui l'ouvre — ce qu'un réglage porté par le
+  document sert justement à empêcher.
+- **La traduction ne s'arrête pas aux chaînes.** Le français écrit
+  « 1 284,50 € », pose une espace fine devant le symbole et le pourcent, compte
+  en octets et dit « le 5 » ; l'anglais écrit « €1,284.50 », n'en met aucune,
+  compte en bytes et dit « the 5th ». Ces règles-là ne tiennent dans aucun
+  catalogue : elles vivent dans `i18n/format.ts`, à côté de l'élision de « de »
+  qui y vivait déjà, et `<Amount />` place le symbole du côté que sa langue lui
+  donne. Une app dont on n'aurait traduit que les phrases aurait affiché des
+  montants français sous une interface anglaise, et personne n'y aurait vu un
+  bug tant qu'on ne regarde que les mots.
+- **Le catalogue par défaut suit la langue du moment**, et lui seul : un foyer
+  créé en anglais n'hérite plus de quarante-six catégories françaises. Ce qui est
+  déjà saisi ne bouge pas — le nom d'une catégorie est une donnée du foyer, comme
+  un prénom de membre, et repasser l'app en français ne réécrit pas ce que
+  quelqu'un a pu modifier depuis.
+- **Les trois pages juridiques sont traduites, pas réécrites.** Le droit ne suit
+  pas la langue de lecture : l'éditeur reste une personne physique française,
+  l'hébergeur le même, la LCEN et le RGPD s'appliquent toujours, et les
+  conditions restent soumises au droit français. Les références aux textes
+  gardent leur nom d'origine — « article 1-1 of the LCEN » se retrouve, une
+  traduction du nom de la loi ne se retrouve pas.
+- **Les cinq écrans qui portent leur propre catalogue** — la présentation, les
+  pages juridiques, l'historique et les projections — emportent chacun leurs
+  deux langues dans le même morceau : ils sont déjà chargés à la demande, et un
+  second aller-retour de réseau pour quelques kibioctets de prose coûterait plus
+  cher que de les emporter ensemble.
+- **L'anglais arrive par le réseau**, et c'est ce qui permet de l'ajouter sans le
+  faire payer à tout le monde : le catalogue français reste dans le graphe
+  initial — c'est la langue par défaut, et le repli si le morceau n'arrive pas —,
+  l'anglais est un `import()` que le démarrage attend avant le premier rendu.
+  Seize kibioctets qui ne pèsent que chez qui les lit. Le premier chargement
+  passe tout de même de 217,6 à 220,2 Kio compressés, et **le budget de
+  `scripts/size.mjs` de 221 à 224** : la machinerie de langue, le glyphe du
+  réglage et les branchements de mise en forme sont lus avant le premier pixel.
+  Le chiffre est relevé pour la marge et non pour le poids — elle retombait à
+  huit dixièmes de kibioctet, ce que ce fichier appelle lui-même un plafond, et
+  une langue de plus ne doit pas se payer sur la place qui reste aux suivantes.
+
+### Modifié
+
+- **Les composants ne lisent plus `fr` mais `t`**, le catalogue actif
+  (`i18n/strings.ts`). Deux règles en découlent, écrites dans le module et dans
+  l'architecture : rien ne lit `t` à l'évaluation d'un module — cent soixante et
+  onze tables de libellés construites au chargement sont devenues des fonctions
+  appelées au rendu —, et changer de langue remonte l'arbre, ce qui garantit
+  qu'il n'y reste aucun mot d'avant.
+- **`mirrorAppearance` mire trois réglages au lieu de deux.** La langue est celui
+  des trois dont l'oubli coûterait le plus cher : le thème se rattrape en une
+  frame, quand un catalogue mal choisi doit être téléchargé avant de pouvoir
+  l'être.
+
+
 ### Ajouté — l'épargne répond à ce que la banque ne sait pas, et cesse de réclamer ce qu'elle sait déjà
 
 **Migration de schéma : v8 → v9.** Un champ `SavingSupport.pace` s'ajoute —

@@ -1,6 +1,6 @@
 import type { Money } from '@/domain/money'
-import { formatMoney, moneyParts } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { decimalSeparator, formatMoney, moneyParts, symbolFirst } from '@/i18n/format'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { useCurrency } from './currency'
 import { useIsScreenEntering } from './screenEntry'
@@ -129,7 +129,25 @@ export function Amount({
      chiffre faux. */
   const spoken = `${sign === '+' ? '+' : ''}${formatMoney(displayed, code, withCents)}`
   const label =
-    direction === 'out' ? `${fr.direction.out.toLowerCase()} ${spoken}` : spoken
+    direction === 'out' ? `${t.direction.out.toLowerCase()} ${spoken}` : spoken
+
+  const before = symbolFirst()
+  const symbol = (
+    <span
+      aria-hidden="true"
+      // L'atténuation du symbole est un token : une tuile dont la couleur de
+      // texte n'a aucune marge de contraste la ramène à 1. Un montant déjà
+      // atténué, lui, ne la subit pas du tout.
+      className={before ? 'mr-[0.18em]' : 'ml-[0.18em]'}
+      style={{
+        fontSize: '0.55em',
+        lineHeight: 1.2,
+        opacity: tone === 'default' ? 'var(--amount-symbol-opacity)' : 1,
+      }}
+    >
+      {parts.symbol}
+    </span>
+  )
 
   return (
     <span
@@ -142,29 +160,24 @@ export function Amount({
           `aria-hidden`, il ne restait rien à annoncer : le montant passait
           muet. Un texte caché à l'œil se lit partout, sans rôle à inventer. */}
       <span className="sr-only-text">{label}</span>
+      {/* Le symbole passe devant le chiffre en anglais — « €1,284.50 » — et le
+          reste du rendu ne bouge pas d'un pixel : c'est le même élément, à la
+          même taille réduite, avec sa marge du côté où il se trouve. La
+          décision est prise par `format.ts` et non ici, comme le séparateur
+          décimal juste en dessous : ce composant assemble, il ne tranche pas de
+          règle de langue. */}
+      {before && symbol}
       <span aria-hidden="true">
         {sign}
         {parts.integer}
         {withCents && (
           <span style={{ fontSize: CENTS_EM[size] }}>
-            ,{parts.fraction}
+            {decimalSeparator()}
+            {parts.fraction}
           </span>
         )}
       </span>
-      <span
-        aria-hidden="true"
-        // L'atténuation du symbole est un token : une tuile dont la couleur de
-        // texte n'a aucune marge de contraste la ramène à 1. Un montant déjà
-        // atténué, lui, ne la subit pas du tout.
-        className="ml-[0.18em]"
-        style={{
-          fontSize: '0.55em',
-          lineHeight: 1.2,
-          opacity: tone === 'default' ? 'var(--amount-symbol-opacity)' : 1,
-        }}
-      >
-        {parts.symbol}
-      </span>
+      {!before && symbol}
     </span>
   )
 }

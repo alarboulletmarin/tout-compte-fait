@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { currentYm, startOfMonth } from '@/domain/date'
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { closeDb } from '@/persistence/db'
 import { emptyData } from '@/persistence/defaults'
@@ -36,13 +36,13 @@ async function answerFirst(names: readonly string[]): Promise<void> {
   for (const name of names) {
     /* Sans `exact`, « Prénom » attraperait aussi les champs de renommage des
        membres déjà ajoutés, qui s'appellent « Prénom de Alix ». */
-    await userEvent.type(screen.getByLabelText(fr.onboarding.membersLabel), name)
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.membersAdd }))
+    await userEvent.type(screen.getByLabelText(t.onboarding.membersLabel), name)
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.membersAdd }))
   }
 
   await userEvent.click(
     screen.getByRole('button', {
-      name: names.length === 0 ? fr.onboarding.solo : fr.common.next,
+      name: names.length === 0 ? t.onboarding.solo : t.common.next,
     }),
   )
 }
@@ -62,11 +62,11 @@ async function finishFrom(step: 2 | 3, keep: boolean): Promise<void> {
   if (step === 2) {
     await userEvent.click(
       screen.getByRole('button', {
-        name: keep ? fr.common.next : fr.onboarding.starterSkip,
+        name: keep ? t.common.next : t.onboarding.starterSkip,
       }),
     )
   }
-  await userEvent.click(screen.getByRole('button', { name: fr.onboarding.savingsSkip }))
+  await userEvent.click(screen.getByRole('button', { name: t.onboarding.savingsSkip }))
 }
 
 describe('les trois étapes du premier lancement', () => {
@@ -80,9 +80,9 @@ describe('les trois étapes du premier lancement', () => {
   it('pose un salaire par personne et un loyer commun, puis ouvre le mois', async () => {
     await answerFirst(['Alix', 'Camille'])
 
-    await fill(tpl(fr.onboarding.starterSalaryOf, 'Alix'), '2400')
-    await fill(tpl(fr.onboarding.starterSalaryOf, 'Camille'), '1850')
-    await fill(fr.onboarding.starterRent, '980')
+    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '2400')
+    await fill(tpl(t.onboarding.starterSalaryOf, 'Camille'), '1850')
+    await fill(t.onboarding.starterRent, '980')
     await finishFrom(2, true)
 
     const { data, status } = state()
@@ -98,7 +98,7 @@ describe('les trois étapes du premier lancement', () => {
     /* Le nom de la ligne, pas celui du tiroir : « Salaires, retraites ou
        indemnités » décrit la catégorie, et la pastille du membre dit déjà de
        qui c'est le salaire. */
-    expect(salaries.every((r) => r.label === fr.onboarding.starterSalaryLabel)).toBe(true)
+    expect(salaries.every((r) => r.label === t.onboarding.starterSalaryLabel)).toBe(true)
 
     /* Le loyer n'est à personne et ne force rien : `defaultShared` le rend
        commun parce que c'est une charge que personne ne s'attribue. Poser
@@ -108,7 +108,7 @@ describe('les trois étapes du premier lancement', () => {
     expect(rent?.memberId).toBeUndefined()
     expect(rent?.shared).toBeUndefined()
     expect(rent?.direction).toBe('out')
-    expect(rent?.label).toBe(fr.onboarding.starterRentLabel)
+    expect(rent?.label).toBe(t.onboarding.starterRentLabel)
 
     // Mensuelles au 1er, sans qu'on ait eu à le demander.
     const ym = currentYm()
@@ -129,7 +129,7 @@ describe('les trois étapes du premier lancement', () => {
   it('accepte un revenu sans personne à qui l’attribuer — l’usage solo', async () => {
     await answerFirst([])
 
-    await fill(fr.onboarding.starterSalarySolo, '1700')
+    await fill(t.onboarding.starterSalarySolo, '1700')
     await finishFrom(2, true)
 
     const { data, status } = state()
@@ -156,7 +156,7 @@ describe('les trois étapes du premier lancement', () => {
     await answerFirst(['Alix'])
 
     // Le loyer reste vide, et le salaire passe quand même.
-    await fill(tpl(fr.onboarding.starterSalaryOf, 'Alix'), '2400')
+    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '2400')
     await finishFrom(2, true)
 
     expect(state().data.recurrences).toHaveLength(1)
@@ -168,16 +168,16 @@ describe('les trois étapes du premier lancement', () => {
      second support, une seconde valorisation, un montant recopié. */
   it('pose le support, sa valeur et le versement qui l’alimente, sans doublon', async () => {
     await answerFirst(['Andrea'])
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.starterSkip }))
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
 
-    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.supportLabel)), 'Livret A')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.supportLabel)), 'Livret A')
     await userEvent.selectOptions(
-      screen.getByLabelText(new RegExp(fr.savings.supportKind)),
+      screen.getByLabelText(new RegExp(t.savings.supportKind)),
       'passbook',
     )
-    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.valueInitial)), '10000')
-    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.contribution)), '200')
-    await userEvent.click(screen.getByRole('button', { name: fr.savings.supportAdd }))
+    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.valueInitial)), '10000')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.contribution)), '200')
+    await userEvent.click(screen.getByRole('button', { name: t.savings.supportAdd }))
 
     const { data } = state()
     const [member] = data.household.members
@@ -201,7 +201,7 @@ describe('les trois étapes du premier lancement', () => {
     expect(data.recurrences[0]?.direction).toBe('out')
     expect(data.recurrences[0]?.categoryId).toBe('passbook')
 
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.start }))
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.start }))
     expect(state().status).toBe('ready')
   })
 
@@ -209,30 +209,30 @@ describe('les trois étapes du premier lancement', () => {
      proposer, et elle le dit plutôt que d'inventer un porteur. */
   it('n’enregistre aucun support quand personne n’a été ajouté', async () => {
     await answerFirst([])
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.starterSkip }))
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
 
-    await userEvent.type(screen.getByLabelText(new RegExp(fr.savings.supportLabel)), 'Livret A')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.supportLabel)), 'Livret A')
     await userEvent.selectOptions(
-      screen.getByLabelText(new RegExp(fr.savings.supportKind)),
+      screen.getByLabelText(new RegExp(t.savings.supportKind)),
       'passbook',
     )
-    await userEvent.click(screen.getByRole('button', { name: fr.savings.supportAdd }))
+    await userEvent.click(screen.getByRole('button', { name: t.savings.supportAdd }))
 
     expect(state().data.savingSupports).toStrictEqual([])
-    expect(screen.getByText(fr.savings.supportOwnerRequired)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.supportOwnerRequired)).toBeInTheDocument()
   })
 
   it('montre la part de chacun dès que deux revenus et un loyer sont posés', async () => {
     await answerFirst(['Alix', 'Camille'])
 
     // Rien encore : l'aperçu dit ce que l'étape débloque plutôt qu'un zéro.
-    expect(screen.getByText(fr.onboarding.previewStarterEmpty)).toBeInTheDocument()
+    expect(screen.getByText(t.onboarding.previewStarterEmpty)).toBeInTheDocument()
 
-    await fill(tpl(fr.onboarding.starterSalaryOf, 'Alix'), '3000')
-    await fill(tpl(fr.onboarding.starterSalaryOf, 'Camille'), '1000')
-    await fill(fr.onboarding.starterRent, '1000')
+    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '3000')
+    await fill(tpl(t.onboarding.starterSalaryOf, 'Camille'), '1000')
+    await fill(t.onboarding.starterRent, '1000')
 
-    expect(screen.getByText(fr.onboarding.previewStarterShare)).toBeInTheDocument()
+    expect(screen.getByText(t.onboarding.previewStarterShare)).toBeInTheDocument()
     // 3 000 contre 1 000 : trois quarts, un quart. Et la somme fait le loyer.
     expect(screen.getByText(spoken(75_000))).toBeInTheDocument()
     expect(screen.getByText(spoken(25_000))).toBeInTheDocument()
@@ -248,13 +248,13 @@ describe('les trois étapes du premier lancement', () => {
         <OnboardingPage />
       </MemoryRouter>,
     )
-    expect(screen.queryByText(fr.onboarding.backup)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.solo }))
-    expect(screen.queryByText(fr.onboarding.backup)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
+    expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.starterSkip }))
-    expect(screen.getByText(fr.onboarding.backup)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
+    expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
   })
 
   /* La phrase se durcit d'un cran là où le navigateur a répondu qu'il ne
@@ -268,15 +268,15 @@ describe('les trois étapes du premier lancement', () => {
         <OnboardingPage />
       </MemoryRouter>,
     )
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.solo }))
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
     // La phrase vit à la dernière étape, qui est la troisième depuis l'épargne.
-    await userEvent.click(screen.getByRole('button', { name: fr.onboarding.starterSkip }))
-    expect(screen.getByText(fr.onboarding.backup)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
+    expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
 
     act(() => {
       useStorageHealth.setState({ durable: false })
     })
-    expect(screen.getByText(fr.onboarding.backupFragile)).toBeInTheDocument()
-    expect(screen.queryByText(fr.onboarding.backup)).not.toBeInTheDocument()
+    expect(screen.getByText(t.onboarding.backupFragile)).toBeInTheDocument()
+    expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
   })
 })

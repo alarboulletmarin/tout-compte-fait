@@ -1,5 +1,5 @@
 import { SPLIT_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 import { useMemberFilter, useMemberMap, useMonthSplit } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -66,17 +66,17 @@ export function SplitTile() {
     <Tile
       span="2x2"
       className="gap-3"
-      label={fr.dashboard.split}
-      link={{ to: SPLIT_PATH, label: fr.dashboard.showSplit }}
+      label={t.dashboard.split}
+      link={{ to: SPLIT_PATH, label: t.dashboard.showSplit }}
     >
-      <Eyebrow icon={SplitIcon}>{fr.dashboard.split}</Eyebrow>
+      <Eyebrow icon={SplitIcon}>{t.dashboard.split}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring
           size={DONUT_SIZE}
           thickness={DONUT_THICKNESS}
           segments={segments}
-          label={fr.dashboard.split}
-          srText={tpl(fr.split.srShares, spoken)}
+          label={t.dashboard.split}
+          srText={tpl(t.split.srShares, spoken)}
           className="shrink-0"
         >
           <Amount value={total} size="label" direction="out" withCents={false} />
@@ -98,7 +98,7 @@ export function SplitTile() {
       {/* Plus souligné : c'était un faux lien — un texte qui promet un clic
           dans une tuile qui en portait déjà un, sur une autre destination
           supposée. Le repère du coin tient ce rôle, et lui seul. */}
-      <p className="t-label">{fr.dashboard.splitHint}</p>
+      <p className="t-label">{t.dashboard.splitHint}</p>
     </Tile>
   )
 }

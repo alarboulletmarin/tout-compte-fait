@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { MORE_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { PageTitle } from '@/ui/PageTitle'
 import { DataSection } from './DataSection'
 
@@ -16,7 +16,7 @@ export function DataPage() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <PageTitle
-        title={fr.settings.transfer}
+        title={t.settings.transfer}
         onBack={() => {
           void navigate(MORE_PATH)
         }}

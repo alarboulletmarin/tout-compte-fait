@@ -6,7 +6,7 @@ import { useState } from 'react'
 import type { MonthPoint } from '@/domain/history'
 import type { Money } from '@/domain/money'
 import { parseYm } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { NO_VALUE, formatMoney, formatYearMonth, monthNameShort, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
@@ -27,7 +27,7 @@ const GAP = 3
 const PAD = 6
 
 /** Ce que la lecture montre, et ce que la légende nommait auparavant. */
-const SERIES = [
+const series = () => [
   { key: 'in' as const, label: history.legendIn, color: 'var(--flow-in)', line: false },
   { key: 'out' as const, label: history.legendOut, color: 'var(--flow-out)', line: false },
   { key: 'balance' as const, label: history.legendBalance, color: 'var(--text)', line: true },
@@ -123,7 +123,7 @@ export function MonthlyBars({ points, label, srText, className }: MonthlyBarsPro
             tomberaient à 77px, où un montant à six chiffres se fait couper par
             le cadre de la tuile, sans que rien ne le dise. */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 sm:gap-x-2">
-          {SERIES.map((serie) => (
+          {series().map((serie) => (
             <div
               key={serie.key}
               className={cn(
@@ -239,7 +239,7 @@ export function MonthlyBars({ points, label, srText, className }: MonthlyBarsPro
               labels={labels}
               shown={shown}
               onShow={setActive}
-              label={fr.a11y.chartCursor}
+              label={t.a11y.chartCursor}
             />
           </div>
 

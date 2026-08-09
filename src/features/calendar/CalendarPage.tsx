@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
 import { entryNewPath, entryPath } from '@/app/routes'
 import { type ISODate, today, ymOf } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useCurrentYm, useMonthBounds } from '@/store/selectors'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
@@ -116,7 +116,7 @@ export function CalendarPage() {
       {/* Cet écran n'avait aucun titre : rien ne le nommait à un lecteur
           d'écran, et son bandeau ne dit que le mois. Comme celui du mois, il ne
           s'affiche pas — le nom de l'écran est déjà dans la navigation. */}
-      <PageTitle title={fr.nav.calendar} hidden />
+      <PageTitle title={t.nav.calendar} hidden />
       {/* Sans note de lecture : le calendrier montre les échéances réelles, où
           une charge commune tombe en entier et n'est à personne. */}
       <MonthHeader />
@@ -143,14 +143,14 @@ export function CalendarPage() {
         {/* L'invitation portait une action — « ouvre le mois » — que cet écran
             n'offre pas. Elle porte maintenant celle qu'il sait faire. */}
         {!hasAny && (
-          <EmptyState message={fr.calendar.empty}>
+          <EmptyState message={t.calendar.empty}>
             <div className="flex flex-wrap justify-center gap-2">
               <Button
                 onClick={() => {
                   create('out')
                 }}
               >
-                {fr.entry.addOut}
+                {t.entry.addOut}
               </Button>
               <Button
                 variant="secondary"
@@ -158,7 +158,7 @@ export function CalendarPage() {
                   create('in')
                 }}
               >
-                {fr.entry.addIn}
+                {t.entry.addIn}
               </Button>
               <Button
                 variant="secondary"
@@ -166,7 +166,7 @@ export function CalendarPage() {
                   create('saving')
                 }}
               >
-                {fr.entry.addSaving}
+                {t.entry.addSaving}
               </Button>
             </div>
           </EmptyState>

@@ -1,6 +1,6 @@
 import { sum } from '@/domain/money'
 import { OTHER_CATEGORY } from '@/domain/stats'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 
 import { useFamilyMap, useSpendingByFamily } from '@/store/selectors'
@@ -40,15 +40,15 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
   const currency = useCurrency()
 
   const labelOf = (id: string): string =>
-    id === OTHER_CATEGORY ? fr.common.other : (families.get(id)?.label ?? fr.common.other)
+    id === OTHER_CATEGORY ? t.common.other : (families.get(id)?.label ?? t.common.other)
   const colorOf = (id: string): string =>
     id === OTHER_CATEGORY ? 'var(--cat-rest)' : familyColor(id)
 
   if (slices.length === 0) {
     return (
       <Tile span="2x2" className="justify-between">
-        <Eyebrow icon={BreakdownIcon}>{fr.dashboard.spending}</Eyebrow>
-        <p className="t-label">{fr.dashboard.noBreakdown}</p>
+        <Eyebrow icon={BreakdownIcon}>{t.dashboard.spending}</Eyebrow>
+        <p className="t-label">{t.dashboard.noBreakdown}</p>
       </Tile>
     )
   }
@@ -66,14 +66,14 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
 
   return (
     <Tile span="2x2" className="gap-3">
-      <Eyebrow icon={BreakdownIcon}>{fr.dashboard.spending}</Eyebrow>
+      <Eyebrow icon={BreakdownIcon}>{t.dashboard.spending}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring
           size={DONUT_SIZE}
           thickness={DONUT_THICKNESS}
           segments={segments}
-          label={fr.dashboard.spending}
-          srText={tpl(fr.dashboard.srBreakdown, spoken)}
+          label={t.dashboard.spending}
+          srText={tpl(t.dashboard.srBreakdown, spoken)}
           className="shrink-0"
         >
           <Amount value={total} size="label" direction="out" withCents={false} />
@@ -114,7 +114,7 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
                   <button
                     type="button"
                     className="flex w-full items-center gap-2 rounded-inner transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2"
-                    aria-label={tpl(fr.dashboard.showFamily, labelOf(slice.categoryId))}
+                    aria-label={tpl(t.dashboard.showFamily, labelOf(slice.categoryId))}
                     onClick={() => {
                       onShowFamily(slice.categoryId)
                     }}

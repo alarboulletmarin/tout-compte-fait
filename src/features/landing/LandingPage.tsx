@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppFooter } from '@/app/AppFooter'
 import { ONBOARDING_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { landing } from '@/i18n/landing'
 import { useStore } from '@/store/store'
 import { ExampleControl } from '@/features/settings/ExampleControl'
@@ -73,8 +73,8 @@ export function LandingPage() {
             détachait à la même distance que le paragraphe : cinq éléments à
             intervalle égal ne font plus une hiérarchie, ils font une liste. */}
         <div className="flex flex-col gap-2">
-          <span className="t-eyebrow text-muted">{fr.app.name}</span>
-          <h1 className="t-hero-fit max-w-[16ch]">{fr.app.tagline}</h1>
+          <span className="t-eyebrow text-muted">{t.app.name}</span>
+          <h1 className="t-hero-fit max-w-[16ch]">{t.app.tagline}</h1>
         </div>
         <p className="t-body max-w-prose">{landing.intro}</p>
 

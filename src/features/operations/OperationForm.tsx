@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { memberPatch } from '@/features/split/memberDraft'
 import { SharedField } from '@/features/split/SharedField'
 import { PeriodFields } from '@/features/recurrences/PeriodFields'
@@ -27,10 +27,10 @@ import { type Operation, type OperationDefaults, useOperationForm } from './useO
  * le carburant. On ne dépense pas son épargne, on la déplace — et l'épargne a
  * donc sa position, d'où l'écran déduit le sens.
  */
-const NATURES = [
-  { value: 'expense' as const, label: fr.entry.natureExpense },
-  { value: 'income' as const, label: fr.entry.natureIncome },
-  { value: 'saving' as const, label: fr.entry.natureSaving },
+const natures = () => [
+  { value: 'expense' as const, label: t.entry.natureExpense },
+  { value: 'income' as const, label: t.entry.natureIncome },
+  { value: 'saving' as const, label: t.entry.natureSaving },
 ]
 
 /**
@@ -38,19 +38,19 @@ const NATURES = [
  * verser sur un livret, jamais y reprendre — l'écran n'offrait alors que des
  * catégories de revenus, et un retrait de livret n'en est pas un.
  */
-const MOVEMENTS = [
-  { value: 'out' as const, label: fr.entry.savingIn },
-  { value: 'in' as const, label: fr.entry.savingOut },
+const movements = () => [
+  { value: 'out' as const, label: t.entry.savingIn },
+  { value: 'in' as const, label: t.entry.savingOut },
 ]
 
-const RHYTHMS = [
-  { value: 'once' as const, label: fr.entry.once },
-  { value: 'recurring' as const, label: fr.entry.recurring },
+const rhythms = () => [
+  { value: 'once' as const, label: t.entry.once },
+  { value: 'recurring' as const, label: t.entry.recurring },
 ]
 
-const AMOUNT_KINDS = [
-  { value: 'fixed' as const, label: fr.recurrences.fixedAmount },
-  { value: 'variable' as const, label: fr.recurrences.variable },
+const amountKinds = () => [
+  { value: 'fixed' as const, label: t.recurrences.fixedAmount },
+  { value: 'variable' as const, label: t.recurrences.variable },
 ]
 
 /**
@@ -66,10 +66,10 @@ const AMOUNT_KINDS = [
  * le titre peut donc dire précisément ce qu'on est en train de modifier.
  */
 function titleFor(operation: Operation | null, nature: EntryNature): string {
-  if (operation === null) return fr.entry.addOperation
-  if (operation.kind === 'recurrence') return fr.recurrences.edit
-  if (nature === 'saving') return fr.entry.editSaving
-  return nature === 'income' ? fr.entry.editIn : fr.entry.editOut
+  if (operation === null) return t.entry.addOperation
+  if (operation.kind === 'recurrence') return t.recurrences.edit
+  if (nature === 'saving') return t.entry.editSaving
+  return nature === 'income' ? t.entry.editIn : t.entry.editOut
 }
 
 export type OperationFormProps = {
@@ -150,7 +150,7 @@ export function OperationForm({
               question n'existe pas ailleurs — quel genre de montant. */}
           <div className="flex flex-wrap gap-2">
             <Segmented
-              options={NATURES}
+              options={natures()}
               value={draft.nature}
               onChange={(nature) => {
                 /* Le brouillon vide seul la catégorie et le support — voir
@@ -160,30 +160,30 @@ export function OperationForm({
                    qu'exceptionnellement. */
                 patch({ nature, direction: nature === 'income' ? 'in' : 'out' })
               }}
-              label={fr.entry.nature}
+              label={t.entry.nature}
             />
 
             {/* Les deux sens d'un mouvement d'épargne. Ailleurs, le sens
                 découle de la nature et n'a pas à être demandé. */}
             {draft.nature === 'saving' && (
               <Segmented
-                options={MOVEMENTS}
+                options={movements()}
                 value={draft.direction}
                 onChange={(direction) => {
                   patch({ direction })
                 }}
-                label={fr.entry.savingMovement}
+                label={t.entry.savingMovement}
               />
             )}
 
             {canSwitchRhythm && (
               <Segmented
-                options={RHYTHMS}
+                options={rhythms()}
                 value={draft.recurring ? 'recurring' : 'once'}
                 onChange={(rhythm) => {
                   patch({ recurring: rhythm === 'recurring' })
                 }}
-                label={fr.entry.rhythm}
+                label={t.entry.rhythm}
               />
             )}
 
@@ -192,20 +192,20 @@ export function OperationForm({
                 sien. */}
             {draft.recurring && (
               <Segmented
-                options={AMOUNT_KINDS}
+                options={amountKinds()}
                 value={draft.variable ? 'variable' : 'fixed'}
                 onChange={(kind) => {
                   patch({ variable: kind === 'variable' })
                 }}
-                label={fr.recurrences.form.amountKind}
+                label={t.recurrences.form.amountKind}
               />
             )}
           </div>
 
           <Field
-            label={fr.entry.amount}
+            label={t.entry.amount}
             {...(optionalAmount
-              ? { optional: true, hint: fr.entry.variableAmountHint }
+              ? { optional: true, hint: t.entry.variableAmountHint }
               : { required: true })}
             {...(errors.amount ? { error: errors.amount } : {})}
           >
@@ -229,19 +229,19 @@ export function OperationForm({
               catégorie qui dit la nature du mouvement. Jamais les deux. */}
           {supportMode ? (
             supports.length === 0 ? (
-              <Field label={fr.savings.support} required>
+              <Field label={t.savings.support} required>
                 {() => (
                   <div className="flex flex-col items-start gap-2">
-                    <p className="t-label">{fr.savings.supportNone}</p>
+                    <p className="t-label">{t.savings.supportNone}</p>
                     <Button type="button" variant="secondary" size="sm" onClick={sheet.open}>
-                      {fr.savings.supportCreateFirst}
+                      {t.savings.supportCreateFirst}
                     </Button>
                   </div>
                 )}
               </Field>
             ) : (
               <Field
-                label={fr.savings.support}
+                label={t.savings.support}
                 required
                 {...(errors.support ? { error: errors.support } : {})}
               >
@@ -259,14 +259,14 @@ export function OperationForm({
                     {/* Créer sans quitter la saisie : partir vers la page
                         Épargne perdrait le montant et la date déjà tapés. */}
                     <Button type="button" variant="ghost" size="sm" onClick={sheet.open}>
-                      {fr.savings.supportCreateFirst}
+                      {t.savings.supportCreateFirst}
                     </Button>
                   </div>
                 )}
               </Field>
             )
           ) : (
-            <Field label={fr.entry.category} required {...(errors.category ? { error: errors.category } : {})}>
+            <Field label={t.entry.category} required {...(errors.category ? { error: errors.category } : {})}>
               {(id, describedBy) => (
                 <CategorySelect
                   id={id}
@@ -287,10 +287,10 @@ export function OperationForm({
               aussi qui préremplit le jour du mois et le jour de la semaine —
               « le 1er mars » répond déjà à « quel jour du mois ». */}
           <Field
-            label={draft.recurring ? fr.entry.firstDate : fr.entry.date}
+            label={draft.recurring ? t.entry.firstDate : t.entry.date}
             required
             {...(draft.recurring && operation === null
-              ? { hint: firstDuePaid ? fr.entry.firstDatePaid : fr.entry.firstDatePlanned }
+              ? { hint: firstDuePaid ? t.entry.firstDatePaid : t.entry.firstDatePlanned }
               : {})}
           >
             {(id, describedBy) => (
@@ -307,7 +307,7 @@ export function OperationForm({
 
           {draft.recurring && <PeriodFields draft={draft} patch={patch} />}
 
-          <Field label={fr.entry.label} required {...(errors.label ? { error: errors.label } : {})}>
+          <Field label={t.entry.label} required {...(errors.label ? { error: errors.label } : {})}>
             {(id, describedBy) => (
               <TextInput
                 id={id}
@@ -315,7 +315,7 @@ export function OperationForm({
                 value={draft.label}
                 invalid={Boolean(errors.label)}
                 placeholder={
-                  draft.recurring ? fr.entry.labelPlaceholderRecurring : fr.entry.labelPlaceholder
+                  draft.recurring ? t.entry.labelPlaceholderRecurring : t.entry.labelPlaceholder
                 }
                 maxLength={60}
                 onChange={(e) => {
@@ -333,13 +333,13 @@ export function OperationForm({
                puis d'erreur : c'est la même, et elle dit pourquoi ce champ,
                facultatif ailleurs, ne l'est pas ici. */
             <Field
-              label={fr.entry.member}
+              label={t.entry.member}
               {...(needsMember
                 ? {
                     required: true,
                     hint: draft.recurring
-                      ? fr.entry.memberRequiredRecurring
-                      : fr.entry.memberRequired,
+                      ? t.entry.memberRequiredRecurring
+                      : t.entry.memberRequired,
                   }
                 : { optional: true })}
               {...(errors.member ? { error: errors.member } : {})}
@@ -354,7 +354,7 @@ export function OperationForm({
                     patch(memberPatch(e.target.value))
                   }}
                 >
-                  <option value="">{fr.shell.everyone}</option>
+                  <option value="">{t.shell.everyone}</option>
                   {members.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name}
@@ -380,13 +380,13 @@ export function OperationForm({
 
           {/* La note se lit sur la ligne du mois et se cherche depuis
               l'historique. En dernier : c'est le champ dont on se passe. */}
-          <Field label={fr.entry.note} optional>
+          <Field label={t.entry.note} optional>
             {(id) => (
               <TextInput
                 id={id}
                 value={draft.note}
                 placeholder={
-                  draft.recurring ? fr.entry.notePlaceholderRecurring : fr.entry.notePlaceholder
+                  draft.recurring ? t.entry.notePlaceholderRecurring : t.entry.notePlaceholder
                 }
                 maxLength={140}
                 onChange={(e) => {
@@ -404,13 +404,13 @@ export function OperationForm({
             rien à nommer — on enregistre ce qui existe déjà. */}
         <Button type="submit" form="operation-form">
           {operation !== null
-            ? fr.common.save
+            ? t.common.save
             : draft.recurring
-              ? fr.entry.saveRecurrence
-              : fr.entry.saveOperation}
+              ? t.entry.saveRecurrence
+              : t.entry.saveOperation}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
-          {fr.common.cancel}
+          {t.common.cancel}
         </Button>
         {actions}
       </div>

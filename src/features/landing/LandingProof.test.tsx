@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatSignedMoney } from '@/i18n/format'
 import { landing } from '@/i18n/landing'
 import { LandingProof } from './LandingProof'
@@ -15,7 +15,7 @@ const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
 const out = (value: Money): string =>
-  said(`${fr.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
+  said(`${t.direction.out.toLowerCase()} ${formatMoney(value, 'EUR')}`)
 
 describe('La démonstration du calcul', () => {
   /* La raison d'être de la section. La page affirmait — dans `splitBody` — que
@@ -27,8 +27,8 @@ describe('La démonstration du calcul', () => {
 
     // Deux fois : en tête de tuile, et sur la ligne de vérification.
     expect(screen.getAllByText(out(SAMPLE.shared))).toHaveLength(2)
-    expect(screen.getByText(fr.split.checkTotal)).toBeInTheDocument()
-    expect(screen.getByText(fr.split.checkHint)).toBeInTheDocument()
+    expect(screen.getByText(t.split.checkTotal)).toBeInTheDocument()
+    expect(screen.getByText(t.split.checkHint)).toBeInTheDocument()
   })
 
   /* La régularisation est la moitié de la promesse qui ne se lisait nulle part.
@@ -51,9 +51,9 @@ describe('La démonstration du calcul', () => {
   it('pose les trois termes de la capacité d’épargne', () => {
     render(<LandingProof />)
 
-    expect(screen.getByText(fr.savings.flowIncome)).toBeInTheDocument()
-    expect(screen.getByText(fr.savings.flowCharges)).toBeInTheDocument()
-    expect(screen.getByText(fr.savings.flowDebts)).toBeInTheDocument()
-    expect(screen.getByText(fr.dashboard.capacityHint)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.flowIncome)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.flowCharges)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.flowDebts)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.capacityHint)).toBeInTheDocument()
   })
 })

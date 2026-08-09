@@ -17,7 +17,7 @@ import { type ISODate, type YearMonth, startOfMonth } from '@/domain/date'
 import { type Money, parseAmount } from '@/domain/money'
 import type { Direction, Member, Recurrence } from '@/domain/types'
 import { tpl } from '@/i18n/format'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 
 /* Les identifiants du catalogue d'amorçage (`persistence/defaults.ts`). Ils
    sont stables, mais on ne s'y fie pas les yeux fermés : la ligne se tait si la
@@ -60,16 +60,16 @@ export function starterLines(members: readonly Member[]): StarterLine[] {
       ? [
           {
             key: SOLO_KEY,
-            label: fr.onboarding.starterSalarySolo,
-            recurrenceLabel: fr.onboarding.starterSalaryLabel,
+            label: t.onboarding.starterSalarySolo,
+            recurrenceLabel: t.onboarding.starterSalaryLabel,
             categoryId: SALARY_CATEGORY,
             direction: 'in',
           },
         ]
       : members.map((member) => ({
           key: member.id,
-          label: tpl(fr.onboarding.starterSalaryOf, member.name),
-          recurrenceLabel: fr.onboarding.starterSalaryLabel,
+          label: tpl(t.onboarding.starterSalaryOf, member.name),
+          recurrenceLabel: t.onboarding.starterSalaryLabel,
           categoryId: SALARY_CATEGORY,
           direction: 'in',
           memberId: member.id,
@@ -79,9 +79,9 @@ export function starterLines(members: readonly Member[]): StarterLine[] {
     ...salaries,
     {
       key: RENT_KEY,
-      label: fr.onboarding.starterRent,
-      hint: fr.onboarding.starterRentHint,
-      recurrenceLabel: fr.onboarding.starterRentLabel,
+      label: t.onboarding.starterRent,
+      hint: t.onboarding.starterRentHint,
+      recurrenceLabel: t.onboarding.starterRentLabel,
       categoryId: RENT_CATEGORY,
       direction: 'out',
     },
@@ -103,7 +103,7 @@ export function starterAmount(
 /**
  * Les récurrences que ces montants décrivent — mensuelles, ancrées au 1er.
  *
- * Le jour ne se demande pas (voir `fr.onboarding.starterDayNote`) : un champ de
+ * Le jour ne se demande pas (voir `t.onboarding.starterDayNote`) : un champ de
  * plus par ligne aurait fait de cette étape le questionnaire que le cahier
  * §4.1 refuse. Le 1er est le défaut, il est annoncé, et il se corrige d'une
  * reprise depuis la fiche.

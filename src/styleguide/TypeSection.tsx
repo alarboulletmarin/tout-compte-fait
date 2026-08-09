@@ -1,5 +1,5 @@
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { Tile } from '@/ui/Tile'
 import { Section, SubTitle } from './Section'
@@ -25,12 +25,12 @@ function TypeScale() {
 
 export function TypographySection() {
   return (
-    <Section title={fr.styleguide.sections.type} note={fr.styleguide.typeNote}>
+    <Section title={t.styleguide.sections.type} note={t.styleguide.typeNote}>
       <DualTheme>
         <TypeScale />
       </DualTheme>
 
-      <SubTitle>{fr.styleguide.sampleAmount}</SubTitle>
+      <SubTitle>{t.styleguide.sampleAmount}</SubTitle>
       <DualTheme>
         {/* Dans une tuile, comme partout dans l'app : un montant ne se pose
             jamais directement sur le fond de page. */}
@@ -52,7 +52,7 @@ export function TypographySection() {
 
 export function ShapesSection() {
   return (
-    <Section title={fr.styleguide.sections.shapes} note={fr.styleguide.shapesNote}>
+    <Section title={t.styleguide.sections.shapes} note={t.styleguide.shapesNote}>
       <DualTheme>
         <div className="flex flex-col gap-6">
           <ul className="flex flex-wrap gap-4">

@@ -2,7 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CATEGORIES_PATH, familyPath } from '@/app/routes'
 import type { CategoryKind } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { addCategory, addFamily } from '@/store/actions'
 import { useFamilies } from '@/store/selectors'
 import { Button } from '@/ui/Button'
@@ -11,11 +11,11 @@ import { Field, Select, TextInput } from '@/ui/Field'
 import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 
-const KINDS: { value: CategoryKind; label: string }[] = [
-  { value: 'charge', label: fr.kinds.charge },
-  { value: 'resource', label: fr.kinds.resource },
-  { value: 'debt', label: fr.kinds.debt },
-  { value: 'saving', label: fr.kinds.saving },
+const kinds = (): { value: CategoryKind; label: string }[] => [
+  { value: 'charge', label: t.kinds.charge },
+  { value: 'resource', label: t.kinds.resource },
+  { value: 'debt', label: t.kinds.debt },
+  { value: 'saving', label: t.kinds.saving },
 ]
 
 /**
@@ -84,8 +84,8 @@ export function FamilyNewPage() {
 
   return (
     <FormScreen
-      title={fr.settings.familyAdd}
-      submit={fr.settings.familyAdd}
+      title={t.settings.familyAdd}
+      submit={t.settings.familyAdd}
       disabled={trimmed === ''}
       onBack={() => {
         void navigate(CATEGORIES_PATH)
@@ -95,12 +95,12 @@ export function FamilyNewPage() {
         void navigate(familyPath(family.id), { replace: true })
       }}
     >
-      <Field label={fr.settings.familyName}>
+      <Field label={t.settings.familyName}>
         {(id) => (
           <TextInput
             id={id}
             value={label}
-            placeholder={fr.settings.familyPlaceholder}
+            placeholder={t.settings.familyPlaceholder}
             maxLength={40}
             autoFocus
             onChange={(event) => {
@@ -111,7 +111,7 @@ export function FamilyNewPage() {
       </Field>
       {/* La nature est le seul choix irréversible du formulaire : elle décide du
           sens et de la teinte de tout ce qu'on rangera dessous. */}
-      <Field label={fr.settings.familyKind}>
+      <Field label={t.settings.familyKind}>
         {(id) => (
           <Select
             id={id}
@@ -120,7 +120,7 @@ export function FamilyNewPage() {
               setKind(event.target.value as CategoryKind)
             }}
           >
-            {KINDS.map((option) => (
+            {kinds().map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -158,9 +158,9 @@ function CategoryNewForm({ familyId, familyLabel }: { familyId: string; familyLa
 
   return (
     <FormScreen
-      title={fr.settings.categoryAdd}
+      title={t.settings.categoryAdd}
       badge={familyLabel}
-      submit={fr.settings.categoryAdd}
+      submit={t.settings.categoryAdd}
       disabled={trimmed === ''}
       onBack={() => {
         void navigate(familyPath(familyId))
@@ -170,12 +170,12 @@ function CategoryNewForm({ familyId, familyLabel }: { familyId: string; familyLa
         void navigate(familyPath(familyId), { replace: true })
       }}
     >
-      <Field label={fr.settings.categoryName}>
+      <Field label={t.settings.categoryName}>
         {(id) => (
           <TextInput
             id={id}
             value={label}
-            placeholder={fr.settings.categoryPlaceholder}
+            placeholder={t.settings.categoryPlaceholder}
             maxLength={40}
             autoFocus
             onChange={(event) => {

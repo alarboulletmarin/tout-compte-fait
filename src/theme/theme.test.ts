@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { PALETTES, isPaletteSetting } from '@/domain/types'
+import { readStoredLocale } from '@/i18n/locale'
 import {
   PALETTE_STORAGE_KEY,
   applyPalette,
@@ -112,12 +113,15 @@ describe('palette', () => {
   })
 
   /* Les cinq chemins qui remplacent le document en bloc passent par là. Oublier
-     l'un des deux miroirs ferait peindre l'ancienne apparence au démarrage
-     suivant — un défaut qui ne se voit qu'une fois la page rechargée. */
-  it('mire les deux réglages d’un seul geste', () => {
-    mirrorAppearance({ theme: 'dark', palette: 'neutre' })
+     l'un des trois miroirs ferait peindre l'ancienne apparence au démarrage
+     suivant — un défaut qui ne se voit qu'une fois la page rechargée, et qui
+     coûte un aller-retour de réseau sur la langue, dont le catalogue se
+     télécharge. */
+  it('mire les trois réglages d’un seul geste', () => {
+    mirrorAppearance({ theme: 'dark', palette: 'neutre', locale: 'en' })
     expect(readStoredPreference()).toBe('dark')
     expect(readStoredPalette()).toBe('neutre')
+    expect(readStoredLocale()).toBe('en')
   })
 
   it('reconnaît les six palettes et rien d’autre', () => {

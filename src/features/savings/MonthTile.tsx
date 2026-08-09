@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { type Money, ZERO, abs, add, sub } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatPercent, tpl } from '@/i18n/format'
 import { useKindTotals, useMemberCharges } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -97,19 +97,19 @@ export function MonthTile({
 
   return (
     <Tile className="gap-2">
-      <Eyebrow icon={SavingsIcon}>{fr.savings.capacity}</Eyebrow>
+      <Eyebrow icon={SavingsIcon}>{t.savings.capacity}</Eyebrow>
       <Amount value={capacity} size="tile" tone={capacity < ZERO ? 'danger' : 'default'} />
-      <span className="t-label">{fr.savings.capacityHint}</span>
-      {capacity < ZERO && <p className="t-label">{fr.savings.capacityNegative}</p>}
+      <span className="t-label">{t.savings.capacityHint}</span>
+      {capacity < ZERO && <p className="t-label">{t.savings.capacityNegative}</p>}
 
       {/* Le versement puis ce qu'il en reste, dans cet ordre : c'est celui de la
           soustraction, et le second se lit comme le résultat du premier.
           « Dépassement » plutôt qu'un reste négatif : placer plus qu'on ne
           dégage est une lecture, et « reste −57 € » n'en est pas une. */}
       <ul className="mt-1 flex flex-col gap-2 border-t border-border pt-3">
-        <Half label={fr.savings.placedTotal} value={saved} signed />
+        <Half label={t.savings.placedTotal} value={saved} signed />
         <Half
-          label={over ? fr.savings.over : fr.savings.left}
+          label={over ? t.savings.over : t.savings.left}
           value={abs(left)}
           tone={over ? 'danger' : 'default'}
         />
@@ -120,12 +120,12 @@ export function MonthTile({
           soldé dit qu'il l'est, les autres donnent le taux. */}
       <span className="t-label">
         {saved < ZERO
-          ? fr.savings.withdrawn
+          ? t.savings.withdrawn
           : left === ZERO && capacity > ZERO
-            ? fr.savings.leftNone
+            ? t.savings.leftNone
             : rate === null
-              ? fr.savings.rateNone
-              : tpl(fr.savings.rate, formatPercent(rate))}
+              ? t.savings.rateNone
+              : tpl(t.savings.rate, formatPercent(rate))}
       </span>
 
       {/* La légende, dans la tuile et non dans un cadre à elle : un `<details>`
@@ -138,15 +138,15 @@ export function MonthTile({
           className="-mx-3"
           open={open}
           onOpenChange={setOpen}
-          title={<span className="t-body">{fr.savings.method}</span>}
+          title={<span className="t-body">{t.savings.method}</span>}
         >
           <div className="flex flex-col gap-3 px-3 pt-3 pb-1">
             {/* La phrase avant le calcul, comme sur la feuille des quatre
                 soldes : l'inverse ouvre sur du vocabulaire qu'on n'a pas encore
                 de quoi comprendre. */}
-            <p className="t-body">{fr.savings.methodFormula}</p>
+            <p className="t-body">{t.savings.methodFormula}</p>
             <ul className="flex flex-col gap-1.5">
-              <Term label={fr.savings.flowIncome} value={totals.resource} direction="in" />
+              <Term label={t.savings.flowIncome} value={totals.resource} direction="in" />
               {/* « Charges » d'un bloc mêlait ses lignes à elle et sa part du
                   pot commun, sans que rien ne le dise — c'est-à-dire que le
                   seul terme sur lequel on peut agir seul·e était indiscernable
@@ -155,7 +155,7 @@ export function MonthTile({
                   un crédit qui mange la moitié de la capacité continue de se
                   voir ici, et nulle part ailleurs. */}
               <Term
-                label={shared === null ? fr.savings.flowCharges : fr.savings.flowOwnCharges}
+                label={shared === null ? t.savings.flowCharges : t.savings.flowOwnCharges}
                 value={ownCharges}
                 direction="out"
               />
@@ -166,27 +166,27 @@ export function MonthTile({
                   absence. */}
               {ownDebts > ZERO && (
                 <Term
-                  label={shared === null ? fr.savings.flowDebts : fr.savings.flowOwnDebts}
+                  label={shared === null ? t.savings.flowDebts : t.savings.flowOwnDebts}
                   value={ownDebts}
                   direction="out"
                 />
               )}
               {shared !== null && shared > ZERO && (
-                <Term label={fr.savings.flowCommon} value={shared} direction="out" />
+                <Term label={t.savings.flowCommon} value={shared} direction="out" />
               )}
               <li className="flex items-baseline gap-3 border-t border-border pt-2">
-                <span className="t-body min-w-0 flex-1 truncate">{fr.savings.capacity}</span>
+                <span className="t-body min-w-0 flex-1 truncate">{t.savings.capacity}</span>
                 <Amount value={capacity} size="body" className="shrink-0" />
               </li>
             </ul>
 
-            <p className="t-label">{fr.savings.methodExcluded}</p>
-            <p className="t-label">{fr.savings.methodShared}</p>
-            <p className="t-label">{fr.savings.methodBalance}</p>
+            <p className="t-label">{t.savings.methodExcluded}</p>
+            <p className="t-label">{t.savings.methodShared}</p>
+            <p className="t-label">{t.savings.methodBalance}</p>
             {/* La règle qui fait exister cet écran : un relevé n'est pas un
                 mouvement. Dite ici, où les deux lectures se touchent. */}
-            <p className="t-label">{fr.savings.valueMethod}</p>
-            <p className="t-label">{fr.savings.estimatedWarning}</p>
+            <p className="t-label">{t.savings.valueMethod}</p>
+            <p className="t-label">{t.savings.estimatedWarning}</p>
           </div>
         </Disclosure>
       </div>

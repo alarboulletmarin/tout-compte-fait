@@ -85,8 +85,24 @@ const DIST = 'dist'
    précédent l'avait laissée à un dixième de kibioctet, ce qu'il nomme lui-même
    un plafond plutôt qu'une marge ; elle revient à quatre et demi. Ce que ce
    nombre tient n'est pas ce que l'app pèse, c'est la place qui reste — de quoi
-   ajouter une fonctionnalité, pas de quoi ramener un écran. */
-const BUDGET_KIB = 221
+   ajouter une fonctionnalité, pas de quoi ramener un écran.
+
+   Relevé à 224 pour la **seconde langue**, et deux kibioctets et demi en sont la
+   mesure exacte : l'app pèse 217,6 avec les projections et 220,2 une fois
+   l'anglais possible. Le catalogue anglais lui-même n'y est pour rien — il fait
+   seize kibioctets et part à la demande, comme les quatre catalogues d'écran,
+   qui emportent chacun leurs deux langues. Ce qui reste est ce qui doit être lu
+   avant le premier pixel : le catalogue actif et son abonnement, la détection et
+   le miroir de la langue, le glyphe du réglage, et surtout les branchements de
+   `format.ts` — séparateur, place du symbole, unités, ordinaux. Ces derniers ne
+   sont pas de la traduction mais des règles, et elles pèsent partout où un
+   montant s'affiche.
+
+   La marge retombait à huit dixièmes, c'est-à-dire au plafond que ce fichier
+   refuse deux fois plus haut. Elle revient à près de quatre — la même qu'avant
+   ce chantier, ce qui est le seul repère honnête : une langue de plus ne doit
+   pas se payer sur la place qui reste aux suivantes. */
+const BUDGET_KIB = 224
 
 const kib = (bytes) => bytes / 1024
 const format = (bytes) => `${kib(bytes).toFixed(1)} Kio`

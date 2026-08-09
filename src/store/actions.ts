@@ -10,7 +10,7 @@ import { makeId } from '@/domain/ids'
 import type { Money } from '@/domain/money'
 import { type Advance, type Category, type CategoryKind, type Debt, type Entry, type Family, type Member, type Recurrence, type SavingSupport, type SavingValuation, type Settings, directionOfKind } from '@/domain/types'
 import * as updates from '@/domain/updates'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { nextCategoryColor, nextMemberColor } from '@/persistence/defaults'
 import { toast } from '@/ui/toast'
 import { ALL_FILTER, useStore } from './store'
@@ -43,7 +43,7 @@ export function undoable(message: string, apply: () => void): void {
   const before = useStore.getState().data
   apply()
   toast(message, 'default', {
-    label: fr.common.undo,
+    label: t.common.undo,
     onAction: () => {
       mutate(() => before)
     },

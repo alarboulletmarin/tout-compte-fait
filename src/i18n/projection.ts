@@ -9,12 +9,16 @@
  * longue, parce que ce que l'écran refuse de faire demande plus de mots que ce
  * qu'il fait — n'a pas plus de raison qu'elle de peser sur l'écran du mois.
  *
- * Deux chaînes restent dans `fr.savings` : le nom de l'écran et sa phrase de
+ * Deux chaînes restent dans `t.savings` : le nom de l'écran et sa phrase de
  * rangée. C'est l'écran Épargne qui porte la porte, et il est chargé d'avance —
  * il doit pouvoir nommer où elle mène sans aller chercher ce qu'il y a derrière.
  * ==========================================================================*/
 
-export const projection = {
+import { en } from './projection.en'
+import { currentLocale, subscribeLocale } from './strings'
+import type { Widen } from './widen'
+
+const fr = {
   title: 'Projections',
 
   /* --- Le cadre, avant le premier chiffre ---------------------------------
@@ -141,3 +145,18 @@ export const projection = {
   plansAhead:
     'Comparer une hypothèse à ce qui est réellement versé mois après mois viendra plus tard : pour l’instant, cet écran ne lit rien de tes données et n’y écrit rien.',
 } as const
+
+export type ProjectionStrings = Widen<typeof fr>
+
+/**
+ * Les chaînes des projections, dans la langue active.
+ *
+ * Même mécanique que `history.ts`, `landing.ts` et `legal.ts` : une liaison
+ * d'export vivante, et les deux langues dans le même morceau — celui-ci est
+ * déjà hors du graphe initial.
+ */
+export let projection: ProjectionStrings = currentLocale() === 'en' ? en : fr
+
+subscribeLocale(() => {
+  projection = currentLocale() === 'en' ? en : fr
+})

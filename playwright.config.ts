@@ -65,6 +65,17 @@ export default defineConfig({
        réglée, non un écran de circonstance. C'est la même décision que
        `src/test/setup.ts` prend pour jsdom, et pour la même raison. */
     contextOptions: { reducedMotion: 'reduce' },
+    /* La suite lit l'app **en français**, et il faut le dire ici plutôt que de
+       l'espérer : depuis qu'il y a deux langues, un profil neuf sans préférence
+       enregistrée suit celle du navigateur (`i18n/locale.ts`), et un navigateur
+       de CI parle anglais. Sans cette ligne, les scénarios s'ouvriraient dans
+       une langue qui dépend de la machine qui les joue — et échoueraient sur
+       « Le mois » chez l'un, passeraient chez l'autre.
+       Le français plutôt que l'anglais parce que c'est la langue de référence :
+       c'est elle que les assertions écrivent, et c'est le catalogue qui fait
+       foi. Un scénario qui voudrait éprouver l'anglais poserait sa propre
+       `locale` — ce que Playwright permet par test. */
+    locale: 'fr-FR',
     /* La trace ne se garde que d'un échec : elle pèse quelques mégaoctets, et
        personne n'ouvre celle d'un test vert. */
     trace: 'retain-on-failure',

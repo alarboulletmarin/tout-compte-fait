@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { MonthlyBars } from '@/charts/MonthlyBars'
 import { entryNewPath } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { formatMoney, formatYearMonth, tpl } from '@/i18n/format'
 import { useCurrencyCode, useEntries, useRecurrences, useTrailingMonths } from '@/store/selectors'
@@ -77,7 +77,7 @@ export function HistoryPage() {
         <PageTitle title={history.title} />
         <EmptyState
           message={history.empty}
-          actionLabel={fr.entry.addOut}
+          actionLabel={t.entry.addOut}
           onAction={() => {
             void navigate(entryNewPath({ direction: 'out' }))
           }}

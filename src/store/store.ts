@@ -11,8 +11,8 @@ import { type YearMonth, currentYm, today } from '@/domain/date'
 import { makeId } from '@/domain/ids'
 import { monthHorizon } from '@/domain/month'
 import { openMonth } from '@/domain/updates'
-import type { Data, PaletteSetting, ThemeSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import type { Data, Locale, PaletteSetting, ThemeSetting } from '@/domain/types'
+import { t } from '@/i18n/strings'
 import { backupDaily, clearBackups } from '@/persistence/backups'
 import { clearDocument, loadDocument, saveDocument, setDbEventHandler } from '@/persistence/db'
 import { emptyData } from '@/persistence/defaults'
@@ -20,6 +20,7 @@ import { askDurability, noteWrite, noteWriteFailure, probeDurability } from '@/p
 import { type TabChannel, type TabMessage, openTabChannel } from '@/persistence/tabs'
 import { forgetExportMarks } from '@/persistence/transfer'
 import { WRITE_DELAY_MS, createWriter } from '@/persistence/writer'
+import { readStoredLocale, storeLocale } from '@/i18n/locale'
 import { mirrorAppearance, readStoredPalette, storePalette } from '@/theme/palette'
 import { readStoredPreference, storePreference } from '@/theme/theme'
 import { toast, useToasts } from '@/ui/toast'
@@ -95,6 +96,15 @@ export type StoreActions = {
    * membre sont des noms de tokens, donc elles suivent.
    */
   setPalette: (palette: PaletteSetting) => void
+  /**
+   * La langue de l'interface.
+   *
+   * Écrite dans le document, comme le thème et la palette, et pour la même
+   * raison : c'est un choix, et il doit survivre au navigateur qui l'a
+   * recueilli. Elle ne touche à aucune donnée saisie — les noms de catégories
+   * d'un foyer restent ceux qu'il a écrits (voir `Locale`).
+   */
+  setLocale: (locale: Locale) => void
   /**
    * La devise dans laquelle les montants s'affichent.
    *
@@ -187,7 +197,7 @@ const writer = createWriter(persist, WRITE_DELAY_MS, {
     if (error?.kind === 'write') setError(null)
   },
   onFailed() {
-    useStore.getState().setError({ kind: 'write', message: fr.storage.writeFailed })
+    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
   },
 })
 
@@ -201,8 +211,8 @@ const writer = createWriter(persist, WRITE_DELAY_MS, {
 setDbEventHandler((event) => {
   useStore.getState().setError(
     event === 'blocked'
-      ? { kind: 'read', message: fr.storage.blocked }
-      : { kind: 'write', message: event === 'blocking' ? fr.storage.blocking : fr.storage.terminated },
+      ? { kind: 'read', message: t.storage.blocked }
+      : { kind: 'write', message: event === 'blocking' ? t.storage.blocking : t.storage.terminated },
   )
 })
 
@@ -214,10 +224,20 @@ setDbEventHandler((event) => {
 export const HYDRATION_TIMEOUT_MS = 10_000
 
 /**
- * Document de départ. Le thème et la palette reprennent leur miroir localStorage
- * pour que rien ne clignote entre le premier rendu et la fin de l'hydratation :
- * ce sont les deux réglages qui décident des couleurs avant que le document ne
- * soit lu.
+ * Document de départ. Les trois réglages d'apparence reprennent leur miroir
+ * localStorage pour que rien ne clignote entre le premier rendu et la fin de
+ * l'hydratation : ce sont eux qui décident des couleurs et des mots avant que le
+ * document ne soit lu.
+ *
+ * **La langue en fait partie, et son absence était un bug.** Elle venait
+ * d'`emptyData`, qui lit la langue *affichée* — ce qui est juste pour un
+ * document créé en cours de route, et faux ici : ce module est évalué à
+ * l'importation, donc avant que `main.tsx` ait appliqué quoi que ce soit. Le
+ * document de départ naissait en français, et l'effet d'`App` réimposait ensuite
+ * cette valeur au catalogue que le démarrage venait de charger. Autrement dit la
+ * détection de la langue du navigateur était morte : l'app s'ouvrait en français
+ * chez tout le monde, y compris au tout premier lancement d'un appareil
+ * anglophone, qui est le seul moment où cette détection sert à quelque chose.
  */
 function initialData(): Data {
   const data = emptyData()
@@ -227,6 +247,7 @@ function initialData(): Data {
       ...data.settings,
       theme: readStoredPreference(),
       palette: readStoredPalette(),
+      locale: readStoredLocale(),
     },
   }
 }
@@ -263,7 +284,7 @@ export const useStore = create<Store>()((set, get) => ({
     try {
       const stored = await Promise.race([loadDocument(), expired])
       if (stored === 'timeout') {
-        set({ status: 'onboarding', error: { kind: 'read', message: fr.storage.readTimeout } })
+        set({ status: 'onboarding', error: { kind: 'read', message: t.storage.readTimeout } })
         return
       }
       if (stored === null) {
@@ -276,7 +297,7 @@ export const useStore = create<Store>()((set, get) => ({
       // Cahier §4.3 : l'ouverture est déclenchée au premier lancement du mois.
       get().ensureMonthOpen()
     } catch {
-      set({ status: 'onboarding', error: { kind: 'read', message: fr.storage.readFailed } })
+      set({ status: 'onboarding', error: { kind: 'read', message: t.storage.readFailed } })
     } finally {
       if (timer !== null) clearTimeout(timer)
     }
@@ -325,6 +346,15 @@ export const useStore = create<Store>()((set, get) => ({
   setPalette(palette) {
     storePalette(palette)
     get().mutate((data) => ({ ...data, settings: { ...data.settings, palette } }))
+  },
+
+  /* Miroir aussi, et c'est celui des trois qui compte le plus : le thème se
+     rattrape en une frame, quand un catalogue mal choisi doit être *téléchargé*
+     avant de pouvoir l'être. Sans lui, une app réglée en anglais s'ouvrirait en
+     français à chaque lancement à froid, le temps d'un aller-retour. */
+  setLocale(locale) {
+    storeLocale(locale)
+    get().mutate((data) => ({ ...data, settings: { ...data.settings, locale } }))
   },
 
   /* Pas de miroir en `localStorage`, contrairement à l'apparence : celle-ci
@@ -395,7 +425,7 @@ export const useStore = create<Store>()((set, get) => ({
     try {
       await persist(get().data)
     } catch {
-      set({ error: { kind: 'write', message: fr.storage.writeFailed } })
+      set({ error: { kind: 'write', message: t.storage.writeFailed } })
     }
   },
 
@@ -455,7 +485,7 @@ export const useStore = create<Store>()((set, get) => ({
         ym: currentYm(),
         filter: ALL_FILTER,
       })
-      toast(fr.storage.otherTabCleared)
+      toast(t.storage.otherTabCleared)
       return
     }
 
@@ -477,6 +507,6 @@ export const useStore = create<Store>()((set, get) => ({
     set({ data: loaded.data, rev: loaded.rev, status: 'ready', error: null })
     // Un toast, pas une modale : arrêter quelqu'un pour lui dire qu'il n'a rien
     // perdu serait pire que le lui dire en passant.
-    toast(fr.storage.otherTab)
+    toast(t.storage.otherTab)
   },
 }))

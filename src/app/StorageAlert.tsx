@@ -1,5 +1,5 @@
 import { today } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { downloadExport } from '@/persistence/transfer'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
@@ -36,21 +36,21 @@ export function StorageAlert() {
   return (
     <div
       role="alert"
-      aria-label={fr.storage.writeFailedLabel}
+      aria-label={t.storage.writeFailedLabel}
       className="tile mb-4 flex flex-col gap-3 border-danger p-4 sm:flex-row sm:items-center"
     >
       <div className="flex min-w-0 flex-1 flex-col">
         <p className="t-body font-semibold text-danger-text">{error.message}</p>
-        <p className="t-label">{fr.storage.writeFailedBody}</p>
+        <p className="t-label">{t.storage.writeFailedBody}</p>
       </div>
       <Button
         className="shrink-0 self-end sm:self-auto"
         onClick={() => {
           downloadExport(data, today())
-          toast(fr.settings.exported)
+          toast(t.settings.exported)
         }}
       >
-        {fr.storage.exportNow}
+        {t.storage.exportNow}
       </Button>
     </div>
   )

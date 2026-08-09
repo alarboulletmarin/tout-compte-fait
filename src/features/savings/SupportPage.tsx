@@ -9,7 +9,7 @@ import {
 } from '@/app/routes'
 import { ZERO } from '@/domain/money'
 import type { SavingSupport } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
@@ -96,9 +96,9 @@ function SupportView({ support }: { support: SavingSupport }) {
           réserve — jamais « valeur actuelle » tout court, qui promettrait une
           précision que ce calcul n'a pas. */}
       <Tile variant="accent" className="gap-2">
-        <Eyebrow>{fr.savings.valueKnown}</Eyebrow>
+        <Eyebrow>{t.savings.valueKnown}</Eyebrow>
         {known === null || value === null ? (
-          <p className="t-body">{fr.savings.valueNone}</p>
+          <p className="t-body">{t.savings.valueNone}</p>
         ) : (
           <>
             <Amount value={known} size="tile" />
@@ -106,14 +106,14 @@ function SupportView({ support }: { support: SavingSupport }) {
             {value.movedSince !== ZERO && value.estimated !== null && (
               <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="t-label min-w-0 flex-1 truncate">{fr.savings.estimated}</span>
+                  <span className="t-label min-w-0 flex-1 truncate">{t.savings.estimated}</span>
                   <Amount value={value.estimated} size="body" className="shrink-0" />
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="t-label min-w-0 flex-1 truncate">{fr.savings.movedSince}</span>
+                  <span className="t-label min-w-0 flex-1 truncate">{t.savings.movedSince}</span>
                   <Amount value={value.movedSince} size="body" signed className="shrink-0" />
                 </div>
-                <p className="t-label mt-1">{fr.savings.estimatedWarning}</p>
+                <p className="t-label mt-1">{t.savings.estimatedWarning}</p>
               </div>
             )}
           </>
@@ -124,7 +124,7 @@ function SupportView({ support }: { support: SavingSupport }) {
             {member?.name ?? ''}
           </span>
           {category !== undefined && <span className="t-label">{category.label}</span>}
-          {support.archived && <span className="t-label">{fr.savings.archived}</span>}
+          {support.archived && <span className="t-label">{t.savings.archived}</span>}
         </div>
       </Tile>
 
@@ -136,7 +136,7 @@ function SupportView({ support }: { support: SavingSupport }) {
             void navigate(valuationNewPath(support.id))
           }}
         >
-          {valuations.length === 0 ? fr.savings.valueFirst : fr.savings.valueUpdate}
+          {valuations.length === 0 ? t.savings.valueFirst : t.savings.valueUpdate}
         </Button>
         <Button
           variant="secondary"
@@ -144,7 +144,7 @@ function SupportView({ support }: { support: SavingSupport }) {
             void navigate(supportEditPath(support.id))
           }}
         >
-          {fr.savings.supportEdit}
+          {t.savings.supportEdit}
         </Button>
       </div>
 
@@ -153,22 +153,22 @@ function SupportView({ support }: { support: SavingSupport }) {
       {/* Le flux du mois, à côté du stock et jamais mêlé à lui : ce sont les
           mêmes `Entry` que celles du tableau de bord, au centime. */}
       <Tile className="gap-3">
-        <Eyebrow>{fr.savings.monthFlows}</Eyebrow>
+        <Eyebrow>{t.savings.monthFlows}</Eyebrow>
         {/* Sans signe sur les deux termes : leur libellé dit déjà le sens, et
             « Reprises +0,00 € » se lirait comme une entrée d'argent un mois où
             il ne s'est rien passé. Le net, lui, le porte — c'est le seul des
             trois qui peut être négatif. */}
         <ul className="flex flex-col gap-1.5">
           <li className="flex items-baseline gap-3">
-            <span className="t-label min-w-0 flex-1 truncate">{fr.savings.contributions}</span>
+            <span className="t-label min-w-0 flex-1 truncate">{t.savings.contributions}</span>
             <Amount value={flows.contributions} size="body" className="shrink-0" />
           </li>
           <li className="flex items-baseline gap-3">
-            <span className="t-label min-w-0 flex-1 truncate">{fr.savings.withdrawals}</span>
+            <span className="t-label min-w-0 flex-1 truncate">{t.savings.withdrawals}</span>
             <Amount value={flows.withdrawals} size="body" className="shrink-0" />
           </li>
           <li className="flex items-baseline gap-3 border-t border-border pt-2">
-            <span className="t-body min-w-0 flex-1 truncate">{fr.savings.net}</span>
+            <span className="t-body min-w-0 flex-1 truncate">{t.savings.net}</span>
             <Amount value={flows.net} size="body" signed className="shrink-0" />
           </li>
         </ul>
@@ -178,13 +178,13 @@ function SupportView({ support }: { support: SavingSupport }) {
           deux, le trait est un dessin, pas une donnée. Elle reste visible quoi
           qu'il arrive — c'est la liste qui se replie, pas ce qu'on vient voir. */}
       <Tile className="gap-3">
-        <Eyebrow>{fr.savings.history}</Eyebrow>
+        <Eyebrow>{t.savings.history}</Eyebrow>
         {valuations.length === 0 ? (
-          <p className="t-label">{fr.savings.historyEmpty}</p>
+          <p className="t-label">{t.savings.historyEmpty}</p>
         ) : (
           <>
             {valuations.length === 1 ? (
-              <p className="t-label">{fr.savings.historyOne}</p>
+              <p className="t-label">{t.savings.historyOne}</p>
             ) : (
               <ValuationChart valuations={valuations} color={color} />
             )}
@@ -213,7 +213,7 @@ function SupportView({ support }: { support: SavingSupport }) {
                   setAllValuations((shown) => !shown)
                 }}
               >
-                {allValuations ? fr.common.less : tpl(fr.savings.historyMore, restValuations)}
+                {allValuations ? t.common.less : tpl(t.savings.historyMore, restValuations)}
               </Button>
             )}
           </>
@@ -223,9 +223,9 @@ function SupportView({ support }: { support: SavingSupport }) {
       {/* Les mouvements — les `Entry` liées, telles qu'elles vivent dans le
           mois. On les ouvre d'ici : c'est le même écran de saisie qu'ailleurs. */}
       <Tile className="gap-3">
-        <Eyebrow>{fr.savings.movements}</Eyebrow>
+        <Eyebrow>{t.savings.movements}</Eyebrow>
         {entries.length === 0 ? (
-          <p className="t-label">{fr.savings.movementsEmpty}</p>
+          <p className="t-label">{t.savings.movementsEmpty}</p>
         ) : (
           <>
             <ul className="flex flex-col">
@@ -253,7 +253,7 @@ function SupportView({ support }: { support: SavingSupport }) {
                   setAllMovements((shown) => !shown)
                 }}
               >
-                {allMovements ? fr.common.less : tpl(fr.savings.movementsMore, restMovements)}
+                {allMovements ? t.common.less : tpl(t.savings.movementsMore, restMovements)}
               </Button>
             )}
           </>

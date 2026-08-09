@@ -1,7 +1,7 @@
 import { type Money, ZERO, sub, sum } from '@/domain/money'
 import { allocate } from '@/domain/split'
 import type { Member } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { Dot } from '@/ui/Dot'
 import { Tile } from '@/ui/Tile'
@@ -21,7 +21,7 @@ export function MembersPreview({ members }: { members: readonly Member[] }) {
   return (
     <Tile className="gap-3">
       {members.length === 0 ? (
-        <p className="t-label">{fr.onboarding.previewMembersEmpty}</p>
+        <p className="t-label">{t.onboarding.previewMembersEmpty}</p>
       ) : (
         <>
           <ul className="flex flex-wrap gap-x-4 gap-y-2">
@@ -32,7 +32,7 @@ export function MembersPreview({ members }: { members: readonly Member[] }) {
               </li>
             ))}
           </ul>
-          <p className="t-label">{fr.onboarding.previewMembers}</p>
+          <p className="t-label">{t.onboarding.previewMembers}</p>
         </>
       )}
     </Tile>
@@ -67,7 +67,7 @@ export function StarterPreview({
   if (filled.every((row) => row.amount === null)) {
     return (
       <Tile className="gap-3">
-        <p className="t-label">{fr.onboarding.previewStarterEmpty}</p>
+        <p className="t-label">{t.onboarding.previewStarterEmpty}</p>
       </Tile>
     )
   }
@@ -94,12 +94,12 @@ export function StarterPreview({
 
   return (
     <Tile className="gap-3">
-      <p className="t-label">{fr.onboarding.previewStarterMonth}</p>
+      <p className="t-label">{t.onboarding.previewStarterMonth}</p>
       <Amount value={balance} size="tile" />
 
       {shares !== null && (
         <>
-          <p className="t-label">{fr.onboarding.previewStarterShare}</p>
+          <p className="t-label">{t.onboarding.previewStarterShare}</p>
           <ul className="flex flex-col gap-1">
             {weighted.map((row, index) => {
               const member = memberName(row.line.memberId)

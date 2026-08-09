@@ -4,7 +4,7 @@ import { SAVINGS_PATH } from '@/app/routes'
 import { type ISODate, today } from '@/domain/date'
 import { ZERO, parseAmount } from '@/domain/money'
 import type { SavingSupport } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate, formatMoney, tpl } from '@/i18n/format'
 import { useActiveSavingSupports, useSupportValue } from '@/store/selectors'
 import { addSavingValuations, undoable } from '@/store/actions'
@@ -54,8 +54,8 @@ export function ValuationsFormPage() {
   if (mine.length === 0) {
     return (
       <div className="flex max-w-xl flex-col gap-5">
-        <PageTitle title={fr.savings.valuesUpdate} onBack={back} />
-        <EmptyState message={fr.savings.supportsEmpty} />
+        <PageTitle title={t.savings.valuesUpdate} onBack={back} />
+        <EmptyState message={t.savings.supportsEmpty} />
       </div>
     )
   }
@@ -94,8 +94,8 @@ function ValuationsForm({
        faire. */
     undoable(
       filled.length === 1
-        ? fr.savings.valueAdded
-        : tpl(fr.savings.valuesAdded, filled.length),
+        ? t.savings.valueAdded
+        : tpl(t.savings.valuesAdded, filled.length),
       () => {
         addSavingValuations(
           filled.map((row) => ({
@@ -111,8 +111,8 @@ function ValuationsForm({
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
-      <PageTitle title={fr.savings.valuesUpdate} onBack={guard.request} />
-      <p className="t-label">{fr.savings.valuesHint}</p>
+      <PageTitle title={t.savings.valuesUpdate} onBack={guard.request} />
+      <p className="t-label">{t.savings.valuesHint}</p>
 
       <form
         id="valuations-form"
@@ -125,7 +125,7 @@ function ValuationsForm({
           {/* Une seule date pour tous : c'est celle du relevé qu'on a sous les
               yeux. Corriger un chiffre à une autre date se fait sur la fiche du
               support, où l'on ne parle que de lui. */}
-          <Field label={fr.savings.valueDate} required hint={fr.savings.valuesDateHint}>
+          <Field label={t.savings.valueDate} required hint={t.savings.valuesDateHint}>
             {(id) => (
               <DateInput
                 id={id}
@@ -165,14 +165,14 @@ function ValuationsForm({
           l'aide au-dessus, qui reste affichée une fois le bouton débloqué. */}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" form="valuations-form" disabled={filled.length === 0}>
-          {fr.common.save}
+          {t.common.save}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
-          {fr.common.cancel}
+          {t.common.cancel}
         </Button>
       </div>
 
-      <p className="t-label">{fr.savings.valueMethod}</p>
+      <p className="t-label">{t.savings.valueMethod}</p>
 
       <ConfirmDialog {...guard.dialog} />
     </div>
@@ -207,15 +207,15 @@ function SupportField({
 
   const last =
     known?.known === null || known === null
-      ? fr.savings.valueNever
+      ? t.savings.valueNever
       : tpl(
-          fr.savings.valuesLast,
+          t.savings.valuesLast,
           formatMoney(known.known, currency),
           formatDate(known.knownOn ?? ''),
         )
   const drift =
     known !== null && known.movedSince !== ZERO && known.estimated !== null
-      ? tpl(fr.savings.valuesDrift, formatMoney(known.estimated, currency))
+      ? tpl(t.savings.valuesDrift, formatMoney(known.estimated, currency))
       : undefined
 
   return (
@@ -223,7 +223,7 @@ function SupportField({
       label={support.label}
       optional
       hint={drift === undefined ? last : `${last} — ${drift}`}
-      {...(error ? { error: fr.savings.valueRequired } : {})}
+      {...(error ? { error: t.savings.valueRequired } : {})}
     >
       {/* « Nouvelle valeur » et non « 0,00 » : sous « Dernier relevé :
           10 631,00 € », un placeholder chiffré se lit comme une valeur déjà
@@ -236,7 +236,7 @@ function SupportField({
           aria-describedby={describedBy}
           value={value}
           invalid={error}
-          placeholder={fr.savings.valueNew}
+          placeholder={t.savings.valueNew}
           autoFocus={autoFocus}
           onChange={(event) => {
             onChange(event.target.value)

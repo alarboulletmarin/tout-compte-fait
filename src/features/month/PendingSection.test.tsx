@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { makeCategory, makeData, makeEntry, makeFamily } from '@/domain/fixtures'
 import { money } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { PendingSection } from './PendingSection'
@@ -64,13 +64,13 @@ describe('« À confirmer » — une tâche, pas un inventaire', () => {
     setUp(planned(20))
     renderSection()
 
-    expect(screen.getByText(tpl(fr.month.pendingMore, 15))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.month.pendingMore, 15))).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: fr.month.pendingShowAll }))
+    await userEvent.click(screen.getByRole('button', { name: t.month.pendingShowAll }))
 
     expect(rows()).toBe(20)
     expect(screen.getByText('Échéance 20')).toBeInTheDocument()
-    expect(screen.queryByText(tpl(fr.month.pendingMore, 15))).not.toBeInTheDocument()
+    expect(screen.queryByText(tpl(t.month.pendingMore, 15))).not.toBeInTheDocument()
   })
 
   /* Cacher une seule ligne derrière un bouton n'économise pas sa hauteur : il
@@ -80,7 +80,7 @@ describe('« À confirmer » — une tâche, pas un inventaire', () => {
     renderSection()
 
     expect(rows()).toBe(6)
-    expect(screen.queryByRole('button', { name: fr.month.pendingShowAll })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.month.pendingShowAll })).not.toBeInTheDocument()
   })
 
   /* Douze boutons « Confirmer » se listent douze fois à l'identique dans les
@@ -90,7 +90,7 @@ describe('« À confirmer » — une tâche, pas un inventaire', () => {
     renderSection()
 
     expect(
-      screen.getByRole('button', { name: tpl(fr.month.confirmEntry, 'Échéance 2') }),
+      screen.getByRole('button', { name: tpl(t.month.confirmEntry, 'Échéance 2') }),
     ).toBeInTheDocument()
   })
 
@@ -107,7 +107,7 @@ describe('« À confirmer » — une tâche, pas un inventaire', () => {
     ])
     renderSection()
 
-    expect(screen.getByText(fr.month.done)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: fr.month.unconfirmAll })).toBeInTheDocument()
+    expect(screen.getByText(t.month.done)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.month.unconfirmAll })).toBeInTheDocument()
   })
 })

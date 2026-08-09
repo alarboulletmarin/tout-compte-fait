@@ -12,7 +12,7 @@ import {
   makeRecurrence,
 } from '@/domain/fixtures'
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MonthPage } from './MonthPage'
 
@@ -56,8 +56,8 @@ describe('MonthPage — l’état vide mène au bon geste', () => {
   it('propose d’abord une récurrence tant qu’il n’y en a aucune', async () => {
     renderEmptyMonth([])
 
-    expect(screen.getByText(fr.month.emptyStart)).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: fr.recurrences.add }))
+    expect(screen.getByText(t.month.emptyStart)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.recurrences.add }))
 
     expect(screen.getByTestId('url')).toHaveTextContent(RECURRENCE_NEW_PATH)
   })
@@ -68,16 +68,16 @@ describe('MonthPage — l’état vide mène au bon geste', () => {
   it('garde les deux portes de saisie à côté', () => {
     renderEmptyMonth([])
 
-    expect(screen.getByRole('button', { name: fr.entry.addOut })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: fr.entry.addIn })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.entry.addOut })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.entry.addIn })).toBeInTheDocument()
   })
 
   it('n’insiste plus dès qu’une récurrence existe', () => {
     renderEmptyMonth([makeRecurrence({ period: { unit: 'month', every: 1, anchorDay: 1 } })])
 
-    expect(screen.getByText(fr.month.empty)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: fr.recurrences.add })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: fr.entry.addOut })).toBeInTheDocument()
+    expect(screen.getByText(t.month.empty)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.recurrences.add })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.entry.addOut })).toBeInTheDocument()
   })
 })
 
@@ -169,9 +169,9 @@ describe('MonthPage — trois étages, dans l’ordre où l’on se les pose', (
   it('pose la situation avant la tâche, et la tâche avant l’analyse', () => {
     renderFullMonth()
 
-    const balance = screen.getByText(fr.dashboard.balance)
-    const pending = screen.getByText(new RegExp(`^${fr.month.toConfirm} · `))
-    const spending = screen.getByText(fr.dashboard.spending)
+    const balance = screen.getByText(t.dashboard.balance)
+    const pending = screen.getByText(new RegExp(`^${t.month.toConfirm} · `))
+    const spending = screen.getByText(t.dashboard.spending)
 
     expect(precedes(balance, pending)).toBe(true)
     expect(precedes(pending, spending)).toBe(true)
@@ -183,12 +183,12 @@ describe('MonthPage — trois étages, dans l’ordre où l’on se les pose', (
   it('renvoie les échéances à venir derrière ce qui demande un geste', () => {
     renderFullMonth()
 
-    const pending = screen.getByText(new RegExp(`^${fr.month.toConfirm} · `))
-    const upcoming = screen.getByText(fr.dashboard.upcoming)
+    const pending = screen.getByText(new RegExp(`^${t.month.toConfirm} · `))
+    const upcoming = screen.getByText(t.dashboard.upcoming)
     /* Par sa bascule d'axe et non par son eyebrow : « Ce mois » se lit aussi au
        coin des deux tuiles de flux, qui nomment la section vers laquelle elles
        font défiler. */
-    const entries = screen.getByRole('radiogroup', { name: fr.month.groupBy })
+    const entries = screen.getByRole('radiogroup', { name: t.month.groupBy })
 
     expect(precedes(pending, upcoming)).toBe(true)
     expect(precedes(upcoming, entries)).toBe(true)
@@ -200,7 +200,7 @@ describe('MonthPage — trois étages, dans l’ordre où l’on se les pose', (
   it('annonce dès le premier étage combien d’opérations restent', () => {
     renderFullMonth()
 
-    expect(screen.getByText(fr.dashboard.monthStatus)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.monthStatus)).toBeInTheDocument()
     expect(screen.getByText('2 / 3')).toBeInTheDocument()
   })
 })

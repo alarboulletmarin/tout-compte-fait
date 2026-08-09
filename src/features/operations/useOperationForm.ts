@@ -12,7 +12,7 @@ import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import { memberRequired } from '@/domain/split'
 import type { Direction, Entry, Recurrence } from '@/domain/types'
 import type { EntryNature } from '@/ui/categoryKinds'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useActiveSavingSupports, useKindOf, useMembers } from '@/store/selectors'
 import { type PeriodDraft, defaultsFrom, kindOf, monthlyDraftFrom, periodOf } from '@/features/recurrences/period'
 
@@ -222,14 +222,14 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
        puis ignoré à l'enregistrement se découvre des semaines plus tard, quand
        la répartition ne se calcule toujours pas. */
     if ((typedAmount || !optionalAmount) && (amount === null || amount <= 0)) {
-      found.amount = fr.entry.amountRequired
+      found.amount = t.entry.amountRequired
     }
-    if (supportMode && draft.savingSupportId === '') found.support = fr.savings.supportRequired
+    if (supportMode && draft.savingSupportId === '') found.support = t.savings.supportRequired
     // En mode support, la catégorie est dérivée : l'exiger poserait deux fois
     // la même question, et son message désignerait un champ qui n'est pas là.
-    if (!supportMode && draft.categoryId === '') found.category = fr.entry.categoryRequired
+    if (!supportMode && draft.categoryId === '') found.category = t.entry.categoryRequired
     if (draft.label.trim() === '') {
-      found.label = draft.recurring ? fr.entry.labelRequiredRecurring : fr.entry.labelRequired
+      found.label = draft.recurring ? t.entry.labelRequiredRecurring : t.entry.labelRequired
     }
     /* Une ligne qui n'entre pas dans les charges communes doit être à quelqu'un :
        sans propriétaire, elle n'apparaîtrait dans le mois de personne — et une
@@ -239,7 +239,7 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
       members.length > 0 &&
       memberRequired(draft.direction, kindOf(draft.categoryId), draft.memberId, draft.shared)
     ) {
-      found.member = draft.recurring ? fr.entry.memberRequiredRecurring : fr.entry.memberRequired
+      found.member = draft.recurring ? t.entry.memberRequiredRecurring : t.entry.memberRequired
     }
     return found
   }, [

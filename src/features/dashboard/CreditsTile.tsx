@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { totalRemaining } from '@/domain/debt'
 import { CREDITS_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useDebtStatuses } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -48,10 +48,10 @@ export function CreditsTile() {
       onClick={() => {
         void navigate(CREDITS_PATH)
       }}
-      label={tpl(fr.dashboard.showCredits, fr.dashboard.credits)}
+      label={tpl(t.dashboard.showCredits, t.dashboard.credits)}
       affordance={{ kind: 'navigate' }}
     >
-      <Eyebrow icon={CreditsIcon}>{fr.dashboard.credits}</Eyebrow>
+      <Eyebrow icon={CreditsIcon}>{t.dashboard.credits}</Eyebrow>
       <div className="flex flex-wrap items-baseline gap-x-2">
         {/* Sans les centimes, seul chiffre de la grille dans ce cas — et pour
             une raison mesurée : un capital restant dû est le montant le plus
@@ -61,13 +61,13 @@ export function CreditsTile() {
             changent rien à un capital qu'on met vingt ans à rendre. Ils se
             lisent entiers sur l'écran au bout du chevron. */}
         <Amount value={remaining} size="tile-fit" withCents={false} />
-        <span className="t-label tile-hint">{fr.dashboard.creditsRemaining}</span>
+        <span className="t-label tile-hint">{t.dashboard.creditsRemaining}</span>
         <span aria-hidden="true" className="t-label max-lg:hidden">
           ·
         </span>
         <span className="t-label max-lg:sr-only">
           {tpl(
-            running > 1 ? fr.dashboard.creditsRunningMany : fr.dashboard.creditsRunningOne,
+            running > 1 ? t.dashboard.creditsRunningMany : t.dashboard.creditsRunningOne,
             running,
           )}
         </span>

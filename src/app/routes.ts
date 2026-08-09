@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   CreditsIcon,
   HistoryIcon,
@@ -21,7 +21,7 @@ export const RECURRENCES_PATH = '/recurrences'
    est déclarée une fois — la barre d'onglets et la colonne latérale la lisent
    toutes les deux, et deux littéraux auraient fini par diverger. */
 export const MORE_PATH = '/plus'
-const MORE_ROUTE: RouteDef = { path: MORE_PATH, label: fr.nav.more, icon: NavMore }
+const moreRoute = (): RouteDef => ({ path: MORE_PATH, label: t.nav.more, icon: NavMore })
 /* Segment fixe : React Router le classe avant `/recurrences/:id`, une
    récurrence ne peut donc pas éclipser le formulaire de création. */
 export const RECURRENCE_NEW_PATH = `${RECURRENCES_PATH}/nouveau`
@@ -52,15 +52,31 @@ export const recurrenceEditPath = (id: string): string => `${RECURRENCES_PATH}/$
  *
  * Chaque destination porte son glyphe ici, en un seul endroit, pour que les
  * deux navigations ne puissent pas diverger.
+ *
+ * **Une fonction et non une table**, comme les quatre listes de libellés qui
+ * suivent : une table construite à l'évaluation du module figerait la langue du
+ * démarrage, et changer de langue laisserait la barre d'onglets en français
+ * sous une app passée à l'anglais. Elle est appelée au rendu, où `t` désigne
+ * toujours le catalogue actif (`i18n/strings.ts`).
  */
-export const NAV_ROUTES: RouteDef[] = [
-  { path: '/', label: fr.nav.month, icon: NavMonth },
-  { path: '/calendrier', label: fr.nav.calendar, icon: NavCalendar },
-  { path: '/historique', label: fr.nav.history, icon: HistoryIcon },
-  MORE_ROUTE,
-]
+export function navRoutes(): RouteDef[] {
+  return [
+    { path: '/', label: t.nav.month, icon: NavMonth },
+    { path: '/calendrier', label: t.nav.calendar, icon: NavCalendar },
+    { path: '/historique', label: t.nav.history, icon: HistoryIcon },
+    moreRoute(),
+  ]
+}
 
-export const STYLEGUIDE_ROUTE = { path: '/styleguide', label: fr.nav.styleguide }
+/* Le chemin se déclare à part de la destination : le bandeau de confidentialité
+   le compare sans avoir à nommer l'écran, et une comparaison de chemins n'a que
+   faire de la langue. */
+export const STYLEGUIDE_PATH = '/styleguide'
+
+export const styleguideRoute = (): { path: string; label: string } => ({
+  path: STYLEGUIDE_PATH,
+  label: t.nav.styleguide,
+})
 
 /* La présentation et « à propos » ne parlent pas d'un foyer, elles parlent de
    l'app : elles répondent donc dans les deux états, avant comme après sa
@@ -81,11 +97,13 @@ export const LEGAL_NOTICE_PATH = '/mentions-legales'
 export const PRIVACY_PATH = '/confidentialite'
 export const TERMS_PATH = '/conditions'
 
-export const LEGAL_ROUTES: { path: string; label: string }[] = [
-  { path: LEGAL_NOTICE_PATH, label: fr.legal.notice },
-  { path: PRIVACY_PATH, label: fr.legal.privacy },
-  { path: TERMS_PATH, label: fr.legal.terms },
-]
+export function legalRoutes(): { path: string; label: string }[] {
+  return [
+    { path: LEGAL_NOTICE_PATH, label: t.legal.notice },
+    { path: PRIVACY_PATH, label: t.legal.privacy },
+    { path: TERMS_PATH, label: t.legal.terms },
+  ]
+}
 
 /* Saisies et fiches sont des écrans pleins, pas des feuilles : elles ont donc
    une URL. Aucune ne figure dans la navigation, on n'y va que par une action. */
@@ -294,12 +312,14 @@ export function legacySettingsTarget(pathname: string): string {
  * Déclaré ici et non en tête du fichier : un `const` ne remonte pas, et cette
  * table lit quatre chemins déclarés au-dessus.
  */
-export const MANAGE_ROUTES: RouteDef[] = [
-  { path: RECURRENCES_PATH, label: fr.nav.subscriptions, icon: RecurrencesIcon },
-  { path: SAVINGS_PATH, label: fr.nav.savings, icon: SavingsIcon },
-  { path: SPLIT_PATH, label: fr.nav.split, icon: SplitIcon },
-  { path: CREDITS_PATH, label: fr.nav.credits, icon: CreditsIcon },
-]
+export function manageRoutes(): RouteDef[] {
+  return [
+    { path: RECURRENCES_PATH, label: t.nav.subscriptions, icon: RecurrencesIcon },
+    { path: SAVINGS_PATH, label: t.nav.savings, icon: SavingsIcon },
+    { path: SPLIT_PATH, label: t.nav.split, icon: SplitIcon },
+    { path: CREDITS_PATH, label: t.nav.credits, icon: CreditsIcon },
+  ]
+}
 
 export type NavGroup = { title?: string; routes: RouteDef[] }
 
@@ -332,11 +352,13 @@ export type NavGroup = { title?: string; routes: RouteDef[] }
  * elle le montre encore, et ce qui vivait derrière « Réglages » vit derrière
  * « Plus », au même rang qu'avant.
  */
-export const SIDEBAR_GROUPS: NavGroup[] = [
-  { routes: NAV_ROUTES.filter((route) => route.path !== MORE_PATH) },
-  { title: fr.nav.manage, routes: MANAGE_ROUTES },
-  { routes: [MORE_ROUTE] },
-]
+export function sidebarGroups(): NavGroup[] {
+  return [
+    { routes: navRoutes().filter((route) => route.path !== MORE_PATH) },
+    { title: t.nav.manage, routes: manageRoutes() },
+    { routes: [moreRoute()] },
+  ]
+}
 
 /* Ce que « Plus » range et que la colonne ne déplie pas : les cinq vues dont il
    est la seule porte, quelle que soit la largeur, plus le simulateur. Son lien doit rester allumé

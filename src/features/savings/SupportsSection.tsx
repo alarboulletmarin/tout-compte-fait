@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { SUPPORT_NEW_PATH, VALUATIONS_PATH, supportPath } from '@/app/routes'
 import { ZERO } from '@/domain/money'
 import { latestValuation } from '@/domain/saving'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { NO_VALUE, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
@@ -62,7 +62,7 @@ export function SupportsSection() {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Eyebrow>{fr.savings.supports}</Eyebrow>
+        <Eyebrow>{t.savings.supports}</Eyebrow>
         {/* Relever ses comptes sans ouvrir quatre fiches. C'est le geste réel —
             un relevé de banque donne tous les chiffres en même temps, donc on
             met tout à jour, on ne met pas à jour le Livret A. Corriger un seul
@@ -83,7 +83,7 @@ export function SupportsSection() {
               void navigate(VALUATIONS_PATH)
             }}
           >
-            {fr.savings.valuesUpdate}
+            {t.savings.valuesUpdate}
           </Button>
         )}
       </div>
@@ -93,7 +93,7 @@ export function SupportsSection() {
           chose à écrire — le reste du temps, la section se tait. */}
       {due.length > 0 && (
         <span className="t-label">
-          {due.length === 1 ? fr.savings.valuesDueOne : tpl(fr.savings.valuesDue, due.length)}
+          {due.length === 1 ? t.savings.valuesDueOne : tpl(t.savings.valuesDue, due.length)}
         </span>
       )}
 
@@ -101,7 +101,7 @@ export function SupportsSection() {
           disparaissait quand la personne n'avait aucun support, y compris quand
           des versements du mois disaient qu'elle en aurait besoin. */}
       {shown.length === 0 ? (
-        <p className="t-label">{fr.savings.supportsEmpty}</p>
+        <p className="t-label">{t.savings.supportsEmpty}</p>
       ) : (
         <RowGroup>
           {shown.map((support) => {
@@ -145,7 +145,7 @@ export function SupportsSection() {
         }}
       >
         <Plus size={18} />
-        {fr.savings.supportAdd}
+        {t.savings.supportAdd}
       </Button>
     </section>
   )

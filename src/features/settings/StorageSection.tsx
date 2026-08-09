@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ISODate } from '@/domain/date'
 import type { Data } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatBytes, formatDate, tpl } from '@/i18n/format'
 import { type StorageUsage, estimateStorage } from '@/lib/storage'
 import { type BackupEntry, listBackups, readBackup } from '@/persistence/backups'
@@ -80,10 +80,10 @@ export function StorageSection() {
        pas prise. */
     toast(
       answer === true
-        ? fr.storage.persistGranted
+        ? t.storage.persistGranted
         : answer === false
-          ? fr.storage.persistRefused
-          : fr.storage.persistSilent,
+          ? t.storage.persistRefused
+          : t.storage.persistSilent,
     )
     refresh()
   }
@@ -108,32 +108,32 @@ export function StorageSection() {
             chose qu'on vient vérifier ici. L'explication suit, à sa place. */}
         <p className="t-body">
           {durable === true
-            ? fr.storage.stateKept
+            ? t.storage.stateKept
             : durable === false
-              ? fr.storage.stateFragile
-              : fr.storage.stateUnknown}
+              ? t.storage.stateFragile
+              : t.storage.stateUnknown}
         </p>
         <p className="t-label">
           {durable === true
-            ? fr.storage.persisted
+            ? t.storage.persisted
             : durable === false
-              ? fr.storage.notPersisted
-              : fr.storage.persistUnknown}
+              ? t.storage.notPersisted
+              : t.storage.persistUnknown}
         </p>
         {/* Le fait d'avoir déjà demandé, quand on l'a fait et qu'on a été
             refusé : sans lui, le bouton ci-dessous ressemble à une case qu'on
             aurait oublié de cocher. */}
         {durable === false && asked && (
-          <p className="t-label">{fr.storage.persistAsked}</p>
+          <p className="t-label">{t.storage.persistAsked}</p>
         )}
         <p className="t-label tnum">
           {state.usage === null
-            ? fr.storage.usageUnknown
-            : tpl(fr.storage.usage, formatBytes(state.usage.usage), formatBytes(state.usage.quota))}
+            ? t.storage.usageUnknown
+            : tpl(t.storage.usage, formatBytes(state.usage.usage), formatBytes(state.usage.quota))}
         </p>
         {durable !== true && (
           <>
-            <p className="t-label">{fr.storage.installHint}</p>
+            <p className="t-label">{t.storage.installHint}</p>
             <Button
               variant="secondary"
               className="w-fit"
@@ -141,17 +141,17 @@ export function StorageSection() {
                 void ask()
               }}
             >
-              {fr.storage.persistAsk}
+              {t.storage.persistAsk}
             </Button>
           </>
         )}
       </Tile>
 
       <Tile className="gap-3">
-        <Eyebrow icon={DeviceIcon}>{fr.storage.backups}</Eyebrow>
-        <p className="t-label">{fr.storage.backupsHint}</p>
+        <Eyebrow icon={DeviceIcon}>{t.storage.backups}</Eyebrow>
+        <p className="t-label">{t.storage.backupsHint}</p>
         {state.backups.length === 0 ? (
-          <p className="t-label">{fr.storage.backupsEmpty}</p>
+          <p className="t-label">{t.storage.backupsEmpty}</p>
         ) : (
           <ul className="flex flex-col">
             {state.backups.map((entry) => (
@@ -162,7 +162,7 @@ export function StorageSection() {
                 <span className="flex min-w-0 flex-col">
                   <span className="t-body tnum">{formatDate(entry.on)}</span>
                   <span className="t-axis">
-                    {tpl(fr.storage.backupContents, entry.entries, entry.recurrences)}
+                    {tpl(t.storage.backupContents, entry.entries, entry.recurrences)}
                   </span>
                 </span>
                 <Button
@@ -172,7 +172,7 @@ export function StorageSection() {
                     void stage(entry)
                   }}
                 >
-                  {fr.storage.backupRestore}
+                  {t.storage.backupRestore}
                 </Button>
               </li>
             ))}
@@ -183,24 +183,24 @@ export function StorageSection() {
       {/* Deux pas : une restauration remplace tout, exactement comme un import. */}
       <ConfirmDialog
         open={pending !== null}
-        title={fr.storage.backupRestore}
+        title={t.storage.backupRestore}
         steps={[
           {
             question:
               pending === null
                 ? ''
                 : tpl(
-                    fr.storage.backupConfirm1,
+                    t.storage.backupConfirm1,
                     tpl(
-                      fr.storage.backupContents,
+                      t.storage.backupContents,
                       pending.entry.entries,
                       pending.entry.recurrences,
                     ),
                     formatDate(pending.on),
                   ),
-            action: fr.common.confirm,
+            action: t.common.confirm,
           },
-          { question: fr.storage.backupConfirm2, action: fr.storage.backupRestore },
+          { question: t.storage.backupConfirm2, action: t.storage.backupRestore },
         ]}
         onCancel={() => {
           setPending(null)
@@ -209,7 +209,7 @@ export function StorageSection() {
           if (pending === null) return
           void replaceData(pending.data).then(() => {
             setPending(null)
-            toast(fr.storage.backupRestored)
+            toast(t.storage.backupRestored)
             refresh()
           })
         }}

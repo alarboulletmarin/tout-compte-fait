@@ -7,7 +7,7 @@ import { sub, sum } from '@/domain/money'
 import { totalToPay } from '@/domain/split'
 import type { MemberShare } from '@/domain/split'
 import type { Entry, Member } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   formatDayMonthShort,
   formatMoney,
@@ -15,6 +15,7 @@ import {
   formatSignedMoney,
   formatYearMonth,
   de,
+  enumerate,
   tpl,
 } from '@/i18n/format'
 import {
@@ -44,12 +45,6 @@ import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
 const SETTLEMENT_KEY = 'settlement'
 const DETAIL_KEY = 'detail'
 
-/** « Alix », « Alix et Camille », « Alix, Camille et Sacha ». */
-function enumerate(names: readonly string[]): string {
-  if (names.length <= 1) return names[0] ?? ''
-  return `${names.slice(0, -1).join(', ')} et ${names.at(-1) ?? ''}`
-}
-
 
 /** Ce qui manque pour répartir : la phrase, le geste, et où il mène. */
 type Missing = { message: string; hint: string; actionLabel: string; path: string }
@@ -76,9 +71,9 @@ function missingIncomes(unknown: readonly Member[], unpriced: number, zero: numb
   // lui qui ne dit rien.
   if (zero > 0 && zero === names.length) {
     return {
-      message: tpl(names.length === 1 ? fr.split.zeroOne : fr.split.zeroMany, who),
-      hint: fr.split.zeroHint,
-      actionLabel: fr.split.goToSubscriptions,
+      message: tpl(names.length === 1 ? t.split.zeroOne : t.split.zeroMany, who),
+      hint: t.split.zeroHint,
+      actionLabel: t.split.goToSubscriptions,
       path: RECURRENCES_PATH,
     }
   }
@@ -87,9 +82,9 @@ function missingIncomes(unknown: readonly Member[], unpriced: number, zero: numb
   // récurrences sont là, il n'y a qu'un montant à poser.
   if (unpriced > 0 && unpriced + zero === names.length) {
     return {
-      message: tpl(names.length === 1 ? fr.split.unpricedOne : fr.split.unpricedMany, who),
-      hint: fr.split.unpricedHint,
-      actionLabel: fr.split.goToSubscriptions,
+      message: tpl(names.length === 1 ? t.split.unpricedOne : t.split.unpricedMany, who),
+      hint: t.split.unpricedHint,
+      actionLabel: t.split.goToSubscriptions,
       path: RECURRENCES_PATH,
     }
   }
@@ -97,10 +92,10 @@ function missingIncomes(unknown: readonly Member[], unpriced: number, zero: numb
   return {
     message:
       names.length === 0
-        ? fr.split.missingNone
-        : tpl(names.length === 1 ? fr.split.missingOne : fr.split.missingMany, who),
-    hint: fr.split.missingHint,
-    actionLabel: fr.split.goToIncome,
+        ? t.split.missingNone
+        : tpl(names.length === 1 ? t.split.missingOne : t.split.missingMany, who),
+    hint: t.split.missingHint,
+    actionLabel: t.split.goToIncome,
     path: RECURRENCE_NEW_PATH,
   }
 }
@@ -134,7 +129,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
           quand c'est une absence. */}
       {share.income > 0 && (
         <div className="flex items-baseline justify-between gap-3">
-          <span className="t-axis min-w-0">{fr.split.income}</span>
+          <span className="t-axis min-w-0">{t.split.income}</span>
           <span className="t-axis tnum shrink-0">{formatMoney(share.income, currency, false)}</span>
         </div>
       )}
@@ -155,7 +150,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
               au centime, et l'annoncer ici sous un autre nom faisait lire deux
               nombres sans rapport là où il n'y en a qu'un. */}
           <div className="flex items-baseline justify-between gap-3">
-            <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
+            <span className="t-axis min-w-0">{t.split.settlementShare}</span>
             <span className="t-axis tnum shrink-0">
               {formatMoney(sub(share.due, share.refund), currency)}
             </span>
@@ -165,7 +160,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
               qu'on verse et ce qu'on paie, et il n'avait pas de ligne. */}
           {share.refund !== 0 && (
             <div className="flex items-baseline justify-between gap-3">
-              <span className="t-axis min-w-0">{fr.split.settlementRefund}</span>
+              <span className="t-axis min-w-0">{t.split.settlementRefund}</span>
               <span className="t-axis tnum shrink-0">{formatMoney(share.refund, currency)}</span>
             </div>
           )}
@@ -181,7 +176,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
                   format d'être choisi pour le libellé, jamais au libellé d'être
                   raboté. */}
               <span className="t-axis min-w-0">
-                {tpl(fr.split.settlement, de(formatYearMonth(previousYm)))}
+                {tpl(t.split.settlement, de(formatYearMonth(previousYm)))}
               </span>
               {/* Signé, et sans `direction` : ce n'est pas un flux dont on
                   lirait la valeur absolue, c'est un écart dont le signe est
@@ -196,7 +191,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
       )}
 
       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
-        <span className="t-label">{fr.split.due}</span>
+        <span className="t-label">{t.split.due}</span>
         {/* Une sortie tant que c'en est une, et un solde sinon : un mois sans
             charge commune ne laisse que le report, et celui qui a tout avancé
             le mois d'avant reçoit alors au lieu de verser. `direction`
@@ -236,7 +231,7 @@ export function SplitPage() {
   /* Nommé une fois, rendu à deux endroits : il ouvre la carte des parts quand
      il y en a, et tient seul le mois sans charge commune — où il n'y a pas de
      carte pour le porter. */
-  const subtitle = members.length === 1 ? fr.split.subtitleSolo : fr.split.subtitle
+  const subtitle = members.length === 1 ? t.split.subtitleSolo : t.split.subtitle
 
   /* Les clés disent ce qui est **rendu**, pas ce que l'écran sait faire : la
      section du report n'existe que sur un mois qui en porte un. Figées à deux,
@@ -254,7 +249,7 @@ export function SplitPage() {
   const metaOf = (entry: Entry): string => {
     const day = formatDayMonthShort(entry.date)
     const name = entry.memberId === undefined ? undefined : memberMap.get(entry.memberId)?.name
-    return name === undefined ? day : `${day} · ${tpl(fr.split.advancedBy, name)}`
+    return name === undefined ? day : `${day} · ${tpl(t.split.advancedBy, name)}`
   }
 
   /* Droit sur « Personnes », et non sur la page de réglages : c'est là que les
@@ -270,13 +265,13 @@ export function SplitPage() {
   if (members.length === 0) {
     return (
       <>
-        <PageTitle title={fr.split.title} />
+        <PageTitle title={t.split.title} />
         <EmptyState
-          message={fr.split.soloTitle}
-          actionLabel={fr.split.goToSettings}
+          message={t.split.soloTitle}
+          actionLabel={t.split.goToSettings}
           onAction={goToSettings}
         >
-          <p className="t-label max-w-xs">{fr.split.soloHint}</p>
+          <p className="t-label max-w-xs">{t.split.soloHint}</p>
         </EmptyState>
       </>
     )
@@ -290,7 +285,7 @@ export function SplitPage() {
     )
     return (
       <>
-        <PageTitle title={fr.split.title} />
+        <PageTitle title={t.split.title} />
         {/* Le mois compte jusque dans cette impasse : les revenus se lisent sur
             le mois affiché, et une récurrence qui démarre le mois prochain
             laisse celui-ci sans répartition. Sans navigation, il fallait
@@ -308,8 +303,8 @@ export function SplitPage() {
             <p className="t-label max-w-sm">
               {tpl(
                 unassigned.length > 1
-                  ? fr.settings.incomeUnassignedMany
-                  : fr.settings.incomeUnassignedOne,
+                  ? t.settings.incomeUnassignedMany
+                  : t.settings.incomeUnassignedOne,
                 unassigned.map((r) => r.label).join(', '),
               )}
             </p>
@@ -321,7 +316,7 @@ export function SplitPage() {
 
   return (
     <>
-      <PageTitle title={fr.split.title} />
+      <PageTitle title={t.split.title} />
       {/* L'écran lit `ym` du store — les charges communes, les revenus et le
           report du mois précédent en dépendent tous — et n'offrait aucun moyen
           d'en changer : vérifier la répartition de juillet imposait de repasser
@@ -332,15 +327,15 @@ export function SplitPage() {
 
       <div className="flex max-w-3xl flex-col gap-4">
         <Tile variant="accent">
-          <Eyebrow icon={SplitIcon}>{fr.split.total}</Eyebrow>
+          <Eyebrow icon={SplitIcon}>{t.split.total}</Eyebrow>
           <Amount value={total} size="tile" className="mt-3" />
-          <span className="t-label mt-1">{fr.split.totalHint}</span>
+          <span className="t-label mt-1">{t.split.totalHint}</span>
         </Tile>
 
         {total <= 0 ? (
           <>
             <p className="t-label">{subtitle}</p>
-            <p className="t-label">{fr.split.nothing}</p>
+            <p className="t-label">{t.split.nothing}</p>
           </>
         ) : (
           <>
@@ -370,13 +365,13 @@ export function SplitPage() {
               </ul>
 
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
-                <span className="t-body">{fr.split.checkTotal}</span>
+                <span className="t-body">{t.split.checkTotal}</span>
                 {/* Ce que chacun verse, report compris : les régularisations
                     s'annulent d'un membre à l'autre, et la vérification reste
                     donc vraie au centime — c'est ce qu'elle sert à montrer. */}
                 <Amount value={totalToPay(shares)} size="body" direction="out" />
               </div>
-              <p className="t-label">{fr.split.checkHint}</p>
+              <p className="t-label">{t.split.checkHint}</p>
             </Tile>
 
             {/* Le geste des trois autres écrans à listes repliables, au même
@@ -390,7 +385,7 @@ export function SplitPage() {
                 l'écran un élément qu'il n'a pas. */}
             <div className="flex justify-end">
               <Button size="sm" variant="ghost" onClick={disclosure.toggleAll}>
-                {disclosure.anyOpen ? fr.split.collapseAll : fr.split.expandAll}
+                {disclosure.anyOpen ? t.split.collapseAll : t.split.expandAll}
               </Button>
             </div>
 
@@ -407,11 +402,11 @@ export function SplitPage() {
                   title={
                     <span className="flex min-w-0 items-baseline gap-2">
                       <span className="t-body truncate">
-                        {tpl(fr.split.settlementDetail, formatYearMonth(previousYm))}
+                        {tpl(t.split.settlementDetail, formatYearMonth(previousYm))}
                       </span>
                       <span className="t-axis shrink-0">
                         {tpl(
-                          advanced.length > 1 ? fr.split.detailCount : fr.split.detailCountOne,
+                          advanced.length > 1 ? t.split.detailCount : t.split.detailCountOne,
                           advanced.length,
                         )}
                       </span>
@@ -437,8 +432,8 @@ export function SplitPage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="t-label mt-2">{fr.split.settlementHint}</p>
-                  <p className="t-label">{fr.split.settlementNotACost}</p>
+                  <p className="t-label mt-2">{t.split.settlementHint}</p>
+                  <p className="t-label">{t.split.settlementNotACost}</p>
                 </Disclosure>
               </Tile>
             )}
@@ -453,10 +448,10 @@ export function SplitPage() {
                 }}
                 title={
                   <span className="flex min-w-0 items-baseline gap-2">
-                    <span className="t-body truncate">{fr.split.detail}</span>
+                    <span className="t-body truncate">{t.split.detail}</span>
                     <span className="t-axis shrink-0">
                       {tpl(
-                        entries.length > 1 ? fr.split.detailCount : fr.split.detailCountOne,
+                        entries.length > 1 ? t.split.detailCount : t.split.detailCountOne,
                         entries.length,
                       )}
                     </span>
@@ -484,20 +479,20 @@ export function SplitPage() {
         )}
 
         <Tile className="gap-2">
-          <Eyebrow>{fr.split.method}</Eyebrow>
-          <p className="t-body mt-1">{fr.split.methodFormula}</p>
-          <p className="t-label">{fr.split.methodIncome}</p>
-          <p className="t-label">{fr.split.methodVariable}</p>
+          <Eyebrow>{t.split.method}</Eyebrow>
+          <p className="t-body mt-1">{t.split.methodFormula}</p>
+          <p className="t-label">{t.split.methodIncome}</p>
+          <p className="t-label">{t.split.methodVariable}</p>
           <ul className="flex list-disc flex-col gap-1 pl-5">
-            <li className="t-label">{fr.split.methodIncluded}</li>
-            <li className="t-label">{fr.split.methodFlagged}</li>
+            <li className="t-label">{t.split.methodIncluded}</li>
+            <li className="t-label">{t.split.methodFlagged}</li>
           </ul>
-          <p className="t-label">{fr.split.methodExcluded}</p>
+          <p className="t-label">{t.split.methodExcluded}</p>
           {/* L'exception, juste après la règle qu'elle contredit — et non dans
               la liste de ce qui entre : c'est la seule ligne du pot qu'on ne
               peut pas déduire des deux puces au-dessus, et la seule qui
               explique qu'un virement dépasse ce que le mois a coûté. */}
-          <p className="t-label">{fr.split.methodAdvance}</p>
+          <p className="t-label">{t.split.methodAdvance}</p>
         </Tile>
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>

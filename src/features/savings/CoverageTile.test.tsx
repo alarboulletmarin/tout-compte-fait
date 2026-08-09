@@ -29,7 +29,7 @@ import {
   makeSavingValuation,
 } from '@/domain/fixtures'
 import type { SavingPace } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDecimal, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { ScreenTitleProvider } from '@/ui/ScreenTitleProvider'
@@ -114,8 +114,8 @@ describe('combien de temps le capital tient', () => {
     seed()
     open()
 
-    expect(screen.getByText(tpl(fr.savings.coverageValue, formatDecimal(10)))).toBeInTheDocument()
-    expect(screen.getByText(fr.savings.coverageHint)).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.coverageValue, formatDecimal(10)))).toBeInTheDocument()
+    expect(screen.getByText(t.savings.coverageHint)).toBeInTheDocument()
   })
 
   /* Un quotient sans dénominateur ne vaut pas zéro : il ne veut rien dire. On
@@ -124,8 +124,8 @@ describe('combien de temps le capital tient', () => {
     seed({ months: 0 })
     open()
 
-    expect(screen.getByText(fr.savings.coverageNoMonth)).toBeInTheDocument()
-    expect(screen.queryByText(fr.savings.coverageHint)).not.toBeInTheDocument()
+    expect(screen.getByText(t.savings.coverageNoMonth)).toBeInTheDocument()
+    expect(screen.queryByText(t.savings.coverageHint)).not.toBeInTheDocument()
   })
 
   /* Sans relevé, il n'y a pas de numérateur — et la tuile Capital dit déjà
@@ -137,8 +137,8 @@ describe('combien de temps le capital tient', () => {
     })
     open()
 
-    expect(screen.queryByText(fr.savings.coverage)).not.toBeInTheDocument()
-    expect(screen.getByText(fr.savings.totalNone)).toBeInTheDocument()
+    expect(screen.queryByText(t.savings.coverage)).not.toBeInTheDocument()
+    expect(screen.getByText(t.savings.totalNone)).toBeInTheDocument()
   })
 
   /* Trois mois vécus et douze ne disent pas la même chose du même chiffre :
@@ -147,7 +147,7 @@ describe('combien de temps le capital tient', () => {
     seed({ months: 3 })
     open()
 
-    expect(screen.getByText(tpl(fr.savings.coverageOver, 3))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.savings.coverageOver, 3))).toBeInTheDocument()
   })
 })
 
@@ -159,8 +159,8 @@ describe('l’écran ne réclame un relevé qu’à la cadence du support', () =
     seed({ valuedOn: dayIn(6, 8) })
     open()
 
-    expect(screen.queryByText(fr.savings.valuesDueOne)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: fr.savings.valuesUpdate })).toBeInTheDocument()
+    expect(screen.queryByText(t.savings.valuesDueOne)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.savings.valuesUpdate })).toBeInTheDocument()
   })
 
   /* Le même relevé, le même jour, sur un support que le marché refait : là, il
@@ -169,7 +169,7 @@ describe('l’écran ne réclame un relevé qu’à la cadence du support', () =
     seed({ valuedOn: dayIn(6, 8), pace: 'quarterly' })
     open()
 
-    expect(screen.getByText(fr.savings.valuesDueOne)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.valuesDueOne)).toBeInTheDocument()
   })
 
   it('réclame un support jamais relevé', () => {
@@ -177,7 +177,7 @@ describe('l’écran ne réclame un relevé qu’à la cadence du support', () =
     useStore.setState({ data: { ...useStore.getState().data, savingValuations: [] } })
     open()
 
-    expect(screen.getByText(fr.savings.valuesDueOne)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.valuesDueOne)).toBeInTheDocument()
   })
 })
 
@@ -191,7 +191,7 @@ describe('ce que l’année a accumulé', () => {
     seed()
     open()
 
-    expect(await screen.findByText(fr.savings.years)).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: fr.savings.yearsCumulative })).toBeInTheDocument()
+    expect(await screen.findByText(t.savings.years)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: t.savings.yearsCumulative })).toBeInTheDocument()
   })
 })

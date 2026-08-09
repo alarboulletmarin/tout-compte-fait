@@ -30,7 +30,7 @@ import {
   legacySettingsTarget,
 } from '@/app/routes'
 import { makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { CategoriesPage } from './CategoriesPage'
@@ -48,7 +48,7 @@ function open(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path={MORE_PATH} element={<h1>{fr.nav.more}</h1>} />
+        <Route path={MORE_PATH} element={<h1>{t.nav.more}</h1>} />
         <Route path={APPEARANCE_PATH} element={<AppearancePage />} />
         <Route path={PEOPLE_PATH} element={<PeoplePage />} />
         <Route path={MEMBER_NEW_PATH} element={<MemberPage />} />
@@ -93,8 +93,8 @@ describe('le retour des cinq vues', () => {
     const user = userEvent.setup()
     open(path)
 
-    await user.click(screen.getByRole('button', { name: fr.common.back }))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.nav.more)
+    await user.click(screen.getByRole('button', { name: t.common.back }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.nav.more)
   })
 })
 
@@ -105,11 +105,11 @@ describe('l’apparence', () => {
     const user = userEvent.setup()
     open(APPEARANCE_PATH)
 
-    expect(screen.getByRole('radiogroup', { name: fr.theme.label })).toBeInTheDocument()
-    const palettes = screen.getByRole('group', { name: fr.appearance.paletteLabel })
+    expect(screen.getByRole('radiogroup', { name: t.theme.label })).toBeInTheDocument()
+    const palettes = screen.getByRole('group', { name: t.appearance.paletteLabel })
     expect(within(palettes).getAllByRole('radio')).toHaveLength(6)
 
-    await user.click(screen.getByRole('radio', { name: new RegExp(fr.palettes.vive) }))
+    await user.click(screen.getByRole('radio', { name: new RegExp(t.palettes.vive) }))
     expect(useStore.getState().data.settings.palette).toBe('vive')
   })
 
@@ -121,7 +121,7 @@ describe('l’apparence', () => {
     const before = useStore.getState().data.categories.map((c) => c.color)
     open(APPEARANCE_PATH)
 
-    await user.click(screen.getByRole('radio', { name: new RegExp(fr.palettes.contrastee) }))
+    await user.click(screen.getByRole('radio', { name: new RegExp(t.palettes.contrastee) }))
     expect(useStore.getState().data.categories.map((c) => c.color)).toEqual(before)
     expect(useStore.getState().data.settings.theme).toBe('system')
   })
@@ -132,7 +132,7 @@ describe('le catalogue', () => {
     const user = userEvent.setup()
     open(CATEGORIES_PATH)
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.settings.categories)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.settings.categories)
 
     await user.click(screen.getByRole('link', { name: /Transport/ }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Transport')
@@ -140,8 +140,8 @@ describe('le catalogue', () => {
     // Les catégories des autres familles restent où elles sont.
     expect(screen.queryByDisplayValue('Courses')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: fr.common.back }))
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.settings.categories)
+    await user.click(screen.getByRole('button', { name: t.common.back }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.settings.categories)
   })
 
   /* La recherche existait déjà ; ce qu'elle doit garder, c'est de retrouver une
@@ -150,7 +150,7 @@ describe('le catalogue', () => {
     const user = userEvent.setup()
     open(CATEGORIES_PATH)
 
-    await user.type(screen.getByRole('searchbox', { name: fr.settings.categorySearch }), 'carbu')
+    await user.type(screen.getByRole('searchbox', { name: t.settings.categorySearch }), 'carbu')
 
     const result = screen.getByRole('link', { name: /Carburant/ })
     expect(result).toHaveTextContent('Transport')
@@ -164,9 +164,9 @@ describe('le catalogue', () => {
     const user = userEvent.setup()
     open(CATEGORIES_PATH)
 
-    await user.type(screen.getByRole('searchbox', { name: fr.settings.categorySearch }), 'zzz')
+    await user.type(screen.getByRole('searchbox', { name: t.settings.categorySearch }), 'zzz')
 
-    expect(screen.getByText(tpl(fr.settings.categorySearchEmpty, 'zzz'))).toBeInTheDocument()
+    expect(screen.getByText(tpl(t.settings.categorySearchEmpty, 'zzz'))).toBeInTheDocument()
   })
 
   /* Le formulaire de création n'attend plus ouvert sous la liste : on le
@@ -175,9 +175,9 @@ describe('le catalogue', () => {
     const user = userEvent.setup()
     open(CATEGORIES_PATH)
 
-    await user.click(screen.getByRole('button', { name: fr.settings.familyAdd }))
-    await user.type(screen.getByRole('textbox', { name: fr.settings.familyName }), 'Animaux')
-    await user.click(screen.getByRole('button', { name: fr.settings.familyAdd }))
+    await user.click(screen.getByRole('button', { name: t.settings.familyAdd }))
+    await user.type(screen.getByRole('textbox', { name: t.settings.familyName }), 'Animaux')
+    await user.click(screen.getByRole('button', { name: t.settings.familyAdd }))
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Animaux')
     expect(useStore.getState().data.families.map((f) => f.label)).toContain('Animaux')
@@ -188,11 +188,11 @@ describe('le catalogue', () => {
     const user = userEvent.setup()
     open(familyPath('fam-transport'))
 
-    await user.click(screen.getByRole('button', { name: fr.settings.categoryAdd }))
+    await user.click(screen.getByRole('button', { name: t.settings.categoryAdd }))
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 
-    await user.type(screen.getByRole('textbox', { name: fr.settings.categoryName }), 'Péage A7')
-    await user.click(screen.getByRole('button', { name: fr.settings.categoryAdd }))
+    await user.type(screen.getByRole('textbox', { name: t.settings.categoryName }), 'Péage A7')
+    await user.click(screen.getByRole('button', { name: t.settings.categoryAdd }))
 
     const created = useStore.getState().data.categories.find((c) => c.label === 'Péage A7')
     expect(created?.familyId).toBe('fam-transport')
@@ -208,27 +208,27 @@ describe('les personnes', () => {
     await user.click(screen.getByRole('button', { name: /Aix/ }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Aix')
 
-    const field = screen.getByRole('textbox', { name: fr.settings.memberName })
+    const field = screen.getByRole('textbox', { name: t.settings.memberName })
     await user.clear(field)
     await user.type(field, 'Camille')
     // Rien n'est écrit tant qu'on n'a pas validé.
     expect(useStore.getState().data.household.members[0]?.name).toBe('Aix')
 
-    await user.click(screen.getByRole('button', { name: fr.common.save }))
+    await user.click(screen.getByRole('button', { name: t.common.save }))
     expect(useStore.getState().data.household.members[0]?.name).toBe('Camille')
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.settings.household)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.settings.household)
   })
 
   it('ajoutent un membre depuis une vue à part', async () => {
     const user = userEvent.setup()
     open(PEOPLE_PATH)
 
-    await user.click(screen.getByRole('button', { name: fr.settings.memberAdd }))
-    await user.type(screen.getByRole('textbox', { name: fr.settings.memberName }), 'Sacha')
-    await user.click(screen.getByRole('button', { name: fr.settings.memberAdd }))
+    await user.click(screen.getByRole('button', { name: t.settings.memberAdd }))
+    await user.type(screen.getByRole('textbox', { name: t.settings.memberName }), 'Sacha')
+    await user.click(screen.getByRole('button', { name: t.settings.memberAdd }))
 
     expect(useStore.getState().data.household.members.map((m) => m.name)).toEqual(['Aix', 'Sacha'])
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(fr.settings.household)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(t.settings.household)
   })
 })
 

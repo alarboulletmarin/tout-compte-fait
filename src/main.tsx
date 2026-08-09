@@ -27,6 +27,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
+import { readStoredLocale } from './i18n/locale'
+import { applyLocale } from './i18n/strings'
 import { ErrorBoundary } from './app/ErrorBoundary'
 /* Importé pour son effet de bord, et importé ici pour qu'il ait lieu avant le
    premier rendu : `beforeinstallprompt` se déclenche une fois, tôt, et ne se
@@ -37,12 +39,33 @@ import './styles/index.css'
 const container = document.getElementById('root')
 if (!container) throw new Error('Élément #root introuvable')
 
+const root = createRoot(container)
+
 /* La barrière est au-dessus de tout, y compris du routeur : une exception dans
    la coquille elle-même doit encore trouver un écran pour s'afficher. */
-createRoot(container).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-)
+const render = (): void => {
+  root.render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  )
+}
+
+/**
+ * Le catalogue avant le premier rendu.
+ *
+ * `settings.locale` fait autorité, mais il vit dans IndexedDB : le miroir
+ * localStorage est la seule chose lisible avant que l'hydratation ait répondu
+ * (`i18n/locale.ts`). Sans cette attente, une app réglée en anglais s'ouvrirait
+ * une frame en français, puis se remonterait — l'écran de démarrage clignoterait
+ * dans la mauvaise langue à chaque lancement à froid.
+ *
+ * En français elle ne coûte rien : le catalogue est déjà là, statique, et
+ * `applyLocale` rend la main sans rien télécharger. La promesse ne rejette
+ * jamais — un morceau qui n'arrive pas laisse simplement le français en place —,
+ * et le second `render` est là quand même : rien dans ce fichier ne doit pouvoir
+ * empêcher l'app de s'afficher.
+ */
+void applyLocale(readStoredLocale()).then(render, render)

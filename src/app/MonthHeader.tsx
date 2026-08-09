@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { addMonthsToYm, today, ymOf } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatYearMonth, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import {
@@ -48,7 +48,7 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
       <div
         className="filter-scroller -mx-4 -my-1 flex gap-2 px-4 py-1 md:-mx-8 md:px-8"
         role="group"
-        aria-label={fr.shell.filterByMember}
+        aria-label={t.shell.filterByMember}
       >
         {members.map((member) => (
           <Chip
@@ -76,7 +76,7 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
     <div
       className="filter-scroller -mx-4 -my-1 flex gap-2 px-4 py-1 md:-mx-8 md:px-8"
       role="group"
-      aria-label={fr.shell.filterByMember}
+      aria-label={t.shell.filterByMember}
     >
       <Chip
         className="shrink-0"
@@ -85,7 +85,7 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
           setFilter({ kind: 'all' })
         }}
       >
-        {fr.shell.all}
+        {t.shell.all}
       </Chip>
       {/* Le commun se propose dès le premier membre : seul, la vue du membre
           vaut « tout le monde » au centime, et le pot est justement la seule
@@ -98,7 +98,7 @@ function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
           setFilter({ kind: 'common' })
         }}
       >
-        {fr.shell.common}
+        {t.shell.common}
       </Chip>
       {/* Les deux premières pilules n'ont pas de pastille parce qu'elles ne
           désignent personne — une pastille est la couleur de quelqu'un. Sans
@@ -200,9 +200,9 @@ function ProrataNote() {
   if (filter.kind === 'common') {
     return (
       <ProrataSummary
-        short={fr.shell.commonShort}
-        full={fr.shell.commonNote}
-        title={fr.shell.common}
+        short={t.shell.commonShort}
+        full={t.shell.commonNote}
+        title={t.shell.common}
       />
     )
   }
@@ -217,18 +217,18 @@ function ProrataNote() {
     const solo = members.size === 1
     return (
       <ProrataSummary
-        short={solo ? fr.shell.prorataSoloShort : fr.shell.prorataShort}
-        full={tpl(solo ? fr.shell.prorataSolo : fr.shell.prorata, name)}
-        title={fr.shell.prorataSheet}
+        short={solo ? t.shell.prorataSoloShort : t.shell.prorataShort}
+        full={tpl(solo ? t.shell.prorataSolo : t.shell.prorata, name)}
+        title={t.shell.prorataSheet}
       />
     )
   }
   if (!partial) return null
 
   const missing = unknown.map((member) => member.name).join(', ')
-  if (missing === '') return <p className="t-label">{fr.shell.prorataOnlyOwn}</p>
+  if (missing === '') return <p className="t-label">{t.shell.prorataOnlyOwn}</p>
 
-  const wording = unknown.length > 1 ? fr.shell.prorataMissingMany : fr.shell.prorataMissingOne
+  const wording = unknown.length > 1 ? t.shell.prorataMissingMany : t.shell.prorataMissingOne
   return <p className="t-label">{tpl(wording, missing)}</p>
 }
 
@@ -336,12 +336,12 @@ export function MonthHeader({
               size="sm"
               variant="secondary"
               className="shrink-0"
-              title={tpl(fr.shell.thisMonthTitle, formatYearMonth(currentYm))}
+              title={tpl(t.shell.thisMonthTitle, formatYearMonth(currentYm))}
               onClick={() => {
                 setYm(currentYm)
               }}
             >
-              {fr.shell.thisMonth}
+              {t.shell.thisMonth}
             </Button>
           )}
         </div>

@@ -16,7 +16,7 @@ import {
   sortRecurrences,
 } from '@/domain/grouping'
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import {
   useAdvanceStatuses,
@@ -44,18 +44,18 @@ import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { RecurrenceRow } from './RecurrenceRow'
 
-const AXES = [
-  { value: 'category' as const, label: fr.recurrences.byCategory },
-  { value: 'member' as const, label: fr.recurrences.byMember },
+const axes = () => [
+  { value: 'category' as const, label: t.recurrences.byCategory },
+  { value: 'member' as const, label: t.recurrences.byMember },
 ]
 
 /* L'ordre était toujours celui du domaine — par prochaine échéance, qui répond
    à « qu'est-ce qui tombe bientôt ». C'est cet écran-là qui porte l'autre
    question, « qu'est-ce qui me coûte le plus », et son chiffre est déjà sur
    chaque ligne. */
-const SORTS = [
-  { value: 'due' as const, label: fr.recurrences.byDue },
-  { value: 'amount' as const, label: fr.recurrences.byAmount },
+const sorts = () => [
+  { value: 'due' as const, label: t.recurrences.byDue },
+  { value: 'amount' as const, label: t.recurrences.byAmount },
 ]
 
 /** La nature que la liste montre, ou `null` pour tout. */
@@ -67,11 +67,11 @@ type NatureFilter = EntryNature | null
    d'épargne sous « Charges » — un mot que la tuile du même nom refuse, elle qui
    compte charges et crédits sans l'épargne. Les mots sont ceux de la saisie,
    positions comprises. */
-const NATURES: { value: NatureFilter; label: string }[] = [
-  { value: null, label: fr.recurrences.showAll },
-  { value: 'expense', label: fr.recurrences.showOut },
-  { value: 'income', label: fr.recurrences.showIn },
-  { value: 'saving', label: fr.recurrences.showSaving },
+const natures = (): { value: NatureFilter; label: string }[] => [
+  { value: null, label: t.recurrences.showAll },
+  { value: 'expense', label: t.recurrences.showOut },
+  { value: 'income', label: t.recurrences.showIn },
+  { value: 'saving', label: t.recurrences.showSaving },
 ]
 
 /**
@@ -84,19 +84,19 @@ const OPEN_BY_DEFAULT: Record<RecurrenceGroupBy, boolean> = {
 }
 
 /** L'étiquette du total, et la vérification qui l'accompagne. */
-const TOTAL_LABEL: Record<string, string> = {
-  all: fr.recurrences.totalOut,
-  expense: fr.recurrences.totalSpending,
-  income: fr.recurrences.totalIn,
-  saving: fr.recurrences.totalSaving,
-}
+const totalLabel = (): Record<string, string> => ({
+  all: t.recurrences.totalOut,
+  expense: t.recurrences.totalSpending,
+  income: t.recurrences.totalIn,
+  saving: t.recurrences.totalSaving,
+})
 
-const TOTAL_SCOPE: Record<string, string> = {
-  all: fr.recurrences.scopeOut,
-  expense: fr.recurrences.scopeSpending,
-  income: fr.recurrences.scopeIn,
-  saving: fr.recurrences.scopeSaving,
-}
+const totalScope = (): Record<string, string> => ({
+  all: t.recurrences.scopeOut,
+  expense: t.recurrences.scopeSpending,
+  income: t.recurrences.scopeIn,
+  saving: t.recurrences.scopeSaving,
+})
 
 /**
  * Ce que les récurrences coûtent — ou rapportent — chaque mois.
@@ -120,18 +120,18 @@ function Totals({ nature }: { nature: NatureFilter }) {
 
   return (
     <Tile variant="accent">
-      <Eyebrow icon={RecurrencesIcon}>{TOTAL_LABEL[key]}</Eyebrow>
+      <Eyebrow icon={RecurrencesIcon}>{totalLabel()[key]}</Eyebrow>
       <Amount value={totals.monthly} size="tile" className="mt-3" />
       <p className="t-label mt-1 tnum">
-        {tpl(fr.recurrences.perYear, formatMoney(totals.annual, currency, false))}
+        {tpl(t.recurrences.perYear, formatMoney(totals.annual, currency, false))}
       </p>
-      <p className="t-axis mt-3">{TOTAL_SCOPE[key]}</p>
+      <p className="t-axis mt-3">{totalScope()[key]}</p>
       {totals.unknownCount > 0 && (
         <p className="t-axis mt-1">
           {tpl(
             totals.unknownCount > 1
-              ? fr.recurrences.variableExcluded
-              : fr.recurrences.variableExcludedOne,
+              ? t.recurrences.variableExcluded
+              : t.recurrences.variableExcludedOne,
             totals.unknownCount,
           )}
         </p>
@@ -169,7 +169,7 @@ function SortField({
       {/* Le libellé visible *est* le nom accessible : un « Trier » posé à côté
           d'un contrôle qu'il ne nomme pas laisserait le sélecteur anonyme. */}
       <label htmlFor={id} className="t-axis shrink-0">
-        {fr.recurrences.sortBy}
+        {t.recurrences.sortBy}
       </label>
       {/* La largeur vit sur le cadre et non sur le contrôle : `cn` ne fusionne
           pas les classes de Tailwind, un `w-auto` posé sur un `Select` qui porte
@@ -183,7 +183,7 @@ function SortField({
             onChange(event.target.value as RecurrenceSortBy)
           }}
         >
-          {SORTS.map((option) => (
+          {sorts().map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -266,8 +266,8 @@ function GroupedList({
   const disclosure = useDisclosureGroup(keys, OPEN_BY_DEFAULT[by])
 
   const titleOf = (key: string): string => {
-    if (by === 'category') return categories.get(key)?.label ?? fr.common.other
-    return key === NO_MEMBER ? fr.shell.everyone : (members.get(key)?.name ?? fr.common.other)
+    if (by === 'category') return categories.get(key)?.label ?? t.common.other
+    return key === NO_MEMBER ? t.shell.everyone : (members.get(key)?.name ?? t.common.other)
   }
 
   /* Sous une pilule, le solde d'un groupe parlerait à l'envers du total en
@@ -304,11 +304,11 @@ function GroupedList({
 
   const countOf = (group: RecurrenceGroup<Row>): string => {
     const count = tpl(
-      group.rows.length > 1 ? fr.recurrences.groupCount : fr.recurrences.groupCountOne,
+      group.rows.length > 1 ? t.recurrences.groupCount : t.recurrences.groupCountOne,
       group.rows.length,
     )
     if (group.unknownCount === 0 || group.unknownCount === group.rows.length) return count
-    return `${count} · ${tpl(fr.recurrences.groupVariable, group.unknownCount)}`
+    return `${count} · ${tpl(t.recurrences.groupVariable, group.unknownCount)}`
   }
 
   return (
@@ -318,28 +318,28 @@ function GroupedList({
           côté d'elle comme s'il en était une. */}
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
-          options={AXES}
+          options={axes()}
           value={by}
           onChange={(next) => {
             setBy(next)
             disclosure.reset()
           }}
-          label={fr.recurrences.groupBy}
+          label={t.recurrences.groupBy}
         />
         {/* `ml-auto` et non `justify-between` : à 320px la rangée passe à la
             ligne, et un `justify-between` y aurait posé le bouton à gauche, sous
             la bascule, où il se lit comme une troisième position. La marge
             automatique le garde à droite sur les deux mises en page. */}
         <Button size="sm" variant="ghost" className="ml-auto" onClick={disclosure.toggleAll}>
-          {disclosure.anyOpen ? fr.recurrences.collapseAll : fr.recurrences.expandAll}
+          {disclosure.anyOpen ? t.recurrences.collapseAll : t.recurrences.expandAll}
         </Button>
       </div>
 
       {/* Retirer, et trier. Les pilules gardent leur groupe à elles : le tri
           n'en est pas une, il ne retire rien. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div role="group" aria-label={fr.recurrences.show} className="flex flex-wrap gap-2">
-          {NATURES.map((option) => (
+        <div role="group" aria-label={t.recurrences.show} className="flex flex-wrap gap-2">
+          {natures().map((option) => (
             <Chip
               key={option.label}
               active={option.value === nature}
@@ -362,10 +362,10 @@ function GroupedList({
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
           <p className="t-label">
             {nature === 'income'
-              ? fr.recurrences.showEmptyIn
+              ? t.recurrences.showEmptyIn
               : nature === 'saving'
-                ? fr.recurrences.showEmptySaving
-                : fr.recurrences.showEmptyOut}
+                ? t.recurrences.showEmptySaving
+                : t.recurrences.showEmptyOut}
           </p>
           <Button
             size="sm"
@@ -374,7 +374,7 @@ function GroupedList({
               onNature(null)
             }}
           >
-            {fr.recurrences.showAllBack}
+            {t.recurrences.showAllBack}
           </Button>
         </div>
       ) : (
@@ -405,7 +405,7 @@ function GroupedList({
                 /* Un groupe dont tout est à montant variable n'a pas de chiffre à
                    montrer : mieux vaut le dire que d'annoncer zéro. */
                 group.unknownCount === group.rows.length ? (
-                  <span className="t-axis">{fr.recurrences.variable}</span>
+                  <span className="t-axis">{t.recurrences.variable}</span>
                 ) : (
                   natureAmount(group.monthly)
                 )
@@ -453,10 +453,10 @@ function StoppedList({ rows, onOpen }: { rows: Row[]; onOpen: (id: string) => vo
           }}
           title={
             <span className="flex min-w-0 flex-col py-1">
-              <span className="t-body truncate">{fr.recurrences.stoppedBadge}</span>
+              <span className="t-body truncate">{t.recurrences.stoppedBadge}</span>
               <span className="t-axis truncate">
                 {tpl(
-                  rows.length > 1 ? fr.recurrences.groupCount : fr.recurrences.groupCountOne,
+                  rows.length > 1 ? t.recurrences.groupCount : t.recurrences.groupCountOne,
                   rows.length,
                 )}
               </span>
@@ -501,24 +501,24 @@ function Trackers() {
 
   const advances =
     statuses.length === 0
-      ? fr.advances.empty
+      ? t.advances.empty
       : [
           tpl(
-            statuses.length > 1 ? fr.advances.count : fr.advances.countOne,
+            statuses.length > 1 ? t.advances.count : t.advances.countOne,
             statuses.length,
           ),
           tpl(
-            fr.advances.remainingTotal,
+            t.advances.remainingTotal,
             formatMoney(totalRemaining(statuses), currency, false),
           ),
         ].join(' · ')
 
   return (
     <RowGroup>
-      <GroupRow label={fr.advances.section} description={advances} to={ADVANCES_PATH} />
+      <GroupRow label={t.advances.section} description={advances} to={ADVANCES_PATH} />
       <GroupRow
-        label={fr.credits.title}
-        description={fr.recurrences.creditsHint}
+        label={t.credits.title}
+        description={t.recurrences.creditsHint}
         to={CREDITS_PATH}
       />
     </RowGroup>
@@ -553,11 +553,11 @@ export function RecurrencesPage() {
           d'en bas ouvre les trois portes de saisie d'une opération ponctuelle,
           celui-ci pose une règle. Le nom accessible le dit en toutes lettres, là
           où « Ajouter » seul laisse deviner quoi. */}
-      <PageTitle title={fr.recurrences.title}>
+      <PageTitle title={t.recurrences.title}>
         {rows.length > 0 && (
-          <Button onClick={openCreate} aria-label={fr.recurrences.add}>
+          <Button onClick={openCreate} aria-label={t.recurrences.add}>
             <Plus size={18} />
-            {fr.common.add}
+            {t.common.add}
           </Button>
         )}
       </PageTitle>
@@ -565,8 +565,8 @@ export function RecurrencesPage() {
       <div className="flex max-w-3xl flex-col gap-4">
         {rows.length === 0 ? (
           <EmptyState
-            message={fr.recurrences.empty}
-            actionLabel={fr.recurrences.add}
+            message={t.recurrences.empty}
+            actionLabel={t.recurrences.add}
             onAction={openCreate}
           />
         ) : (

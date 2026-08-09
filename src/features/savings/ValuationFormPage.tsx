@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { SAVINGS_PATH, supportPath } from '@/app/routes'
 import { parseAmount } from '@/domain/money'
 import type { SavingValuation } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDate } from '@/i18n/format'
 import {
   addSavingValuation,
@@ -91,10 +91,10 @@ function ValuationForm({
     }
     if (valuationId === undefined) {
       addSavingValuation({ supportId, amount, date: draft.date })
-      toast(fr.savings.valueAdded)
+      toast(t.savings.valueAdded)
     } else {
       replaceSavingValuation(valuationId, { supportId, amount, date: draft.date })
-      toast(fr.savings.valueUpdated)
+      toast(t.savings.valueUpdated)
     }
     back()
   }
@@ -102,7 +102,7 @@ function ValuationForm({
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <PageTitle
-        title={valuationId === undefined ? fr.savings.valueUpdate : fr.savings.valueEdit}
+        title={valuationId === undefined ? t.savings.valueUpdate : t.savings.valueEdit}
         onBack={guard.request}
       />
       <p className="t-label">{supportLabel}</p>
@@ -116,7 +116,7 @@ function ValuationForm({
       >
         <Tile className="gap-4">
           <Field
-            label={fr.savings.value}
+            label={t.savings.value}
             required
             {...(showError && error !== undefined ? { error } : {})}
           >
@@ -130,7 +130,7 @@ function ValuationForm({
                 aria-describedby={describedBy}
                 value={draft.amountText}
                 invalid={showError && error !== undefined}
-                placeholder={fr.savings.valueNew}
+                placeholder={t.savings.valueNew}
                 autoFocus
                 onChange={(event) => {
                   setDraft((current) => ({ ...current, amountText: event.target.value }))
@@ -139,7 +139,7 @@ function ValuationForm({
             )}
           </Field>
 
-          <Field label={fr.savings.valueDate} required>
+          <Field label={t.savings.valueDate} required>
             {(fieldId) => (
               <DateInput
                 id={fieldId}
@@ -160,7 +160,7 @@ function ValuationForm({
           {previous !== null && (
             <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
               <span className="t-label min-w-0 flex-1 truncate">
-                {`${fr.savings.valueKnown} · ${formatDate(previous.date)}`}
+                {`${t.savings.valueKnown} · ${formatDate(previous.date)}`}
               </span>
               <Amount value={previous.amount} size="body" className="shrink-0" />
             </div>
@@ -170,10 +170,10 @@ function ValuationForm({
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" form="valuation-form">
-          {fr.common.save}
+          {t.common.save}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
-          {fr.common.cancel}
+          {t.common.cancel}
         </Button>
       </div>
 
@@ -181,7 +181,7 @@ function ValuationForm({
           pas une façon de sortir de l'écran, c'est une suppression. */}
       {valuationId !== undefined && (
         <Tile className="gap-3">
-          <p className="t-label">{fr.savings.valueMethod}</p>
+          <p className="t-label">{t.savings.valueMethod}</p>
           <Button
             variant="ghost"
             className="w-fit"
@@ -189,22 +189,22 @@ function ValuationForm({
               setRemoving(true)
             }}
           >
-            {fr.savings.valueRemove}
+            {t.savings.valueRemove}
           </Button>
         </Tile>
       )}
 
       <ConfirmDialog
         open={removing}
-        title={fr.savings.valueRemove}
-        steps={[{ question: fr.savings.valueRemoveConfirm, action: fr.common.delete }]}
+        title={t.savings.valueRemove}
+        steps={[{ question: t.savings.valueRemoveConfirm, action: t.common.delete }]}
         onCancel={() => {
           setRemoving(false)
         }}
         onConfirm={() => {
           setRemoving(false)
           if (valuationId === undefined) return
-          undoable(fr.savings.valueRemoved, () => {
+          undoable(t.savings.valueRemoved, () => {
             removeSavingValuation(valuationId)
           })
           back()

@@ -4,7 +4,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ADVANCE_NEW_PATH, RECURRENCES_PATH } from '@/app/routes'
 import { makeAdvance, makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { AdvancesPage } from './AdvancesPage'
 
@@ -44,7 +44,7 @@ describe('AdvancesPage', () => {
     renderPage([makeAdvance({ id: 'a1' })])
 
     expect(screen.getByText('Assurance auto')).toBeInTheDocument()
-    expect(screen.getByText(fr.advances.remaining)).toBeInTheDocument()
+    expect(screen.getByText(t.advances.remaining)).toBeInTheDocument()
     /* Rien n'est encore revenu sur le livret : le reste vaut le montant avancé,
        et c'est lui le chiffre de la carte. */
     expect(screen.getByText(/^600,00\s€$/)).toBeInTheDocument()
@@ -54,22 +54,22 @@ describe('AdvancesPage', () => {
   it('revient aux récurrences', async () => {
     renderPage([makeAdvance({ id: 'a1' })])
 
-    await userEvent.click(screen.getByRole('button', { name: fr.common.back }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.back }))
     expect(screen.getByTestId('url')).toHaveTextContent(RECURRENCES_PATH)
   })
 
   it('mène à la saisie d’une avance', async () => {
     renderPage([makeAdvance({ id: 'a1' })])
 
-    await userEvent.click(screen.getByRole('button', { name: fr.common.add }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.add }))
     expect(screen.getByTestId('url')).toHaveTextContent(ADVANCE_NEW_PATH)
   })
 
   it('demande avant de retirer une avance', async () => {
     renderPage([makeAdvance({ id: 'a1' })])
 
-    await userEvent.click(screen.getByRole('button', { name: fr.advances.remove }))
-    expect(screen.getByText(fr.advances.removeConfirm)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: t.advances.remove }))
+    expect(screen.getByText(t.advances.removeConfirm)).toBeInTheDocument()
   })
 
   /* Le vide occupe la page : le DS §7 y veut une invitation et non un constat,
@@ -77,10 +77,10 @@ describe('AdvancesPage', () => {
   it('invite à poser la première avance', async () => {
     renderPage([])
 
-    expect(screen.getByText(fr.advances.emptyInvite)).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: fr.advances.add })).toHaveLength(1)
+    expect(screen.getByText(t.advances.emptyInvite)).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: t.advances.add })).toHaveLength(1)
 
-    await userEvent.click(screen.getByRole('button', { name: fr.advances.add }))
+    await userEvent.click(screen.getByRole('button', { name: t.advances.add }))
     expect(screen.getByTestId('url')).toHaveTextContent(ADVANCE_NEW_PATH)
   })
 })

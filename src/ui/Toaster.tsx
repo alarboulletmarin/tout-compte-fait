@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { cn } from '@/lib/cn'
 import { Button, IconButton } from './Button'
 import { Close } from './Icons'
@@ -74,7 +74,7 @@ function ToastItem({ toast }: { toast: Toast }) {
         </Button>
       )}
       <IconButton
-        label={fr.common.close}
+        label={t.common.close}
         onClick={() => {
           dismiss(toast.id)
         }}

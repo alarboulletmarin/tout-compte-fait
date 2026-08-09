@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Button, IconButton } from '@/ui/Button'
 import { Disclosure } from '@/ui/Disclosure'
 import { AmountInput, Checkbox, DateInput, Field, Select, TextInput } from '@/ui/Field'
@@ -8,9 +8,9 @@ import { Segmented } from '@/ui/Segmented'
 import { Section, SubTitle } from './Section'
 import { DualTheme } from './ThemePane'
 
-const DIRECTIONS = [
-  { value: 'in' as const, label: fr.direction.in },
-  { value: 'out' as const, label: fr.direction.out },
+const directions = () => [
+  { value: 'in' as const, label: t.direction.in },
+  { value: 'out' as const, label: t.direction.out },
 ]
 
 function Controls() {
@@ -20,21 +20,21 @@ function Controls() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-3">
-        <Button>{fr.common.save}</Button>
-        <Button variant="secondary">{fr.common.cancel}</Button>
-        <Button variant="ghost">{fr.common.edit}</Button>
-        <Button variant="danger">{fr.common.delete}</Button>
-        <Button disabled>{fr.common.save}</Button>
-        <IconButton label={fr.common.add} variant="primary">
+        <Button>{t.common.save}</Button>
+        <Button variant="secondary">{t.common.cancel}</Button>
+        <Button variant="ghost">{t.common.edit}</Button>
+        <Button variant="danger">{t.common.delete}</Button>
+        <Button disabled>{t.common.save}</Button>
+        <IconButton label={t.common.add} variant="primary">
           <Plus />
         </IconButton>
       </div>
 
       <Segmented
-        options={DIRECTIONS}
+        options={directions()}
         value={direction}
         onChange={setDirection}
-        label={fr.direction.in}
+        label={t.direction.in}
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -79,10 +79,10 @@ function Controls() {
         <Checkbox
           checked={shared}
           onChange={setShared}
-          label={fr.entry.shared}
-          hint={fr.entry.sharedHint}
+          label={t.entry.shared}
+          hint={t.entry.sharedHint}
         />
-        <Checkbox checked={false} onChange={() => undefined} label={fr.recurrences.variable} />
+        <Checkbox checked={false} onChange={() => undefined} label={t.recurrences.variable} />
       </div>
 
       <Disclosure
@@ -100,7 +100,7 @@ function Controls() {
 export function ControlsSection() {
   return (
     <Section title="Contrôles" note="Primitives de formulaire, alignées sur les mêmes tokens.">
-      <SubTitle>{fr.styleguide.states}</SubTitle>
+      <SubTitle>{t.styleguide.states}</SubTitle>
       <DualTheme>
         <Controls />
       </DualTheme>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { IconButton } from './Button'
 import { ChevronLeft } from './Icons'
 import { useAnnounceScreen } from './screenTitle'
@@ -48,7 +48,7 @@ export function PageTitle({ title, hidden = false, onBack, children }: PageTitle
   if (onBack !== undefined) {
     return (
       <div className="flex items-center gap-1">
-        <IconButton label={fr.common.back} onClick={onBack}>
+        <IconButton label={t.common.back} onClick={onBack}>
           <ChevronLeft />
         </IconButton>
         <h1 className="t-section min-w-0 truncate">{title}</h1>

@@ -1,13 +1,13 @@
 import { useId, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { hasReadNotice, markNoticeRead } from '@/lib/notice'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
 import { Checkbox } from '@/ui/Field'
 import { Sheet } from '@/ui/Sheet'
 import { LINK } from './AppFooter'
-import { LEGAL_ROUTES, PRIVACY_PATH, STYLEGUIDE_ROUTE } from './routes'
+import { legalRoutes, PRIVACY_PATH, styleguideRoute } from './routes'
 
 /**
  * La promesse de ne rien collecter, devant qui n'a pas l'intention de la lire.
@@ -90,7 +90,7 @@ export function PrivacyNotice() {
   const failing = useStore((s) => s.error !== null)
 
   const elsewhere =
-    pathname === STYLEGUIDE_ROUTE.path || LEGAL_ROUTES.some((route) => route.path === pathname)
+    pathname === styleguideRoute().path || legalRoutes().some((route) => route.path === pathname)
 
   /* Rien du tout, et non une feuille refermée : elle n'a jamais été là chez qui
      l'a déjà lue, donc il n'y a aucune sortie à animer. */
@@ -105,7 +105,7 @@ export function PrivacyNotice() {
       onClose={() => {}}
       dismissible={false}
       describedBy={bodyId}
-      title={fr.notice.title}
+      title={t.notice.title}
       footer={
         <Button
           full
@@ -115,12 +115,12 @@ export function PrivacyNotice() {
             setDone(true)
           }}
         >
-          {fr.notice.action}
+          {t.notice.action}
         </Button>
       }
     >
       <div id={bodyId} className="flex flex-col gap-4">
-        <p className="t-body">{fr.notice.lead}</p>
+        <p className="t-body">{t.notice.lead}</p>
 
         {/* Une vraie liste, et non quatre paragraphes : c'est un décompte de
             quatre choses qui n'existent pas, et un lecteur d'écran doit pouvoir
@@ -130,10 +130,10 @@ export function PrivacyNotice() {
             devant. */}
         <ul className="flex list-none flex-col gap-2 border-l border-border pl-4">
           {[
-            fr.notice.noAccount,
-            fr.notice.noTracking,
-            fr.notice.noServer,
-            fr.notice.noReader,
+            t.notice.noAccount,
+            t.notice.noTracking,
+            t.notice.noServer,
+            t.notice.noReader,
           ].map((claim) => (
             <li key={claim} className="t-body">
               {claim}
@@ -147,9 +147,9 @@ export function PrivacyNotice() {
             la page, y compris la seule trace qui existe vraiment : les journaux
             de l'hébergeur, qu'aucune des quatre lignes ne prétend nier. */}
         <div className="flex flex-col gap-1">
-          <p className="t-label">{fr.notice.verify}</p>
+          <p className="t-label">{t.notice.verify}</p>
           <Link to={PRIVACY_PATH} className={LINK}>
-            {fr.legal.privacy}
+            {t.legal.privacy}
           </Link>
         </div>
 
@@ -159,12 +159,12 @@ export function PrivacyNotice() {
           className="border-t border-border pt-3"
           checked={read}
           onChange={setRead}
-          label={fr.notice.check}
+          label={t.notice.check}
           /* L'aide reste affichée après la coche : le DS §6 le demande de ce qui
              informe de ce qui va se passer, et la faire disparaître au moment où
              l'on comprend enfin le lien entre la case et le bouton reviendrait à
              effacer l'explication au profit de qui n'en a plus besoin. */
-          hint={fr.notice.checkHint}
+          hint={t.notice.checkHint}
         />
       </div>
     </Sheet>

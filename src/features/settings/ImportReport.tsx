@@ -1,4 +1,4 @@
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import type { ImportNotice } from '@/persistence/validate'
 
@@ -7,10 +7,10 @@ const SHOWN = 6
 
 /** « Entrée « Loyer » », ou son rang quand la ligne n'avait pas de nom. */
 function subject(notice: ImportNotice): string {
-  const collection = fr.settings.reportCollection[notice.collection]
+  const collection = t.settings.reportCollection[notice.collection]
   return notice.label === undefined
-    ? tpl(fr.settings.reportRanked, collection, notice.index + 1)
-    : tpl(fr.settings.reportNamed, collection, notice.label)
+    ? tpl(t.settings.reportRanked, collection, notice.index + 1)
+    : tpl(t.settings.reportNamed, collection, notice.label)
 }
 
 function Group({ notices, title }: { notices: readonly ImportNotice[]; title: string }) {
@@ -23,13 +23,13 @@ function Group({ notices, title }: { notices: readonly ImportNotice[]; title: st
       <ul className="flex flex-col gap-0.5">
         {notices.slice(0, SHOWN).map((notice) => (
           <li key={`${notice.collection}-${String(notice.index)}-${notice.reason}`} className="t-label">
-            {tpl(fr.settings.reportLine, subject(notice), fr.settings.reportReason[notice.reason])}
+            {tpl(t.settings.reportLine, subject(notice), t.settings.reportReason[notice.reason])}
           </li>
         ))}
       </ul>
       {/* Un « et 12 de plus » vaut mieux qu'une liste tronquée sans le dire :
           le compte, lui, reste juste. */}
-      {extra > 0 && <p className="t-label">{tpl(fr.settings.reportMore, extra)}</p>}
+      {extra > 0 && <p className="t-label">{tpl(t.settings.reportMore, extra)}</p>}
     </div>
   )
 }
@@ -58,16 +58,16 @@ export function ImportReport({ notices }: { notices: readonly ImportNotice[] }) 
         notices={discarded}
         title={
           discarded.length === 1
-            ? fr.settings.reportDiscardedOne
-            : tpl(fr.settings.reportDiscarded, discarded.length)
+            ? t.settings.reportDiscardedOne
+            : tpl(t.settings.reportDiscarded, discarded.length)
         }
       />
       <Group
         notices={repaired}
         title={
           repaired.length === 1
-            ? fr.settings.reportRepairedOne
-            : tpl(fr.settings.reportRepaired, repaired.length)
+            ? t.settings.reportRepairedOne
+            : tpl(t.settings.reportRepaired, repaired.length)
         }
       />
     </div>

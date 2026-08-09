@@ -1,5 +1,5 @@
 import type { CategoryKind, Direction } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useCategoriesByFamily } from '@/store/selectors'
 import { Select, type SelectProps } from './Field'
 import { kindsOfDirection } from './categoryKinds'
@@ -24,7 +24,7 @@ export function CategorySelect({
 
   return (
     <Select {...rest}>
-      <option value="">{fr.entry.categoryPlaceholder}</option>
+      <option value="">{t.entry.categoryPlaceholder}</option>
       {groups.map((group) => (
         <optgroup key={group.family.id} label={group.family.label}>
           {group.categories.map((category) => (

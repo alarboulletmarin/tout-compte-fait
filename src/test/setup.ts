@@ -1,9 +1,23 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
+import { fr } from '@/i18n/fr'
+import { setCatalog } from '@/i18n/strings'
 
 afterEach(() => {
   cleanup()
+})
+
+/* La langue revient au français entre deux tests.
+ *
+ * Le catalogue actif est un état de module (`i18n/strings.ts`), donc partagé par
+ * tout un fichier de test : sans ce retour, un test qui passe l'app en anglais
+ * laisse les suivants s'exécuter en anglais — et ils échouent loin de la ligne
+ * qui a changé la langue, ce qui est la pire façon de les lire. Le reste de la
+ * suite parle français parce que c'est la langue par défaut, pas parce qu'elle
+ * a de la chance. */
+afterEach(() => {
+  setCatalog('fr', fr)
 })
 
 /* jsdom n'implémente pas matchMedia : le module de thème s'en sert au boot.

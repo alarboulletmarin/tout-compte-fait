@@ -121,7 +121,13 @@ export function makeData(over: Partial<Data> = {}): Data {
     savingSupports: [],
     savingValuations: [],
     months: [],
-    settings: { theme: 'system', palette: 'classique', currency: 'EUR', monthStartsOn: 1 },
+    settings: {
+      theme: 'system',
+      palette: 'classique',
+      locale: 'fr',
+      currency: 'EUR',
+      monthStartsOn: 1,
+    },
     ...over,
   }
 }

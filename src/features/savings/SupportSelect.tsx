@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { addSavingSupport } from '@/store/actions'
 import { useActiveSavingSupports, useMemberMap, useMembers } from '@/store/selectors'
 import { Button } from '@/ui/Button'
@@ -30,7 +30,7 @@ export function SupportSelect(props: Omit<SelectProps, 'children'>) {
 
   return (
     <Select {...props}>
-      <option value="">{fr.entry.categoryPlaceholder}</option>
+      <option value="">{t.entry.categoryPlaceholder}</option>
       {owners.map((memberId) => (
         <optgroup key={memberId} label={members.get(memberId)?.name ?? ''}>
           {supports
@@ -106,7 +106,7 @@ function SupportCreateForm({
     const input = build()
     if (input === null) return
     const created = addSavingSupport(input)
-    toast(fr.savings.supportAdded)
+    toast(t.savings.supportAdded)
     onCreated(created.id)
   }
 
@@ -114,14 +114,14 @@ function SupportCreateForm({
     <Sheet
       open={open}
       onClose={onClose}
-      title={fr.savings.supportNew}
+      title={t.savings.supportNew}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} full>
-            {fr.common.cancel}
+            {t.common.cancel}
           </Button>
           <Button onClick={submit} full>
-            {fr.savings.supportAdd}
+            {t.savings.supportAdd}
           </Button>
         </>
       }

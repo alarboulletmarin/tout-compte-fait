@@ -1,6 +1,22 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { money } from '@/domain/money'
-import { formatBytes, formatMoney, formatRoundedMoney, moneyParts } from './format'
+import {
+  de,
+  decimalSeparator,
+  enumerate,
+  formatBytes,
+  formatDate,
+  formatDelta,
+  formatMoney,
+  formatMonthDay,
+  formatPercent,
+  formatRelativeDays,
+  formatRoundedMoney,
+  formatYearMonth,
+  moneyParts,
+  symbolFirst,
+} from './format'
+import { applyLocale } from './strings'
 
 /* Les espaces de la mise en forme française sont insécables : les tests les
    normalisent plutôt que de les recopier, sans quoi ils passent ou échouent
@@ -91,5 +107,110 @@ describe('taille sur l’appareil', () => {
 
   it('n’affiche jamais de taille négative', () => {
     expect(plain(formatBytes(-1))).toBe('0 o')
+  })
+})
+
+/**
+ * La mise en forme anglaise, et ce qui la sépare de la française.
+ *
+ * Ce n'est pas une redite des tests du dessus : ce qu'on vérifie ici est
+ * précisément **ce qu'une traduction ne peut pas porter** — la place du symbole,
+ * le séparateur, l'espace avant le pourcent, la lettre de l'unité, l'ordinal du
+ * jour. Une app dont on n'aurait traduit que les mots rendrait « 1 284,50 € »
+ * sous une interface anglaise, et personne n'y verrait un bug tant qu'on ne
+ * regarde que les phrases.
+ */
+describe('mise en forme anglaise', () => {
+  beforeEach(async () => {
+    await applyLocale('en')
+  })
+
+  it('place le symbole devant le montant, sans espace', () => {
+    expect(formatMoney(money(128_450), 'EUR')).toBe('€1,284.50')
+    expect(formatMoney(money(-4_290), 'EUR')).toBe('−€42.90')
+  })
+
+  it('sépare les décimales d’un point et les milliers d’une virgule', () => {
+    const parts = moneyParts(money(128_450), 'EUR')
+    expect(parts.integer).toBe('1,284')
+    expect(parts.fraction).toBe('50')
+    expect(decimalSeparator()).toBe('.')
+    expect(symbolFirst()).toBe(true)
+  })
+
+  /* Le multiplicateur ne se pose pas du même côté dans les deux langues : le
+     français multiplie l'unité — un kilo-euro, « 202 k€ » —, l'anglais multiplie
+     le nombre, « €202k ». */
+  it('écrit les montants arrondis à l’anglaise, multiplicateur compris', () => {
+    expect(formatRoundedMoney(money(20_213_625), 'EUR')).toBe('€202k')
+    expect(formatRoundedMoney(money(124_000_000), 'EUR')).toBe('€1.2M')
+    expect(formatRoundedMoney(money(25_437), 'EUR')).toBe('€250')
+    expect(formatRoundedMoney(money(-840_000), 'EUR')).toBe('−€8.4k')
+  })
+
+  it('colle le pourcent au chiffre', () => {
+    expect(formatPercent(0.42)).toBe('42%')
+    expect(formatDelta(-0.04)).toBe('−4%')
+  })
+
+  it('compte en bytes et non en octets', () => {
+    expect(plain(formatBytes(512))).toBe('512 B')
+    expect(plain(formatBytes(1_500_000))).toBe('1.5 MB')
+  })
+
+  it('dit les dates dans l’ordre jour-mois, sans « 1er »', () => {
+    expect(formatDate('2026-07-01')).toBe('1 July 2026')
+    expect(formatDate('2026-07-12')).toBe('12 July 2026')
+    expect(formatYearMonth('2026-07')).toBe('July 2026')
+  })
+
+  /* « on the 5 of each month » se lit comme une faute : le gabarit reçoit donc
+     un ordinal, que le français rend en chiffre nu. */
+  it('ordonne le jour du mois, exceptions comprises', () => {
+    expect(formatMonthDay(1)).toBe('1st')
+    expect(formatMonthDay(2)).toBe('2nd')
+    expect(formatMonthDay(3)).toBe('3rd')
+    expect(formatMonthDay(4)).toBe('4th')
+    expect(formatMonthDay(11)).toBe('11th')
+    expect(formatMonthDay(12)).toBe('12th')
+    expect(formatMonthDay(13)).toBe('13th')
+    expect(formatMonthDay(21)).toBe('21st')
+  })
+
+  it('dit les jours relatifs dans sa langue', () => {
+    expect(formatRelativeDays(0)).toBe('today')
+    expect(formatRelativeDays(3)).toBe('in 3 days')
+    expect(formatRelativeDays(-2)).toBe('2 days ago')
+  })
+
+  /* L'élision n'existe pas en anglais, mais la préposition reste : les gabarits
+     des deux langues portent donc le complément sans elle. */
+  it('remplace l’élision par une préposition', () => {
+    expect(de('Alice')).toBe('of Alice')
+    expect(de('Camille')).toBe('of Camille')
+  })
+
+  it('énumère avec « and »', () => {
+    expect(enumerate(['Alix'])).toBe('Alix')
+    expect(enumerate(['Alix', 'Camille'])).toBe('Alix and Camille')
+    expect(enumerate(['Alix', 'Camille', 'Sacha'])).toBe('Alix, Camille and Sacha')
+  })
+})
+
+describe('mise en forme française', () => {
+  it('garde l’élision et l’énumération de sa langue', () => {
+    expect(de('Alice')).toBe('d’Alice')
+    expect(de('Camille')).toBe('de Camille')
+    expect(de('Hugo')).toBe('d’Hugo')
+    expect(enumerate(['Alix', 'Camille'])).toBe('Alix et Camille')
+  })
+
+  it('écrit le jour du mois en chiffre nu', () => {
+    expect(formatMonthDay(1)).toBe('1')
+    expect(formatMonthDay(21)).toBe('21')
+  })
+
+  it('écrit « 1er » en toutes lettres sur une date complète', () => {
+    expect(formatDate('2026-07-01')).toBe('1er juillet 2026')
   })
 })

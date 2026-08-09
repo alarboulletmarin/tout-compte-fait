@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { ImportError, type MigrationResult, parseImport } from '@/persistence/transfer'
 import { useStore } from '@/store/store'
 import { Button, type ButtonVariant } from '@/ui/Button'
@@ -33,7 +33,7 @@ export function ImportControl({
     try {
       setPending(parseImport(await file.text()))
     } catch (error) {
-      toast(error instanceof ImportError ? error.message : fr.settings.importHint, 'danger')
+      toast(error instanceof ImportError ? error.message : t.settings.importHint, 'danger')
     }
   }
 
@@ -57,7 +57,7 @@ export function ImportControl({
           fileInput.current?.click()
         }}
       >
-        {fr.settings.import}
+        {t.settings.import}
       </Button>
 
       {/* Deux pas : un import est un effacement déguisé — le fichier arrive,
@@ -69,10 +69,10 @@ export function ImportControl({
           comparer ce qui manque. */}
       <ConfirmDialog
         open={pending !== null}
-        title={fr.settings.import}
+        title={t.settings.import}
         steps={[
-          { question: fr.settings.importConfirm, action: fr.common.confirm },
-          { question: fr.settings.importConfirm2, action: fr.settings.import },
+          { question: t.settings.importConfirm, action: t.common.confirm },
+          { question: t.settings.importConfirm2, action: t.settings.import },
         ]}
         details={pending === null ? undefined : <ImportReport notices={pending.notices} />}
         onCancel={() => {
@@ -83,14 +83,14 @@ export function ImportControl({
           void replaceData(pending.data)
             .then(() => {
               setPending(null)
-              toast(pending.migrated ? fr.settings.importMigrated : fr.settings.imported)
+              toast(pending.migrated ? t.settings.importMigrated : t.settings.imported)
             })
             // Sans ce filet, un échec d'écriture laissait le toast de réussite
             // s'afficher quand même : on annonçait comme rangé ce qui n'était
             // nulle part.
             .catch(() => {
               setPending(null)
-              toast(fr.settings.importFailed, 'danger')
+              toast(t.settings.importFailed, 'danger')
             })
         }}
       />

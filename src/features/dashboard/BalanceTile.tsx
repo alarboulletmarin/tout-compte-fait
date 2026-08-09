@@ -1,5 +1,5 @@
 import { daysInMonth, parseYm, today, ymOf } from '@/domain/date'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useCurrentYm, useMonthProgress, useMonthTotals } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -19,9 +19,9 @@ import type { Metric } from './MetricInfo'
  */
 function progressLabel(ym: string, progress: number, days: number): string {
   const current = ymOf(today())
-  if (ym > current) return fr.dashboard.monthAhead
-  if (ym < current) return fr.dashboard.monthDone
-  return tpl(fr.dashboard.progress, Math.round(progress * days), days)
+  if (ym > current) return t.dashboard.monthAhead
+  if (ym < current) return t.dashboard.monthDone
+  return tpl(t.dashboard.progress, Math.round(progress * days), days)
 }
 
 /**
@@ -54,10 +54,10 @@ export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void
       onClick={() => {
         onExplain({ key: 'balance', value: totals.balance, hint })
       }}
-      label={tpl(fr.dashboard.explain, fr.dashboard.balance)}
+      label={tpl(t.dashboard.explain, t.dashboard.balance)}
       affordance={{ kind: 'explain' }}
     >
-      <Eyebrow icon={BalanceIcon}>{fr.dashboard.balance}</Eyebrow>
+      <Eyebrow icon={BalanceIcon}>{t.dashboard.balance}</Eyebrow>
       {/* Un eyebrow, un chiffre, une lecture secondaire, une visualisation — le
           maximum exact qu'une tuile porte selon le DS §5, et l'anneau *est* la
           visualisation.
@@ -83,7 +83,7 @@ export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void
             size={48}
             thickness={8}
             value={progress}
-            label={fr.a11y.ringLabel}
+            label={t.a11y.ringLabel}
             className="shrink-0"
           />
           <span className="t-label min-w-0">{hint}</span>

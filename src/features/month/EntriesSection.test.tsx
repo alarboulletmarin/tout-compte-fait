@@ -9,7 +9,7 @@ import {
   makeFamily,
   makeMember,
 } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDayFull } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { EntriesSection } from './EntriesSection'
@@ -100,7 +100,7 @@ describe('la liste du mois', () => {
 
     it('ne s’annonce pas quand il n’y en a pas', () => {
       setup()
-      expect(screen.queryByText(fr.month.familyFilter)).not.toBeInTheDocument()
+      expect(screen.queryByText(t.month.familyFilter)).not.toBeInTheDocument()
     })
   })
 
@@ -136,9 +136,9 @@ describe('la liste du mois', () => {
        dit ce que l'encre pleine laisserait deviner. */
     it('nomme le jour courant', () => {
       setup()
-      expect(within(groupOf('2026-08-05')).getByText(fr.month.today)).toBeInTheDocument()
+      expect(within(groupOf('2026-08-05')).getByText(t.month.today)).toBeInTheDocument()
       expect(
-        within(groupOf('2026-08-03')).queryByText(fr.month.today),
+        within(groupOf('2026-08-03')).queryByText(t.month.today),
       ).not.toBeInTheDocument()
     })
 
@@ -150,7 +150,7 @@ describe('la liste du mois', () => {
 
       expect(groupOf('2026-08-05').open).toBe(true)
       expect(groupOf('2026-08-03').open).toBe(false)
-      expect(screen.queryByText(fr.month.today)).not.toBeInTheDocument()
+      expect(screen.queryByText(t.month.today)).not.toBeInTheDocument()
     })
 
     /* Par poste, l'en-tête porte déjà la réponse : c'est un résumé dans lequel
@@ -159,7 +159,7 @@ describe('la liste du mois', () => {
       setup()
       vi.useRealTimers()
 
-      await userEvent.click(screen.getByRole('radio', { name: fr.month.byCategory }))
+      await userEvent.click(screen.getByRole('radio', { name: t.month.byCategory }))
 
       const groups = screen
         .getAllByText(/Loyer|Courses/)

@@ -21,7 +21,7 @@ import { money, neg } from '@/domain/money'
  * - leurs parts du pot commun le redonnent au centime :
  *   520,80 + 319,20 = 840 ;
  * - et le report s'annule d'un membre à l'autre, si bien que la somme des
- *   versements vaut encore 840 : c'est exactement ce que `fr.split.checkHint`
+ *   versements vaut encore 840 : c'est exactement ce que `t.split.checkHint`
  *   promet sur le vrai écran, et le montrer vaut mieux que l'affirmer.
  *
  * Une grille dont les chiffres ne se recomposent pas se lit comme une erreur —

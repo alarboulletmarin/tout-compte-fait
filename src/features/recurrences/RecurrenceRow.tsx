@@ -1,6 +1,6 @@
 import { diffDays, today } from '@/domain/date'
 import { isCostly } from '@/domain/priceHistory'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDayMonthShort, formatMoney, formatRelativeDays, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { type RecurrenceRow as Row, useKindOf } from '@/store/selectors'
@@ -19,10 +19,10 @@ import { useCurrency } from '@/ui/currency'
  * l'appelant n'y met que ça (voir `whoOf`).
  */
 function meta(row: Row, who: string | undefined): string {
-  if (row.stopped) return fr.recurrences.stoppedBadge
+  if (row.stopped) return t.recurrences.stoppedBadge
   const when =
     row.next === null
-      ? fr.recurrences.noNextDue
+      ? t.recurrences.noNextDue
       : `${formatDayMonthShort(row.next)} · ${formatRelativeDays(diffDays(today(), row.next))}`
   return who === undefined ? when : `${when} · ${who}`
 }
@@ -96,7 +96,7 @@ export function RecurrenceRow({
             <span className="tnum truncate">
               {tpl(
                 // Un virement d'épargne n'a pas de prix : son montant change.
-                kind === 'saving' ? fr.recurrences.amountChanged : fr.recurrences.priceChanged,
+                kind === 'saving' ? t.recurrences.amountChanged : t.recurrences.priceChanged,
                 formatMoney(priceChange.previous, currency),
                 formatMoney(priceChange.current, currency),
               )}
@@ -107,13 +107,13 @@ export function RecurrenceRow({
 
       <span className="flex shrink-0 flex-col items-end gap-0.5">
         {monthly === null ? (
-          <span className="t-label">{fr.recurrences.variable}</span>
+          <span className="t-label">{t.recurrences.variable}</span>
         ) : (
           <>
             <Amount value={monthly} direction={recurrence.direction} />
             {annual !== null && showsAnnual(row) && (
               <span className="t-axis tnum">
-                {tpl(fr.recurrences.perYear, formatMoney(annual, currency, false))}
+                {tpl(t.recurrences.perYear, formatMoney(annual, currency, false))}
               </span>
             )}
           </>

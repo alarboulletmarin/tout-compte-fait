@@ -12,7 +12,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { makeData } from '@/domain/fixtures'
 import { money } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import {
   DURABILITY_DISMISSED_KEY,
   type StorageHealth,
@@ -93,7 +93,7 @@ describe('DataNotice', () => {
     useStorageHealth.setState({ probed: true, durable: true })
 
     notice()
-    expect(screen.getByText(fr.settings.reminderTitleNever)).toBeInTheDocument()
+    expect(screen.getByText(t.settings.reminderTitleNever)).toBeInTheDocument()
   })
 
   it('signale la conservation plutôt que l’export, quand les deux sont vrais', () => {
@@ -102,26 +102,26 @@ describe('DataNotice', () => {
     useStorageHealth.setState({ probed: true, durable: false })
 
     notice()
-    expect(screen.getByText(fr.storage.durabilityTitle)).toBeInTheDocument()
-    expect(screen.queryByText(fr.settings.reminderTitleNever)).not.toBeInTheDocument()
+    expect(screen.getByText(t.storage.durabilityTitle)).toBeInTheDocument()
+    expect(screen.queryByText(t.settings.reminderTitleNever)).not.toBeInTheDocument()
   })
 
   it('laisse l’échec d’écriture couvrir tout le reste', () => {
     useStorageHealth.setState({ probed: true, durable: false })
-    useStore.getState().setError({ kind: 'write', message: fr.storage.writeFailed })
+    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
 
     notice()
-    expect(screen.getByRole('alert')).toHaveTextContent(fr.storage.writeFailed)
-    expect(screen.queryByText(fr.storage.durabilityTitle)).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(t.storage.writeFailed)
+    expect(screen.queryByText(t.storage.durabilityTitle)).not.toBeInTheDocument()
   })
 
   /* Une base devenue illisible après l'ouverture ne trouvera pas l'écran
      d'arrivée : la coquille est déjà montée. Elle ne disait rien du tout. */
   it('dit aussi qu’une base est devenue illisible en cours de route', () => {
-    useStore.getState().setError({ kind: 'read', message: fr.storage.blocked })
+    useStore.getState().setError({ kind: 'read', message: t.storage.blocked })
 
     notice()
-    expect(screen.getByRole('alert')).toHaveTextContent(fr.storage.blocked)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.storage.blocked)
   })
 
   it('ne s’intercale pas dans une saisie, sauf pour un échec confirmé', () => {
@@ -129,7 +129,7 @@ describe('DataNotice', () => {
     const { container, rerender } = notice(true)
     expect(container).toBeEmptyDOMElement()
 
-    useStore.getState().setError({ kind: 'write', message: fr.storage.writeFailed })
+    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
     rerender(
       <MemoryRouter>
         <DataNotice focus />
@@ -142,7 +142,7 @@ describe('DataNotice', () => {
     useStorageHealth.setState({ probed: true, durable: false })
 
     const { rerender } = notice()
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.durabilityDismiss }))
+    await userEvent.click(screen.getByRole('button', { name: t.storage.durabilityDismiss }))
 
     // L'écart est écrit sur l'appareil, pas seulement dans ce rendu : le
     // composant est remonté à chaque changement d'écran.
@@ -152,17 +152,17 @@ describe('DataNotice', () => {
         <DataNotice />
       </MemoryRouter>,
     )
-    expect(screen.queryByText(fr.storage.durabilityTitle)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.storage.durabilityTitle)).not.toBeInTheDocument()
     // Le niveau du dessous prend la place : il n'a pas disparu, il attendait.
-    expect(screen.getByText(fr.settings.reminderTitleNever)).toBeInTheDocument()
+    expect(screen.getByText(t.settings.reminderTitleNever)).toBeInTheDocument()
   })
 
   it('se tait entièrement quand les deux rappels ont été écartés', async () => {
     useStorageHealth.setState({ probed: true, durable: false })
 
     const { container } = notice()
-    await userEvent.click(screen.getByRole('button', { name: fr.storage.durabilityDismiss }))
-    await userEvent.click(screen.getByRole('button', { name: fr.settings.reminderDismiss }))
+    await userEvent.click(screen.getByRole('button', { name: t.storage.durabilityDismiss }))
+    await userEvent.click(screen.getByRole('button', { name: t.settings.reminderDismiss }))
 
     expect(localStorage.getItem(REMINDER_DISMISSED_KEY)).not.toBeNull()
     expect(container).toBeEmptyDOMElement()

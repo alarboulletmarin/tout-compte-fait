@@ -1,7 +1,7 @@
 import { SPLIT_PATH } from '@/app/routes'
 import { addMonthsToYm } from '@/domain/date'
 import { add, sub } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { de, formatMoney, formatMonthName, formatSignedMoney, tpl } from '@/i18n/format'
 import { useCurrentYm, useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -141,21 +141,21 @@ export function MemberShareTile() {
          il vient du filtre, que la tuile ne redit pas —, et il vivait jusqu'ici
          dans la lecture parlée de l'anneau, partie avec lui. Un lecteur d'écran
          parcourt les régions d'une page hors de leur voisinage. */
-      label={tpl(fr.dashboard.memberShareOf, member?.name ?? '')}
+      label={tpl(t.dashboard.memberShareOf, member?.name ?? '')}
       /* Le repère nu, sans nommer sa destination : « À VERSER SUR LE COMMUN »
          est l'eyebrow le plus long de la grille (~195px en mono 11px, sans
          césure possible) et « Répartition › » en demande 95 de plus, quand la
          tuile n'en offre que 288 sur un écran de 360. Les deux se croisaient.
          `SplitTile` passe déjà son repère nu, pour la même raison. Le nom du
          lien, lui, est entier : il ne coûte aucun pixel. */
-      link={{ to: SPLIT_PATH, label: fr.dashboard.showMemberShare }}
+      link={{ to: SPLIT_PATH, label: t.dashboard.showMemberShare }}
     >
       {/* L'eyebrow nomme le chiffre, au lieu qu'un libellé le refasse juste
           au-dessus : la tuile portait cinq éléments là où le DS §5 en autorise
           quatre, et les trente pixels de trop se coupaient en haut comme en
           bas — le libellé remontait sous l'eyebrow, le total à payer sortait
           par le bas. */}
-      <Eyebrow icon={SplitIcon}>{fr.dashboard.memberShare}</Eyebrow>
+      <Eyebrow icon={SplitIcon}>{t.dashboard.memberShare}</Eyebrow>
       {settled ? (
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-1">
           {amount}
@@ -176,7 +176,7 @@ export function MemberShareTile() {
               juste si on l'arrondit. */}
           <ul className="flex flex-col gap-1 border-t border-border pt-2">
             <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-              <span className="t-axis min-w-0">{fr.split.settlementShare}</span>
+              <span className="t-axis min-w-0">{t.split.settlementShare}</span>
               <span className="t-axis tnum">{formatMoney(spending, currency)}</span>
             </li>
             {/* Presque jamais, et c'est bien pour ça qu'elle manquait tant : le
@@ -184,13 +184,13 @@ export function MemberShareTile() {
                 d'elle, et aucun écran ne le nommait. */}
             {refund !== 0 && (
               <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="t-axis min-w-0">{fr.split.settlementRefund}</span>
+                <span className="t-axis min-w-0">{t.split.settlementRefund}</span>
                 <span className="t-axis tnum">{formatMoney(refund, currency)}</span>
               </li>
             )}
             {charges.adjustment !== 0 && (
               <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="t-axis min-w-0">{tpl(fr.split.settlement, previous)}</span>
+                <span className="t-axis min-w-0">{tpl(t.split.settlement, previous)}</span>
                 {/* Signé, et sans direction : ce n'est pas un flux dont on
                     lirait la valeur absolue, c'est un écart dont le signe est
                     toute la lecture. */}

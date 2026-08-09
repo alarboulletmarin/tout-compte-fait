@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { LANDING_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { ChevronLeft } from '@/ui/Icons'
 import { Ring } from '@/ui/Ring'
@@ -22,12 +22,12 @@ import { Ring } from '@/ui/Ring'
 const STEPS = 3
 
 export function StepProgress({ step, onBack }: { step: 1 | 2 | 3; onBack?: () => void }) {
-  const label = tpl(fr.onboarding.progress, step)
+  const label = tpl(t.onboarding.progress, step)
 
   return (
     <header className="flex items-center gap-4">
       {onBack === undefined ? (
-        <Link to={LANDING_PATH} className={BACK} aria-label={fr.onboarding.backToLanding}>
+        <Link to={LANDING_PATH} className={BACK} aria-label={t.onboarding.backToLanding}>
           <ChevronLeft size={18} />
         </Link>
       ) : (
@@ -37,7 +37,7 @@ export function StepProgress({ step, onBack }: { step: 1 | 2 | 3; onBack?: () =>
           type="button"
           onClick={onBack}
           className={BACK}
-          aria-label={tpl(fr.onboarding.backToStep, step - 1)}
+          aria-label={tpl(t.onboarding.backToStep, step - 1)}
         >
           <ChevronLeft size={18} />
         </button>
@@ -48,8 +48,8 @@ export function StepProgress({ step, onBack }: { step: 1 | 2 | 3; onBack?: () =>
       <Ring size={56} value={step / STEPS} label={label} srText={label} className="shrink-0" />
 
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="t-eyebrow text-muted">{fr.app.name}</span>
-        <span className="t-label">{tpl(fr.onboarding.step, step)}</span>
+        <span className="t-eyebrow text-muted">{t.app.name}</span>
+        <span className="t-label">{tpl(t.onboarding.step, step)}</span>
       </div>
     </header>
   )

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { ChevronLeft } from '@/ui/Icons'
 import { LANDING_PATH } from './routes'
 
@@ -29,7 +29,7 @@ export function PlainShell({ children }: { children: ReactNode }) {
         className="mb-5 inline-flex h-11 w-fit items-center gap-1 rounded-input text-[13px] font-medium text-muted"
       >
         <ChevronLeft size={18} />
-        {fr.nav.landing}
+        {t.nav.landing}
       </Link>
       {children}
     </div>

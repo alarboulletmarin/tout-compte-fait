@@ -10,6 +10,7 @@
  * ==========================================================================*/
 
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
@@ -17,13 +18,15 @@ import {
   APPEARANCE_PATH,
   CATEGORIES_PATH,
   DATA_PATH,
-  MANAGE_ROUTES,
+  manageRoutes,
   PEOPLE_PATH,
   PROJECTION_PATH,
   STORAGE_PATH,
 } from '@/app/routes'
 import { makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { en } from '@/i18n/en'
+import { readStoredLocale } from '@/i18n/locale'
+import { applyLocale, t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
 import { MorePage } from './MorePage'
@@ -70,7 +73,7 @@ describe('« Plus » — la place qui manquait à quatre écrans', () => {
   it('mène à chaque écran que « Gérer » range', () => {
     open()
 
-    for (const route of MANAGE_ROUTES) {
+    for (const route of manageRoutes()) {
       expect(screen.getByRole('link', { name: new RegExp(route.label) })).toHaveAttribute(
         'href',
         route.path,
@@ -83,8 +86,8 @@ describe('« Plus » — la place qui manquait à quatre écrans', () => {
   it('dit d’une phrase ce qu’il y a derrière chaque porte de « Gérer »', () => {
     open()
 
-    expect(screen.getByText(fr.nav.savingsHint)).toBeInTheDocument()
-    expect(screen.getByText(fr.nav.splitHint)).toBeInTheDocument()
+    expect(screen.getByText(t.nav.savingsHint)).toBeInTheDocument()
+    expect(screen.getByText(t.nav.splitHint)).toBeInTheDocument()
   })
 })
 
@@ -95,11 +98,11 @@ describe('les cinq intentions', () => {
     open()
 
     for (const title of [
-      fr.nav.manage,
-      fr.nav.simulate,
-      fr.nav.organise,
-      fr.nav.data,
-      fr.nav.application,
+      t.nav.manage,
+      t.nav.simulate,
+      t.nav.organise,
+      t.nav.data,
+      t.nav.application,
     ]) {
       expect(screen.getByText(title)).toBeInTheDocument()
     }
@@ -120,7 +123,7 @@ describe('les cinq intentions', () => {
     open()
 
     expect(
-      within(group(fr.nav.simulate)).getByRole('link', { name: new RegExp(fr.nav.projections) }),
+      within(group(t.nav.simulate)).getByRole('link', { name: new RegExp(t.nav.projections) }),
     ).toHaveAttribute('href', PROJECTION_PATH)
   })
 
@@ -132,7 +135,7 @@ describe('les cinq intentions', () => {
     open()
 
     expect(
-      within(group(fr.nav.manage)).queryByRole('link', { name: new RegExp(fr.nav.projections) }),
+      within(group(t.nav.manage)).queryByRole('link', { name: new RegExp(t.nav.projections) }),
     ).toBeNull()
   })
 
@@ -141,26 +144,26 @@ describe('les cinq intentions', () => {
      préférence d'application. */
   it('range les personnes et les catégories sous « Organiser »', () => {
     open()
-    const organise = within(group(fr.nav.organise))
+    const organise = within(group(t.nav.organise))
 
-    expect(organise.getByRole('link', { name: new RegExp(fr.settings.household) })).toHaveAttribute(
+    expect(organise.getByRole('link', { name: new RegExp(t.settings.household) })).toHaveAttribute(
       'href',
       PEOPLE_PATH,
     )
     expect(
-      organise.getByRole('link', { name: new RegExp(fr.settings.categories) }),
+      organise.getByRole('link', { name: new RegExp(t.settings.categories) }),
     ).toHaveAttribute('href', CATEGORIES_PATH)
   })
 
   it('remonte les données d’un cran, au lieu de les enfouir sous un réglage', () => {
     open()
-    const data = within(group(fr.nav.data))
+    const data = within(group(t.nav.data))
 
-    expect(data.getByRole('link', { name: new RegExp(fr.storage.title) })).toHaveAttribute(
+    expect(data.getByRole('link', { name: new RegExp(t.storage.title) })).toHaveAttribute(
       'href',
       STORAGE_PATH,
     )
-    expect(data.getByRole('link', { name: new RegExp(fr.settings.transfer) })).toHaveAttribute(
+    expect(data.getByRole('link', { name: new RegExp(t.settings.transfer) })).toHaveAttribute(
       'href',
       DATA_PATH,
     )
@@ -170,13 +173,13 @@ describe('les cinq intentions', () => {
      l'app se présente — plus la page qui dit ce qu'elle est. */
   it('garde sous « Application » ce qui ne touche qu’à la présentation', () => {
     open()
-    const application = within(group(fr.nav.application))
+    const application = within(group(t.nav.application))
 
     expect(
-      application.getByRole('link', { name: new RegExp(fr.appearance.title) }),
+      application.getByRole('link', { name: new RegExp(t.appearance.title) }),
     ).toHaveAttribute('href', APPEARANCE_PATH)
-    expect(application.getByRole('combobox', { name: fr.settings.currency })).toBeInTheDocument()
-    expect(application.getByRole('link', { name: new RegExp(fr.nav.about) })).toHaveAttribute(
+    expect(application.getByRole('combobox', { name: t.settings.currency })).toBeInTheDocument()
+    expect(application.getByRole('link', { name: new RegExp(t.nav.about) })).toHaveAttribute(
       'href',
       ABOUT_PATH,
     )
@@ -204,7 +207,7 @@ describe('les repères', () => {
   it('en donne un aussi à la rangée qui ne mène nulle part', () => {
     open()
 
-    const row = screen.getByText(fr.settings.currency).closest('div')
+    const row = screen.getByText(t.settings.currency).closest('div')
     expect(row?.querySelectorAll('svg')).toHaveLength(1)
   })
 })
@@ -215,12 +218,12 @@ describe('ce que chaque rangée dit d’elle-même', () => {
   it('affiche la valeur des rangées qui en ont une', () => {
     open()
 
-    expect(screen.getByText(`Maison · ${tpl(fr.settings.membersCountOne, 1)}`)).toBeInTheDocument()
+    expect(screen.getByText(`Maison · ${tpl(t.settings.membersCountOne, 1)}`)).toBeInTheDocument()
     expect(
-      screen.getByText(`${tpl(fr.settings.familyCount, 2)} · ${tpl(fr.settings.familiesCount, 2)}`),
+      screen.getByText(`${tpl(t.settings.familyCount, 2)} · ${tpl(t.settings.familiesCount, 2)}`),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(tpl(fr.settings.appearanceSummary, fr.theme.system, fr.palettes.classique)),
+      screen.getByText(tpl(t.settings.appearanceSummary, t.theme.system, t.palettes.classique)),
     ).toBeInTheDocument()
   })
 
@@ -230,7 +233,7 @@ describe('ce que chaque rangée dit d’elle-même', () => {
     useStore.setState({ data: makeData({ household: { name: '', members: [] } }) })
     open()
 
-    expect(screen.getByText(fr.settings.membersNone)).toBeInTheDocument()
+    expect(screen.getByText(t.settings.membersNone)).toBeInTheDocument()
   })
 
   /* Un second tableau de bord serait en retard d'une règle sur le premier : les
@@ -241,5 +244,105 @@ describe('ce que chaque rangée dit d’elle-même', () => {
 
     expect(screen.queryByText('Carburant')).not.toBeInTheDocument()
     expect(screen.queryByText('Transport')).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * Le réglage de langue, et ce qu'il doit à qui ne lit pas l'app.
+ *
+ * Le seul écran de l'app qu'on ouvre *sans pouvoir le lire* : quelqu'un qui
+ * arrive sur une interface française sans parler français vient chercher un mot
+ * qu'il reconnaît. C'est ce qui décide de la forme du contrôle, et c'est donc ce
+ * qui se teste — pas seulement que le réglage existe, mais que les deux langues
+ * sont **visibles ensemble**, et nommées chacune dans la sienne.
+ */
+describe('la langue', () => {
+  it('montre les deux langues à la fois, chacune dans la sienne', () => {
+    open()
+
+    const application = group(t.nav.application)
+    expect(within(application).getByRole('radio', { name: 'Français' })).toBeInTheDocument()
+    expect(within(application).getByRole('radio', { name: 'English' })).toBeInTheDocument()
+  })
+
+  it('marque la langue active', () => {
+    open()
+
+    expect(screen.getByRole('radio', { name: 'Français' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  /* Le réglage vit dans le document, à côté du thème et de la palette : c'est
+     un choix, et il doit survivre au navigateur qui l'a recueilli. */
+  it('écrit la langue choisie dans le document', async () => {
+    const user = userEvent.setup()
+    open()
+
+    await user.click(screen.getByRole('radio', { name: 'English' }))
+
+    expect(useStore.getState().data.settings.locale).toBe('en')
+  })
+
+  /* Le miroir localStorage est celui des trois qui compte le plus : sans lui,
+     l'app s'ouvre en français à chaque démarrage à froid, le temps d'un
+     aller-retour de réseau pour aller chercher le catalogue anglais. */
+  it('en garde un miroir pour le prochain démarrage', async () => {
+    const user = userEvent.setup()
+    open()
+
+    await user.click(screen.getByRole('radio', { name: 'English' }))
+
+    expect(readStoredLocale()).toBe('en')
+  })
+})
+
+/**
+ * L'app rendue en anglais, et la règle qu'elle vérifie.
+ *
+ * Les chaînes sont lues sur une liaison de module (`i18n/strings.ts`), qui n'est
+ * juste qu'à une condition : **rien ne lit `t` à l'évaluation d'un module**. Un
+ * tableau de libellés construit au chargement fige la langue du démarrage, et le
+ * défaut ne se voit alors que sur l'écran concerné, en anglais, chez quelqu'un
+ * qui ne le signalera pas.
+ *
+ * Cet écran-ci est le bon endroit pour l'éprouver : c'est celui qui portait le
+ * plus de ces tables — les phrases de « Gérer », les noms de thème, les noms de
+ * palette —, et elles sont toutes rendues ici en une fois.
+ */
+describe('rendu en anglais', () => {
+  beforeEach(async () => {
+    await applyLocale('en')
+  })
+
+  it('traduit les titres de groupe, qui viennent d’une table de module', () => {
+    open()
+
+    expect(screen.getByText(en.nav.manage)).toBeInTheDocument()
+    expect(screen.getByText(en.nav.application)).toBeInTheDocument()
+  })
+
+  it('traduit les phrases de « Gérer », rangées par chemin', () => {
+    open()
+
+    expect(screen.getByText(en.nav.savingsHint)).toBeInTheDocument()
+    expect(screen.getByText(en.nav.splitHint)).toBeInTheDocument()
+  })
+
+  /* La rangée d'apparence assemble deux tables indexées — les noms de thème et
+     de palette — dans un gabarit. Trois occasions de figer la langue sur une
+     seule ligne d'écran. */
+  it('traduit le résumé d’apparence, assemblé de deux tables', () => {
+    open()
+
+    expect(
+      screen.getByText(tpl(en.settings.appearanceSummary, en.theme.system, en.palettes.classique)),
+    ).toBeInTheDocument()
+  })
+
+  it('garde le nom des deux langues dans la leur', () => {
+    open()
+
+    expect(screen.getByRole('radio', { name: 'Français' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'English' })).toBeInTheDocument()
   })
 })

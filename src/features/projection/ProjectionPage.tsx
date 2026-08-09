@@ -26,7 +26,7 @@ import { ZERO } from '@/domain/money'
 import { type RateKind, milestoneMonths } from '@/domain/projection'
 import { formatPercent, formatRoundedMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Button } from '@/ui/Button'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { AmountInput, Checkbox, Field, TextInput } from '@/ui/Field'
@@ -60,12 +60,12 @@ import {
  */
 const SERIE_COLORS = ['var(--accent-2)', 'var(--text)', 'var(--text-muted)'] as const
 
-const MODES: { value: ProjectionMode; label: string }[] = [
+const modes = (): { value: ProjectionMode; label: string }[] => [
   { value: 'forecast', label: projection.modeForecast },
   { value: 'target', label: projection.modeTarget },
 ]
 
-const KINDS: { value: RateKind; label: string }[] = [
+const kinds = (): { value: RateKind; label: string }[] => [
   { value: 'guaranteed', label: projection.kindGuaranteed },
   { value: 'assumed', label: projection.kindAssumed },
 ]
@@ -141,7 +141,7 @@ export function ProjectionPage() {
 
         <Tile className="gap-4">
           <Segmented
-            options={MODES}
+            options={modes()}
             value={draft.mode}
             onChange={(mode) => {
               patch({ mode })
@@ -476,13 +476,13 @@ function ScenarioFields({
             aria-label={tpl(projection.scenarioRemove, `${shown} %`)}
             onClick={onRemove}
           >
-            {fr.common.delete}
+            {t.common.delete}
           </Button>
         )}
       </div>
 
       <Segmented
-        options={KINDS}
+        options={kinds()}
         value={kind}
         onChange={(next) => {
           onChange({ kind: next })

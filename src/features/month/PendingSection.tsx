@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { entryPath } from '@/app/routes'
 import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatDateCompact, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { reveal } from '@/lib/reveal'
@@ -51,7 +51,7 @@ function OpenPart({
     <button
       type="button"
       onClick={onOpen}
-      aria-label={tpl(fr.month.openEntry, entry.label)}
+      aria-label={tpl(t.month.openEntry, entry.label)}
       className={cn(
         'flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-inner px-1 text-left',
         'transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2',
@@ -98,7 +98,7 @@ function ConfirmButton({
   return (
     <Button
       size="sm"
-      aria-label={tpl(fr.month.confirmEntry, label)}
+      aria-label={tpl(t.month.confirmEntry, label)}
       className="shrink-0"
       {...(disabled === undefined ? {} : { disabled })}
       onClick={onConfirm}
@@ -120,7 +120,7 @@ function FixedRow({ entry, color, onOpen }: { entry: Entry; color: string; onOpe
         label={entry.label}
         onConfirm={() => {
           confirmEntry(entry.id)
-          toast(fr.month.confirmedOne)
+          toast(t.month.confirmedOne)
         }}
       />
     </li>
@@ -150,7 +150,7 @@ function VariableRow({
       <OpenPart
         entry={entry}
         color={color}
-        meta={`${formatDateCompact(entry.date)} · ${fr.month.toFill}`}
+        meta={`${formatDateCompact(entry.date)} · ${t.month.toFill}`}
         onOpen={onOpen}
       />
       {/* La largeur du champ est portée par la colonne, pas par le champ :
@@ -160,7 +160,7 @@ function VariableRow({
       <AmountCell>
         <AmountInput
           value={text}
-          aria-label={`${fr.entry.amount} — ${entry.label}`}
+          aria-label={`${t.entry.amount} — ${entry.label}`}
           placeholder="0,00"
           className="px-2"
           onChange={(e) => {
@@ -174,7 +174,7 @@ function VariableRow({
         onConfirm={() => {
           if (parsed === null) return
           confirmEntry(entry.id, parsed)
-          toast(fr.month.confirmedOne)
+          toast(t.month.confirmedOne)
         }}
       />
     </li>
@@ -266,11 +266,11 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
   const undo = (
     <ConfirmDialog
       open={undoing}
-      title={fr.month.unconfirmAll}
+      title={t.month.unconfirmAll}
       steps={[
         {
-          question: tpl(fr.month.unconfirmAllConfirm, unconfirmable.length),
-          action: fr.month.unconfirm,
+          question: tpl(t.month.unconfirmAllConfirm, unconfirmable.length),
+          action: t.month.unconfirm,
         },
       ]}
       onCancel={() => {
@@ -278,7 +278,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
       }}
       onConfirm={() => {
         setUndoing(false)
-        undoable(fr.month.unconfirmedAll, () => {
+        undoable(t.month.unconfirmedAll, () => {
           unconfirmEntries(unconfirmable.map((e) => e.id))
         })
       }}
@@ -298,8 +298,8 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
          quoi on atterrissait après le titre et après « Confirmer le mois ». */
       <div ref={root} className="reveal-target">
         <Tile className="flex flex-col gap-3">
-          <Eyebrow icon={ToConfirmIcon}>{fr.month.toConfirm}</Eyebrow>
-          <p className="t-label">{fr.month.done}</p>
+          <Eyebrow icon={ToConfirmIcon}>{t.month.toConfirm}</Eyebrow>
+          <p className="t-label">{t.month.done}</p>
           <Button
             variant="ghost"
             className="self-start"
@@ -307,7 +307,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
               setUndoing(true)
             }}
           >
-            {fr.month.unconfirmAll}
+            {t.month.unconfirmAll}
           </Button>
           {undo}
         </Tile>
@@ -324,7 +324,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
 
   const confirmAll = (): void => {
     confirmEntries(fixed.map((e) => e.id))
-    toast(fr.month.confirmedAll)
+    toast(t.month.confirmedAll)
   }
 
   return (
@@ -332,15 +332,15 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
       <Tile className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Eyebrow icon={ToConfirmIcon}>
-            {tpl(`${fr.month.toConfirm} · %s`, all.length)}
+            {tpl(`${t.month.toConfirm} · %s`, all.length)}
           </Eyebrow>
-          {fixed.length > 0 && <Button onClick={confirmAll}>{fr.month.confirmAll}</Button>}
+          {fixed.length > 0 && <Button onClick={confirmAll}>{t.month.confirmAll}</Button>}
         </div>
 
         {/* Dit ce que « Confirmer le mois » laisse derrière lui, plutôt que de
             laisser découvrir que des lignes restent après l'avoir actionné. */}
         {fixed.length > 0 && variable.length > 0 && (
-          <p className="t-label">{fr.month.confirmAllHint}</p>
+          <p className="t-label">{t.month.confirmAllHint}</p>
         )}
 
         <ul className="flex flex-col gap-1">
@@ -373,7 +373,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
             se lit comme une liste complète et l'on croit avoir tout confirmé. */}
         {cut && (
           <div className="flex flex-wrap items-center gap-3">
-            <p className="t-label">{tpl(fr.month.pendingMore, hidden)}</p>
+            <p className="t-label">{tpl(t.month.pendingMore, hidden)}</p>
             <Button
               size="sm"
               variant="ghost"
@@ -381,7 +381,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
                 setShowAll(true)
               }}
             >
-              {fr.month.pendingShowAll}
+              {t.month.pendingShowAll}
             </Button>
           </div>
         )}
@@ -397,7 +397,7 @@ export function PendingSection({ focus = 0 }: { focus?: number }) {
               setUndoing(true)
             }}
           >
-            {fr.month.unconfirmAll}
+            {t.month.unconfirmAll}
           </Button>
         )}
         {undo}

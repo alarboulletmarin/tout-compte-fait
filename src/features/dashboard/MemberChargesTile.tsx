@@ -1,5 +1,5 @@
 import { type Money, ZERO, add } from '@/domain/money'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -90,18 +90,18 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
       id: 'own',
       value: shareOf(charges.own),
       color,
-      label: fr.dashboard.memberChargesOwn,
+      label: t.dashboard.memberChargesOwn,
     },
     {
       id: 'common',
       value: shareOf(common),
       color: COMMON_COLOR,
-      label: fr.dashboard.memberChargesCommon,
+      label: t.dashboard.memberChargesCommon,
     },
   ]
 
   const spoken = tpl(
-    fr.dashboard.srMemberCharges,
+    t.dashboard.srMemberCharges,
     formatMoney(total, currency),
     member?.name ?? '',
     formatMoney(charges.own, currency),
@@ -111,7 +111,7 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
      celle des deux qu'on ne décide pas seul·e, donc celle dont on vient
      chercher l'explication, et une explication qui parle d'un montant qu'on ne
      voit plus oblige à refermer la feuille pour le retrouver. */
-  const hint = tpl(fr.dashboard.memberChargesOfWhich, formatMoney(common, currency))
+  const hint = tpl(t.dashboard.memberChargesOfWhich, formatMoney(common, currency))
 
   return (
     /* **Aucun chevron, et une feuille à la place.** Ses deux moitiés viennent
@@ -143,16 +143,16 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
       onClick={() => {
         onExplain({ key: 'memberCharges', value: total, hint })
       }}
-      label={tpl(fr.dashboard.explain, fr.dashboard.memberCharges)}
+      label={tpl(t.dashboard.explain, t.dashboard.memberCharges)}
       affordance={{ kind: 'explain' }}
     >
-      <Eyebrow icon={ChargesIcon}>{fr.dashboard.memberCharges}</Eyebrow>
+      <Eyebrow icon={ChargesIcon}>{t.dashboard.memberCharges}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring
           size={DONUT_SIZE}
           thickness={DONUT_THICKNESS}
           segments={segments}
-          label={fr.dashboard.memberCharges}
+          label={t.dashboard.memberCharges}
           srText={spoken}
           className="shrink-0"
         >
@@ -182,14 +182,14 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={color} />
-              <span className="t-label min-w-0">{fr.dashboard.memberChargesOwn}</span>
+              <span className="t-label min-w-0">{t.dashboard.memberChargesOwn}</span>
             </span>
             <Amount value={charges.own} size="label" direction="out" />
           </p>
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Dot color={COMMON_COLOR} />
-              <span className="t-label min-w-0">{fr.dashboard.memberChargesCommon}</span>
+              <span className="t-label min-w-0">{t.dashboard.memberChargesCommon}</span>
             </span>
             <Amount value={common} size="label" direction="out" />
           </p>

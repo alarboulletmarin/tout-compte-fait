@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { ExternalIcon } from '@/ui/Icons'
@@ -36,23 +36,23 @@ export function AppFooter() {
           premier. Libellés courts — « Mentions » plutôt que « Mentions
           légales » — parce que cinq liens entiers ne tiennent pas sur deux
           lignes à 320px, et qu'aucun n'a le droit d'y être tronqué. */}
-      <nav aria-label={fr.nav.about} className="flex flex-wrap items-center gap-x-5">
+      <nav aria-label={t.nav.about} className="flex flex-wrap items-center gap-x-5">
         <Link to={ABOUT_PATH} className={LINK}>
-          {fr.nav.about}
+          {t.nav.about}
         </Link>
         <Link to={LEGAL_NOTICE_PATH} className={LINK}>
-          {fr.legal.shortNotice}
+          {t.legal.shortNotice}
         </Link>
         <Link to={PRIVACY_PATH} className={LINK}>
-          {fr.legal.privacy}
+          {t.legal.privacy}
         </Link>
         <Link to={TERMS_PATH} className={LINK}>
-          {fr.legal.shortTerms}
+          {t.legal.shortTerms}
         </Link>
-        <ExternalLink href={REPO_URL}>{fr.about.repo}</ExternalLink>
+        <ExternalLink href={REPO_URL}>{t.about.repo}</ExternalLink>
       </nav>
       <p className="t-axis text-muted">
-        {tpl(fr.about.version, VERSION)} · {fr.about.license}
+        {tpl(t.about.version, VERSION)} · {t.about.license}
       </p>
     </footer>
   )
@@ -82,7 +82,7 @@ export function ExternalLink({
     <a href={href} target="_blank" rel="noreferrer" className={cn(LINK, className)}>
       {children}
       <ExternalIcon size={14} />
-      <span className="sr-only-text"> {fr.about.newWindow}</span>
+      <span className="sr-only-text"> {t.about.newWindow}</span>
     </a>
   )
 }

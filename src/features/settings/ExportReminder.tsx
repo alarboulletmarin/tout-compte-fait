@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { DATA_PATH } from '@/app/routes'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { IconButton } from '@/ui/Button'
 import { Close } from '@/ui/Icons'
 import { SwipeAway } from '@/ui/SwipeAway'
@@ -19,7 +19,7 @@ import { SwipeAway } from '@/ui/SwipeAway'
  */
 export function ExportReminder({ never, onDismiss }: { never: boolean; onDismiss: () => void }) {
   return (
-    <SwipeAway onDismiss={onDismiss} label={fr.settings.reminderLabel} className="mb-4 block">
+    <SwipeAway onDismiss={onDismiss} label={t.settings.reminderLabel} className="mb-4 block">
       {/* Le texte et ses boutons s'empilent tant que la ligne n'est pas tenable :
           en rangée, un bouton `shrink-0` écrase la phrase sous sa largeur
           min-content et la fait tomber en colonne d'un mot. */}
@@ -28,9 +28,9 @@ export function ExportReminder({ never, onDismiss }: { never: boolean; onDismiss
           {/* Le jour où l'on n'a jamais exporté, parler d'un « dernier export »
               décrit quelque chose qui n'existe pas. */}
           <p className="t-body">
-            {never ? fr.settings.reminderTitleNever : fr.settings.reminderTitle}
+            {never ? t.settings.reminderTitleNever : t.settings.reminderTitle}
           </p>
-          <p className="t-label">{fr.settings.reminderBody}</p>
+          <p className="t-label">{t.settings.reminderBody}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
           {/* Droit sur la vue qui exporte, et non sur la page de réglages :
@@ -40,9 +40,9 @@ export function ExportReminder({ never, onDismiss }: { never: boolean; onDismiss
             to={DATA_PATH}
             className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
           >
-            {fr.settings.export}
+            {t.settings.export}
           </Link>
-          <IconButton label={fr.settings.reminderDismiss} onClick={onDismiss}>
+          <IconButton label={t.settings.reminderDismiss} onClick={onDismiss}>
             <Close size={18} />
           </IconButton>
         </div>

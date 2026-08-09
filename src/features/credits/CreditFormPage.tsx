@@ -5,7 +5,7 @@ import { type ISODate, today } from '@/domain/date'
 import { parseAmount, toAmountInput } from '@/domain/money'
 import { parseRateBp, toRateInput } from '@/domain/rate'
 import type { Debt } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 import { addDebt, removeDebt, replaceDebt, undoable } from '@/store/actions'
 import { useDebtStatus, useRecurrenceRows } from '@/store/selectors'
@@ -55,9 +55,9 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
   const principal = parseAmount(draft.principalText)
   const rateBp = parseRateBp(draft.rateText)
   const errors = {
-    label: draft.label.trim() === '' ? fr.credits.labelRequired : undefined,
-    principal: principal === null || principal <= 0 ? fr.credits.principalRequired : undefined,
-    category: draft.categoryId === '' ? fr.credits.categoryRequired : undefined,
+    label: draft.label.trim() === '' ? t.credits.labelRequired : undefined,
+    principal: principal === null || principal <= 0 ? t.credits.principalRequired : undefined,
+    category: draft.categoryId === '' ? t.credits.categoryRequired : undefined,
   }
   const shown = showErrors
     ? errors
@@ -84,28 +84,28 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
     }
     if (debt === null) {
       addDebt(payload)
-      toast(fr.credits.added)
+      toast(t.credits.added)
     } else {
       replaceDebt(debt.id, payload)
-      toast(fr.credits.updated)
+      toast(t.credits.updated)
     }
     onDone()
   }
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
-      <PageTitle title={debt === null ? fr.credits.add : fr.credits.edit} onBack={guard.request} />
+      <PageTitle title={debt === null ? t.credits.add : t.credits.edit} onBack={guard.request} />
 
       {/* Sur un crédit existant, le calcul est montré avant le formulaire :
           c'est la réponse qu'on vient chercher, pas les champs qui l'ont
           produite. */}
       {status !== null && (
         <Tile className="gap-1">
-          <span className="t-label">{fr.credits.remaining}</span>
+          <span className="t-label">{t.credits.remaining}</span>
           <Amount value={status.remaining} size="tile" />
           <span className="t-axis">
-            {tpl(fr.credits.progress, formatPercent(status.progress))} ·{' '}
-            {fr.credits.paid} {formatMoney(status.paid, currency)}
+            {tpl(t.credits.progress, formatPercent(status.progress))} ·{' '}
+            {t.credits.paid} {formatMoney(status.paid, currency)}
           </span>
         </Tile>
       )}
@@ -118,14 +118,14 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
         }}
       >
         <Tile className="gap-4">
-          <Field label={fr.entry.label} required {...(shown.label ? { error: shown.label } : {})}>
+          <Field label={t.entry.label} required {...(shown.label ? { error: shown.label } : {})}>
             {(id, describedBy) => (
               <TextInput
                 id={id}
                 aria-describedby={describedBy}
                 value={draft.label}
                 invalid={Boolean(shown.label)}
-                placeholder={fr.credits.labelPlaceholder}
+                placeholder={t.credits.labelPlaceholder}
                 maxLength={60}
                 autoFocus
                 onChange={(e) => {
@@ -136,7 +136,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
           </Field>
 
           <Field
-            label={fr.entry.category}
+            label={t.entry.category}
             required
             {...(shown.category ? { error: shown.category } : {})}
           >
@@ -154,7 +154,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
           </Field>
 
           <Field
-            label={fr.credits.principal}
+            label={t.credits.principal}
             required
             {...(shown.principal ? { error: shown.principal } : {})}
           >
@@ -175,7 +175,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
           {/* Un taux annuel s'écrit « 1,89 » : quatre caractères, bornés à cent
               par `parseRateBp`. Il porte donc le plafond des champs bornés, sans
               être un montant — il n'a ni symbole ni centimes. */}
-          <Field label={fr.credits.rate} optional hint={fr.credits.rateHint}>
+          <Field label={t.credits.rate} optional hint={t.credits.rateHint}>
             {(id, describedBy) => (
               <TextInput
                 id={id}
@@ -184,7 +184,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
                 value={draft.rateText}
                 invalid={rateBp === null}
                 inputMode="decimal"
-                placeholder={fr.credits.ratePlaceholder}
+                placeholder={t.credits.ratePlaceholder}
                 onChange={(e) => {
                   patch({ rateText: e.target.value })
                 }}
@@ -194,7 +194,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
 
           {/* Sans mensualité, le capital ne peut pas décroître. Le dire dans
               l'option elle-même vaut mieux qu'un crédit figé sans explication. */}
-          <Field label={fr.credits.linked} optional hint={fr.credits.linkedHint}>
+          <Field label={t.credits.linked} optional hint={t.credits.linkedHint}>
             {(id, describedBy) => (
               <Select
                 id={id}
@@ -204,7 +204,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
                   patch({ recurrenceId: e.target.value })
                 }}
               >
-                <option value="">{fr.credits.linkedNone}</option>
+                <option value="">{t.credits.linkedNone}</option>
                 {rows.map((row) => (
                   <option key={row.recurrence.id} value={row.recurrence.id}>
                     {row.recurrence.label}
@@ -214,7 +214,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
             )}
           </Field>
 
-          <Field label={fr.credits.startedOn} required>
+          <Field label={t.credits.startedOn} required>
             {(id) => (
               <DateInput
                 id={id}
@@ -226,7 +226,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
             )}
           </Field>
 
-          <Field label={fr.credits.endsOn} required>
+          <Field label={t.credits.endsOn} required>
             {(id) => (
               <DateInput
                 id={id}
@@ -238,7 +238,7 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
             )}
           </Field>
 
-          <Field label={fr.entry.note} optional>
+          <Field label={t.entry.note} optional>
             {(id) => (
               <TextInput
                 id={id}
@@ -255,10 +255,10 @@ function Form({ debt, onDone }: { debt: Debt | null; onDone: () => void }) {
 
       <div className="flex flex-wrap gap-2">
         <Button type="submit" form="credit-form">
-          {fr.common.save}
+          {t.common.save}
         </Button>
         <Button variant="secondary" onClick={guard.request}>
-          {fr.common.cancel}
+          {t.common.cancel}
         </Button>
       </div>
 
@@ -280,18 +280,18 @@ function RemoveDebt({ debt, onDone }: { debt: Debt; onDone: () => void }) {
           setConfirming(true)
         }}
       >
-        {fr.credits.remove}
+        {t.credits.remove}
       </Button>
       <ConfirmDialog
         open={confirming}
-        title={fr.credits.remove}
-        steps={[{ question: fr.credits.removeConfirm, action: fr.common.delete }]}
+        title={t.credits.remove}
+        steps={[{ question: t.credits.removeConfirm, action: t.common.delete }]}
         onCancel={() => {
           setConfirming(false)
         }}
         onConfirm={() => {
           setConfirming(false)
-          undoable(fr.credits.removed, () => {
+          undoable(t.credits.removed, () => {
             removeDebt(debt.id)
           })
           onDone()

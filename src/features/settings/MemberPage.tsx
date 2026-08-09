@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { RECURRENCES_PATH, SAVINGS_PATH, PEOPLE_PATH } from '@/app/routes'
 import type { Member } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
 import { addMember, removeMember, renameMember, undoable } from '@/store/actions'
 import {
@@ -37,15 +37,15 @@ import { useCurrency } from '@/ui/currency'
 function removeQuestion(name: string, advances: number, supports: number): string {
   const base =
     advances === 0
-      ? tpl(fr.settings.memberRemoveConfirm, name)
+      ? tpl(t.settings.memberRemoveConfirm, name)
       : advances === 1
-        ? tpl(fr.settings.memberRemoveConfirmAdvanceOne, name)
-        : tpl(fr.settings.memberRemoveConfirmAdvances, advances, name)
+        ? tpl(t.settings.memberRemoveConfirmAdvanceOne, name)
+        : tpl(t.settings.memberRemoveConfirmAdvances, advances, name)
   if (supports === 0) return base
   const about =
     supports === 1
-      ? fr.settings.memberRemoveSupportOne
-      : tpl(fr.settings.memberRemoveSupports, supports)
+      ? t.settings.memberRemoveSupportOne
+      : tpl(t.settings.memberRemoveSupports, supports)
   return `${about} ${base}`
 }
 
@@ -104,7 +104,7 @@ function MemberView({ member }: { member?: Member }) {
 
   return (
     <div className="flex max-w-xl flex-col gap-4">
-      <PageTitle title={member?.name ?? fr.settings.memberAdd} onBack={back}>
+      <PageTitle title={member?.name ?? t.settings.memberAdd} onBack={back}>
         {member !== undefined && <Dot color={member.color} size={10} className="shrink-0" />}
       </PageTitle>
 
@@ -119,12 +119,12 @@ function MemberView({ member }: { member?: Member }) {
             back()
           }}
         >
-          <Field label={fr.settings.memberName}>
+          <Field label={t.settings.memberName}>
             {(fieldId) => (
               <TextInput
                 id={fieldId}
                 value={name}
-                placeholder={fr.settings.memberPlaceholder}
+                placeholder={t.settings.memberPlaceholder}
                 maxLength={24}
                 /* Le champ prend le focus à la création, où l'écran n'existe
                    que pour lui — jamais sur une fiche qu'on vient consulter,
@@ -139,7 +139,7 @@ function MemberView({ member }: { member?: Member }) {
             )}
           </Field>
           <Button type="submit" disabled={trimmed === ''} className="w-fit">
-            {member === undefined ? fr.settings.memberAdd : fr.common.save}
+            {member === undefined ? t.settings.memberAdd : t.common.save}
           </Button>
         </form>
 
@@ -150,19 +150,19 @@ function MemberView({ member }: { member?: Member }) {
             rien. */}
         {member !== undefined && (
           <div className="flex flex-col gap-2 border-t border-border pt-4">
-            <Eyebrow icon={IncomeIcon}>{fr.settings.memberIncome}</Eyebrow>
+            <Eyebrow icon={IncomeIcon}>{t.settings.memberIncome}</Eyebrow>
             <p className="t-body tnum">
               {read?.income != null
                 ? formatMoney(read.income, currency, false)
                 : read?.gap === 'unpriced'
-                  ? fr.settings.memberIncomeUnpriced
+                  ? t.settings.memberIncomeUnpriced
                   : read?.gap === 'zero'
-                    ? fr.settings.memberIncomeZero
-                    : fr.settings.memberNoIncome}
+                    ? t.settings.memberIncomeZero
+                    : t.settings.memberNoIncome}
             </p>
             {shareBp !== undefined && (
               <p className="t-label">
-                {tpl(fr.settings.memberShareOf, formatPercent(shareBp / 10_000, 1))}
+                {tpl(t.settings.memberShareOf, formatPercent(shareBp / 10_000, 1))}
               </p>
             )}
             {(read?.gap === 'unpriced' || read?.gap === 'zero') && (
@@ -171,8 +171,8 @@ function MemberView({ member }: { member?: Member }) {
                 className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
               >
                 {read.gap === 'unpriced'
-                  ? fr.settings.memberIncomeUnpricedFix
-                  : fr.settings.memberIncomeZeroFix}
+                  ? t.settings.memberIncomeUnpricedFix
+                  : t.settings.memberIncomeZeroFix}
               </Link>
             )}
           </div>
@@ -188,18 +188,18 @@ function MemberView({ member }: { member?: Member }) {
           rattrape pas. */}
       {member !== undefined && (
         <Tile className="gap-3">
-          <p className="t-label">{fr.settings.memberRemoveHint}</p>
+          <p className="t-label">{t.settings.memberRemoveHint}</p>
           {/* Réattribuer avant de retirer : c'est le même geste que changer le
               propriétaire depuis la fiche d'un support, et il vaut mieux le
               proposer avant qu'après. */}
           {ownedSupports.length > 0 && (
             <>
-              <p className="t-label">{fr.settings.memberSupportsReassign}</p>
+              <p className="t-label">{t.settings.memberSupportsReassign}</p>
               <Link
                 to={SAVINGS_PATH}
                 className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
               >
-                {fr.settings.memberSupportsGo}
+                {t.settings.memberSupportsGo}
               </Link>
             </>
           )}
@@ -210,18 +210,18 @@ function MemberView({ member }: { member?: Member }) {
               setRemoving(true)
             }}
           >
-            {tpl(fr.settings.memberRemove, member.name)}
+            {tpl(t.settings.memberRemove, member.name)}
           </Button>
         </Tile>
       )}
 
       <ConfirmDialog
         open={removing}
-        title={tpl(fr.settings.memberRemove, member?.name ?? '')}
+        title={tpl(t.settings.memberRemove, member?.name ?? '')}
         steps={[
           {
             question: removeQuestion(member?.name ?? '', removedAdvances, ownedSupports.length),
-            action: fr.common.delete,
+            action: t.common.delete,
           },
         ]}
         onCancel={() => {
@@ -236,7 +236,7 @@ function MemberView({ member }: { member?: Member }) {
              mois rabattu sur « tout le monde », ses supports d'épargne et leurs
              relevés effacés — et donc celui où l'instantané rend le plus de
              service : aucun geste inverse ne les recollerait un par un. */
-          undoable(tpl(fr.settings.memberRemoved, member.name), () => {
+          undoable(tpl(t.settings.memberRemoved, member.name), () => {
             removeMember(member.id)
           })
           back()

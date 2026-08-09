@@ -9,7 +9,7 @@ import { YearCompare } from './YearCompare'
 
 type CompareMode = 'months' | 'years'
 
-const MODES: readonly SegmentedOption<CompareMode>[] = [
+const modes = (): readonly SegmentedOption<CompareMode>[] => [
   { value: 'months', label: history.compareModeMonths },
   { value: 'years', label: history.compareModeYears },
 ]
@@ -44,7 +44,7 @@ export function CompareSection() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Eyebrow icon={CompareIcon}>{history.compare}</Eyebrow>
         <Segmented
-          options={MODES}
+          options={modes()}
           value={mode}
           onChange={setMode}
           label={history.compareAxis}

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { PageTitle } from './PageTitle'
 import { ScreenTitleProvider } from './ScreenTitleProvider'
 
@@ -56,13 +56,13 @@ describe('PageTitle', () => {
     const back = vi.fn()
     inShell(<PageTitle title="Ajouter un crédit" onBack={back} />)
 
-    await userEvent.click(screen.getByRole('button', { name: fr.common.back }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.back }))
     expect(back).toHaveBeenCalledOnce()
   })
 
   it('n’offre aucun retour aux écrans que la navigation tient déjà', () => {
     inShell(<PageTitle title="Crédits et dettes" />)
-    expect(screen.queryByRole('button', { name: fr.common.back })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.common.back })).not.toBeInTheDocument()
   })
 
   /* Hors coquille — le styleguide, les deux questions du début —, il n'y a

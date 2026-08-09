@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { entryPath, recurrencePath } from '@/app/routes'
 import { isSearchable, searchEntries, searchRecurrences } from '@/domain/search'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
 import { formatDate, tpl } from '@/i18n/format'
 import { useCategoryMap, useEntries, useRecurrences } from '@/store/selectors'
@@ -169,12 +169,12 @@ export function SearchSection() {
                       label={recurrence.label}
                       meta={
                         recurrence.endedOn === undefined
-                          ? (categories.get(recurrence.categoryId)?.label ?? fr.common.other)
-                          : fr.recurrences.stoppedBadge
+                          ? (categories.get(recurrence.categoryId)?.label ?? t.common.other)
+                          : t.recurrences.stoppedBadge
                       }
                       trailing={
                         recurrence.amount === null ? (
-                          <span className="t-label">{fr.recurrences.variable}</span>
+                          <span className="t-label">{t.recurrences.variable}</span>
                         ) : (
                           <Amount value={recurrence.amount} direction={recurrence.direction} />
                         )

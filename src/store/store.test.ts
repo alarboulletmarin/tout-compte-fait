@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addMonthsToYm, currentYm } from '@/domain/date'
 import { makeData } from '@/domain/fixtures'
 import { HORIZON_MONTHS } from '@/domain/month'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import type { Data } from '@/domain/types'
 import type * as dbModule from '@/persistence/db'
 import type { LoadedDocument } from '@/persistence/db'
@@ -84,7 +84,7 @@ describe('store — échecs de persistance', () => {
 
     expect(store.getState().error).toStrictEqual({
       kind: 'write',
-      message: fr.storage.writeFailed,
+      message: t.storage.writeFailed,
     })
   })
 
@@ -107,14 +107,14 @@ describe('store — échecs de persistance', () => {
   it('n’efface pas un échec de lecture par une écriture réussie', async () => {
     // Rien de ce qu'on écrit ne rend lisible ce qui ne l'était pas.
     const { store } = await freshStore()
-    store.getState().setError({ kind: 'read', message: fr.storage.readFailed })
+    store.getState().setError({ kind: 'read', message: t.storage.readFailed })
 
     store.getState().finishOnboarding()
     await store.getState().flush()
 
     expect(store.getState().error).toStrictEqual({
       kind: 'read',
-      message: fr.storage.readFailed,
+      message: t.storage.readFailed,
     })
   })
 
@@ -128,7 +128,7 @@ describe('store — échecs de persistance', () => {
     expect(store.getState().status).toBe('onboarding')
     expect(store.getState().error).toStrictEqual({
       kind: 'read',
-      message: fr.storage.readFailed,
+      message: t.storage.readFailed,
     })
   })
 
@@ -179,7 +179,7 @@ describe('store — échecs de persistance', () => {
       expect(store.getState().status).toBe('onboarding')
       expect(store.getState().error).toStrictEqual({
         kind: 'read',
-        message: fr.storage.readTimeout,
+        message: t.storage.readTimeout,
       })
 
       // Le délai gagne définitivement : une lecture tardive ne bascule rien.

@@ -22,7 +22,7 @@ import {
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { useToasts } from '@/ui/toast'
@@ -116,7 +116,7 @@ describe('relever plusieurs supports d’un coup', () => {
     open()
 
     await userEvent.type(screen.getByLabelText(/PEA/), '5000')
-    await userEvent.click(screen.getByRole('button', { name: fr.common.save }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.save }))
 
     expect(valuationsOf('s-2')).toEqual([
       expect.objectContaining({ amount: eur(500_000), date: TODAY }),
@@ -133,14 +133,14 @@ describe('relever plusieurs supports d’un coup', () => {
     seed()
     open()
 
-    const save = screen.getByRole('button', { name: fr.common.save })
+    const save = screen.getByRole('button', { name: t.common.save })
     expect(save).toBeDisabled()
-    expect(screen.getByText(fr.savings.valuesHint)).toBeInTheDocument()
+    expect(screen.getByText(t.savings.valuesHint)).toBeInTheDocument()
 
     await userEvent.type(screen.getByLabelText(/PEA/), '5000')
 
-    expect(screen.getByRole('button', { name: fr.common.save })).toBeEnabled()
-    expect(screen.getByText(fr.savings.valuesHint)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.common.save })).toBeEnabled()
+    expect(screen.getByText(t.savings.valuesHint)).toBeInTheDocument()
   })
 
   /* Vide et zéro ne sont pas la même chose : l'un ne dit rien, l'autre dit
@@ -150,10 +150,10 @@ describe('relever plusieurs supports d’un coup', () => {
     seed()
     open()
 
-    expect(screen.getByLabelText(/PEA/)).toHaveAttribute('placeholder', fr.savings.valueNew)
+    expect(screen.getByLabelText(/PEA/)).toHaveAttribute('placeholder', t.savings.valueNew)
 
     await userEvent.type(screen.getByLabelText(/PEA/), '0')
-    await userEvent.click(screen.getByRole('button', { name: fr.common.save }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.save }))
 
     expect(valuationsOf('s-2')).toEqual([expect.objectContaining({ amount: eur(0) })])
     // Le Livret A, laissé vide, n'a rien reçu.
@@ -168,12 +168,12 @@ describe('relever plusieurs supports d’un coup', () => {
 
     await userEvent.type(screen.getByLabelText(/Livret A/), '12400')
     await userEvent.type(screen.getByLabelText(/PEA/), '5000')
-    await userEvent.click(screen.getByRole('button', { name: fr.common.save }))
+    await userEvent.click(screen.getByRole('button', { name: t.common.save }))
 
     expect(useStore.getState().data.savingValuations).toHaveLength(3)
     const { toasts } = useToasts.getState()
     expect(toasts).toHaveLength(1)
-    expect(toasts[0]?.message).toBe(tpl(fr.savings.valuesAdded, 2))
+    expect(toasts[0]?.message).toBe(tpl(t.savings.valuesAdded, 2))
 
     toasts[0]?.action?.onAction()
 
@@ -191,6 +191,6 @@ describe('relever plusieurs supports d’un coup', () => {
     const text = said(document.getElementById(hint.split(' ')[0] ?? '')?.textContent ?? '')
 
     expect(text).toContain(said(formatMoney(eur(1_200_000), 'EUR')))
-    expect(text).toContain(said(tpl(fr.savings.valuesDrift, formatMoney(eur(1_220_000), 'EUR'))))
+    expect(text).toContain(said(tpl(t.savings.valuesDrift, formatMoney(eur(1_220_000), 'EUR'))))
   })
 })

@@ -1,6 +1,6 @@
 import { defaultShared } from '@/domain/split'
 import { type CategoryKind, isSpending } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { useKindOf, useMembers } from '@/store/selectors'
 import { Checkbox } from '@/ui/Field'
 
@@ -55,8 +55,8 @@ export function SharedField({
     <Checkbox
       checked={locked ? true : (value ?? byRule)}
       disabled={locked}
-      label={fr.entry.shared}
-      hint={locked ? fr.entry.sharedLocked : fr.entry.sharedHint}
+      label={t.entry.shared}
+      hint={locked ? t.entry.sharedLocked : t.entry.sharedHint}
       onChange={(next) => {
         // Revenu à la valeur de la règle, la case lui rend la main : rien à
         // stocker, et le champ suivra de nouveau le membre et la catégorie.

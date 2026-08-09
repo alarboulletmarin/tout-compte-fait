@@ -215,8 +215,8 @@ function amount(value: string): Money | null {
    fait respecter. Recopier « entre 1 et 50 » dans la prose donnerait un texte
    qui survivrait au changement de la borne, et qui mentirait alors sans que
    rien ne le dise. */
-const OUT_OF_RANGE_YEARS = tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS)
-const OUT_OF_RANGE_RATE = tpl(projection.rateInvalid, MAX_RATE_PERCENT)
+const outOfRangeYears = () => tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS)
+const outOfRangeRate = () => tpl(projection.rateInvalid, MAX_RATE_PERCENT)
 
 /**
  * Ce que la saisie produit : les erreurs à signaler, et le résultat à tracer.
@@ -243,7 +243,7 @@ export function analyse(draft: ProjectionDraft): Analysis {
   const scenarios = draft.scenarios.flatMap((scenario) => {
     const rateBp = parseRateBp(scenario.rateText)
     if (rateBp === null) {
-      rates[scenario.id] = OUT_OF_RANGE_RATE
+      rates[scenario.id] = outOfRangeRate()
       return []
     }
     return [{ id: scenario.id, rateBp, kind: scenario.kind }]
@@ -253,8 +253,8 @@ export function analyse(draft: ProjectionDraft): Analysis {
     ...(initial === null ? { initial: projection.amountInvalid } : {}),
     ...(draft.mode === 'forecast' && monthly === null ? { monthly: projection.amountInvalid } : {}),
     ...(draft.mode === 'target' && target === null ? { target: projection.amountInvalid } : {}),
-    ...(validYears ? {} : { years: OUT_OF_RANGE_YEARS }),
-    ...(inflationBp === null ? { inflation: OUT_OF_RANGE_RATE } : {}),
+    ...(validYears ? {} : { years: outOfRangeYears() }),
+    ...(inflationBp === null ? { inflation: outOfRangeRate() } : {}),
     rates,
   }
 

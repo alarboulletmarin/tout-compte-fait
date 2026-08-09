@@ -1,5 +1,5 @@
 import { PALETTES, type PaletteSetting } from '@/domain/types'
-import { fr } from '@/i18n/fr'
+import { t } from '@/i18n/strings'
 import { Section, SubTitle } from './Section'
 import { ThemePane } from './ThemePane'
 import {
@@ -10,14 +10,14 @@ import {
   type TokenEntry,
 } from './tokens.data'
 
-const PALETTE_NAME: Record<PaletteSetting, string> = {
-  classique: fr.palettes.classique,
-  monochrome: fr.palettes.monochrome,
-  douce: fr.palettes.douce,
-  vive: fr.palettes.vive,
-  neutre: fr.palettes.neutre,
-  contrastee: fr.palettes.contrastee,
-}
+const paletteName = (): Record<PaletteSetting, string> => ({
+  classique: t.palettes.classique,
+  monochrome: t.palettes.monochrome,
+  douce: t.palettes.douce,
+  vive: t.palettes.vive,
+  neutre: t.palettes.neutre,
+  contrastee: t.palettes.contrastee,
+})
 
 function Swatch({ entry }: { entry: TokenEntry }) {
   return (
@@ -34,7 +34,7 @@ function Swatch({ entry }: { entry: TokenEntry }) {
 
 export function BasePaletteSection() {
   return (
-    <Section title={fr.styleguide.sections.base} note={fr.styleguide.baseNote}>
+    <Section title={t.styleguide.sections.base} note={t.styleguide.baseNote}>
       {BASE_PALETTE.map((group) => (
         <div key={group.title} className="flex flex-col gap-3">
           <SubTitle>{group.title}</SubTitle>
@@ -68,7 +68,7 @@ function SemanticList() {
 
 export function SemanticTokensSection() {
   return (
-    <Section title={fr.styleguide.sections.semantic} note={fr.styleguide.semanticNote}>
+    <Section title={t.styleguide.sections.semantic} note={t.styleguide.semanticNote}>
       <div className="grid gap-4 md:grid-cols-2">
         <ThemePane theme="light">
           <SemanticList />
@@ -97,7 +97,7 @@ function SwatchRow({ entries }: { entries: TokenEntry[] }) {
    un fond noir. Une rangée unique n'en montrait donc que la moitié. */
 export function CategoryPaletteSection() {
   return (
-    <Section title={fr.styleguide.sections.categories} note={fr.styleguide.categoriesNote}>
+    <Section title={t.styleguide.sections.categories} note={t.styleguide.categoriesNote}>
       <div className="grid gap-4 md:grid-cols-2">
         <ThemePane theme="light">
           <SwatchRow entries={CATEGORY_PALETTE} />
@@ -112,7 +112,7 @@ export function CategoryPaletteSection() {
 
 export function MemberPaletteSection() {
   return (
-    <Section title={fr.styleguide.sections.members} note={fr.styleguide.membersNote}>
+    <Section title={t.styleguide.sections.members} note={t.styleguide.membersNote}>
       <div className="grid gap-4 md:grid-cols-2">
         <ThemePane theme="light">
           <SwatchRow entries={MEMBER_PALETTE} />
@@ -135,25 +135,25 @@ export function MemberPaletteSection() {
  */
 export function PalettesSection() {
   return (
-    <Section title={fr.styleguide.sections.palettes} note={fr.styleguide.palettesNote}>
+    <Section title={t.styleguide.sections.palettes} note={t.styleguide.palettesNote}>
       <div className="flex flex-col gap-4">
         {PALETTES.map((palette) => (
           <div key={palette} className="flex flex-col gap-2">
-            <SubTitle>{PALETTE_NAME[palette]}</SubTitle>
+            <SubTitle>{paletteName()[palette]}</SubTitle>
             <div className="grid gap-4 md:grid-cols-2">
               {(['light', 'dark'] as const).map((theme) => (
                 <ThemePane key={theme} theme={theme} palette={palette}>
                   <div className="flex flex-col gap-3">
                     <div className="surface rounded-inner bg-surface p-3">
-                      <p className="t-eyebrow text-muted">{PALETTE_NAME[palette]}</p>
+                      <p className="t-eyebrow text-muted">{paletteName()[palette]}</p>
                       <p className="t-tile-num tnum text-text">1 240</p>
                     </div>
                     <div className="flex gap-2">
                       <span className="t-eyebrow rounded-chip bg-accent px-2 py-1 text-accent-fg">
-                        {fr.kinds.resource}
+                        {t.kinds.resource}
                       </span>
                       <span className="t-eyebrow rounded-chip bg-accent-2 px-2 py-1 text-accent-2-fg">
-                        {fr.kinds.charge}
+                        {t.kinds.charge}
                       </span>
                       <span className="t-eyebrow rounded-chip bg-danger-fill px-2 py-1 text-danger-fg">
                         !
