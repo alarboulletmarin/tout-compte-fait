@@ -163,6 +163,35 @@ export const valuationNewPath = (supportId: string): string =>
 export const valuationEditPath = (supportId: string, valuationId: string): string =>
   `${SAVINGS_PATH}/${supportId}/valeur/${valuationId}`
 
+/**
+ * Le simulateur de projections — à la racine, et sous l'écran Épargne.
+ *
+ * **Il n'est pas un cinquième rang de « Gérer », et il a deux portes.** « Gérer »
+ * range ce qui *décide de ce que le budget calcule* ; un simulateur ne décide
+ * de rien — il ne lit même pas le document. Il vit donc sous son propre titre,
+ * « Simuler », qui est le cinquième groupe de « Plus »
+ * (`features/more/MorePage.tsx`), et il garde en plus une rangée en fin d'écran
+ * Épargne : c'est là qu'on se demande ce que deviendra ce qu'on place, et une
+ * porte posée dans le contexte de la question vaut mieux qu'une porte
+ * seulement rangée.
+ *
+ * La rangée de l'écran Épargne ne suffisait pas à elle seule, et c'est
+ * l'argument qui a fait exister le groupe : un écran qu'on n'atteint qu'en
+ * descendant tout un autre écran n'a pas d'adresse — c'est le défaut même que
+ * `NAV_ROUTES` décrit pour les quatre écrans qui n'existaient qu'au bout d'une
+ * tuile.
+ *
+ * **À la racine, et non sous `/epargne/`**, pour une raison qui n'est pas
+ * cosmétique : `isFocusScreen` compte comme fiche *tout* ce qui vit sous
+ * `/epargne/`, parce que tout ce qui y vit est un objet de l'épargne — un
+ * support, un relevé, un formulaire. Le simulateur n'en est pas un : c'est une
+ * destination pleine, qu'on ouvre pour elle-même et qu'on met en signet. La
+ * ranger sous ce préfixe aurait demandé une exception à une règle qui n'en a
+ * pas, ce qui coûte plus qu'un segment d'URL. `/avances` est déjà à la racine
+ * pour la même raison.
+ */
+export const PROJECTION_PATH = '/projections'
+
 /* Les avances ont leur écran, pour la raison qui donne le sien aux crédits :
    elles vivent sous les récurrences — leur mensualité en est une — mais ce
    qu'elles ajoutent est un suivi à part, qu'on ouvre quand on le cherche. En
@@ -293,7 +322,7 @@ export type NavGroup = { title?: string; routes: RouteDef[] }
  * l'argument tenait tant que « Plus » était le repli d'une barre trop courte :
  * la colonne avait la place de déplier ses deux groupes, et un lien vers une
  * page qui l'aurait redite aurait été un tour sur soi-même. Il ne tient plus
- * depuis que « Plus » range quatre groupes au lieu de deux — les onze
+ * depuis que « Plus » range cinq groupes au lieu de deux — les douze
  * destinations doubleraient la colonne — et surtout depuis qu'il porte un
  * **contrôle** : la devise se règle sur place, dans un sélecteur, et une
  * colonne de navigation n'a pas à héberger un champ de formulaire. Le déplier
@@ -310,12 +339,18 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
 ]
 
 /* Ce que « Plus » range et que la colonne ne déplie pas : les cinq vues dont il
-   est la seule porte, quelle que soit la largeur. Son lien doit rester allumé
+   est la seule porte, quelle que soit la largeur, plus le simulateur. Son lien doit rester allumé
    quand on y descend, sans quoi la colonne n'aurait plus rien d'allumé du tout.
    « À propos » n'y figure pas — la colonne porte son propre lien en pied, et
    deux entrées allumées à la fois ne diraient plus où l'on est. */
 const MORE_ONLY_PREFIXES = [
   MORE_PATH,
+  /* Le simulateur en fait partie **du point de vue de la colonne**, et non de
+     celui de la barre : la colonne ne montre pas l'écran Épargne assez loin
+     pour porter sa rangée de fin, donc « Plus » est la seule chose qu'elle
+     puisse allumer quand on lit une projection. Sur la barre d'onglets, c'est
+     la même conclusion par un autre chemin — voir `MORE_PREFIXES`. */
+  PROJECTION_PATH,
   PEOPLE_PATH,
   CATEGORIES_PATH,
   APPEARANCE_PATH,

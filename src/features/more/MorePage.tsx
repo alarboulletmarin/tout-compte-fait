@@ -8,6 +8,7 @@ import {
   DATA_PATH,
   MANAGE_ROUTES,
   PEOPLE_PATH,
+  PROJECTION_PATH,
   RECURRENCES_PATH,
   SAVINGS_PATH,
   SPLIT_PATH,
@@ -23,6 +24,7 @@ import {
   CategoriesIcon,
   CurrencyIcon,
   DeviceIcon,
+  ForecastIcon,
   InfoIcon,
   PeopleIcon,
   ThemeIcon,
@@ -52,18 +54,27 @@ import { Row, RowGroup } from '@/ui/RowGroup'
  * budget**. Les données non plus — sauvegarder n'est pas un goût.
  *
  * Le critère n'est donc pas « où peut-on ranger cette fonctionnalité ? » mais
- * « avec quelle intention vient-on ? », et il en sort quatre :
+ * « avec quelle intention vient-on ? », et il en sort cinq :
  *
  * - **Gérer** — ce qui décide de ce que le budget calcule au quotidien.
+ * - **Simuler** — ce qu'on essaie sans rien engager, et qui ne lit aucune donnée.
  * - **Organiser** — qui y figure, et sous quelles étiquettes.
  * - **Données** — où elles vivent, et comment en sortir une copie.
  * - **Application** — ce qui ne touche qu'à la façon dont l'app se présente.
  *
+ * Le cinquième est arrivé avec les projections, et il a coûté une discussion :
+ * un groupe d'une rangée, alors que la colonne latérale refuse précisément un
+ * titre au-dessus d'un lien unique. La différence est qu'il y sert *à la place*
+ * du lien, quand ici il vit à côté de quatre autres titres — c'est lui qui dit
+ * qu'on change de nature. Et « Simuler » plutôt que « Calculateurs », pour la
+ * raison qui a fait tomber « Réglages » : les quatre autres nomment une
+ * intention, pas une catégorie d'outil.
+ *
  * L'écran gagne deux groupes et perd un cran : « Plus → Réglages → Catégories »
  * devient « Plus → Catégories ». Il est un peu plus long, et c'est le bon
- * échange sur un téléphone — quatre groupes qu'on comprend en les balayant
- * valent mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce
- * qu'il contient.
+ * échange sur un téléphone — des groupes qu'on comprend en les balayant valent
+ * mieux qu'un écran court qui oblige à en ouvrir un autre pour savoir ce qu'il
+ * contient.
  *
  * **Ce que les rangées disent, et ce qu'elles ne disent pas.** Pas un chiffre du
  * budget, pas une tuile accentuée, aucune synthèse : chaque écran d'arrivée dit
@@ -240,6 +251,28 @@ export function MorePage() {
             />
           )
         })}
+      </RowGroup>
+
+      {/* Le seul groupe dont le contenu ne décrit pas le foyer : on n'y lit
+          rien de ses données, on y essaie un chiffre. Il vient juste après
+          « Gérer » parce qu'il en est le prolongement — on tient un budget,
+          puis on se demande ce qu'il donne au bout de dix ans — et avant
+          « Organiser », qui parle de la structure et non des montants.
+
+          Un groupe d'une seule rangée, et c'est assumé : la doctrine de la
+          colonne latérale refuse un titre au-dessus d'un lien unique, mais elle
+          le refuse là où le titre serait *à la place* du lien. Ici il est à
+          côté de quatre autres titres, dans un écran qui se parcourt à l'œil, et
+          c'est lui qui dit qu'on change de nature — sans quoi « Projections »
+          tomberait sous « Gérer », où elle prétendrait décider de quelque
+          chose. */}
+      <RowGroup title={fr.nav.simulate}>
+        <Row
+          label={fr.nav.projections}
+          icon={ForecastIcon}
+          description={fr.nav.projectionsHint}
+          to={PROJECTION_PATH}
+        />
       </RowGroup>
 
       {/* La structure du budget, et non des réglages : on n'ouvre pas ces deux

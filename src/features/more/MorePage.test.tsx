@@ -2,7 +2,7 @@
  * « Plus » range par intention, pas par commodité.
  *
  * Ce qui est éprouvé ici n'est pas la mise en forme mais l'architecture de
- * l'information : quatre groupes qui nomment ce pour quoi on vient, et aucun
+ * l'information : cinq groupes qui nomment ce pour quoi on vient, et aucun
  * intitulé fourre-tout au-dessus d'eux. L'écran a compté un groupe « Réglages »
  * qui contenait les personnes, les catégories, l'apparence, la devise, les
  * données et « à propos » — six natures de tâches derrière un mot qui n'en
@@ -19,6 +19,7 @@ import {
   DATA_PATH,
   MANAGE_ROUTES,
   PEOPLE_PATH,
+  PROJECTION_PATH,
   STORAGE_PATH,
 } from '@/app/routes'
 import { makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
@@ -87,16 +88,52 @@ describe('« Plus » — la place qui manquait à quatre écrans', () => {
   })
 })
 
-describe('les quatre intentions', () => {
+describe('les cinq intentions', () => {
   /* Le cœur du rangement : plus aucun intitulé ne couvre à lui seul les
      personnes, les catégories, l'apparence et les données. */
   it('nomme ce pour quoi on vient, et non « Réglages »', () => {
     open()
 
-    for (const title of [fr.nav.manage, fr.nav.organise, fr.nav.data, fr.nav.application]) {
+    for (const title of [
+      fr.nav.manage,
+      fr.nav.simulate,
+      fr.nav.organise,
+      fr.nav.data,
+      fr.nav.application,
+    ]) {
       expect(screen.getByText(title)).toBeInTheDocument()
     }
     expect(screen.queryByText('Réglages')).not.toBeInTheDocument()
+    /* Ni « Calculateurs » ni « Outils » : ces mots-là nomment une catégorie
+       d'objet, pas ce pour quoi on vient — c'est le défaut exact de
+       « Réglages », et le rangement ne le réintroduit pas par la petite
+       porte. */
+    expect(screen.queryByText('Calculateurs')).not.toBeInTheDocument()
+    expect(screen.queryByText('Outils')).not.toBeInTheDocument()
+  })
+
+  /* Le simulateur a deux portes, et celle-ci est la seule qui existe à toutes
+     les largeurs : la rangée de l'écran Épargne vit en fin d'un écran qu'il
+     faut avoir descendu. Un écran qu'on n'atteint que comme ça n'a pas
+     d'adresse. */
+  it('donne au simulateur une adresse sous « Simuler »', () => {
+    open()
+
+    expect(
+      within(group(fr.nav.simulate)).getByRole('link', { name: new RegExp(fr.nav.projections) }),
+    ).toHaveAttribute('href', PROJECTION_PATH)
+  })
+
+  /* Il n'est pas dans « Gérer », et c'est la distinction qui fait exister le
+     cinquième groupe : « Gérer » range ce qui décide de ce que le budget
+     calcule, et un simulateur ne décide de rien — il ne lit même pas le
+     document. */
+  it('ne range pas le simulateur sous « Gérer »', () => {
+    open()
+
+    expect(
+      within(group(fr.nav.manage)).queryByRole('link', { name: new RegExp(fr.nav.projections) }),
+    ).toBeNull()
   })
 
   /* Ce que « Organiser » sort des réglages : qui compose le foyer et sous
