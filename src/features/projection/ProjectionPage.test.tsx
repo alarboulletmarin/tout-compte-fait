@@ -1013,4 +1013,20 @@ describe('le curseur de l’effort', () => {
     await user.tab()
     expect(useStore.getState().data).toEqual(pristine)
   })
+
+  /* Le composant ne démonte pas quand le versement simulé change par un autre
+     geste — taper dans le champ, ou tapoter un barreau de la table
+     (`applyEffort`) — et doit donc s'y resynchroniser lui-même : planté sur
+     l'ancien versement, il ne comparerait plus rien à ce que la table dit. */
+  it('reprend le nouveau versement simulé quand on tapote un barreau', async () => {
+    const user = userEvent.setup()
+    show()
+    await user.click(
+      screen.getByRole('button', {
+        name: tpl(projection.effortApply, tpl(projection.perMonth, '200 €')),
+      }),
+    )
+    expect(slider().value).toBe('20000')
+    expect(input().value).toBe('200,00')
+  })
 })

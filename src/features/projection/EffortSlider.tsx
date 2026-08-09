@@ -43,6 +43,20 @@ export function EffortSlider({
      qu'au blur, ou quand c'est le curseur qui a bougé. */
   const [text, setText] = useState<string>(toAmountInput(base))
 
+  /* Le versement simulé peut bouger sans que ce composant démonte — on tape
+     dans le champ au-dessus, ou on tapote un barreau de la table, qui recopie
+     sa valeur dans la simulation (`applyEffort`). Le curseur explore *autour*
+     du versement en cours ; s'il reste planté sur l'ancien après qu'il a
+     changé, il compare plus rien à ce que la table affiche déjà.
+     Ajusté pendant le rendu plutôt que dans un effet — le React qui suit un
+     changement de prop, sans détour par un rendu intermédiaire périmé. */
+  const [trackedBase, setTrackedBase] = useState<Money>(base)
+  if (base !== trackedBase) {
+    setTrackedBase(base)
+    setValue(base)
+    setText(toAmountInput(base))
+  }
+
   const clamp = (next: number): Money => money(Math.min(Math.max(Math.round(next), 0), max))
 
   /* Le curseur, lui, ne porte que des montants déjà lisibles : il remet donc
