@@ -12,6 +12,42 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Ajouté — les projections partent enfin de tes propres comptes
+
+L'écran des projections demandait un capital de départ et un versement mensuel
+que l'app connaissait déjà : le premier est le dernier relevé de chaque support
+plus les mouvements confirmés depuis, le second est ce que les récurrences
+d'épargne posent tous les mois. Il fallait donc recopier à la main, dans une
+calculatrice, des chiffres saisis dans la même application — et le résultat ne
+parlait d'aucun compte en particulier.
+
+- **Une bascule en tête d'écran : « Mes supports » ou « Chiffres libres ».** La
+  première part du document, la seconde reste le simulateur d'avant, inchangé.
+  Celle qui a quelque chose à montrer s'ouvre la première — tes comptes dès
+  qu'un support a un relevé, le simulateur sinon —, et un choix explicite
+  l'emporte ensuite.
+- **Une ligne par support** : son capital estimé avec l'âge du relevé qui le
+  fonde, le versement que ses récurrences posent, une hypothèse de taux et sa
+  nature, et ce que ça donne à l'horizon choisi. Le graphique trace le capital
+  **total**, et le tableau de jalons porte une colonne par compte plus le total.
+- **Le versement s'essaie sans rien casser.** Il est prérempli depuis tes
+  récurrences et se modifie — « et si je mettais 300 au lieu de 200 » —, la ligne
+  dit alors qu'il est simulé, rappelle le vrai chiffre et propose de le
+  rétablir. Aucune récurrence ne bouge.
+- **Un support sans relevé n'est jamais compté pour zéro** : il est nommé, laissé
+  hors de la courbe et du total, et l'écran mène au relevé groupé. C'est le point
+  de départ qui manque, pas une valeur nulle.
+- **La lecture est individuelle**, comme tout ce qui touche à l'épargne : une
+  personne à la fois, jamais une somme du foyer.
+- **Rien n'entre dans tes données.** Le taux, sa nature et le versement essayé
+  vivent hors du document, à côté des réglages du simulateur : aucun champ n'est
+  ajouté au modèle, aucune migration, et rien de tout cela ne voyage dans un
+  export.
+- **Le total est la somme des trajectoires, rang par rang**, jamais une
+  reprojection à un taux moyen : un livret à 2 % et un PEA à 7 % ne font pas un
+  patrimoine à 4,5 %. Et le moteur reste unique — le même que le simulateur,
+  vérifié sur le même vecteur de référence.
+
 ### Corrigé — deux libellés presque identiques sur deux montants différents
 
 « Sa part du mois » annonçait 1 659,83 € sur la tuile du virement, « Part du

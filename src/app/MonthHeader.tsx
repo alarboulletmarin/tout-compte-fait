@@ -6,126 +6,18 @@ import { cn } from '@/lib/cn'
 import {
   useMemberFilter,
   useMemberMap,
-  useMembers,
   useMonthFilter,
   useMonthBounds,
   useMonthScope,
   useMonthSplit,
 } from '@/store/selectors'
+import { MemberChips } from './MemberChips'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
-import { Chip } from '@/ui/Chip'
 import { InfoIcon } from '@/ui/Icons'
 import { MonthNav } from '@/ui/MonthNav'
 import { Sheet } from '@/ui/Sheet'
 import { useHotkeys } from '@/ui/useHotkeys'
-
-/**
- * Les trois lectures du mois : tout, le commun seul, ou une personne.
- *
- * « Commun » n'est pas le frère de « une personne » — c'est l'autre découpage
- * du même total (voir `MonthFilter`). Il vaut la peine d'être une pilule quand
- * même : le pot est ce qu'on regarde ensemble, et c'était le seul chiffre du
- * foyer qu'aucun tableau de bord ne savait isoler.
- *
- * Seules les personnes portent une pastille : c'est leur couleur, et elle ne
- * désigne qu'elles. En donner une au commun demandait l'accent, qui est bien sa
- * couleur ailleurs — mais une pilule active passe elle-même en accent, et la
- * pastille y disparaissait, exactement comme celle du premier membre avant
- * qu'il quitte le vert pomme.
- *
- * `personsOnly` retire les deux premières, et avec elles le filet qui les
- * séparait : voir `MonthHeaderProps.personsOnly`.
- */
-function MonthFilterChips({ personsOnly }: { personsOnly: boolean }) {
-  const members = useMembers()
-  const filter = useMonthFilter()
-  const setFilter = useStore((s) => s.setFilter)
-  if (members.length === 0) return null
-
-  if (personsOnly) {
-    return (
-      <div
-        className="filter-scroller -mx-4 -my-1 flex gap-2 px-4 py-1 md:-mx-8 md:px-8"
-        role="group"
-        aria-label={t.shell.filterByMember}
-      >
-        {members.map((member) => (
-          <Chip
-            key={member.id}
-            className="shrink-0"
-            color={member.color}
-            active={filter.kind === 'member' && filter.memberId === member.id}
-            onClick={() => {
-              setFilter({ kind: 'member', memberId: member.id })
-            }}
-          >
-            {member.name}
-          </Chip>
-        ))}
-      </div>
-    )
-  }
-
-  return (
-    /* Une ligne qui défile, à bord perdu : le cadre de l'en-tête est annulé puis
-       reposé sur la piste, pour que la première et la dernière pilule ne soient
-       pas rognées et que la rangée file jusqu'au bord de l'écran. Les 4px de
-       cadre vertical logent l'anneau de focus, et la marge négative les reprend
-       pour que la hauteur du bandeau ne bouge pas. */
-    <div
-      className="filter-scroller -mx-4 -my-1 flex gap-2 px-4 py-1 md:-mx-8 md:px-8"
-      role="group"
-      aria-label={t.shell.filterByMember}
-    >
-      <Chip
-        className="shrink-0"
-        active={filter.kind === 'all'}
-        onClick={() => {
-          setFilter({ kind: 'all' })
-        }}
-      >
-        {t.shell.all}
-      </Chip>
-      {/* Le commun se propose dès le premier membre : seul, la vue du membre
-          vaut « tout le monde » au centime, et le pot est justement la seule
-          lecture qui distingue encore les charges du foyer de ses lignes à
-          lui. */}
-      <Chip
-        className="shrink-0"
-        active={filter.kind === 'common'}
-        onClick={() => {
-          setFilter({ kind: 'common' })
-        }}
-      >
-        {t.shell.common}
-      </Chip>
-      {/* Les deux premières pilules n'ont pas de pastille parce qu'elles ne
-          désignent personne — une pastille est la couleur de quelqu'un. Sans
-          rien pour le dire, cette absence se lit comme un oubli ; le filet la
-          rend voulue, et sépare les lectures des personnes.
-
-          En `--text-muted` atténué, et non en `--border` : ce dernier vaut 8 %
-          d'encre, calibré pour une bordure posée sur une surface. Le bandeau,
-          lui, est sur le fond de page, où un trait d'un pixel à 8 % ne se voit
-          pas — un séparateur qu'on ne distingue pas ne sépare rien. */}
-      <span aria-hidden="true" className="my-auto h-5 w-px shrink-0 bg-muted opacity-40" />
-      {members.map((member) => (
-        <Chip
-          key={member.id}
-          className="shrink-0"
-          color={member.color}
-          active={filter.kind === 'member' && filter.memberId === member.id}
-          onClick={() => {
-            setFilter({ kind: 'member', memberId: member.id })
-          }}
-        >
-          {member.name}
-        </Chip>
-      ))}
-    </div>
-  )
-}
 
 /**
  * Une phrase, et le reste dans une feuille.
@@ -256,6 +148,9 @@ export function MonthHeader({
    * L'écran qui la pose s'assure qu'une personne est bien choisie : une rangée
    * de pilules dont aucune n'est active laisserait croire à une lecture qui
    * n'existe pas.
+   *
+   * La rangée elle-même vit dans `MemberChips` : l'écran des projections en a
+   * besoin sans avoir de mois à naviguer.
    */
   personsOnly?: boolean
   /* Réservé aux écrans de chiffres : le calendrier montre les échéances
@@ -345,7 +240,7 @@ export function MonthHeader({
             </Button>
           )}
         </div>
-        {withMemberFilter && <MonthFilterChips personsOnly={personsOnly} />}
+        {withMemberFilter && <MemberChips personsOnly={personsOnly} />}
       </header>
 
       {/* La note de lecture ne colle pas : c'est une phrase qui s'explique une

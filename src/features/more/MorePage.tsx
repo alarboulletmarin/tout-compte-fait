@@ -59,7 +59,9 @@ import { Segmented } from '@/ui/Segmented'
  * « avec quelle intention vient-on ? », et il en sort cinq :
  *
  * - **Gérer** — ce qui décide de ce que le budget calcule au quotidien.
- * - **Simuler** — ce qu'on essaie sans rien engager, et qui ne lit aucune donnée.
+ * - **Simuler** — ce qu'on essaie sans rien engager. La projection lit désormais
+ *   les supports et leurs versements, mais lire n'est pas décider : rien de ce
+ *   qu'on y pose ne change un chiffre du mois, ni ne s'écrit dans le document.
  * - **Organiser** — qui y figure, et sous quelles étiquettes.
  * - **Données** — où elles vivent, et comment en sortir une copie.
  * - **Application** — ce qui ne touche qu'à la façon dont l'app se présente.

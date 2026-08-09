@@ -235,7 +235,9 @@ export const fr = {
        — ce pour quoi on vient —, quand « Calculateurs » nommerait une catégorie
        d'outil, c'est-à-dire ce qu'on a sous la main plutôt que ce qu'on
        cherche. C'est aussi ce qui le distingue de « Gérer » : on n'y règle
-       rien, on essaie un chiffre pour voir. */
+       rien, on essaie un chiffre pour voir. L'écran lit désormais les supports
+       et leurs versements, et le titre tient toujours — lire n'est pas décider,
+       et rien de ce qu'on y pose ne touche au document. */
     simulate: 'Simuler',
     data: 'Données',
     application: 'Application',
@@ -247,9 +249,11 @@ export const fr = {
        diverger. Toute la prose de l'écran d'arrivée, elle, est dans
        `i18n/projection.ts`, qui voyage avec lui.
        Le libellé ne promet aucun rendement, et la phrase dit exactement ce que
-       l'écran fait : un calcul sous une hypothèse qu'on pose soi-même. */
+       l'écran fait : un calcul sous une hypothèse qu'on pose soi-même. Elle
+       nomme désormais **tes** comptes, parce que c'est ce que l'écran ouvre par
+       défaut — la trajectoire de ce qui est déjà là, versements compris. */
     projections: 'Projections',
-    projectionsHint: 'Ce qu’un versement régulier devient, sous une hypothèse de taux.',
+    projectionsHint: 'Ce que ton épargne devient sur plusieurs années, sous une hypothèse de taux.',
     /* Ce que chaque rangée de « Gérer » dit d'elle-même : sur un écran qui n'est
        qu'une liste de portes, le libellé seul demande d'ouvrir pour savoir.
        Les rangées des trois autres groupes n'en ont pas besoin — elles disent

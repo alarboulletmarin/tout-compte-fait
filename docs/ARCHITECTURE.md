@@ -299,15 +299,38 @@ arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans
 et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
 d'affichage. C'est le motif de `remainingPrincipal`.
 
-**Le simulateur n'écrit rien, et ne lit rien.** Aucune `Entry`, aucun support,
-aucun relevé n'entre dans `features/projection/` ; rien n'en ressort dans le
-document, donc rien dans les exports ni dans le schéma qu'on donne à un
-assistant. Une projection est une **question qu'on pose**, pas un fait du
-foyer — et un `expectedReturn` posé sur un support « au cas où » serait
-exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent en
-`localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
-lecture, comme un document importé l'est par `validate.ts`, parce que cette
-clé-là s'édite depuis la console du navigateur.
+**Les projections lisent le document, elles n'y écrivent rien.** L'écran porte
+deux lectures, et une seule chose les sépare : d'où viennent les chiffres.
+« Chiffres libres » ne lit rien du tout — quatre nombres tapés à la main.
+« Mes supports » part du **capital estimé** de chaque support et des versements
+que ses récurrences posent, par `domain/savingProjection.ts` : il n'y refait
+aucun calcul, il appelle `supportValue` et `monthlyEquivalent`, c'est-à-dire les
+fonctions qu'emploient déjà la tuile Capital et la fiche d'une récurrence — un
+chiffre annoncé ici et là ne peut donc pas différer d'un centime.
+
+Ce qui reste vrai des deux côtés est le **sens de l'écriture** : rien ne ressort
+dans le document, donc rien dans les exports ni dans le schéma qu'on donne à un
+assistant. Un taux est une **question qu'on pose**, pas un fait du foyer, et un
+`expectedReturn` posé sur un `SavingSupport` serait exactement la promesse que le
+cahier §2 refuse d'inscrire dans le modèle. Les hypothèses — un taux, sa nature,
+et le versement qu'on essaie à la place du vrai — vivent donc en `localStorage`,
+du côté de ce qui décrit l'appareil, et sont revalidées à la lecture comme un
+document importé l'est par `validate.ts` : cette clé-là s'édite depuis la console
+du navigateur.
+
+Deux règles de calcul en découlent, et elles tiennent le total. Le total est la
+somme des séries **rang par rang**, jamais une reprojection à un taux moyen : un
+livret à 2 % et un PEA à 7 % ne font pas un patrimoine à 4,5 %. Et un support
+sans relevé n'est **pas** projeté depuis zéro — il sort de la courbe, il est
+compté et nommé, parce que zéro est une information financière réelle quand
+l'absence de relevé n'en est pas une. C'est la règle de `savingTotal`, à dix ans
+comme aujourd'hui.
+
+Les hooks qui vont chercher tout cela vivent dans `features/projection/` et non
+dans `store/selectors.ts`, contrairement à tous les autres : ce fichier est lu
+par presque tous les composants, donc il pèse dans le graphe initial que
+`scripts/size.mjs` plafonne, quand cet écran-ci part à la demande. C'est le motif
+de `features/savings/individualScope.ts`.
 
 **Les versements cumulés sont une aire, pas une quatrième courbe.** L'app n'a
 que trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les

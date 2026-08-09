@@ -36,9 +36,24 @@ export type ScenarioId = (typeof SCENARIO_SLOTS)[number]
 
 export type ProjectionMode = 'forecast' | 'target'
 
+/**
+ * D'où partent les chiffres : de tes comptes, ou de ce que tu tapes.
+ *
+ * `null` est un troisième état, et il compte : il dit qu'**on n'a pas encore
+ * choisi**, ce qui n'est pas la même chose que d'avoir choisi les chiffres
+ * libres. Tant qu'il vaut `null`, l'écran ouvre la lecture qui a quelque chose
+ * à montrer — tes supports s'il en existe un de relevé, le simulateur sinon. Un
+ * choix explicite l'emporte ensuite, et pour toujours : sans cette distinction,
+ * quelqu'un qui préfère le simulateur se ferait renvoyer sur ses comptes au
+ * premier relevé posé.
+ */
+export type ProjectionSource = 'supports' | 'free'
+
 export type ScenarioDraft = { id: ScenarioId; rateText: string; kind: RateKind }
 
 export type ProjectionDraft = {
+  /** `null` tant que personne n'a choisi — voir `ProjectionSource`. */
+  source: ProjectionSource | null
   mode: ProjectionMode
   initialText: string
   monthlyText: string
@@ -50,6 +65,9 @@ export type ProjectionDraft = {
   constant: boolean
   inflationText: string
 }
+
+/** La modification d'un brouillon, telle que la coquille la distribue. */
+export type Patch = (next: Partial<ProjectionDraft>) => void
 
 export const YEAR_PRESETS = [5, 10, 15, 20] as const
 export const MIN_YEARS = 1
@@ -78,6 +96,7 @@ export const MAX_YEARS = 50
  * recommandation.
  */
 export const DEFAULT_DRAFT: ProjectionDraft = {
+  source: null,
   mode: 'forecast',
   initialText: '',
   monthlyText: '100',
@@ -134,6 +153,7 @@ export function readDraft(): ProjectionDraft {
     const years = Number(stored.years)
 
     return {
+      source: stored.source === 'supports' || stored.source === 'free' ? stored.source : null,
       mode: stored.mode === 'target' ? 'target' : 'forecast',
       initialText: text(stored.initialText, DEFAULT_DRAFT.initialText),
       monthlyText: text(stored.monthlyText, DEFAULT_DRAFT.monthlyText),
@@ -215,8 +235,25 @@ function amount(value: string): Money | null {
    fait respecter. Recopier « entre 1 et 50 » dans la prose donnerait un texte
    qui survivrait au changement de la borne, et qui mentirait alors sans que
    rien ne le dise. */
-const outOfRangeYears = () => tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS)
 const outOfRangeRate = () => tpl(projection.rateInvalid, MAX_RATE_PERCENT)
+
+/**
+ * L'horizon est-il lisible, et sinon comment le dire.
+ *
+ * Exporté parce que les deux lectures de l'écran posent la même question au même
+ * champ : deux validations de la durée finiraient par ne plus refuser les mêmes
+ * saisies, sur un contrôle qui est justement partagé (`YearsField`).
+ */
+export function yearsError(years: number): string | undefined {
+  return Number.isInteger(years) && years >= MIN_YEARS && years <= MAX_YEARS
+    ? undefined
+    : tpl(projection.durationInvalid, MIN_YEARS, MAX_YEARS)
+}
+
+/** L'horizon en mois, ou zéro quand il n'est pas lisible — rien à tracer. */
+export function monthsOf(years: number): number {
+  return yearsError(years) === undefined ? years * 12 : 0
+}
 
 /**
  * Ce que la saisie produit : les erreurs à signaler, et le résultat à tracer.
@@ -236,8 +273,7 @@ export function analyse(draft: ProjectionDraft): Analysis {
   const monthly = amount(draft.monthlyText)
   const target = amount(draft.targetText)
   const inflationBp = parseRateBp(draft.inflationText)
-  const validYears =
-    Number.isInteger(draft.years) && draft.years >= MIN_YEARS && draft.years <= MAX_YEARS
+  const years = yearsError(draft.years)
 
   const rates: Partial<Record<ScenarioId, string>> = {}
   const scenarios = draft.scenarios.flatMap((scenario) => {
@@ -253,7 +289,7 @@ export function analyse(draft: ProjectionDraft): Analysis {
     ...(initial === null ? { initial: projection.amountInvalid } : {}),
     ...(draft.mode === 'forecast' && monthly === null ? { monthly: projection.amountInvalid } : {}),
     ...(draft.mode === 'target' && target === null ? { target: projection.amountInvalid } : {}),
-    ...(validYears ? {} : { years: outOfRangeYears() }),
+    ...(years === undefined ? {} : { years }),
     ...(inflationBp === null ? { inflation: outOfRangeRate() } : {}),
     rates,
   }
@@ -261,7 +297,7 @@ export function analyse(draft: ProjectionDraft): Analysis {
   /* Une inflation illisible ne vaut pas zéro : elle éteint la lecture en euros
      constants, qui est une lecture de plus et non le calcul lui-même. */
   const erosion = draft.constant ? (inflationBp ?? 0) : 0
-  const months = validYears ? draft.years * 12 : 0
+  const months = monthsOf(draft.years)
 
   if (initial === null || months === 0 || scenarios.length === 0) {
     return { errors, result: null, missing: null }

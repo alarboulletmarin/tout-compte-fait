@@ -188,7 +188,7 @@ export const en: Strings = {
     savings: 'Savings',
     split: 'Split',
     projections: 'Projections',
-    projectionsHint: 'What a regular contribution becomes, under a rate you assume.',
+    projectionsHint: 'What your savings become over several years, under a rate you assume.',
     subscriptionsHint: 'What comes back every month, written once.',
     savingsHint: 'What you can set aside, and where to put it.',
     splitHint: 'Who pays what towards shared costs.',

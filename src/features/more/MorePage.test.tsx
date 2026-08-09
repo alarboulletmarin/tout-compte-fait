@@ -128,9 +128,10 @@ describe('les cinq intentions', () => {
   })
 
   /* Il n'est pas dans « Gérer », et c'est la distinction qui fait exister le
-     cinquième groupe : « Gérer » range ce qui décide de ce que le budget
-     calcule, et un simulateur ne décide de rien — il ne lit même pas le
-     document. */
+     cinquième groupe : « Gérer » range ce qui **décide** de ce que le budget
+     calcule, et une projection ne décide de rien. Qu'elle lise désormais les
+     supports n'y change rien — lire n'est pas décider, et rien de ce qu'on y
+     pose ne s'écrit dans le document. */
   it('ne range pas le simulateur sous « Gérer »', () => {
     open()
 

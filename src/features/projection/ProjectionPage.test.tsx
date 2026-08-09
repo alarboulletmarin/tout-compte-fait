@@ -5,6 +5,11 @@
  * de réserve ne se replie jamais, les montants n'ont pas de centimes, le
  * graphique est doublé d'un tableau, les hypothèses sont plafonnées à trois, et
  * rien de ce qu'on tape ne touche au document.
+ *
+ * **Sur les chiffres libres**, qui sont la lecture qu'un document vide ouvre :
+ * sans support relevé, il n'y a rien à projeter de réel, et l'écran retombe sur
+ * le simulateur — qui trace quelque chose sans rien demander. L'autre lecture a
+ * son fichier, `SupportsProjection.test.tsx`, où le document est peuplé.
  * ==========================================================================*/
 
 import { cleanup, render, screen, within } from '@testing-library/react'

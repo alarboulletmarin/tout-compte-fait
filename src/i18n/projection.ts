@@ -28,6 +28,12 @@ const fr = {
      rien qui oblige à promettre — et le dire est la première chose que
      l'écran fait, pas une note en bas de page. */
   lead: 'Ce qu’un versement régulier devient, sous une hypothèse de taux que tu poses.',
+  /* L'autre lecture, et la seule que l'app soit seule à pouvoir produire : une
+     banque connaît le solde d'un livret et ignore ce qu'on y verse, un
+     simulateur connaît le versement et ignore le solde. Ici les deux bouts sont
+     là — d'où une projection qui ne demande **aucune** saisie sauf le taux. */
+  supportsLead:
+    'Ce que tes comptes deviennent, à partir de ce que l’app sait déjà : leur capital d’aujourd’hui, et les versements que tes récurrences posent chaque mois.',
   /* La phrase fixe du cahier §4.6 ter. Elle ne s'écarte pas et ne se replie
      pas : c'est la seule chose de cet écran qui soit vraie quels que soient
      les chiffres saisis. */
@@ -39,6 +45,15 @@ const fr = {
      calcul faux. */
   netRate:
     'Les taux se saisissent nets : le rendement espéré, moins les frais annuels, moins la fiscalité qui s’appliquera aux gains. L’app ne modélise ni prélèvement forfaitaire, ni prélèvements sociaux, ni frais de gestion.',
+
+  /* --- D'où partent les chiffres ------------------------------------------
+     La seule chose qui sépare les deux lectures de l'écran. « Chiffres libres »
+     et non « Simulateur » : les deux simulent, et le mot ne dirait pas ce qui
+     change. Ce qui change est l'origine des nombres — les tiens, ou ceux que tu
+     tapes. */
+  sourceAxis: 'D’où l’on part',
+  sourceSupports: 'Mes supports',
+  sourceFree: 'Chiffres libres',
 
   /* --- Ce qu'on cherche ---------------------------------------------------
      Deux questions, et la seconde est la plus utile : « combien j'aurai » se
@@ -119,6 +134,45 @@ const fr = {
   targetMissing: 'Indique un montant visé pour savoir combien verser.',
   nothingToPlot: 'Indique un versement mensuel ou un capital de départ.',
 
+  /* --- La lecture branchée sur les vrais comptes --------------------------
+     Elle dit d'abord d'où viennent ses chiffres, parce que c'est ce qui la
+     distingue de tout ce qui existe ailleurs — et parce qu'un nombre qu'on n'a
+     pas tapé se croit sur parole tant qu'on ne sait pas d'où il sort. */
+  supportsReads:
+    'Le point de départ est ton dernier relevé, plus les mouvements confirmés depuis. Les versements viennent de tes récurrences d’épargne. Le taux vient de toi : l’app n’en connaît aucun, et n’écrit rien de tout ceci dans tes données.',
+  /* L'épargne se lit au nom de quelqu'un, et le total le dit : un chiffre de
+     cette taille sans propriétaire à côté se lirait comme une somme du foyer —
+     celle que le cahier §4.6 bis refuse d'afficher. */
+  supportsOwner: 'Épargne %s',
+  supportsTotal: 'Capital total',
+  supportsArrival: 'À l’arrivée',
+  /* L'aire porte le capital d'aujourd'hui **et** les versements : sur cette
+     lecture-ci, la ligne de départ n'est pas zéro, et l'appeler « versements
+     cumulés » ferait passer un capital déjà là pour de l'argent versé demain. */
+  supportsPaid: 'Capital d’aujourd’hui et versements',
+  /* Une inconnue n'est pas un zéro : un support jamais relevé sort de la courbe
+     et du total, et l'écran le dit plutôt que de le compter pour rien. */
+  supportsUnvaluedOne: '1 support n’a aucun relevé : il n’entre ni dans la courbe ni dans le total.',
+  supportsUnvalued:
+    '%s supports n’ont aucun relevé : ils n’entrent ni dans la courbe ni dans le total.',
+  supportsNoValue:
+    'Aucun de tes supports n’a de relevé : l’app ne sait pas d’où partir. Relève tes comptes une fois — ensuite, tes versements s’y ajoutent tout seuls.',
+  supportsUnreadable: 'Saisie illisible : %s n’entre pas dans le total.',
+
+  /* La ligne d'un support. Le capital de départ est un **fait**, et il ne
+     s'édite pas ici : le corriger se fait par un relevé, là où les relevés se
+     posent. Le versement, lui, s'essaie — c'est la seule chose de l'écran qui
+     se simule, et elle se signale quand elle est simulée. */
+  supportStart: 'Capital estimé %s · %s',
+  supportNoValue: 'Aucun relevé — ce support n’entre pas dans la courbe.',
+  supportIn: '%s dans %s',
+  supportFromRules: 'Tes récurrences posent %s par mois.',
+  supportNoRule: 'Aucune récurrence n’alimente ce support : le versement projeté est celui d’ici.',
+  supportTried: 'Versement simulé — tes récurrences ne bougent pas (%s par mois).',
+  supportReset: 'Revenir au versement réel',
+  supportVariableOne: '1 récurrence à montant variable n’est pas comptée.',
+  supportVariable: '%s récurrences à montant variable ne sont pas comptées.',
+
   /* --- Les lectures accessibles -------------------------------------------
      Ce qui se lit à l'œil se lit à l'oreille, ou l'un des deux ment. Le
      tableau porte déjà les chiffres ligne à ligne : le graphique n'a donc
@@ -126,6 +180,7 @@ const fr = {
   srChart: '%s : de %s aujourd’hui à %s dans %s.',
   srScenario: 'Hypothèse à %s, %s',
   srContributed: 'Versements cumulés : %s à l’arrivée.',
+  srPaid: 'Capital d’aujourd’hui et versements : %s à l’arrivée.',
 
   /* --- La durée, en toutes lettres ----------------------------------------
      Deux clés par unité plutôt qu'un pluriel calculé, comme partout ailleurs
@@ -139,11 +194,19 @@ const fr = {
      côté. */
   yearsAndMonths: '%s %s',
 
-  /* --- L'étage suivant ----------------------------------------------------
-     Nommé et non promis : la comparaison au réel est un chantier à part
+  /* --- Ce que chaque lecture ne fait pas -----------------------------------
+     La phrase du bas du simulateur. Elle disait « cet écran ne lit rien de tes
+     données » : c'était vrai de l'écran entier, ça ne l'est plus que de cette
+     lecture-ci, et une phrase qui survit à ce qu'elle décrit ment. Elle nomme
+     donc ce qu'elle est, et l'autre position qui fait le contraire.
+
+     L'étage suivant reste nommé et non promis : comparer mois après mois le
+     prévu au confirmé — l'adhérence, l'écart cumulé — est un chantier à part
      (cahier §4.6 ter), et un écran qui annoncerait une date se tromperait. */
+  freeNote:
+    'Cette lecture ne touche pas à tes données : elle part des chiffres que tu tapes, et rien d’autre. Pour partir de tes vrais comptes, choisis « Mes supports ».',
   plansAhead:
-    'Comparer une hypothèse à ce qui est réellement versé mois après mois viendra plus tard : pour l’instant, cet écran ne lit rien de tes données et n’y écrit rien.',
+    'Comparer une hypothèse à ce qui est réellement versé, mois après mois, viendra plus tard : cet écran projette, il ne mesure pas encore l’écart.',
 } as const
 
 export type ProjectionStrings = Widen<typeof fr>
