@@ -89,6 +89,11 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
   { path: '/historique', heading: /historique/i },
   { path: '/recurrences', heading: /récurrences/i },
   { path: '/epargne', heading: /épargne/i },
+  /* Le flux du mois a quitté la vue d'ensemble : c'est un écran, et il porte
+     ses propres gestes. Sans lui dans cette liste, la moitié de ce que l'épargne
+     savait faire ne serait plus ouverte par aucun scénario. */
+  { path: '/epargne/mois', heading: /ce mois/i },
+  { path: '/epargne/supports', heading: /supports/i },
   { path: '/credits', heading: /crédits et dettes/i },
   { path: '/avances', heading: /avances/i },
   { path: '/repartition', heading: /répartition/i },

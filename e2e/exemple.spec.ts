@@ -118,3 +118,35 @@ test('réclame un relevé là où il en manque un, et se tait ailleurs', async (
   await page.goto('/epargne/supports')
   await expect(page.getByRole('button', { name: /mettre à jour les relevés/i })).toBeVisible()
 })
+
+/* ============================================================================
+ * L'objectif, et son verdict.
+ *
+ * C'est le seul bloc de l'épargne qui conclue, et le seul chiffre de l'app
+ * qu'aucun relevé de banque ne produit. Le jeu d'exemple en porte trois, dont un
+ * en retard : sans ce dernier, la ligne actionnable de l'écran — « il faudrait
+ * tant de plus par mois » — ne s'afficherait jamais.
+ *
+ * Ce qui se vérifie ici et nulle part ailleurs : que le verdict **arrive
+ * jusqu'à l'écran**, et que la fiche trace bien la courbe qui porte les relevés.
+ * Aucune assertion sur un montant — les tests du domaine le font mieux et mille
+ * fois plus vite.
+ * ==========================================================================*/
+
+test('conclut sur chaque objectif, et ouvre sa fiche', async ({ page }) => {
+  await openApp(page)
+  await loadExample(page)
+  await page.goto('/epargne')
+
+  /* Le verdict en toutes lettres, avant la jauge et avant la couleur : une
+     conclusion qui ne survit pas au niveau de gris n'en est pas une (DS §2.3). */
+  await expect(page.getByText(/apport appartement/i)).toBeVisible()
+  await expect(page.getByText(/à l’heure|de retard|d’avance|atteint/i).first()).toBeVisible()
+
+  await page.getByRole('link', { name: /apport appartement/i }).click()
+
+  /* La fiche, et ce qui la distingue d'une courbe décorative : le prévu porte
+     les relevés réels des comptes rattachés. */
+  await expect(page.getByRole('img', { name: /trajectoire de l’objectif/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /simuler autrement/i })).toBeVisible()
+})
