@@ -1,14 +1,22 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { type Money, money } from '@/domain/money'
 import type { Entry, Recurrence } from '@/domain/types'
 import { fr } from '@/i18n/fr'
-import { formatMoney } from '@/i18n/format'
+import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MemberChargesTile } from './MemberChargesTile'
+import type { Metric } from './MetricInfo'
 
 const initial = useStore.getState().data
+
+/** Ce que la tuile passe à la feuille, capté pour l'assertion. */
+let opened: Metric | null = null
+const explained = (metric: Metric): void => {
+  opened = metric
+}
 
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 /** Ce qu'`Amount` donne à lire d'une sortie, en texte hors de l'œil. */
@@ -80,12 +88,13 @@ function mount(over: { filterOn?: string; entries?: Entry[] } = {}): void {
     }),
   })
 
-  render(<MemberChargesTile />)
+  render(<MemberChargesTile onExplain={explained} />)
 }
 
 describe('« Perso et commun », ce que le mois coûte et d’où ça vient', () => {
   afterEach(() => {
     useStore.setState({ data: initial })
+    opened = null
   })
 
   /* Le foyer entier n'a pas de perso : la découpe n'existe que du point de vue
@@ -163,6 +172,26 @@ describe('« Perso et commun », ce que le mois coûte et d’où ça vient', ()
         said(`${fr.direction.out.toLowerCase()} ${formatMoney(eur(65_000), 'EUR', false)}`),
       ),
     ).toBeInTheDocument()
+  })
+
+  /* Elle ne mène nulle part — ses deux moitiés viennent de deux endroits —, et
+     restait donc la seule tuile de la grille à porter deux montants sans que
+     rien nulle part ne dise ce qu'ils sont. Elle ouvre sa feuille, comme les
+     soldes de la grille du haut, et lui passe la moitié qui vient du foyer :
+     une explication qui parle d'un montant qu'on ne voit plus oblige à la
+     refermer pour le retrouver. */
+  it('ouvre son explication, avec le chiffre et la part du commun', async () => {
+    mount({ filterOn: 'm-1' })
+
+    await userEvent.click(
+      screen.getByRole('button', { name: tpl(fr.dashboard.explain, fr.dashboard.memberCharges) }),
+    )
+
+    expect(opened).toEqual({
+      key: 'memberCharges',
+      value: eur(65_000),
+      hint: tpl(fr.dashboard.memberChargesOfWhich, formatMoney(eur(60_000), 'EUR')),
+    })
   })
 
   /* Une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va (cahier §4.6). */

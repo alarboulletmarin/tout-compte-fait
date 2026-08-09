@@ -12,6 +12,30 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Ajouté — « Perso et commun » dit enfin ce que son chiffre représente
+
+C'était la seule tuile de la grille à porter deux montants sans mener nulle part
+et sans rien expliquer. Sa voisine « À verser sur le commun » ouvre l'écran
+Répartition, où son calcul est posé ligne à ligne ; celle-ci ne mène nulle part —
+ses deux moitiés viennent de deux endroits — et n'avait donc aucun endroit où
+s'expliquer. Devant deux chiffres voisins qui se ressemblent, la question « c'est
+quoi la différence ? » n'avait aucune réponse à l'écran.
+
+- **Elle ouvre une feuille**, celle-là même que les quatre soldes de la grille du
+  haut utilisent : ce que le chiffre est, **Le calcul**, et **Ce qui le
+  distingue**. Le glyphe d'information au coin, sans nom de destination, parce
+  qu'il n'y en a pas (DS §6).
+- **Elle nomme les deux causes de l'écart avec le virement** : la régularisation
+  du mois précédent, et la mensualité d'une avance. Les deux se virent sans rien
+  coûter au mois — un coût est arrêté au mois où la dépense a eu lieu.
+- **« Comment c'est calculé », sur l'écran Répartition, cesse de mentir par
+  omission.** Il disait « l'épargne n'est pas partagée » sans réserve, quand
+  l'app elle-même pose l'exception : la mensualité qui reconstitue un livret
+  après une avance est de nature épargne *et* partagée, puisque le foyer
+  rembourse celui qui a avancé. C'est la seule ligne du pot commun que rien
+  n'expliquait, et c'est elle qui fait qu'un virement peut dépasser ce que le
+  mois a coûté.
+
 ### Corrigé — « Perso et commun » annonçait un coût plus grand que la tuile Charges
 
 Sur le jeu d'exemple, la tuile Charges disait 1 672,42 € et « Perso et commun »

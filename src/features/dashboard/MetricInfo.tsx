@@ -4,7 +4,7 @@ import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { Sheet } from '@/ui/Sheet'
 
-export type MetricKey = 'balance' | 'forecast' | 'remaining'
+export type MetricKey = 'balance' | 'forecast' | 'remaining' | 'memberCharges'
 
 /**
  * Ce qu'une tuile passe à la feuille en s'ouvrant : sa clé, son chiffre, et la
@@ -31,6 +31,15 @@ const CONTENT: Record<MetricKey, Explanation> = {
   balance: { title: fr.dashboard.balance, ...fr.dashboard.info.balance },
   forecast: { title: fr.dashboard.forecast, ...fr.dashboard.info.forecast },
   remaining: { title: fr.dashboard.remaining, ...fr.dashboard.info.remaining },
+  /* Le quatrième n'est pas un solde, et il est ici pour la raison qui a fait
+     les trois autres : deux chiffres voisins qui se ressemblent à l'œil sans
+     dire la même chose. « Perso et commun » annonce ce que le mois coûte,
+     « À verser sur le commun » ce qu'on vire — et les deux diffèrent de la
+     régularisation *et* du remboursement d'une avance, sans que rien à l'écran
+     ne l'ait jamais dit. La section « ce qui le distingue » existait déjà pour
+     exactement cette question ; celui-ci est le cas où elle manquait le plus,
+     puisque sa voisine mène à un écran et lui à rien. */
+  memberCharges: { title: fr.dashboard.memberCharges, ...fr.dashboard.info.memberCharges },
 }
 
 /**

@@ -469,6 +469,11 @@ export function SplitPage() {
             <li className="t-label">{fr.split.methodFlagged}</li>
           </ul>
           <p className="t-label">{fr.split.methodExcluded}</p>
+          {/* L'exception, juste après la règle qu'elle contredit — et non dans
+              la liste de ce qui entre : c'est la seule ligne du pot qu'on ne
+              peut pas déduire des deux puces au-dessus, et la seule qui
+              explique qu'un virement dépasse ce que le mois a coûté. */}
+          <p className="t-label">{fr.split.methodAdvance}</p>
         </Tile>
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>
