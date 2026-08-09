@@ -100,8 +100,18 @@ export type Built = { nature: EntryNature } & (
        * Une échéance à venir n'a rien eu lieu du tout, et celle d'une règle à
        * montant variable n'a pas de montant à porter : la marquer payée
        * l'enregistrerait à l'estimation, c'est-à-dire à une supposition.
+       *
+       * Sans objet à la conversion d'une entrée — voir `convertedFromEntryId` —
+       * qui sait déjà si l'entrée qu'elle remplace a eu lieu.
        */
       paidOn: ISODate | null
+      /**
+       * Une entrée ponctuelle qu'on est en train de rendre récurrente, plutôt
+       * qu'une récurrence qu'on crée ou qu'on corrige. Sa date devient la
+       * première échéance ; sa confirmation, si elle en portait une, survit au
+       * changement — c'est un fait déjà là, pas une nouvelle question.
+       */
+      convertedFromEntryId?: string
     }
 )
 
@@ -451,6 +461,11 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
     }
 
     const existing = operation?.kind === 'recurrence' ? operation.recurrence : null
+    /* On convertit une entrée ponctuelle plutôt qu'on ne crée ou ne corrige une
+       règle : c'est le seul autre cas où `draft.recurring` est vrai en reprise —
+       voir `canSwitchRhythm`, qui n'ouvre la bascule que sur une entrée sans
+       récurrence. */
+    const convertedFrom = operation?.kind === 'entry' ? operation.entry.id : undefined
     return {
       kind: 'recurrence',
       nature: draft.nature,
@@ -463,6 +478,7 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
         ...(existing?.endedOn === undefined ? {} : { endedOn: existing.endedOn }),
       },
       paidOn: firstDuePaid ? draft.startedOn : null,
+      ...(convertedFrom === undefined ? {} : { convertedFromEntryId: convertedFrom }),
     }
   }
 

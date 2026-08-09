@@ -320,6 +320,18 @@ export function removeRecurrence(id: string): void {
   mutate((data) => updates.removeRecurrence(data, id))
 }
 
+/** Rend récurrente une entrée ponctuelle. Voir `updates.convertEntryToRecurrence`. */
+export function convertEntryToRecurrence(entryId: string, input: Omit<Recurrence, 'id'>): Recurrence {
+  const recurrence: Recurrence = { ...input, id: makeId() }
+  mutate((data) => updates.convertEntryToRecurrence(data, entryId, recurrence, makeId))
+  return recurrence
+}
+
+/** Rend ponctuelle une récurrence. Voir `updates.convertRecurrenceToEntry`. */
+export function convertRecurrenceToEntry(id: string): void {
+  mutate((data) => updates.convertRecurrenceToEntry(data, id, makeId))
+}
+
 /* --- Entrées --------------------------------------------------------------*/
 
 export function addEntry(input: Omit<Entry, 'id'>): Entry {

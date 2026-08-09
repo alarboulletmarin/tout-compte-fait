@@ -810,6 +810,17 @@ export const en: Strings = {
     removeConfirm:
       'The rule disappears along with its upcoming payments. Those already confirmed stay in the history.',
     stopHint: 'Payments already confirmed stay in the history.',
+
+    convertToOneTime: 'Change to one-off',
+    convertToOneTimeConfirmSingle:
+      'It becomes a single one-off entry, at the same date and amount. Nothing else changes.',
+    convertToOneTimeConfirmHistory:
+      'The rule stops. Payments already confirmed become independent one-off entries; those only planned disappear.',
+    convertToOneTimeAction: 'Change',
+    convertedToEntry: 'Changed to one-off',
+    convertToOneTimeBlocked:
+      'It sets the instalment of a loan or restores an advance: it changes from that record instead.',
+    convertedFromEntry: 'Changed to a recurring rule',
     form: {
       amountKind: 'Amount type',
       period: 'Frequency',

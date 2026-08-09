@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { today, ymOf } from './date'
 import {
   eur,
   makeAdvance,
@@ -21,6 +22,9 @@ import {
   confirmEntries,
   confirmEntry,
   confirmOccurrence,
+  convertEntryToRecurrence,
+  convertRecurrenceToEntry,
+  convertsToSingleEntry,
   createAdvance,
   createSavingSupport,
   openMonth,
@@ -449,6 +453,180 @@ describe('récurrences', () => {
     expect(after.recurrences[0]).not.toHaveProperty('shared')
     expect(after.recurrences[0]).not.toHaveProperty('note')
     expect(after.recurrences[0]?.id).toBe('r1')
+  })
+})
+
+describe('convertir une entrée ponctuelle en récurrence', () => {
+  const TODAY = today()
+  const anchor = Number(TODAY.slice(8, 10))
+  const period = { unit: 'month', every: 1, anchorDay: anchor } as const
+
+  it('supprime l’ancienne ligne et pose la règle à sa date', () => {
+    const before = makeData({
+      entries: [makeEntry({ id: 'e1', date: TODAY, label: 'Loyer', amount: eur(80000) })],
+    })
+    const recurrence = makeRecurrence({
+      id: 'r1',
+      label: 'Loyer',
+      amount: eur(80000),
+      startedOn: TODAY,
+      period,
+    })
+    const after = convertEntryToRecurrence(before, 'e1', recurrence, sequentialIds())
+    expect(after.recurrences.map((r) => r.id)).toEqual(['r1'])
+    expect(after.entries.some((e) => e.id === 'e1')).toBe(false)
+  })
+
+  it('part payée à la date de l’entrée, quand celle-ci était confirmée', () => {
+    const before = makeData({
+      entries: [
+        makeEntry({ id: 'e1', date: TODAY, amount: eur(80000), status: 'confirmed' }),
+      ],
+    })
+    const recurrence = makeRecurrence({ id: 'r1', amount: eur(80000), startedOn: TODAY, period })
+    const after = convertEntryToRecurrence(before, 'e1', recurrence, sequentialIds())
+    const posed = after.entries.find((e) => e.recurrenceId === 'r1')
+    expect(posed).toMatchObject({ date: TODAY, amount: eur(80000), status: 'confirmed' })
+  })
+
+  it('ne confirme rien de plus quand l’entrée n’était que prévue', () => {
+    const before = makeData({
+      months: [{ ym: ymOf(TODAY), openedAt: TODAY, closed: false }],
+      entries: [makeEntry({ id: 'e1', date: TODAY, amount: eur(80000), status: 'planned' })],
+    })
+    const recurrence = makeRecurrence({ id: 'r1', amount: eur(80000), startedOn: TODAY, period })
+    const after = convertEntryToRecurrence(before, 'e1', recurrence, sequentialIds())
+    const posed = after.entries.find((e) => e.recurrenceId === 'r1' && e.date === TODAY)
+    expect(posed?.status).toBe('planned')
+  })
+
+  /* `buildPlannedEntry` ne connaît que l'ordre de grandeur d'une règle à
+     montant variable — le montant réel, lui, ne vit que sur l'entrée qu'on
+     remplace, et la conversion doit le lui rendre. */
+  it('garde le montant réel de l’entrée, même sur une règle à montant variable', () => {
+    const before = makeData({
+      entries: [makeEntry({ id: 'e1', date: TODAY, amount: eur(12345), status: 'confirmed' })],
+    })
+    const recurrence = makeRecurrence({
+      id: 'r1',
+      amount: null,
+      estimate: eur(5000),
+      startedOn: TODAY,
+      period,
+    })
+    const after = convertEntryToRecurrence(before, 'e1', recurrence, sequentialIds())
+    const posed = after.entries.find((e) => e.recurrenceId === 'r1')
+    expect(posed?.amount).toBe(eur(12345))
+  })
+
+  it('ne fait rien si l’entrée a disparu entre-temps', () => {
+    const before = makeData()
+    const recurrence = makeRecurrence({ id: 'r1', startedOn: TODAY, period })
+    expect(convertEntryToRecurrence(before, 'inconnue', recurrence, sequentialIds())).toBe(before)
+  })
+})
+
+describe('convertir une récurrence en entrée ponctuelle', () => {
+  const period = { unit: 'month', every: 1, anchorDay: 5 } as const
+
+  it('devient une ligne unique sans aucune échéance confirmée', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: eur(3000), startedOn: '2026-01-05', period }),
+      ],
+      entries: [
+        makeEntry({ id: 'p1', recurrenceId: 'r1', date: '2026-01-05', status: 'planned' }),
+        makeEntry({ id: 'p2', recurrenceId: 'r1', date: '2026-02-05', status: 'planned' }),
+      ],
+    })
+    expect(convertsToSingleEntry(before, 'r1')).toBe(true)
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.recurrences).toEqual([])
+    expect(after.entries.map((e) => e.id)).toEqual(['p1'])
+    expect(after.entries[0]).not.toHaveProperty('recurrenceId')
+  })
+
+  /* Une seule confirmée compte aussi comme une ligne unique — c'est le cas
+     courant d'une règle tout juste créée, dont la première échéance est déjà
+     payée. Le chemin reste `removeRecurrence` : détacher LA confirmée plutôt
+     que de chercher « la plus proche du début » évite de garder une prévue
+     par erreur si son tour venait à tomber avant celui de la confirmée. */
+  it('devient une ligne unique aussi avec une seule échéance confirmée, sans en choisir une autre', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: eur(3000), startedOn: '2026-01-05', period }),
+      ],
+      entries: [
+        // Datée avant la confirmée : si le geste se trompait de ligne, c'est
+        // elle qu'il garderait.
+        makeEntry({ id: 'p0', recurrenceId: 'r1', date: '2025-12-05', status: 'planned' }),
+        makeEntry({ id: 'c1', recurrenceId: 'r1', date: '2026-01-05', status: 'confirmed' }),
+      ],
+    })
+    expect(convertsToSingleEntry(before, 'r1')).toBe(true)
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.recurrences).toEqual([])
+    expect(after.entries.map((e) => e.id)).toEqual(['c1'])
+    expect(after.entries[0]).not.toHaveProperty('recurrenceId')
+  })
+
+  it('fabrique l’échéance manquante quand aucune n’a encore été posée', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: eur(3000), startedOn: '2026-05-05', period }),
+      ],
+    })
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.entries).toHaveLength(1)
+    expect(after.entries[0]).toMatchObject({ date: '2026-05-05', amount: eur(3000), status: 'planned' })
+    expect(after.entries[0]).not.toHaveProperty('recurrenceId')
+  })
+
+  it('détache chaque échéance confirmée plutôt que d’en choisir une', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: eur(3000), startedOn: '2026-01-05', period }),
+      ],
+      entries: [
+        makeEntry({ id: 'c1', recurrenceId: 'r1', date: '2026-01-05', status: 'confirmed' }),
+        makeEntry({ id: 'c2', recurrenceId: 'r1', date: '2026-02-05', status: 'confirmed' }),
+        makeEntry({ id: 'p3', recurrenceId: 'r1', date: '2026-03-05', status: 'planned' }),
+      ],
+    })
+    expect(convertsToSingleEntry(before, 'r1')).toBe(false)
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.recurrences).toEqual([])
+    expect(after.entries.map((e) => e.id).sort()).toEqual(['c1', 'c2'])
+    expect(after.entries.every((e) => !('recurrenceId' in e))).toBe(true)
+  })
+
+  it('ne transporte rien d’une règle à montant variable qui n’a jamais servi', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: null, estimate: eur(3000), startedOn: '2026-01-05', period }),
+      ],
+      entries: [makeEntry({ id: 'p1', recurrenceId: 'r1', date: '2026-01-05', status: 'planned' })],
+    })
+    expect(convertsToSingleEntry(before, 'r1')).toBe(false)
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.recurrences).toEqual([])
+    expect(after.entries).toEqual([])
+  })
+
+  it('retire le lien d’un crédit même sur une conversion propre', () => {
+    const before = makeData({
+      recurrences: [
+        makeRecurrence({ id: 'r1', amount: eur(3000), startedOn: '2026-01-05', period }),
+      ],
+      debts: [makeDebt({ id: 'd1', recurrenceId: 'r1' })],
+    })
+    const after = convertRecurrenceToEntry(before, 'r1', sequentialIds())
+    expect(after.debts[0]).not.toHaveProperty('recurrenceId')
+  })
+
+  it('ne fait rien si la récurrence a disparu entre-temps', () => {
+    const before = makeData()
+    expect(convertRecurrenceToEntry(before, 'inconnue', sequentialIds())).toBe(before)
   })
 })
 

@@ -8,7 +8,14 @@
 
 import type { Direction } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { addEntry, addRecurrence, addRecurrencePaidOn, replaceEntry, replaceRecurrence } from '@/store/actions'
+import {
+  addEntry,
+  addRecurrence,
+  addRecurrencePaidOn,
+  convertEntryToRecurrence,
+  replaceEntry,
+  replaceRecurrence,
+} from '@/store/actions'
 import type { EntryNature } from '@/ui/categoryKinds'
 import { toast } from '@/ui/toast'
 import type { Built, Operation } from './useOperationForm'
@@ -40,6 +47,14 @@ export function saveOperation(built: Built, operation: Operation | null): void {
   if (operation?.kind === 'recurrence') {
     replaceRecurrence(operation.recurrence.id, built.payload)
     toast(t.recurrences.updated)
+    return
+  }
+
+  /* Une entrée ponctuelle qu'on vient de rendre récurrente : elle sait déjà si
+     elle a eu lieu, ce n'est plus `Built.paidOn` qui tranche. */
+  if (built.convertedFromEntryId !== undefined) {
+    convertEntryToRecurrence(built.convertedFromEntryId, built.payload)
+    toast(t.recurrences.convertedFromEntry)
     return
   }
 

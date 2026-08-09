@@ -723,6 +723,117 @@ export function removeRecurrence(data: Data, id: string): Data {
   }
 }
 
+/**
+ * Traduit une entrée ponctuelle en récurrence : la même écriture, à qui l'on
+ * découvre qu'elle se répète.
+ *
+ * L'entrée part avec sa date, devenue la première échéance de la règle — c'est
+ * elle qui a eu lieu, ou qui est prévue, et rien n'invente une seconde fois ce
+ * que l'utilisateur a déjà tapé. `syncRecurrenceEntries` pose ensuite les
+ * échéances à venir, exactement comme à la création d'une récurrence neuve.
+ *
+ * Confirmée, elle laisse une échéance confirmée à sa place — la même
+ * composition qu'`addRecurrencePaidOn`, sauf sur un point : le montant qui
+ * part payé est celui, réel, de l'entrée qu'on remplace, jamais celui qu'une
+ * règle à montant variable devinerait pour un jour qui n'a encore aucun fait
+ * à lire (`buildPlannedEntry` ne connaît que l'ordre de grandeur).
+ *
+ * Un seul geste, une seule mutation : l'ancienne ligne ne peut pas disparaître
+ * si la règle ne se posait pas.
+ */
+export function convertEntryToRecurrence(
+  data: Data,
+  entryId: string,
+  recurrence: Recurrence,
+  makeId: () => string,
+): Data {
+  const entry = data.entries.find((e) => e.id === entryId)
+  if (entry === undefined) return data
+
+  const withRecurrence = syncRecurrenceEntries(
+    addRecurrence(removeEntry(data, entryId), recurrence),
+    recurrence.id,
+    makeId,
+  )
+  if (entry.status !== 'confirmed') return withRecurrence
+
+  const confirmed = confirmOccurrence(withRecurrence, recurrence.id, recurrence.startedOn, makeId)
+  const posed = confirmed.entries.find(
+    (e) => e.recurrenceId === recurrence.id && e.date === recurrence.startedOn,
+  )
+  return posed === undefined || posed.amount === entry.amount
+    ? confirmed
+    : updateEntry(confirmed, posed.id, { amount: entry.amount })
+}
+
+/**
+ * Vrai si `convertRecurrenceToEntry` va rendre une ligne **unique**.
+ *
+ * Une seule échéance confirmée compte comme une ligne unique : elle se
+ * détache seule, à sa date et à son montant exacts, ni plus ni moins que si
+ * elle était la seule chose que la règle ait jamais produite. Deux ou plus,
+ * en revanche, n'en font pas une — choisir laquelle garder inventerait une
+ * réponse — et un montant variable qui n'a encore rien confirmé n'a, lui,
+ * rien à transporter dans une ligne unique.
+ *
+ * Exportée pour que l'écran qui propose le geste puisse annoncer ce qu'il va
+ * faire avant qu'on l'actionne, sans jamais décider *comment* — c'est
+ * `convertRecurrenceToEntry` seul qui choisit le chemin, sur le compte
+ * d'échéances confirmées : au-delà de zéro, c'est toujours `removeRecurrence`,
+ * jamais la ligne la plus proche du début de la règle, qui pourrait très bien
+ * être une prévue plus ancienne qu'une confirmée tardive.
+ */
+export function convertsToSingleEntry(data: Data, id: string): boolean {
+  const recurrence = data.recurrences.find((r) => r.id === id)
+  if (recurrence === undefined) return false
+  const confirmed = data.entries.filter((e) => e.recurrenceId === id && e.status === 'confirmed')
+  if (confirmed.length > 1) return false
+  return confirmed.length === 1 || recurrence.amount !== null
+}
+
+/**
+ * Traduit une récurrence en ce qu'elle n'aurait jamais dû cesser d'être : une
+ * ligne ponctuelle, à qui l'on découvre qu'elle ne se répète pas.
+ *
+ * Rien à recoller dès qu'au moins une échéance est **confirmée** : c'est un
+ * fait, et le choisir parmi d'éventuels autres inventerait une réponse — la
+ * règle s'arrête alors exactement comme `removeRecurrence` le fait déjà, ce
+ * qui détache la confirmée seule si elle est unique. Même chemin sur un
+ * montant **variable** qui n'en a encore confirmé aucune : rien à transporter.
+ *
+ * Sinon, il n'y a qu'un seul fait à sauver — la première échéance, déjà posée
+ * par `syncRecurrenceEntries` si son mois est ouvert (la plus proche du début
+ * de la règle, si plusieurs le sont — toutes prévues, ici, donc interchangeables
+ *), ou fabriquée sinon. Les autres prévues n'en sont qu'un écho, et partent
+ * avec la règle.
+ */
+export function convertRecurrenceToEntry(data: Data, id: string, makeId: () => string): Data {
+  const recurrence = data.recurrences.find((r) => r.id === id)
+  if (recurrence === undefined) return data
+
+  const related = data.entries.filter((e) => e.recurrenceId === id)
+  const hasConfirmed = related.some((e) => e.status === 'confirmed')
+  if (hasConfirmed || recurrence.amount === null) return removeRecurrence(data, id)
+
+  const unlink = <T extends { recurrenceId?: string }>(item: T): T => {
+    if (item.recurrenceId !== id) return item
+    const { recurrenceId: _dropped, ...rest } = item
+    return rest as T
+  }
+
+  const earliest = related.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))[0]
+  const kept = earliest ?? buildPlannedEntry(recurrence, recurrence.startedOn, data.entries, makeId)
+  const { recurrenceId: _dropped, ...detached } = kept
+
+  return {
+    ...data,
+    recurrences: data.recurrences.filter((r) => r.id !== id),
+    entries: [...data.entries.filter((e) => e.recurrenceId !== id), detached],
+    debts: data.debts.map(unlink),
+    advances: data.advances.map(unlink),
+  }
+}
+
 /* --- Entrées --------------------------------------------------------------*/
 
 export function addEntry(data: Data, entry: Entry): Data {

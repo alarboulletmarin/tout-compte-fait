@@ -7,13 +7,15 @@ import {
   eur,
   makeCategory,
   makeData,
+  makeEntry,
   makeFamily,
   makeMember,
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
+import type { Entry } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { ENTRY_NEW_PATH, RECURRENCE_NEW_PATH } from '@/app/routes'
+import { ENTRY_NEW_PATH, RECURRENCE_NEW_PATH, entryPath } from '@/app/routes'
 import { EntryPage } from '@/features/month/EntryPage'
 import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { useStore } from '@/store/store'
@@ -37,6 +39,7 @@ function openAt(path: string) {
       <ScreenTitleProvider>
         <Routes>
           <Route path={ENTRY_NEW_PATH} element={<EntryPage />} />
+          <Route path={`${ENTRY_NEW_PATH}/:id`} element={<EntryPage />} />
           <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceFormPage />} />
           <Route path="*" element={null} />
         </Routes>
@@ -47,6 +50,7 @@ function openAt(path: string) {
 
 const fromEntryDoor = () => { openAt(`${ENTRY_NEW_PATH}?sens=sortie`) }
 const fromRecurrenceDoor = () => { openAt(RECURRENCE_NEW_PATH) }
+const editingEntry = (id: string) => { openAt(entryPath(id)) }
 
 const choice = (label: string) => screen.getByRole('radio', { name: label })
 const field = (label: string) => screen.getByLabelText(new RegExp(label))
@@ -275,6 +279,74 @@ describe('les mots suivent ce qu’on enregistre', () => {
     await userEvent.click(choice(t.entry.recurring))
     expect(screen.getByText(t.entry.labelRequiredRecurring)).toBeInTheDocument()
     expect(screen.queryByText(t.entry.labelRequired)).not.toBeInTheDocument()
+  })
+})
+
+describe('convertir une entrée ponctuelle en récurrence', () => {
+  const seedEntry = (over: Partial<Entry> = {}) => {
+    const entry = makeEntry({
+      id: 'e1',
+      date: TODAY,
+      label: 'Assurance',
+      categoryId: 'cat-rent',
+      amount: eur(85000),
+      status: 'confirmed',
+      ...over,
+    })
+    useStore.setState((state) => ({
+      data: { ...state.data, entries: [...state.data.entries, entry] },
+    }))
+  }
+
+  it('propose la bascule sur une entrée ponctuelle', () => {
+    seedEntry()
+    editingEntry('e1')
+    expect(screen.getByRole('radio', { name: t.entry.recurring })).toBeInTheDocument()
+  })
+
+  // Une échéance déjà générée n'a pas sa place ici : voir `canSwitchRhythm`.
+  it('ne la propose pas sur une échéance déjà générée par une récurrence', () => {
+    seedEntry({ recurrenceId: 'r-existante' })
+    editingEntry('e1')
+    expect(screen.queryByRole('radio', { name: t.entry.recurring })).not.toBeInTheDocument()
+  })
+
+  it('dit que la première échéance part payée quand l’entrée l’était déjà', async () => {
+    seedEntry({ status: 'confirmed' })
+    editingEntry('e1')
+    await userEvent.click(choice(t.entry.recurring))
+    expect(screen.getByText(t.entry.firstDatePaid)).toBeInTheDocument()
+  })
+
+  it('dit qu’elle reste à confirmer quand l’entrée n’était encore que prévue', async () => {
+    seedEntry({ status: 'planned' })
+    editingEntry('e1')
+    await userEvent.click(choice(t.entry.recurring))
+    expect(screen.getByText(t.entry.firstDatePlanned)).toBeInTheDocument()
+  })
+
+  it('remplace l’entrée par une récurrence, payée à sa date', async () => {
+    seedEntry({ status: 'confirmed', amount: eur(85000) })
+    editingEntry('e1')
+    await userEvent.click(choice(t.entry.recurring))
+    await userEvent.click(save())
+
+    expect(entries().some((e) => e.id === 'e1')).toBe(false)
+    expect(recurrences()).toHaveLength(1)
+    expect(recurrences()[0]).toMatchObject({ label: 'Assurance', amount: 85000 })
+    const posed = entries().find((e) => e.recurrenceId === recurrences()[0]?.id)
+    expect(posed).toMatchObject({ status: 'confirmed', amount: 85000, date: TODAY })
+  })
+
+  it('ne force pas la confirmation d’une entrée qui n’était encore que prévue', async () => {
+    seedEntry({ status: 'planned' })
+    editingEntry('e1')
+    await userEvent.click(choice(t.entry.recurring))
+    await userEvent.click(save())
+
+    expect(entries().some((e) => e.id === 'e1')).toBe(false)
+    expect(recurrences()).toHaveLength(1)
+    expect(entries().filter((e) => e.status === 'confirmed')).toHaveLength(0)
   })
 })
 

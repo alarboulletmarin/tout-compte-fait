@@ -140,10 +140,27 @@ export function OperationForm({
     onDone()
   }
 
-  /* Seulement à la création. Convertir après coup une dépense passée en
-     récurrence — ou l'inverse — réécrirait un historique, et c'est une autre
-     histoire que celle de cet écran. */
-  const canSwitchRhythm = operation === null
+  /* À la création, et sur une entrée ponctuelle qui n'en tient pas déjà une :
+     la reprendre en récurrence lui donne sa date pour première échéance, sans
+     rien réécrire de ce qui existe. L'autre sens n'a pas sa place ici — une
+     récurrence peut porter plusieurs échéances confirmées, et ce formulaire
+     n'en montre qu'une ; le geste vit sur sa fiche (`RecurrenceDetailPage`),
+     qui sait ce qu'il y a à recoller. Une échéance déjà générée ne bouge pas
+     non plus : la détacher une à une changerait ce que la règle raconte des
+     mois suivants, une décision qui dépasse le simple montant qu'on corrige. */
+  const canSwitchRhythm =
+    operation === null || (operation.kind === 'entry' && operation.entry.recurrenceId === undefined)
+
+  /* Ce qu'il advient de la première échéance, dit avant l'enregistrement — à
+     la création comme à la conversion d'une entrée. Les deux ne tranchent pas
+     pareil : une création n'a que la date pour deviner si « ça a eu lieu »
+     (`firstDuePaid`), une conversion le sait déjà — l'entrée porte son statut. */
+  const firstOccurrenceHint =
+    operation === null
+      ? (firstDuePaid ? t.entry.firstDatePaid : t.entry.firstDatePlanned)
+      : operation.kind === 'entry'
+        ? (operation.entry.status === 'confirmed' ? t.entry.firstDatePaid : t.entry.firstDatePlanned)
+        : undefined
 
   return (
     <div className="flex max-w-xl flex-col gap-5">
@@ -309,8 +326,8 @@ export function OperationForm({
           <Field
             label={draft.recurring ? t.entry.firstDate : t.entry.date}
             required
-            {...(draft.recurring && operation === null
-              ? { hint: firstDuePaid ? t.entry.firstDatePaid : t.entry.firstDatePlanned }
+            {...(draft.recurring && firstOccurrenceHint !== undefined
+              ? { hint: firstOccurrenceHint }
               : {})}
           >
             {(id, describedBy) => (
