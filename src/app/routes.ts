@@ -186,6 +186,17 @@ export const GOAL_NEW_PATH = `${GOALS_PATH}/nouveau`
 export const goalPath = (id: string): string => `${GOALS_PATH}/${id}`
 export const goalEditPath = (id: string): string => `${GOALS_PATH}/${id}/modifier`
 export const SAVINGS_ANALYSIS_PATH = `${SAVINGS_PATH}/analyse`
+/**
+ * Ce que le mois permet d'épargner — la capacité, le versé, le reste, et la
+ * ventilation par compte.
+ *
+ * Il vivait en quatre blocs au milieu de `/epargne`, c'est-à-dire quatre blocs
+ * qui **dépendent du mois affiché** au milieu de trois qui n'en dépendent pas :
+ * le patrimoine est ancré sur aujourd'hui. C'est le même défaut que
+ * `CreditsPage` a réglé en retirant son en-tête de mois, à ceci près qu'ici le
+ * mois compte — pour une moitié de l'écran seulement, donc pour un écran à part.
+ */
+export const SAVINGS_MONTH_PATH = `${SAVINGS_PATH}/mois`
 /* Segment fixe avant `:id`, comme partout ailleurs : React Router le classe
    d'abord, un support ne peut donc pas éclipser le formulaire de création. */
 export const SUPPORT_NEW_PATH = `${SAVINGS_PATH}/nouveau`

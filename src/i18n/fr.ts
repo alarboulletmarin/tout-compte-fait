@@ -2167,6 +2167,12 @@ export const fr = {
        versée, l'autre le solde de trésorerie avant la prochaine rentrée
        d'argent. « Encore disponible » ne prête à aucune des deux confusions. */
     left: 'Encore disponible',
+    /* Le nom de l'écran qui porte le flux du mois, et de la tuile qui y mène.
+       « Ce mois » et non « Capacité d'épargne » : la tuile du tableau de bord
+       porte déjà ce second mot, et deux étiquettes identiques à deux écrans
+       d'écart ne désignent pas la même chose — l'une est un chiffre, l'autre
+       est une destination. */
+    month: 'Ce mois',
     /* « capacité − versements » ne se dit plus : les deux rangées au-dessus
        *sont* la soustraction, et l'écrire à côté la commente au lieu de
        l'expliquer. */

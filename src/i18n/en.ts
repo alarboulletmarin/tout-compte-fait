@@ -1228,6 +1228,7 @@ export const en: Strings = {
       'A contribution left “shared” goes into nobody’s savings. Attribute it so that it counts.',
 
     left: 'Still available',
+    month: 'This month',
     leftNone: 'The whole capacity is set aside.',
     over: 'Overshoot',
     overHint: 'contributions exceed the capacity by %s',

@@ -1036,6 +1036,26 @@ dérive le capital restant dû des échéances confirmées à la date du jour et
 lit jamais `ym`. Un navigateur de mois qui ne change rien à l'écran vaut moins
 que son absence.
 
+**L'épargne a poussé cette règle jusqu'à découper l'écran.** Elle mélangeait
+deux temporalités qui ne se lisent pas ensemble : le patrimoine — capital,
+autonomie, comptes, objectifs — se consulte au trimestre et est ancré sur
+*aujourd'hui* ; le flux — capacité, versé, reste à placer, ventilation — se
+consulte à la semaine et dépend entièrement du mois affiché. L'écran les
+alternait, si bien que l'œil changeait trois fois de registre en une page et
+qu'un navigateur de mois surplombait un contenu dont la moitié ne le suivait
+pas. Ce n'est pas un défaut de mise en forme, c'est un défaut de découpage : le
+flux est passé sur `/epargne/mois`, qui porte le `MonthHeader`, et `/epargne`
+n'en a plus du tout. Il n'en reste sur la vue d'ensemble qu'une tuile — ce qu'il
+reste à placer — et sa porte.
+
+La rangée de personnes, elle, survit à ce déménagement sans son en-tête :
+`MonthFilterChips` est exportée pour cela. L'épargne est la seule lecture de
+l'app qui n'a pas de version foyer, donc la personne compte même là où le mois
+ne compte pas — mais **un contrôle à une seule valeur n'est pas un contrôle**,
+et la rangée s'efface en solo. Le filtre, lui, est posé dans tous les cas
+(`useIndividualScope`) : sans lui, l'écran lirait le foyer entier, c'est-à-dire
+la somme qu'il existe pour ne pas montrer.
+
 ## PWA
 
 Tout se configure dans `vite.config.ts`, sauf ce qui s'adresse à quelqu'un.

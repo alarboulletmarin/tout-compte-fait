@@ -43,6 +43,7 @@ import {
   SAVINGS_PATH,
   GOALS_PATH,
   GOAL_NEW_PATH,
+  SAVINGS_MONTH_PATH,
   SAVINGS_SUPPORTS_PATH,
   STORAGE_PATH,
   SUPPORT_NEW_PATH,
@@ -116,6 +117,7 @@ const RateFormPage = lazy(async () => ({ default: (await savings()).RateFormPage
 const ValuationsFormPage = lazy(async () => ({ default: (await savings()).ValuationsFormPage }))
 const SupportsPage = lazy(async () => ({ default: (await savings()).SupportsPage }))
 const AnalysisPage = lazy(async () => ({ default: (await savings()).AnalysisPage }))
+const SavingMonthPage = lazy(async () => ({ default: (await savings()).SavingMonthPage }))
 const GoalPage = lazy(async () => ({ default: (await savings()).GoalPage }))
 const GoalFormPage = lazy(async () => ({ default: (await savings()).GoalFormPage }))
 
@@ -213,6 +215,7 @@ export function AppRoutes() {
               React Router — comme `/nouveau` juste dessous. */}
           <Route path={SAVINGS_SUPPORTS_PATH} element={<SupportsPage />} />
           <Route path={SAVINGS_ANALYSIS_PATH} element={<AnalysisPage />} />
+          <Route path={SAVINGS_MONTH_PATH} element={<SavingMonthPage />} />
           {/* Le segment fixe est classé avant `:id` par React Router : un
               support ne peut donc pas éclipser le formulaire de création. */}
           <Route path={SUPPORT_NEW_PATH} element={<SupportFormPage />} />
