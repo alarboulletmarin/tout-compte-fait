@@ -53,6 +53,7 @@ import { Row, RowGroup } from '@/ui/RowGroup'
 import { Segmented } from '@/ui/Segmented'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
+import { EffortSlider } from './EffortSlider'
 import { EffortTable } from './EffortTable'
 import { ExplainSheet } from './ExplainSheet'
 import { MilestoneTable, type MilestoneColumn } from './MilestoneTable'
@@ -974,11 +975,12 @@ export function ProjectionPage() {
               )}
             </Tile>
 
-            {rungs.length > 1 && (
+            {rungs.length > 1 && result !== null && first !== undefined && (
               <Tile className="gap-3">
                 <Eyebrow>{projection.effort}</Eyebrow>
                 <p className="t-label">{projection.effortHint}</p>
                 <EffortTable rungs={rungs} onApply={applyEffort} />
+                <EffortSlider result={result} scenario={first} />
               </Tile>
             )}
 

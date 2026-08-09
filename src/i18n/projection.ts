@@ -291,6 +291,11 @@ const fr = {
      recommande toujours rien — cliquer n'est pas plus une préconisation que la
      lire ne l'était. */
   effortApply: 'Simuler avec %s',
+  /* Le curseur explore un continu, sans rien adopter — le tap sur un barreau
+     applique, le curseur regarde seulement. Les quatre barreaux du tableau
+     restent des repères, pas les seuls montants qu'on puisse essayer. */
+  effortSlider: 'Essayer un autre versement',
+  effortSliderArrival: 'donnerait %s',
 
   /* --- Euros constants ----------------------------------------------------*/
   constant: 'Tenir compte de l’inflation',

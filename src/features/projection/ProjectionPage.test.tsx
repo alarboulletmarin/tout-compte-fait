@@ -12,7 +12,7 @@
  * bouge pas d'un octet, quoi qu'on tape ici. Ce fichier tient les deux bouts.
  * ==========================================================================*/
 
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -29,6 +29,7 @@ import {
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
+import { money, toAmountInput } from '@/domain/money'
 import { projection } from '@/i18n/projection'
 import { formatMoney, tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
@@ -955,5 +956,61 @@ describe('un compte plafonné', () => {
   it('ne dit rien quand le plafond ne coupe rien', async () => {
     await capped(90_000_000)
     expect(screen.queryByText(projection.supportCapped)).not.toBeInTheDocument()
+  })
+})
+
+describe('le curseur de l’effort', () => {
+  // Le préfixe du gabarit, jamais le texte entier : la fin porte un montant
+  // arrondi que ce test n'a pas à recalculer pour le reconnaître.
+  const arrivalPrefix = said(projection.effortSliderArrival.split('%s')[0] ?? '')
+  const arrivalNode = (): HTMLElement =>
+    screen.getByText((text) => said(text).startsWith(arrivalPrefix))
+  const slider = (): HTMLInputElement =>
+    screen.getByRole('slider', { name: projection.effortSlider })
+  const input = (): HTMLInputElement =>
+    screen.getByRole('textbox', { name: projection.effortSlider })
+
+  it('part du versement simulé, au centime près', () => {
+    show()
+    expect(slider().value).toBe('10000')
+    expect(input().value).toBe('100,00')
+  })
+
+  it('recalcule l’arrivée en glissant, sans changer le versement du tableau', () => {
+    show()
+    const before = arrivalNode().textContent
+    fireEvent.change(slider(), { target: { value: '20000' } })
+    expect(input().value).toBe('200,00')
+    expect(arrivalNode().textContent).not.toBe(before)
+    // Le barreau courant du tableau reste celui de la simulation, inchangé.
+    expect(screen.getByText(projection.effortCurrent)).toBeInTheDocument()
+  })
+
+  it('reprend une saisie tapée dans le champ', async () => {
+    const user = userEvent.setup()
+    show()
+    await user.clear(input())
+    await user.type(input(), '150,00')
+    await user.tab()
+    expect(slider().value).toBe('15000')
+  })
+
+  it('borne une saisie hors échelle au maximum du curseur', async () => {
+    const user = userEvent.setup()
+    show()
+    const max = slider().max
+    await user.clear(input())
+    await user.type(input(), '999999')
+    await user.tab()
+    expect(slider().value).toBe(max)
+    expect(input().value).toBe(toAmountInput(money(Number(max))))
+  })
+
+  it('n’écrit rien dans le document', async () => {
+    const user = userEvent.setup()
+    show()
+    fireEvent.change(slider(), { target: { value: '25000' } })
+    await user.tab()
+    expect(useStore.getState().data).toEqual(pristine)
   })
 })
