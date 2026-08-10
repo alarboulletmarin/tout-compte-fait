@@ -288,8 +288,8 @@ serait faux dès qu'il y a des intérêts : sur 100 000 € à 4 % sur 20 ans, l
 première année amortit ~3 000 € pour ~7 300 € versés, et le raccourci
 annoncerait le prêt soldé des années trop tôt.
 
-**Projection.** Un seul moteur, `projectSeries`, et rien à côté. Le tracé, les
-jalons et le chiffre d'arrivée lisent la **même** série : il n'existe pas de
+**Projection.** Un seul moteur, `projectSeries`, et rien à côté. Le tracé, le
+tableau et le chiffre d'arrivée lisent la **même** série : il n'existe pas de
 formule fermée qui donnerait la valeur finale plus vite, parce que deux façons
 de calculer un capital donneraient deux vérités à tenir d'accord — c'est ce que
 la valeur estimée d'un support refuse déjà. Les flottants restent à l'intérieur
@@ -298,85 +298,112 @@ arrondir à chaque pas ferait dériver le total de plusieurs euros sur vingt ans
 et l'arrondi deviendrait une donnée du calcul au lieu d'une décision
 d'affichage. C'est le motif de `remainingPrincipal`.
 
-**La boucle se referme, et c'est la règle qu'il a fallu reformuler.** « Rien
-n'entre dans le document » tenait toujours, mais elle était énoncée au mauvais
-niveau : ce qui doit rester dehors, c'est l'**hypothèse** — un taux essayé, un
-capital tapé pour voir. Ce qui entre est une **intention adoptée par un geste
-explicite**, ce qui est un fait du foyer exactement comme un crédit souscrit. Le
-simulateur a donc une sortie — « en faire un objectif » —, et elle passe par le
-formulaire d'un objectif plutôt que par une écriture directe : rien ne s'écrit
-sans qu'on ait vu ce qu'on écrit. Le taux, lui, n'entre toujours que par la fiche
-d'un compte, et daté.
+**Ce que le simulateur écrit dans le document : rien.** Une hypothèse — un taux
+essayé, un versement pour voir — n'est pas un fait du foyer : elle ne voyage pas
+dans les exports, n'apparaît pas dans le schéma qu'on donne à un assistant, et
+n'exige aucune migration. Les réglages vivent en `localStorage`, du côté de ce
+qui décrit l'appareil, et sont revalidés à la lecture comme un document importé
+l'est par `validate.ts` — cette clé-là s'édite depuis la console du navigateur.
+Ce qui *peut* entrer dans le document est d'une autre nature : une intention
+adoptée par un geste explicite — un objectif —, et elle se pose sur l'écran des
+objectifs, jamais ici. Le taux, lui, n'entre que par la fiche d'un compte, daté.
 
-Le chemin de retour existe pour la même raison. La fiche d'un objectif ouvre le
-simulateur préréglé sur *sa* question — cette cible, cette échéance, ces
-comptes —, et lui passe son identifiant : la sortie de l'écran devient alors
-« adopter ce rythme », qui repose le versement sur l'objectif d'où l'on vient.
-Tout voyage en clair dans l'URL, comme le sens et la nature d'une saisie
-(`entryNewPath`), et tout est revalidé à l'arrivée — une URL vient du dehors,
-exactement comme `localStorage` et comme un document importé.
+Le chemin d'aller existe quand même : la fiche d'un objectif ouvre le simulateur
+préréglé sur *sa* question — ces comptes-là, jusqu'à cette échéance —, et rien de
+plus. Il lui passait aussi sa cible et son identifiant, du temps où le simulateur
+savait chercher un versement requis et le reposer sur l'objectif ; cette moitié
+de boucle a disparu avec la question, parce que **le verdict d'un objectif y
+répond déjà** (`domain/goal.ts`) et que deux écrans qui répondent à la même
+question par deux calculs finissent par ne plus donner le même chiffre. Ce qui
+voyage voyage en clair dans l'URL, comme le sens et la nature d'une saisie
+(`entryNewPath`), et tout est revalidé à l'arrivée.
 
-**Le simulateur n'écrit rien de lui-même, et il lit dans un seul sens.** Rien n'en ressort
-dans le document, donc rien dans les exports ni dans le schéma qu'on donne à un
-assistant. Une projection est une **question qu'on pose**, pas un fait du
-foyer — et un `expectedReturn` posé sur un support « au cas où » serait
-exactement la promesse que le cahier §2 refuse. Les derniers réglages vivent en
-`localStorage`, du côté de ce qui décrit l'appareil : ils sont revalidés à la
-lecture, comme un document importé l'est par `validate.ts`, parce que cette
-clé-là s'édite depuis la console du navigateur.
+**Le simulateur simule des comptes, un par un.** Il savait faire trois choses :
+projeter quatre nombres tapés à la main, projeter un support, projeter « toute
+l'épargne d'une personne » d'un bloc. La première est une calculatrice qu'on
+trouve n'importe où ; la troisième additionnait des comptes qui ne suivent pas la
+même courbe pour en tirer un taux moyen qui n'existe pas — un Livret A à 2,40 %
+et un PEA à 6 % ne se résument pas à 4,20 %. Ce qui reste est une **liste de
+cases à cocher** : chaque compte coché court à son rendement et reçoit son
+versement, et la courbe est l'addition de leurs trajectoires. Cocher un seul
+compte fait de tout l'écran sa trajectoire à lui, ce qui est la lecture unitaire
+que les trois origines n'exprimaient pas — « ces deux comptes-là » n'était
+exprimable par aucune d'elles.
 
-**Une fourchette, et non trois hypothèses.** L'écran comparait jusqu'à trois
-taux, plus trois présélections, plus un second taux « comparé » par compte :
-quatre mécanismes pour poser une seule chose, l'incertitude, dont aucun ne
-disait lequel des autres il remplaçait. Un placement n'a pas trois rendements,
-il a une fourchette — et trois courbes obligent à choisir laquelle on croit,
-quand une aire montre l'écart sans rien promettre.
+Le corollaire est que `domain/projectionStart.ts` ne rend plus aucun total : une
+part par support, et la somme se fait **après**, sur des séries, à l'écran qui
+les trace. Il n'y a toujours qu'un moteur — `projectSeries` —, et le tracé, le
+tableau et le chiffre d'arrivée lisent littéralement les mêmes nombres.
 
-Ce qui rend la fourchette juste et non décorative, c'est **où** elle s'applique :
-seulement aux comptes qui ne portent aucun taux. Un compte dont le rendement est
-posé sur sa fiche vaut la même chose dans les deux bornes — son propriétaire a
-dit ce qu'il en attend, l'app n'a pas d'incertitude à ajouter par-dessus. Deux
-conséquences se lisent à l'écran sans une ligne de prose : la fourchette **se
-referme d'elle-même** sur un portefeuille entièrement renseigné, et la ligne
-« Rendement » affiche l'étendue des taux qui *courent* — « 2,40 % – 7 % » pour
-un Livret A posé et un PEA muet —, jamais celle des deux champs saisis.
+**Trois façons de poser un rendement, une seule à la fois par compte.** Le taux
+de sa fiche — daté, et seul à engager le document —, une valeur qu'on essaie, ou
+une fourchette. L'écran en proposait quatre *en même temps* : trois hypothèses
+libres, trois présélections, un taux par compte et un second taux « comparé » par
+compte, sans qu'aucun ne dise lequel des autres il remplaçait. Un choix explicite
+le dit, et il se pose compte par compte parce que c'est là qu'il a un sens : un
+Livret A n'a pas l'incertitude d'un PEA. La fourchette reste le défaut d'un compte
+muet — l'app ne devine aucun rendement, et entre suggérer un chiffre flatteur et
+montrer un écart large, elle montre l'écart. Deux conséquences se lisent sans une
+ligne de prose : la fourchette **se referme d'elle-même** quand tous les comptes
+sont renseignés, et la pilule « Rendement » affiche l'étendue des taux qui
+*courent*, jamais celle des champs saisis.
 
-Le corollaire mécanique est que chaque compte est projeté **deux fois**, une par
-borne, et que les deux séries sont littéralement la même référence quand il est
-fixé. La contrainte des trois couleurs de trait tombe avec les scénarios : il
-n'y a plus qu'une teinte, `--accent-2`, et deux tracés qui bornent une aire.
+**La cadence des versements est le seul endroit de l'app où une échéance n'est
+pas ramenée au mois** (cahier §4.2). Ailleurs on compare des rythmes, donc on
+amortit ; ici on capitalise, et 1 200 € versés une fois l'an ne valent pas 100 €
+versés douze fois — le premier n'a produit d'intérêts sur rien pendant onze mois.
+`projectSeries` prend donc un `everyMonths`, et l'écart entre deux cadences est
+exactement ce qu'on vient mesurer en la changeant.
 
-Ce qu'il **lit** passe par un seul module, `domain/projectionStart.ts`, qui rend
-exactement deux nombres : le capital estimé d'un support ou de l'épargne d'une
-personne, et ses versements récurrents amortis au mois. **Aucun taux** — un test
-vérifie la forme même du type rendu, parce que c'est la règle qui tient tout
-l'écran : un capital et un versement sont des faits, un rendement futur n'en est
-pas un. L'écran affiche ces deux nombres en **lecture**, jamais dans un champ,
-et le seul geste qui les rend éditables coupe le lien avec l'épargne au lieu
-d'écrire dessus. Refuser d'écrire protège le document ; refuser de *lire* ne
-protégeait rien — ça obligeait à retaper à la main un capital que l'écran
-Épargne affiche au centime deux écrans plus haut.
+**Une page qui ne défile pas.** L'écran empilait dix-sept blocs dans une colonne
+de trois mille pixels : on y réglait un taux en bas et on remontait voir ce que
+ça changeait. Il tient désormais dans la fenêtre — la réponse en tête, la figure
+au milieu qui prend toute la place restante, les réglages en pilules au bas du
+pouce, la réserve en pied —, et ce qui se règle s'ouvre en feuille montante, une
+par question. La hauteur se calcule en retranchant le cadre de la coquille
+(`AppShell`), qui change deux fois : la gouttière s'élargit à 768px, la barre
+d'onglets et le bouton flottant disparaissent à 1024px. Sous un plancher — la
+somme de ce qui entoure la figure, plus cent pixels de tracé — la page défile
+plutôt que de rendre la figure illisible : sur un écran de 320×640, mieux vaut
+cent pixels de défilement qu'une courbe de cinq.
 
-**Les versements cumulés sont une aire, pas une courbe de plus.** L'app n'a que
-trois valeurs qui tiennent le contraste de 3:1 exigé d'un trait dans les deux
-thèmes — `--accent-2`, `--text`, `--text-muted` —, mesure faite pour
-`charts/CumulativeLines.tsx`. C'est cette contrainte-là qui a rendu l'aire
-nécessaire ; elle s'est avérée meilleure que le trait qu'elle remplace, puisqu'
-elle découpe le graphique en deux lectures qu'il n'y a plus à expliquer — ce qui
-vient de la poche, ce qui vient du taux. Son échelle part de zéro, contrairement
-à la courbe d'un support, qui part de son minimum relevé : une aire mesurée
-depuis une base flottante ne dit rien.
+**Deux lectures, à un appui l'une de l'autre.** La figure répond à « où ça va »,
+le tableau à « combien, dans sept ans ». Le tableau était un repli sous la
+courbe, avec quatre jalons pris aux quarts de l'horizon ; il est devenu une
+**vue**, une ligne par année, et il porte les mêmes séries que la figure. C'est
+aussi la lecture textuelle que le cahier §5 exige de tout graphique, et elle
+cesse d'être un pis-aller qu'on déplie.
 
-Les deux se lisent **empilées** : le versé en bas, le rendement au-dessus, le
-haut de la pile étant la borne basse du capital. La hauteur d'une bande *est*
-alors la réponse, là où deux tracés superposés demandaient de mesurer l'écart
-entre eux — et `bandPath` sert les trois figures, parce qu'une aire posée sur
-zéro, une bande posée sur une autre série et l'aire de la fourchette sont la
-même chose à la base près. La bande du rendement est teintée de l'accent à
-faible opacité et non d'une couleur de plus — une aire n'a pas de contraste de
-trait à tenir, c'est le trait posé dessus qui porte la lecture ; celle de la
-fourchette est plus claire encore, parce qu'elle dit exactement l'inverse de sa
-voisine : l'une est ce que le calcul produit, l'autre ce qu'il ne sait pas.
+**Recharts, et c'est la seule figure de l'app qui ne soit pas écrite à la main.**
+Les cinq autres (`src/charts`) sont du SVG maison, ce qui leur va : elles tracent
+une série connue d'avance, sans curseur continu ni infobulle. Celle-ci est un
+instrument qu'on manipule — on tire un taux, une cadence, une durée, et on
+regarde ce que ça fait sur cinq cents points —, et la bibliothèque apporte ce qui
+coûterait le plus à réécrire : l'échelle, l'axe, l'infobulle au doigt, la
+navigation au clavier. Elle pèse **110 Kio compressés**, soit vingt fois l'écran
+qu'elle sert, et c'est une dépense assumée : elle voyage dans le morceau de la
+simulation, qui se charge à la demande, donc elle ne pèse sur le premier
+chargement de personne — `scripts/size.mjs` mesure le graphe initial et le
+budget n'a pas bougé d'un octet.
+
+La figure empile **trois aires** : le capital du départ, ce qu'on a versé depuis,
+ce que le taux a produit. Un capital projeté est trois choses, et un trait unique
+les confond — « ≈ 42 000 € » impressionne, « 12 000 € versés et 6 000 € de
+rendement » informe. La borne haute passe **au-dessus, en trait tireté**, et non
+en quatrième couche : en euros d'aujourd'hui, un taux sous l'inflation creuse la
+couche du rendement sous zéro, et une pile posée dessus n'aurait plus rien sommé.
+Le tireté dit d'ailleurs ce qu'il est — une hypothèse, pas une mesure.
+
+**Les couches se lisent empilées, et c'est une contrainte de couleur autant
+qu'une décision de lecture.** L'app n'a que trois valeurs qui tiennent le
+contraste de 3:1 exigé d'un trait dans les deux thèmes — `--accent-2`, `--text`,
+`--text-muted` —, mesure faite pour `charts/CumulativeLines.tsx` : trois séries
+superposées en trois traits n'étaient pas tenables. Empilées, la **hauteur d'une
+bande est la réponse**, là où deux tracés demandaient de mesurer l'écart entre
+eux, et une aire n'a pas de contraste de trait à tenir — elle se teinte à faible
+opacité. C'est la figure que l'écran d'épargne applique au passé
+(`charts/GrowthAreas.tsx`, `bandPath`) et que la simulation applique à l'avenir :
+la même question se lit du même œil des deux côtés.
 
 **Prorata des revenus.** Le revenu d'un membre est *dérivé* de ses récurrences
 de nature `resource`, ramenées au mois — il n'est stocké nulle part. Le déclarer

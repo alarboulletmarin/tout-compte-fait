@@ -80,13 +80,7 @@ import {
 import { type CapState, capStateOf, isFull } from '@/domain/savingCap'
 import { rateOn, ratesOf } from '@/domain/savingRate'
 import { convertsToSingleEntry } from '@/domain/updates'
-import {
-  NO_START,
-  type ProjectionSource,
-  type ProjectionStart,
-  memberStart,
-  supportStart,
-} from '@/domain/projectionStart'
+import { type ProjectionPart, supportParts } from '@/domain/projectionStart'
 import {
   type MemberCharges,
   type MemberIncome,
@@ -1241,60 +1235,38 @@ export function useUnlinkedSavings(): Entry[] {
 }
 
 /**
- * D'où part une projection, quand elle part de l'épargne réelle.
+ * Ce que le document sait des supports d'épargne, prêt pour la simulation.
  *
- * Deux nombres — le capital estimé, les versements récurrents — et les paliers
- * de taux **posés sur les supports**, jamais un taux deviné : l'app ne connaît
- * aucun produit et n'en prête aucun (cahier §4.6 ter). C'est la seule lecture
- * du document que l'écran des projections fasse, et elle est à sens unique :
- * rien de ce qu'on simule ne redescend.
+ * Une part par support actif — capital estimé, versements récurrents, paliers de
+ * taux **posés sur la fiche**, plafond —, et jamais un taux deviné : l'app ne
+ * connaît aucun produit et n'en prête aucun (cahier §4.6 ter). C'est la seule
+ * lecture du document que l'écran de simulation fasse, et elle est à sens
+ * unique : rien de ce qu'on simule ne redescend.
  *
- * Elle ignore le filtre par membre de l'app : le simulateur n'a pas de bandeau
- * de mois, et son origine est **choisie sur place** — un support, ou toute
- * l'épargne d'une personne. Suivre en plus un filtre posé deux écrans plus tôt
- * ferait varier le chiffre sans que rien ne le montre.
+ * Elle ignore le filtre par membre de l'app : la simulation n'a pas de bandeau
+ * de mois, et ses comptes sont **cochés sur place**. Suivre en plus un filtre
+ * posé deux écrans plus tôt ferait disparaître de la liste un compte qu'on
+ * venait d'y choisir, sans que rien ne le montre.
  *
  * `months` est l'horizon simulé, et il **change la réponse** : une règle qui
  * s'arrête avant la fin n'entre pas dans un versement constant. Une
  * reconstitution d'avance de six mois projetée sur dix ans ajouterait des
  * milliers d'euros que personne n'a l'intention de verser.
  */
-export function useProjectionStart(source: ProjectionSource, months: number): ProjectionStart {
+export function useSupportParts(months: number): ProjectionPart[] {
   const supports = useSavingSupports()
   const valuations = useSavingValuations()
   const rates = useSavingRates()
   const entries = useEntries()
   const recurrences = useRecurrences()
-  const kindOf = useKindOf()
 
   return useMemo(() => {
     const on = today()
     /* Le dernier jour du dernier mois simulé : une règle qui s'éteint le 31 du
        mois d'arrivée a bien couru sur tout l'horizon. */
     const until = endOfMonth(addMonthsToYm(ymOf(on), Math.max(0, months)))
-    if (source.kind === 'support') {
-      const support = supports.find((one) => one.id === source.id)
-      /* Un support qui n'existe plus n'a rien à reprendre — l'écran retombe de
-         son côté en simulation libre, mais le sélecteur ne peut pas inventer un
-         support pour autant. */
-      if (support === undefined) return NO_START
-      return supportStart(support, valuations, entries, recurrences, rates, on, until)
-    }
-    if (source.kind === 'member') {
-      return memberStart(
-        source.id,
-        supports,
-        valuations,
-        entries,
-        recurrences,
-        rates,
-        kindOf,
-        on,
-        until,
-      )
-    }
-    return NO_START
-  }, [source, months, supports, valuations, entries, recurrences, rates, kindOf])
+    return supportParts(supports, valuations, entries, recurrences, rates, on, until)
+  }, [months, supports, valuations, entries, recurrences, rates])
 }
 
 /* `useMemberSavings` vivait ici — la même lecture pour chaque membre, en

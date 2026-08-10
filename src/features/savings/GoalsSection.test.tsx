@@ -26,7 +26,7 @@ import {
 import { t } from '@/i18n/strings'
 import { tpl } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
-import { GOAL_PARAM, goalNewPath, projectionPath } from '@/app/routes'
+import { goalNewPath, projectionPath } from '@/app/routes'
 import { GoalsSection } from './GoalsSection'
 
 const pristine = useStore.getState().data
@@ -162,30 +162,26 @@ describe('le verdict d’un objectif', () => {
 })
 
 /* ============================================================================
- * La boucle se referme — et c'est ce qui distingue un objectif d'un formulaire.
+ * Ce qu'un objectif passe au simulateur — et ce qu'il ne lui passe plus.
  *
- * Le simulateur était un cul-de-sac : on réglait quatre choses, on regardait une
- * courbe, on partait, et rien n'était retenu. Ce que ces deux tests tiennent
- * n'est pas une navigation, c'est que **chaque étape produise quelque chose que
- * la suivante consomme** : une simulation devient un cap, un cap rouvre une
- * simulation qui sait d'où elle vient, et le rythme qu'on y essaie revient s'y
- * poser.
+ * La fiche d'un objectif ouvre le simulateur sur **sa** question : ces comptes,
+ * jusqu'à cette échéance. Elle lui passait aussi sa cible et son identifiant, du
+ * temps où le simulateur savait chercher un versement requis et le reposer sur
+ * l'objectif ; cette moitié de boucle a disparu avec la question — c'est le
+ * verdict de la fiche qui dit ce qu'il faudrait verser (`domain/goal.ts`), et
+ * deux écrans qui y répondraient par deux calculs finiraient par ne plus donner
+ * le même chiffre.
  * ==========================================================================*/
 
-describe('la boucle entre l’objectif et le simulateur', () => {
-  it('ouvre le simulateur sur la question de l’objectif, et dit d’où l’on vient', () => {
-    const path = projectionPath({
-      goalId: 'g-1',
-      target: eur(2_000_000),
-      years: 4,
-      source: 'support:s-1',
-    })
+describe('la porte vers le simulateur', () => {
+  it('emporte les comptes de l’objectif et son échéance, et rien de plus', () => {
+    const path = projectionPath({ years: 4, supportIds: ['s-1', 's-2'] })
     /* En clair, comme le sens et la nature d'une saisie : un lien qu'on peut
        lire est un lien qu'on peut corriger. */
-    expect(path).toContain(`${GOAL_PARAM}=g-1`)
-    expect(path).toContain('cible=2000000')
     expect(path).toContain('duree=4')
-    expect(path).toContain('origine=support%3As-1')
+    expect(path).toContain('comptes=s-1%2Cs-2')
+    expect(path).not.toContain('cible')
+    expect(path).not.toContain('objectif')
   })
 
   it('emporte vers le formulaire ce qu’on vient de décider, et rien de plus', () => {

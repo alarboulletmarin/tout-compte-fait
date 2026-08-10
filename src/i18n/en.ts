@@ -1079,10 +1079,7 @@ export const en: Strings = {
     goalsEmpty:
       'No goal yet. Set a target — a deposit, a safety net — and the app will tell you whether you’re on track.',
     goalAdd: 'Add a goal',
-    goalFromSimulation: 'Make it a goal',
     goalSimulate: 'Simulate differently',
-    goalAdopt: 'Adopt this pace',
-    goalAdopted: 'Pace adopted',
 
     goalOn: 'on time',
     goalAhead: '%s months early',

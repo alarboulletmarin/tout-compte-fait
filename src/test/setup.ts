@@ -97,3 +97,20 @@ if (typeof Element === 'function' && !Element.prototype.setPointerCapture) {
     return captured.get(this)?.has(id) ?? false
   }
 }
+
+/* jsdom ne mesure rien, donc il n'implémente pas `ResizeObserver`.
+ *
+ * C'est le seul manque qui ferait **lever** un composant plutôt que rendre une
+ * réponse fausse : la figure de la simulation (Recharts) s'y abonne pour suivre
+ * la taille de son cadre, et sans lui le premier rendu de l'écran jette une
+ * TypeError. Le bouchon n'observe rien — il n'y a rien à observer, jsdom ne
+ * fait pas de mise en page —, si bien que la figure se rend à zéro pixel : les
+ * tests de cet écran lisent donc sa lecture textuelle et son tableau, qui sont
+ * de toute façon ce que le cahier §5 exige d'elle. */
+if (typeof globalThis.ResizeObserver !== 'function') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}

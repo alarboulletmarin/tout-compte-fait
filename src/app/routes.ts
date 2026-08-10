@@ -299,28 +299,26 @@ export const PROJECTION_PATH = '/simulation'
 export const LEGACY_PROJECTION_PATH = '/projections'
 
 /**
- * Le simulateur, préréglé sur un objectif — et sachant à qui il doit revenir.
+ * Le simulateur, préréglé sur des comptes et une échéance.
  *
- * C'est l'autre moitié de la boucle. « Simuler autrement » ouvre le simulateur
- * sur la question de l'objectif — cette cible, cette échéance, ces comptes — et
- * `objectif` dit d'où l'on vient : la sortie de l'écran cesse alors d'être
- * « en faire un objectif » pour devenir « adopter ce rythme », qui repose le
- * versement sur celui qu'on avait déjà.
+ * C'est l'autre moitié de la boucle : la fiche d'un objectif ouvre le simulateur
+ * sur *sa* question — ces comptes-là, jusqu'à cette date-là —, et il n'y a rien
+ * de plus à transporter. Le simulateur ne cherche plus « combien faut-il
+ * verser » : c'est le verdict de l'objectif qui répond à ça (`domain/goal.ts`),
+ * et deux écrans qui répondraient à la même question par deux calculs
+ * finiraient par ne plus donner le même chiffre.
  *
- * Sans lui, revenir d'une simulation demanderait de retrouver son objectif à la
- * main et d'y retaper un chiffre qu'on vient de lire — c'est-à-dire exactement
- * le cul-de-sac qu'on retire.
+ * Les comptes voyagent par leurs identifiants, séparés par des virgules, et la
+ * durée en années pleines : tout est en clair dans l'URL, comme le sens et la
+ * nature d'une saisie (`entryNewPath`), et tout est revalidé à l'arrivée — une
+ * URL vient du dehors, exactement comme `localStorage`.
  */
-export const GOAL_PARAM = 'objectif'
-
-export function projectionPath(
-  seed: { goalId?: string; target?: number; years?: number; source?: string } = {},
-): string {
+export function projectionPath(seed: { years?: number; supportIds?: readonly string[] } = {}): string {
   const params = new URLSearchParams()
-  if (seed.goalId !== undefined) params.set(GOAL_PARAM, seed.goalId)
-  if (seed.target !== undefined) params.set('cible', String(seed.target))
   if (seed.years !== undefined) params.set('duree', String(seed.years))
-  if (seed.source !== undefined) params.set('origine', seed.source)
+  if (seed.supportIds !== undefined && seed.supportIds.length > 0) {
+    params.set('comptes', seed.supportIds.join(','))
+  }
   const query = params.toString()
   return query === '' ? PROJECTION_PATH : `${PROJECTION_PATH}?${query}`
 }

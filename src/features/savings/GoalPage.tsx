@@ -212,34 +212,29 @@ export function GoalPage() {
 
       {/* **La porte du simulateur est ici**, et nulle part ailleurs sur
           l'épargne : c'est le seul endroit où la question « et si je versais
-          autrement ? » se pose sur quelque chose de précis — cette cible, cette
-          échéance, ces comptes. La rangée qui vivait en fin d'écran d'épargne
-          ouvrait le simulateur sur rien du tout ; « Plus » garde son entrée pour
-          qui vient sans objectif.
-          Le simulateur sait d'où il vient : sa sortie cesse d'être « en faire un
-          objectif » pour devenir « adopter ce rythme », qui repose le versement
-          sur celui-ci. C'est ce qui referme la boucle. */}
+          autrement ? » se pose sur quelque chose de précis — ces comptes, cette
+          échéance. La rangée qui vivait en fin d'écran d'épargne ouvrait le
+          simulateur sur rien du tout ; « Plus » garde son entrée pour qui vient
+          sans objectif.
+          Ce qui voyage est ce que le simulateur sait régler : **les comptes
+          rattachés**, tous, et l'échéance. Il n'y a plus de cible à transporter —
+          « combien faudrait-il verser » est le verdict de cette fiche-ci, et deux
+          écrans qui y répondraient par deux calculs finiraient par ne plus donner
+          le même chiffre. */}
       <div className="flex flex-wrap gap-2">
         <Button
           onClick={() => {
             void navigate(
               projectionPath({
-                goalId: goal.id,
-                target: goal.target,
                 /* L'horizon en années, arrondi au supérieur : le simulateur
                    raisonne en années pleines, et rogner l'échéance ferait
                    répondre à une question plus courte que celle qu'on pose. */
                 ...(goal.targetOn === undefined
                   ? {}
                   : { years: Math.max(1, Math.ceil(monthsTo(month, goal.targetOn) / 12)) }),
-                /* Un seul compte : le simulateur part de lui. Plusieurs :
-                   il part de toute l'épargne de la personne — il n'existe pas
-                   d'origine « ces trois comptes-là », et en inventer une pour
-                   un aller simple coûterait plus qu'elle ne rapporte. */
-                source:
-                  linked.length === 1 && linked[0] !== undefined
-                    ? `support:${linked[0].id}`
-                    : `member:${goal.memberId}`,
+                /* Tous les comptes de l'objectif, et eux seuls : le simulateur
+                   coche des comptes, donc « ces trois-là » s'exprime enfin. */
+                supportIds: linked.map((support) => support.id),
               }),
             )
           }}

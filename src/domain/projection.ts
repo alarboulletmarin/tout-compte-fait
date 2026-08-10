@@ -2,10 +2,10 @@
  * Projection d'épargne à taux constant par palier.
  *
  * Ce module ne sait faire qu'une chose : dire ce que devient un capital qu'on
- * alimente tous les mois, sous une hypothèse de taux qu'on lui donne. Il ne
- * choisit aucun taux, ne connaît aucun produit, et ne connaît pas le document.
- * D'où viennent ses quatre nombres ne le regarde pas — l'écran peut les lire sur
- * un support (`projectionStart.ts`) ou les recevoir d'un champ de saisie, la
+ * alimente à cadence régulière, sous une hypothèse de taux qu'on lui donne. Il
+ * ne choisit aucun taux, ne connaît aucun produit, et ne connaît pas le
+ * document. D'où viennent ses nombres ne le regarde pas — le capital et les
+ * versements d'un support (`projectionStart.ts`), un taux essayé à l'écran : la
  * capitalisation est la même (cahier §4.6 ter).
  *
  * **Le taux est saisi net.** Ni fiscalité, ni frais de gestion, ni enveloppe :
@@ -43,7 +43,10 @@ export type RateKind = 'guaranteed' | 'assumed'
 export type ProjectionInput = {
   /** Ce qu'il y a déjà, au premier jour. */
   initial: Money
-  /** Ce qu'on ajoute chaque mois, en fin de mois. */
+  /**
+   * Ce qu'on ajoute à chaque échéance, en fin de mois — voir `everyMonths` pour
+   * la cadence de ces échéances, qui n'est pas forcément mensuelle.
+   */
   monthly: Money
   /** L'horizon, en mois. La série porte `months + 1` points, le départ compris. */
   months: number
@@ -61,6 +64,24 @@ export type ProjectionInput = {
    * §4.6 ter).
    */
   rateBp: number | readonly number[]
+  /**
+   * Tous les combien tombe un versement, en mois. Un — le défaut — verse chaque
+   * mois ; trois verse en fin de trimestre, douze en fin d'année.
+   *
+   * **Ce n'est pas un amortissement, et c'est là tout l'intérêt.** L'app ramène
+   * partout ailleurs une échéance au mois (cahier §4.2) parce qu'elle compare
+   * des rythmes ; ici elle capitalise, et 1 200 € versés le douzième mois ne
+   * valent pas 100 € versés douze fois — le premier n'a produit d'intérêts sur
+   * rien pendant onze mois. Verser trimestriellement rend donc un peu moins que
+   * verser mensuellement à effort égal, et c'est exactement ce que quelqu'un
+   * vient vérifier en changeant la cadence.
+   *
+   * Le versement tombe sur les rangs multiples de la cadence : le mois 3 pour un
+   * trimestre, le 12 pour une année. Le premier mois d'un horizon annuel ne
+   * verse donc rien, ce qui est la même convention prudente que « en fin de
+   * mois » — entre deux lectures défendables, celle qui promet le moins.
+   */
+  everyMonths?: number
   /**
    * Inflation annuelle en points de base, pour la lecture en euros constants.
    * Zéro — le défaut — laisse les montants en euros courants.
@@ -151,10 +172,15 @@ export function projectSeries({
   monthly,
   months,
   rateBp,
+  everyMonths = 1,
   inflationBp = 0,
   room,
 }: ProjectionInput): ProjectionSeries {
   const horizon = Math.max(0, Math.trunc(months))
+  /* Une cadence au moins mensuelle, et entière : « tous les 0 mois » ne décrit
+     rien, et un reste de division par zéro verserait à chaque rang ou jamais
+     selon l'humeur du calcul. */
+  const every = Math.max(1, Math.trunc(everyMonths))
   /* Le facteur de croissance du mois `k`. Un barème plat n'appelle `Math.pow`
      qu'une fois — le cache le retient par taux, pas par rang —, si bien que le
      vecteur de référence du cahier reste bit à bit celui d'avant le barème. */
@@ -191,8 +217,11 @@ export function projectSeries({
 
   for (let month = 1; month <= horizon; month += 1) {
     /* Le versement du mois, écrêté par ce qui reste de place. Le capital, lui,
-       continue de croître : un livret plein rapporte encore. */
-    const put = monthly > 0 ? Math.min(monthly, left) : monthly
+       continue de croître : un livret plein rapporte encore.
+       Hors échéance, il n'y a rien à verser — et le capital croît quand même,
+       ce qui est toute la différence entre une cadence et un amortissement. */
+    const due = month % every === 0 ? monthly : ZERO
+    const put = due > 0 ? Math.min(due, left) : due
     if (put > 0) left -= put
     capital = capital * growthAt(month - 1) + put
     discount /= erosion
@@ -202,97 +231,4 @@ export function projectSeries({
   }
 
   return { balance, contributed }
-}
-
-/**
- * Le versement mensuel qui atteint `target` en `months`, capital initial
- * compris — le mode inverse.
- *
- * C'est la question qu'on se pose vraiment : « combien dois-je mettre » est
- * actionnable, « combien j'aurai » ne l'est pas. La formule est celle de
- * `projectSeries`, résolue en `P` :
- * `P = (cible − initial·(1+i)ⁿ) · i / ((1+i)ⁿ − 1)`, et `(cible − initial)/n`
- * à taux nul, où la limite existe mais pas le quotient.
- *
- * **Un scalaire, et pas un barème**, à la différence de `projectSeries`. Le mode
- * inverse cherche un versement, donc il ne décompose rien : `analyse` y rend une
- * `split` vide, et aucun barème de support n'arrive jusqu'ici. S'il en arrivait
- * un un jour, ce serait par **dichotomie sur `projectSeries`** et non par une
- * seconde forme fermée — deux façons de calculer un capital donneraient deux
- * vérités à tenir d'accord.
- *
- * **Arrondi au centime supérieur**, seul de tout le module. Un versement requis
- * arrondi par le bas rate sa cible — de peu, mais toujours du même côté, et
- * c'est le mauvais côté : c'est l'argument qui fait déjà arrondir « reste à
- * payer » plutôt que le tronquer (`i18n/format.ts`).
- *
- * Deux refus, et aucun des deux ne vaut zéro. Sans durée, la question n'a pas
- * de réponse — pas de versement nul, pas de réponse du tout. Et si le capital
- * initial atteint seul la cible, il n'y a rien à verser : `ZERO` le dit, et
- * l'écran a de quoi le formuler autrement qu'en « 0,00 € par mois ».
- */
-export function requiredMonthly({
-  target,
-  initial,
-  months,
-  rateBp,
-}: {
-  target: Money
-  initial: Money
-  months: number
-  rateBp: number
-}): Money | null {
-  const horizon = Math.trunc(months)
-  if (horizon <= 0) return null
-
-  const i = monthlyRate(rateBp)
-  const grown = initial * Math.pow(1 + i, horizon)
-  const missing = target - grown
-  if (missing <= 0) return ZERO
-
-  const perMonth = i === 0 ? missing / horizon : (missing * i) / (Math.pow(1 + i, horizon) - 1)
-  return money(Math.ceil(perMonth))
-}
-
-/**
- * Ce qu'il faudra nominalement pour valoir `amount` d'aujourd'hui dans
- * `months` mois.
- *
- * Le pendant de la déflation de `projectSeries`, et il n'existe que pour le
- * mode inverse : quelqu'un qui lit en euros constants et tape « 200 000 € »
- * parle du pouvoir d'achat qu'il connaît, pas d'un nombre affiché sur un relevé
- * dans vingt ans. La cible est donc réinflatée avant le calcul, puis les
- * montants redescendent à l'affichage — si bien que la courbe arrive exactement
- * sur le chiffre demandé.
- */
-export function inflate(amount: Money, inflationBp: number, months: number): Money {
-  return money(Math.round(amount * Math.pow(1 + monthlyRate(inflationBp), Math.max(0, months))))
-}
-
-/**
- * Les rangs où la lecture s'arrête, en mois — quatre jalons, le dernier étant
- * l'horizon lui-même.
- *
- * Des **quarts de l'horizon**, et non une liste fixe de 5/10/15/20 ans : sur
- * quarante ans, une liste fixe laisserait vingt années sans un seul repère, et
- * sur trois ans elle ne rendrait rien du tout. Les quarts redonnent d'ailleurs
- * 5/10/15/20 sur l'horizon de vingt ans, qui est celui du vecteur de référence.
- *
- * Quatre, parce que le tableau se lit sur un téléphone : un jalon par ligne,
- * un scénario par colonne, et trois scénarios font déjà quatre colonnes avec
- * celle des durées.
- */
-export function milestoneMonths(months: number): number[] {
-  const horizon = Math.max(0, Math.trunc(months))
-  if (horizon === 0) return []
-
-  const marks: number[] = []
-  for (let quarter = 1; quarter <= 4; quarter += 1) {
-    const mark = quarter === 4 ? horizon : Math.round((horizon * quarter) / 4)
-    /* Un horizon de deux mois donnerait deux fois le rang 1 : on ne pose pas
-       deux fois la même ligne, et le zéro n'est pas un jalon — c'est le départ,
-       que la première colonne du tableau porte déjà. */
-    if (mark > 0 && !marks.includes(mark)) marks.push(mark)
-  }
-  return marks
 }

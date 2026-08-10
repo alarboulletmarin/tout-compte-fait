@@ -1,8 +1,8 @@
 /* ============================================================================
  * Les licences de ce qui voyage dans l'app publiée.
  *
- * Six des douze paquets sont sous MIT, un sous ISC, et **deux sous SIL Open
- * Font License 1.1** — Archivo et Geist Mono. L'OFL n'est la licence ni du
+ * La plupart sont sous MIT, quelques-uns sous ISC ou BSD, et **deux sous SIL
+ * Open Font License 1.1** — Archivo et Geist Mono. L'OFL n'est la licence ni du
  * dépôt ni d'aucun de ces paquets-là, et elle pose sa condition sur des
  * fichiers qui ne sont pas du code : le logiciel de fonte, modifié ou non, se
  * distribue **avec le texte de sa licence et sa notice de copyright**. Or les
@@ -30,7 +30,7 @@
  * mente.
  * ==========================================================================*/
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 const OUT = 'public/licences-tierces.txt'
@@ -44,9 +44,20 @@ const REPO_URL = JSON.parse(readFileSync('package.json', 'utf8'))
   .replace(/\.git$/, '')
 
 /* Le nom du fichier de licence n'est normalisé nulle part : chaque paquet
-   choisit sa casse et son extension. On les essaie dans l'ordre du plus
-   courant, et on échoue bruyamment plutôt que d'omettre une notice. */
-const LICENSE_FILES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'license', 'license.md']
+   choisit sa casse, son extension — et son orthographe : `decimal.js-light`,
+   qui voyage avec le graphique de la simulation, la nomme `LICENCE.md`. On les
+   essaie dans l'ordre du plus courant, et on échoue bruyamment plutôt que
+   d'omettre une notice. */
+const LICENSE_FILES = [
+  'LICENSE',
+  'LICENSE.md',
+  'LICENSE.txt',
+  'LICENCE',
+  'LICENCE.md',
+  'LICENCE.txt',
+  'license',
+  'license.md',
+]
 
 /**
  * Les paquets qui voyagent vraiment.
@@ -76,11 +87,42 @@ function shippedPackages() {
   return [...found.entries()].sort(([a], [b]) => a.localeCompare(b, 'en'))
 }
 
-function licenseTextOf(dir, name) {
+/** Le fichier de licence posé à la racine d'un dossier, s'il y en a un. */
+function licenseFileIn(dir) {
   for (const file of LICENSE_FILES) {
     const path = join(dir, file)
     if (existsSync(path)) return readFileSync(path, 'utf8').trimEnd()
   }
+  return null
+}
+
+/**
+ * Les licences qu'un paquet **recopie** plutôt que d'en porter une.
+ *
+ * `victory-vendor` — que le graphique de la simulation emmène par `recharts` —
+ * republie les bibliothèques d3 dans `lib-vendor/`, chacune avec sa licence, et
+ * n'en pose aucune à sa racine. Les notices qui doivent voyager sont donc
+ * exactement celles-là : c'est leur code qui est servi au navigateur, sous le
+ * nom de leur hôte.
+ *
+ * Un seul niveau de profondeur, et nommé : « voici les licences trouvées
+ * quelque part dans l'arborescence » ne serait pas une notice, ce serait une
+ * trouvaille.
+ */
+function vendoredLicenses(dir) {
+  const vendor = join(dir, 'lib-vendor')
+  if (!existsSync(vendor)) return null
+  const parts = readdirSync(vendor, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => ({ name: entry.name, text: licenseFileIn(join(vendor, entry.name)) }))
+    .filter((part) => part.text !== null)
+    .map((part) => `--- ${part.name} ---\n\n${part.text}`)
+  return parts.length === 0 ? null : parts.join('\n\n')
+}
+
+function licenseTextOf(dir, name) {
+  const own = licenseFileIn(dir) ?? vendoredLicenses(dir)
+  if (own !== null) return own
   /* Aucun repli : une notice manquante est le problème que ce fichier existe
      pour régler, et la remplacer par « voir le paquet » ne la rend pas. */
   throw new Error(`Aucun fichier de licence trouvé pour ${name} dans ${dir}.`)
