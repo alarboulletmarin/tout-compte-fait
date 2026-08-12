@@ -101,13 +101,22 @@ export function CreditsPage() {
       {statuses.length === 0 ? (
         <EmptyState message={t.credits.empty} actionLabel={t.credits.add} onAction={openCreate} />
       ) : (
-        <div className="flex max-w-3xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <Tile variant="accent">
             <Eyebrow icon={CreditsIcon}>{t.credits.total}</Eyebrow>
             <Amount value={totalRemaining(statuses)} size="tile-fit" className="mt-3" />
           </Tile>
 
-          <div className="flex flex-col gap-3">
+          {/* Chaque crédit est une carte entière — sa jauge, son capital, son
+              échéance —, et deux cartes se comparent bien mieux côte à côte que
+              l'une sous l'autre : c'est la même question posée à chacune, « où
+              en est celui-là ». Deux colonnes au-delà de 768px, donc.
+
+              Sauf s'il n'y en a qu'un : une carte seule sur une demi-largeur ne
+              se compare à rien, elle se lit juste comme une mise en page
+              inachevée. La grille n'arrive qu'avec le second crédit, c'est-à-dire
+              au moment exact où elle sert. */}
+          <div className={statuses.length > 1 ? 'cols' : 'flex flex-col gap-3'}>
             {statuses.map((status) => (
               <DebtRow key={status.debt.id} status={status} />
             ))}

@@ -544,6 +544,17 @@ export function RecurrencesPage() {
     void navigate(recurrencePath(id))
   }
 
+  /* Ce qui borde la liste sans en faire partie : les règles qu'on a arrêtées,
+     et les deux écrans que les récurrences alimentent. Nommé une fois parce
+     qu'il se pose à deux endroits selon qu'il y ait une liste à côté ou non —
+     recopié, l'un des deux dériverait. */
+  const aside = (
+    <>
+      {stopped.length > 0 && <StoppedList rows={stopped} onOpen={openDetail} />}
+      <Trackers />
+    </>
+  )
+
   return (
     <>
       {/* L'état vide porte déjà le même bouton : le garder en titre l'affiche
@@ -562,24 +573,36 @@ export function RecurrencesPage() {
         )}
       </PageTitle>
 
-      <div className="flex max-w-3xl flex-col gap-4">
-        {rows.length === 0 ? (
+      <div className="flex flex-col gap-4">
+        {rows.length === 0 && (
           <EmptyState
             message={t.recurrences.empty}
             actionLabel={t.recurrences.add}
             onAction={openCreate}
           />
-        ) : (
-          <>
-            <Totals nature={nature} />
-            {active.length > 0 && (
-              <GroupedList rows={active} nature={nature} onNature={setNature} onOpen={openDetail} />
-            )}
-            {stopped.length > 0 && <StoppedList rows={stopped} onOpen={openDetail} />}
-          </>
         )}
+        {rows.length > 0 && <Totals nature={nature} />}
 
-        <Trackers />
+        {/* Les règles qui courent à gauche, ce qui les borde à droite — au-delà
+            de 768px. Les deux blocs de droite se lisaient jusqu'ici *après* la
+            liste, c'est-à-dire après vingt rangées et deux écrans de
+            défilement sur un desktop : « Avances » et « Crédits » sont les deux
+            seules portes permanentes vers ces écrans, et elles vivaient sous la
+            ligne de flottaison. Les mettre à côté ne change pas l'ordre de
+            lecture, ça le rend atteignable.
+
+            La grille ne s'installe que s'il y a une colonne de gauche à
+            remplir : quand toutes les règles sont arrêtées, `active` est vide,
+            et deux colonnes dont une l'est aussi ne sont pas une mise en page —
+            l'aparté reprend alors la largeur, comme avant. */}
+        {active.length > 0 ? (
+          <div className="cols">
+            <GroupedList rows={active} nature={nature} onNature={setNature} onOpen={openDetail} />
+            <div className="cols-stack">{aside}</div>
+          </div>
+        ) : (
+          aside
+        )}
       </div>
     </>
   )

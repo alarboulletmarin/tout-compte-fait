@@ -304,6 +304,24 @@ Ce n'est pas une permission générale d'en semer partout. Deux grilles se justi
 
 La largeur a son plafond, et c'est lui qui choisit entre `2×1` et `4×1`. La `2×1` reste en demi-colonne sur mobile, seule de tous les formats : elle n'offre que **~104px de contenu à 320px**. L'eyebrow y tient sur une ligne quoi qu'il arrive (§6), donc passé sa dégradation il déborde et se fait trancher. Mesuré : le plafond est de **13 caractères** — « Prévisionnel » (12) et « Reste à vivre » (13) tiennent, « Capacité d'épargne » (18) non, elle déborde de 35px. **Au-delà de 13 caractères, le format est `4×1`.** Un débordement de largeur ne se voit pas « par le bas » : il coupe le libellé au milieu d'un mot, et c'est le pire des deux.
 
+### La grille de contenu, hors bento
+
+Le bento range des tuiles calibrées sur une trame de rangées. Les écrans secondaires ne portent pas ça : ils portent des **blocs dont la hauteur vient de leur contenu** — groupes de rangées, tuiles de texte, panneaux de réglage —, et la règle du dessus le dit déjà, une liste n'entre pas dans la grille. Ils n'avaient pour autant aucune règle à eux, et l'absence de règle a une valeur par défaut qui ne s'était jamais discutée : la colonne unique, plafonnée à 768px.
+
+Elle coûte, et ça se mesure. Sur un desktop, la colonne latérale prend ses 264px et il reste ~950px de contenu : on empilait 768px de large sur deux écrans de défilement, avec un tiers de la fenêtre vide à droite. Sept écrans mesurés à 1440 points, jeu d'exemple chargé : « Plus » passe de 1477 à 1117px de haut, « Crédits » de 1570 à 970, « Données » de 1091 à 918, « Épargne » de 1513 à 1318, « Récurrences » de 2056 à 1818.
+
+**Deux colonnes à partir de 768px, une en dessous, gouttière de 16px** (`.cols`). Le seuil est celui du palier tablette du bento, et non un troisième inventé : au-dessus, les deux états que l'app connaît donnent la même largeur utile — 704px sur une tablette sans colonne latérale, 696px sur un desktop de 1024 qui vient d'en gagner une. Mesuré, les colonnes tombent entre **336 et 488px** de 768 à 1440, jamais sous la largeur d'une rangée de téléphone, qui est le plancher de `ListRow`.
+
+Un `auto-fit` aurait laissé la largeur décider seule du nombre de colonnes — c'est ce que le prototype propose, et c'est ce qu'on écarte : une troisième colonne apparaît vers 1000px et retombe à ~310px, sous ce plancher. Le nombre de colonnes est une décision de mise en page, pas un reste de division.
+
+Trois règles la bordent, et chacune vient d'un mode d'échec réel.
+
+**L'ordre du DOM est l'ordre de lecture.** La grille range de gauche à droite puis de haut en bas, et ne réordonne rien : c'est ce qui interdit de composer deux piles à la main pour égaliser leurs hauteurs — ça se lirait en colonnes, et un groupe passerait devant un autre pour une raison de hauteur. Le blanc sous un bloc court est le prix de l'ordre, et c'est le bon prix. Quand deux blocs doivent rester l'un sous l'autre sans que le flux les sépare, ils partagent une pile (`.cols-stack`) qui est un seul enfant de la grille.
+
+**Les blocs voisins ne s'étirent pas l'un sur l'autre** (`align-items: start`). Un groupe de rangées étiré porterait sa dernière rangée à mi-hauteur d'un vide, et le vide se lirait comme une rangée manquante.
+
+**Une grille à deux colonnes dont une seule est remplie n'est pas une mise en page.** Elle ne déborde pas et ne coupe rien — elle occupe la moitié gauche et laisse l'autre vide, ce qui se voit immédiatement. Le cas naît d'un état de données, pas d'une erreur d'écriture : un seul crédit, plus aucune récurrence active. L'écran reprend alors la pile, et c'est à lui de le décider — `e2e/mise-en-page.spec.ts` refuse le cas contraire aux trois largeurs.
+
 ---
 
 ## 6. Composants

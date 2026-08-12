@@ -156,7 +156,7 @@ export function SavingsPage() {
               })}
         />
       ) : (
-        <div className="flex max-w-3xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {/* Un seul chiffre héros : le capital. C'est la question qu'on se pose
               en arrivant, et la seule qui mérite cette taille. */}
           <CapitalTile
@@ -187,21 +187,32 @@ export function SavingsPage() {
             <MonthPreview />
           </div>
 
-          {/* Le seul bloc qui conclut, et c'est pourquoi il passe devant la
-              liste des comptes : « à l'heure » ou « sept mois de retard » est ce
-              qu'aucun relevé de banque ne dit, quand « où c'est placé » se lit
-              ailleurs et en mieux. */}
-          <GoalsSection />
+          {/* Ce qui conclut à gauche, ce qui détaille à droite — au-delà de
+              768px seulement. L'ordre du DOM ne bouge pas d'une ligne : les
+              objectifs restent le premier bloc lu, et les deux autres le
+              suivent dans leur ordre, empilés dans la colonne voisine plutôt
+              que dessous. C'est exactement la hiérarchie que la pile disait
+              déjà, rendue visible d'un coup d'œil au lieu de se découvrir en
+              faisant défiler. */}
+          <div className="cols">
+            {/* Le seul bloc qui conclut, et c'est pourquoi il passe devant la
+                liste des comptes : « à l'heure » ou « sept mois de retard » est ce
+                qu'aucun relevé de banque ne dit, quand « où c'est placé » se lit
+                ailleurs et en mieux. */}
+            <GoalsSection />
 
-          {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
-              fait sur l'écran dédié, vers lequel ce bloc renvoie. Les comptes y
-              sont rangés par ce qu'ils demandent, pas par ce qu'ils pèsent. */}
-          <SupportsOverview />
+            <div className="cols-stack">
+              {/* Un aperçu, pas la gestion : relever un compte ou en ouvrir un se
+                  fait sur l'écran dédié, vers lequel ce bloc renvoie. Les comptes y
+                  sont rangés par ce qu'ils demandent, pas par ce qu'ils pèsent. */}
+              <SupportsOverview />
 
-          {/* « Est-ce que ça monte, au fond ? » — la réponse s'y arrête, elle ne
-              s'y décide pas : un aperçu et un lien vers `/epargne/analyse`, où
-              vivent le tracé, sa fenêtre et le cumul de l'année. */}
-          <AnalysisPreview />
+              {/* « Est-ce que ça monte, au fond ? » — la réponse s'y arrête, elle ne
+                  s'y décide pas : un aperçu et un lien vers `/epargne/analyse`, où
+                  vivent le tracé, sa fenêtre et le cumul de l'année. */}
+              <AnalysisPreview />
+            </div>
+          </div>
         </div>
       )}
     </>

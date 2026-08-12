@@ -40,7 +40,7 @@ export function AppearancePage() {
   const resolved = theme === 'system' ? (prefersDark() ? 'dark' : 'light') : theme
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <PageTitle
         title={t.appearance.title}
         onBack={() => {
@@ -48,28 +48,37 @@ export function AppearancePage() {
         }}
       />
 
-      <RowGroup title={t.theme.label}>
-        <Row
-          label={t.theme.label}
-          control={
-            <Segmented
-              options={themeOptions()}
-              value={theme}
-              onChange={setTheme}
-              label={t.theme.label}
-              className="w-fit"
-            />
-          }
-        />
-      </RowGroup>
+      {/* Les deux réglages côte à côte au-delà de 768px : ils se regardent
+          l'un l'autre, et c'est tout l'argument de cet écran — une palette n'a
+          pas la même allure en clair et en sombre. Empilés, on changeait le
+          thème puis on faisait défiler pour voir ce que ça donne ; côte à côte,
+          les six vignettes se repeignent sous les yeux au moment où la position
+          bascule. Le lien entre les deux réglages devient visible au lieu
+          d'être écrit. */}
+      <div className="cols">
+        <RowGroup title={t.theme.label}>
+          <Row
+            label={t.theme.label}
+            control={
+              <Segmented
+                options={themeOptions()}
+                value={theme}
+                onChange={setTheme}
+                label={t.theme.label}
+                className="w-fit"
+              />
+            }
+          />
+        </RowGroup>
 
-      {/* La phrase est ici et non sur la page d'entrée : elle explique comment
-          les deux réglages se combinent, ce qui ne se pose comme question qu'une
-          fois devant eux. */}
-      <Tile className="gap-3">
-        <p className="t-label">{t.appearance.intro}</p>
-        <PaletteChoice value={palette} onChange={setPalette} theme={resolved} />
-      </Tile>
+        {/* La phrase est ici et non sur la page d'entrée : elle explique comment
+            les deux réglages se combinent, ce qui ne se pose comme question qu'une
+            fois devant eux. */}
+        <Tile className="gap-3">
+          <p className="t-label">{t.appearance.intro}</p>
+          <PaletteChoice value={palette} onChange={setPalette} theme={resolved} />
+        </Tile>
+      </div>
     </div>
   )
 }

@@ -278,100 +278,116 @@ export function MorePage() {
   ].join(' · ')
 
   return (
-    <div className="flex max-w-2xl flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <PageTitle title={t.nav.more} />
 
-      {/* Ce qu'on tient, par opposition aux trois lectures que la barre porte.
-          Les quatre destinations viennent de `manageRoutes()`, que la colonne
-          latérale déplie par la même table : deux navigations qui liraient deux
-          listes finiraient par diverger sans que rien ne l'annonce. */}
-      <RowGroup title={t.nav.manage}>
-        {manageRoutes().map((route) => {
-          const hint = hints()[route.path]
-          return (
-            <Row
-              key={route.path}
-              label={route.label}
-              icon={route.icon}
-              to={route.path}
-              {...(hint === undefined ? {} : { description: hint })}
-            />
-          )
-        })}
-      </RowGroup>
+      {/* Cinq groupes sur deux colonnes au-delà de 768px, un seul en dessous.
+          L'écran est un index de destinations : il ne se lit pas, il se
+          balaie, et sur un desktop la colonne unique en cachait la moitié sous
+          la ligne de flottaison pendant qu'un tiers de la fenêtre restait vide
+          à droite. Deux colonnes le rendent d'un coup d'œil.
 
-      {/* Le seul groupe dont le contenu ne décrit pas le foyer : on n'y lit
-          rien de ses données, on y essaie un chiffre. Il vient juste après
-          « Gérer » parce qu'il en est le prolongement — on tient un budget,
-          puis on se demande ce qu'il donne au bout de dix ans — et avant
-          « Organiser », qui parle de la structure et non des montants.
+          L'ordre des groupes reste celui du DOM, et donc celui de la lecture au
+          clavier comme au lecteur d'écran : la grille les range de gauche à
+          droite puis de haut en bas, sans rien réordonner. C'est ce qui
+          interdisait de composer deux piles à la main pour égaliser leurs
+          hauteurs — ça se lirait en colonnes, et « Simuler » passerait avant
+          « Gérer » pour une raison qui n'est pas la sienne. Les hauteurs sont
+          donc inégales, et le blanc sous un groupe court est le prix de
+          l'ordre. */}
+      <div className="cols">
+        {/* Ce qu'on tient, par opposition aux trois lectures que la barre porte.
+            Les quatre destinations viennent de `manageRoutes()`, que la colonne
+            latérale déplie par la même table : deux navigations qui liraient deux
+            listes finiraient par diverger sans que rien ne l'annonce. */}
+        <RowGroup title={t.nav.manage}>
+          {manageRoutes().map((route) => {
+            const hint = hints()[route.path]
+            return (
+              <Row
+                key={route.path}
+                label={route.label}
+                icon={route.icon}
+                to={route.path}
+                {...(hint === undefined ? {} : { description: hint })}
+              />
+            )
+          })}
+        </RowGroup>
 
-          Un groupe d'une seule rangée, et c'est assumé : la doctrine de la
-          colonne latérale refuse un titre au-dessus d'un lien unique, mais elle
-          le refuse là où le titre serait *à la place* du lien. Ici il est à
-          côté de quatre autres titres, dans un écran qui se parcourt à l'œil, et
-          c'est lui qui dit qu'on change de nature — sans quoi « Projections »
-          tomberait sous « Gérer », où elle prétendrait décider de quelque
-          chose. */}
-      <RowGroup title={t.nav.simulate}>
-        <Row
-          label={t.nav.projections}
-          icon={ForecastIcon}
-          description={t.nav.projectionsHint}
-          to={PROJECTION_PATH}
-        />
-      </RowGroup>
+        {/* Le seul groupe dont le contenu ne décrit pas le foyer : on n'y lit
+            rien de ses données, on y essaie un chiffre. Il vient juste après
+            « Gérer » parce qu'il en est le prolongement — on tient un budget,
+            puis on se demande ce qu'il donne au bout de dix ans — et avant
+            « Organiser », qui parle de la structure et non des montants.
 
-      {/* La structure du budget, et non des réglages : on n'ouvre pas ces deux
-          vues pour changer l'app, on les ouvre parce que quelqu'un est arrivé
-          dans le foyer ou parce qu'une dépense n'a pas d'étiquette où aller. */}
-      <RowGroup title={t.nav.organise}>
-        <Row
-          label={t.settings.household}
-          icon={PeopleIcon}
-          description={household}
-          to={PEOPLE_PATH}
-        />
-        <Row
-          label={t.settings.categories}
-          icon={CategoriesIcon}
-          description={catalogue}
-          to={CATEGORIES_PATH}
-        />
-      </RowGroup>
+            Un groupe d'une seule rangée, et c'est assumé : la doctrine de la
+            colonne latérale refuse un titre au-dessus d'un lien unique, mais elle
+            le refuse là où le titre serait *à la place* du lien. Ici il est à
+            côté de quatre autres titres, dans un écran qui se parcourt à l'œil, et
+            c'est lui qui dit qu'on change de nature — sans quoi « Projections »
+            tomberait sous « Gérer », où elle prétendrait décider de quelque
+            chose. */}
+        <RowGroup title={t.nav.simulate}>
+          <Row
+            label={t.nav.projections}
+            icon={ForecastIcon}
+            description={t.nav.projectionsHint}
+            to={PROJECTION_PATH}
+          />
+        </RowGroup>
 
-      {/* « Sur cet appareil » avant « Exporter / importer » : la première dit
-          où les données vivent, la seconde comment les en faire sortir. */}
-      <RowGroup title={t.nav.data}>
-        <Row
-          label={t.storage.title}
-          icon={DeviceIcon}
-          description={t.settings.storageSummary}
-          to={STORAGE_PATH}
-        />
-        <Row
-          label={t.settings.transfer}
-          icon={TransferIcon}
-          description={t.settings.transferSummary}
-          to={DATA_PATH}
-        />
-      </RowGroup>
+        {/* La structure du budget, et non des réglages : on n'ouvre pas ces deux
+            vues pour changer l'app, on les ouvre parce que quelqu'un est arrivé
+            dans le foyer ou parce qu'une dépense n'a pas d'étiquette où aller. */}
+        <RowGroup title={t.nav.organise}>
+          <Row
+            label={t.settings.household}
+            icon={PeopleIcon}
+            description={household}
+            to={PEOPLE_PATH}
+          />
+          <Row
+            label={t.settings.categories}
+            icon={CategoriesIcon}
+            description={catalogue}
+            to={CATEGORIES_PATH}
+          />
+        </RowGroup>
 
-      {/* Les vrais réglages, ceux qui ne touchent qu'à la présentation — plus la
-          page qui dit ce qu'est cette app. « À propos » est ici parce que sous
-          1024px c'est sa seule porte : la barre d'onglets ne peut pas en porter
-          une cinquième, et la colonne, elle, a son propre lien en pied. */}
-      <RowGroup title={t.nav.application}>
-        <AppearanceRow />
-        <LanguageRow />
-        <CurrencyRow />
-        <Row
-          label={t.nav.about}
-          icon={InfoIcon}
-          description={tpl(t.settings.aboutSummary, VERSION)}
-          to={ABOUT_PATH}
-        />
-      </RowGroup>
+        {/* « Sur cet appareil » avant « Exporter / importer » : la première dit
+            où les données vivent, la seconde comment les en faire sortir. */}
+        <RowGroup title={t.nav.data}>
+          <Row
+            label={t.storage.title}
+            icon={DeviceIcon}
+            description={t.settings.storageSummary}
+            to={STORAGE_PATH}
+          />
+          <Row
+            label={t.settings.transfer}
+            icon={TransferIcon}
+            description={t.settings.transferSummary}
+            to={DATA_PATH}
+          />
+        </RowGroup>
+
+        {/* Les vrais réglages, ceux qui ne touchent qu'à la présentation — plus la
+            page qui dit ce qu'est cette app. « À propos » est ici parce que sous
+            1024px c'est sa seule porte : la barre d'onglets ne peut pas en porter
+            une cinquième, et la colonne, elle, a son propre lien en pied. */}
+        <RowGroup title={t.nav.application}>
+          <AppearanceRow />
+          <LanguageRow />
+          <CurrencyRow />
+          <Row
+            label={t.nav.about}
+            icon={InfoIcon}
+            description={tpl(t.settings.aboutSummary, VERSION)}
+            to={ABOUT_PATH}
+          />
+        </RowGroup>
+      </div>
     </div>
   )
 }

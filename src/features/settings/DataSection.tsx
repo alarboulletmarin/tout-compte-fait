@@ -103,82 +103,95 @@ export function DataSection() {
   }
 
   return (
-    <>
-      {/* Où vivent les données, ce qu'on en promet, et depuis quand elles sont
-          copiées ailleurs — les trois faits qui décident si l'on clique sur le
-          bouton du dessous. Ils étaient répartis entre deux vues : la
-          conservation ici invisible, l'export invisible là-bas. Ce n'est pas
-          une vue de plus, c'est le haut de celle-ci ; « Sur cet appareil »
-          garde le détail, les chiffres, les sauvegardes et le bouton qui
-          redemande, et le lien y mène. */}
-      <Tile className="gap-3">
-        <dl className="flex flex-col gap-2">
-          <Status label={t.storage.placeLabel} value={t.storage.placeValue} />
-          <Status
-            label={t.storage.keepLabel}
-            value={
-              durable === true
-                ? t.storage.keepPersistent
-                : durable === false
-                  ? t.storage.keepFragile
-                  : t.storage.keepUnknown
-            }
-          />
-          <Status
-            label={t.storage.lastExportLabel}
-            value={lastExport === null ? t.storage.lastExportNever : formatDate(lastExport)}
-          />
-        </dl>
-        <Link to={STORAGE_PATH} className="t-label w-fit underline">
-          {t.storage.statusMore}
-        </Link>
-      </Tile>
+    <div className="cols">
+      {/* Garder une copie d'un côté, tout perdre de l'autre. Les deux
+          premières tuiles racontent la même chose dans l'ordre — où vivent
+          les données, puis comment en sortir un fichier —, et elles restent
+          donc l'une sous l'autre : les séparer en colonnes ferait lire les
+          trois faits qui décident du geste *à côté* du bouton plutôt
+          qu'avant lui.
 
-      <Tile className="gap-4">
-        {/* Deux sorties pour un seul fichier, et chacune dit au-dessus ce
-            qu'elle fait — le partage n'annonce pas dans la feuille ce qu'on
-            décide avant de cliquer. Le second bouton ne s'affiche que si le
-            navigateur sait envoyer un .json ; ailleurs, le bloc est
-            exactement celui d'avant. */}
-        <Block title={t.settings.backupGroup}>
-          <p className="t-label">{t.settings.exportHint}</p>
-          {canShare && <p className="t-label">{t.settings.shareHint}</p>}
-          {/* La date du dernier export ne se redit pas ici : elle est trois
-              centimètres au-dessus, dans le résumé, où elle a un sens à côté de
-              ce que le navigateur promet. */}
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={doExport}>{t.settings.export}</Button>
-            {canShare && (
-              <Button variant="secondary" onClick={doShare}>
-                <ShareIcon size={18} />
-                {t.settings.share}
-              </Button>
-            )}
-          </div>
-        </Block>
+          L'effacement part seul dans la colonne de droite, et cet
+          isolement-là est le propos : au bout d'une pile, il était la suite
+          de « exporter », donc la dernière étape d'une sauvegarde. À côté,
+          il est ce qu'il est — l'autre branche, celle qui ne garde rien. */}
+      <div className="cols-stack">
+        {/* Où vivent les données, ce qu'on en promet, et depuis quand elles sont
+            copiées ailleurs — les trois faits qui décident si l'on clique sur le
+            bouton du dessous. Ils étaient répartis entre deux vues : la
+            conservation ici invisible, l'export invisible là-bas. Ce n'est pas
+            une vue de plus, c'est le haut de celle-ci ; « Sur cet appareil »
+            garde le détail, les chiffres, les sauvegardes et le bouton qui
+            redemande, et le lien y mène. */}
+        <Tile className="gap-3">
+          <dl className="flex flex-col gap-2">
+            <Status label={t.storage.placeLabel} value={t.storage.placeValue} />
+            <Status
+              label={t.storage.keepLabel}
+              value={
+                durable === true
+                  ? t.storage.keepPersistent
+                  : durable === false
+                    ? t.storage.keepFragile
+                    : t.storage.keepUnknown
+              }
+            />
+            <Status
+              label={t.storage.lastExportLabel}
+              value={lastExport === null ? t.storage.lastExportNever : formatDate(lastExport)}
+            />
+          </dl>
+          <Link to={STORAGE_PATH} className="t-label w-fit underline">
+            {t.storage.statusMore}
+          </Link>
+        </Tile>
 
-        {/* La conséquence reste écrite au-dessus du bouton, et pas seulement
-            dans la question : « remplace intégralement » est ce qui décide si
-            l'on clique, et l'apprendre une fois la boîte ouverte est trop
-            tard pour qui l'ouvre par curiosité. */}
-        <Block title={t.settings.restoreGroup}>
-          <p className="t-label">{t.settings.importHint}</p>
-          <ImportControl className="w-fit" />
-        </Block>
+        <Tile className="gap-4">
+          {/* Deux sorties pour un seul fichier, et chacune dit au-dessus ce
+              qu'elle fait — le partage n'annonce pas dans la feuille ce qu'on
+              décide avant de cliquer. Le second bouton ne s'affiche que si le
+              navigateur sait envoyer un .json ; ailleurs, le bloc est
+              exactement celui d'avant. */}
+          <Block title={t.settings.backupGroup}>
+            <p className="t-label">{t.settings.exportHint}</p>
+            {canShare && <p className="t-label">{t.settings.shareHint}</p>}
+            {/* La date du dernier export ne se redit pas ici : elle est trois
+                centimètres au-dessus, dans le résumé, où elle a un sens à côté de
+                ce que le navigateur promet. */}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={doExport}>{t.settings.export}</Button>
+              {canShare && (
+                <Button variant="secondary" onClick={doShare}>
+                  <ShareIcon size={18} />
+                  {t.settings.share}
+                </Button>
+              )}
+            </div>
+          </Block>
 
-        {/* Le schéma se lit juste sous l'import, parce que c'est l'import qu'il
-            sert : il n'a d'autre usage que de faire exister le fichier qu'on
-            déposera à la ligne du dessus. */}
-        <Block title={t.settings.schema}>
-          <p className="t-label">{t.settings.schemaHint}</p>
-          <SchemaControl />
-        </Block>
+          {/* La conséquence reste écrite au-dessus du bouton, et pas seulement
+              dans la question : « remplace intégralement » est ce qui décide si
+              l'on clique, et l'apprendre une fois la boîte ouverte est trop
+              tard pour qui l'ouvre par curiosité. */}
+          <Block title={t.settings.restoreGroup}>
+            <p className="t-label">{t.settings.importHint}</p>
+            <ImportControl className="w-fit" />
+          </Block>
 
-        <Block title={t.settings.example}>
-          <p className="t-label">{t.settings.exampleHint}</p>
-          <ExampleControl className="w-fit" />
-        </Block>
-      </Tile>
+          {/* Le schéma se lit juste sous l'import, parce que c'est l'import qu'il
+              sert : il n'a d'autre usage que de faire exister le fichier qu'on
+              déposera à la ligne du dessus. */}
+          <Block title={t.settings.schema}>
+            <p className="t-label">{t.settings.schemaHint}</p>
+            <SchemaControl />
+          </Block>
+
+          <Block title={t.settings.example}>
+            <p className="t-label">{t.settings.exampleHint}</p>
+            <ExampleControl className="w-fit" />
+          </Block>
+        </Tile>
+      </div>
 
       {/* La zone sensible, à part et en dernier. Ce n'est pas la couleur qui
           prévient l'erreur — le DS §2.3 réserve le rouge aux dépassements et
@@ -230,6 +243,6 @@ export function DataSection() {
           }}
         />
       </Tile>
-    </>
+    </div>
   )
 }

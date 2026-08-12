@@ -437,6 +437,61 @@
     }
   }
 
+  /* --- Grille de contenu hors bento — DS §5 ------------------------------ */
+
+  /* Ce que les écrans secondaires posent à la place d'une grille bento : deux
+     colonnes de blocs qui gardent leur hauteur propre — groupes de rangées,
+     tuiles de texte, panneaux de réglage. Le bento range des tuiles calibrées
+     sur une trame de rangées ; ces blocs-là ne se calibrent pas, leur hauteur
+     vient de ce qu'ils contiennent, et les faire entrer dans la trame les
+     couperait (DS §5 : « une liste n'entre pas dans la grille »).
+     Ils n'avaient pour autant aucune règle, et l'absence de règle a une valeur
+     par défaut : la colonne unique. Sur un desktop, la colonne latérale prend
+     ses 264px et il reste ~950px de contenu où l'on empilait 768px de large sur
+     deux écrans de défilement — un tiers de la fenêtre vide à droite pendant
+     qu'on fait défiler ce qui aurait tenu à côté.
+
+     **Deux colonnes à partir de 768px, une en dessous**, et c'est le palier
+     tablette du bento, pas un troisième seuil inventé : au-dessus, les deux
+     états que l'app connaît donnent la même largeur utile — 704px sur une
+     tablette sans colonne latérale, 696px sur un desktop de 1024 qui vient
+     d'en gagner une. Les deux atterrissent sur des colonnes de ~344px, soit la
+     largeur d'une rangée de téléphone, qui est le plancher mesuré de `ListRow`.
+     Un `auto-fit` aurait laissé la largeur décider seule du nombre de colonnes,
+     et une troisième colonne de 310px passe sous ce plancher.
+
+     La gouttière est celle du DS §4 — 16px, la même relation que partout
+     ailleurs entre deux blocs de contenu voisins.
+
+     `align-items: start` : deux blocs voisins de hauteurs différentes ne
+     s'étirent pas l'un sur l'autre. Un `RowGroup` étiré porterait sa dernière
+     rangée à mi-hauteur d'un vide, et le vide se lirait comme une rangée
+     manquante. */
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (min-width: 768px) {
+    .cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Une colonne de la grille, quand deux blocs doivent rester l'un sous
+     l'autre — « Revenus » puis « Arrêtées » face à la colonne des charges. Sans
+     elle, le flux ligne par ligne de la grille les séparerait : le second
+     partirait à droite du premier au lieu de rester dessous, et la paire que
+     l'écran voulait dire se déferait. */
+  .cols-stack {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   /* --- Cible d'un défilement piloté -------------------------------------- */
 
   /* Une section qu'une tuile fait venir sous les yeux (`lib/reveal.ts`).

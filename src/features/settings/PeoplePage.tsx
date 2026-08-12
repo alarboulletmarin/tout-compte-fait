@@ -86,7 +86,7 @@ export function PeoplePage() {
   const incomeMap = new Map(incomes.map((income) => [income.memberId, income]))
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <PageTitle
         title={t.settings.household}
         onBack={() => {
@@ -94,109 +94,118 @@ export function PeoplePage() {
         }}
       />
 
-      <Tile>
-        <Field label={t.settings.householdName} hint={t.settings.householdHint} optional>
-          {(id) => (
-            <TextInput
-              id={id}
-              placeholder={t.settings.householdPlaceholder}
-              maxLength={40}
-              {...householdDraft}
-            />
+      {/* Le nom du foyer et ceux qui le composent, côte à côte au-delà de
+          768px : c'est la même question posée deux fois — comment ça s'appelle,
+          et qui y vit. Le champ est court et la liste est longue, et c'est
+          justement pourquoi ils ne s'empilent plus sur un desktop : un champ
+          seul en haut d'un écran vide se lisait comme l'objet de la page,
+          alors qu'il en est l'accessoire. À côté de la liste, il reprend son
+          rang sans qu'on ait à le dire. */}
+      <div className="cols">
+        <Tile>
+          <Field label={t.settings.householdName} hint={t.settings.householdHint} optional>
+            {(id) => (
+              <TextInput
+                id={id}
+                placeholder={t.settings.householdPlaceholder}
+                maxLength={40}
+                {...householdDraft}
+              />
+            )}
+          </Field>
+        </Tile>
+
+        <Tile className="gap-3">
+          <Eyebrow icon={PeopleIcon}>{t.settings.members}</Eyebrow>
+
+          {members.length === 0 ? (
+            <p className="t-label">{t.settings.membersEmpty}</p>
+          ) : (
+            /* La liste déborde du cadre de la tuile de ce que la rangée reprend en
+               marge intérieure : la pastille tombe alors sur la ligne de
+               l'étiquette du groupe, et le fond de survol dépasse le texte. */
+            <ul className="-mx-3 flex flex-col">
+              {members.map((member) => (
+                <li key={member.id} className="flex flex-col">
+                  <ListRow
+                    color={member.color}
+                    label={member.name}
+                    meta={incomeOf(incomeMap.get(member.id), shares?.get(member.id), currency)}
+                    trailing={<ChevronRight size={16} className="text-muted" aria-hidden="true" />}
+                    onClick={() => {
+                      void navigate(memberPath(member.id))
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
           )}
-        </Field>
-      </Tile>
 
-      <Tile className="gap-3">
-        <Eyebrow icon={PeopleIcon}>{t.settings.members}</Eyebrow>
+          {/* Un salaire resté « en commun » ne compte dans le revenu de
+              personne : il rentre bien sur le mois, mais il ne pèse dans aucune
+              part, et rien nulle part ne le disait. C'est la première explication
+              d'une répartition qui ne se calcule pas. */}
+          {members.length > 0 && unassigned.length > 0 && (
+            <div className="flex flex-col gap-1 rounded-inner bg-surface-2 px-3 py-2">
+              <p className="t-label">
+                {tpl(
+                  unassigned.length > 1
+                    ? t.settings.incomeUnassignedMany
+                    : t.settings.incomeUnassignedOne,
+                  unassigned.map((recurrence) => recurrence.label).join(', '),
+                )}
+              </p>
+              {/* Droit sur la récurrence quand il n'y en a qu'une : le nom est déjà
+                  dans la phrase, le répéter en lien ne dirait rien de plus. */}
+              <Link
+                to={
+                  unassigned.length === 1 && unassigned[0] !== undefined
+                    ? recurrenceEditPath(unassigned[0].id)
+                    : RECURRENCES_PATH
+                }
+                className="t-label underline underline-offset-2"
+              >
+                {t.settings.incomeUnassignedFix}
+              </Link>
+            </div>
+          )}
 
-        {members.length === 0 ? (
-          <p className="t-label">{t.settings.membersEmpty}</p>
-        ) : (
-          /* La liste déborde du cadre de la tuile de ce que la rangée reprend en
-             marge intérieure : la pastille tombe alors sur la ligne de
-             l'étiquette du groupe, et le fond de survol dépasse le texte. */
-          <ul className="-mx-3 flex flex-col">
-            {members.map((member) => (
-              <li key={member.id} className="flex flex-col">
-                <ListRow
-                  color={member.color}
-                  label={member.name}
-                  meta={incomeOf(incomeMap.get(member.id), shares?.get(member.id), currency)}
-                  trailing={<ChevronRight size={16} className="text-muted" aria-hidden="true" />}
-                  onClick={() => {
-                    void navigate(memberPath(member.id))
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
+          <Button
+            variant="secondary"
+            className="w-fit"
+            onClick={() => {
+              void navigate(MEMBER_NEW_PATH)
+            }}
+          >
+            {t.settings.memberAdd}
+          </Button>
 
-        {/* Un salaire resté « en commun » ne compte dans le revenu de
-            personne : il rentre bien sur le mois, mais il ne pèse dans aucune
-            part, et rien nulle part ne le disait. C'est la première explication
-            d'une répartition qui ne se calcule pas. */}
-        {members.length > 0 && unassigned.length > 0 && (
-          <div className="flex flex-col gap-1 rounded-inner bg-surface-2 px-3 py-2">
+          {/* D'où vient le revenu de chacun, et où se vérifie ce qu'il en
+              découle. Deux explications qui restent, sous le filet plutôt que
+              dans une tuile à elles : la première dit pourquoi aucun champ
+              « revenu » n'existe ici — un comportement qu'on ne devine pas —, la
+              seconde est la seule porte permanente vers la répartition. */}
+          <div className="flex flex-col gap-3 border-t border-border pt-4">
             <p className="t-label">
-              {tpl(
-                unassigned.length > 1
-                  ? t.settings.incomeUnassignedMany
-                  : t.settings.incomeUnassignedOne,
-                unassigned.map((recurrence) => recurrence.label).join(', '),
-              )}
+              {t.settings.memberIncomeHint}{' '}
+              <Link to={RECURRENCE_NEW_PATH} className="underline underline-offset-2">
+                {t.settings.memberIncomeLink}
+              </Link>
             </p>
-            {/* Droit sur la récurrence quand il n'y en a qu'une : le nom est déjà
-                dans la phrase, le répéter en lien ne dirait rien de plus. */}
-            <Link
-              to={
-                unassigned.length === 1 && unassigned[0] !== undefined
-                  ? recurrenceEditPath(unassigned[0].id)
-                  : RECURRENCES_PATH
-              }
-              className="t-label underline underline-offset-2"
-            >
-              {t.settings.incomeUnassignedFix}
-            </Link>
+            {/* Sans membre il n'y a personne à qui donner une part, et l'écran
+                renverrait ici même. Un seul suffit : sa part vaut 100 %, et
+                l'écran Répartition reste là où le pot se vérifie ligne à ligne. */}
+            {members.length > 0 && (
+              <Link
+                to={SPLIT_PATH}
+                className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
+              >
+                {t.settings.splitLink}
+              </Link>
+            )}
           </div>
-        )}
-
-        <Button
-          variant="secondary"
-          className="w-fit"
-          onClick={() => {
-            void navigate(MEMBER_NEW_PATH)
-          }}
-        >
-          {t.settings.memberAdd}
-        </Button>
-
-        {/* D'où vient le revenu de chacun, et où se vérifie ce qu'il en
-            découle. Deux explications qui restent, sous le filet plutôt que
-            dans une tuile à elles : la première dit pourquoi aucun champ
-            « revenu » n'existe ici — un comportement qu'on ne devine pas —, la
-            seconde est la seule porte permanente vers la répartition. */}
-        <div className="flex flex-col gap-3 border-t border-border pt-4">
-          <p className="t-label">
-            {t.settings.memberIncomeHint}{' '}
-            <Link to={RECURRENCE_NEW_PATH} className="underline underline-offset-2">
-              {t.settings.memberIncomeLink}
-            </Link>
-          </p>
-          {/* Sans membre il n'y a personne à qui donner une part, et l'écran
-              renverrait ici même. Un seul suffit : sa part vaut 100 %, et
-              l'écran Répartition reste là où le pot se vérifie ligne à ligne. */}
-          {members.length > 0 && (
-            <Link
-              to={SPLIT_PATH}
-              className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
-            >
-              {t.settings.splitLink}
-            </Link>
-          )}
-        </div>
-      </Tile>
+        </Tile>
+      </div>
     </div>
   )
 }
