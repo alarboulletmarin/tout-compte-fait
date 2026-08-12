@@ -78,12 +78,32 @@ export function SupportFields({
    * date du premier relevé.
    */
   withValue = true,
+  /**
+   * L'onboarding, et lui seul : le libellé, le propriétaire, le type, le
+   * montant. Rien d'autre.
+   *
+   * Ce fichier écrit depuis toujours qu'il répond à « combien j'ai, et où »,
+   * et l'onboarding le reprenait mot pour mot en promettant « ni taux, ni
+   * objectif, ni durée » — pendant qu'il montait ce formulaire *entier*, ses
+   * onze champs et ses deux sections. Le rôle, la note, la cadence, le taux et
+   * le plafond arrivaient donc au premier lancement, avant même qu'un mois
+   * existe ; et le montant, la seule chose que l'étape vienne chercher, se
+   * rangeait sous un pli fermé. Le formulaire disait le contraire de ce qu'il
+   * demandait.
+   *
+   * Ici le montant remonte au premier plan, sans section : il n'y a plus
+   * qu'un pli possible, et un pli d'un seul champ n'est pas un pli. Ce qui
+   * tombe ne se perd pas — les cinq champs retirés vivent sur la fiche du
+   * support, où l'on va justement quand on a un contrat sous les yeux.
+   */
+  essentials = false,
   autoFocus = false,
 }: {
   draft: SupportDraft
   patch: (next: Partial<SupportDraft>) => void
   errors: SupportErrors
   withValue?: boolean
+  essentials?: boolean
   autoFocus?: boolean
 }) {
   const members = useMembers()
@@ -119,6 +139,55 @@ export function SupportFields({
     valueAmount === null
       ? t.savings.sectionValueEmpty
       : `${valueAmount} · ${formatDate(draft.valueDate)}`
+
+  /* Le relevé, nommé une fois : il se pose sous un pli sur la fiche du support
+     et à plat dans l'onboarding, et les deux doivent rester le même champ —
+     recopié, l'un des deux perdrait sa date ou son message d'erreur. */
+  const valueFields = (
+    <>
+      {/* Le premier relevé est facultatif, et son absence a un sens : on ne
+          connaît pas le capital. Le laisser vide n'écrit rien — surtout pas
+          zéro, qui dirait « ce livret est vide ».
+          Sans placeholder : « 0,00 » dans un champ vide est précisément le
+          chiffre qu'on ne veut pas voir enregistré, et un champ de relevé ne
+          peut pas se permettre de le suggérer. */}
+      <Field
+        label={t.savings.valueInitial}
+        optional
+        hint={t.savings.valueHint}
+        {...(errors.amount === undefined ? {} : { error: errors.amount })}
+      >
+        {(id, describedBy) => (
+          <AmountInput
+            id={id}
+            aria-describedby={describedBy}
+            value={draft.amountText}
+            invalid={errors.amount !== undefined}
+            onChange={(event) => {
+              patch({ amountText: event.target.value })
+            }}
+          />
+        )}
+      </Field>
+
+      {/* La date du relevé, et non celle du jour : on saisit souvent le
+          chiffre d'un relevé qui date de la semaine dernière, et le dater
+          d'aujourd'hui décalerait toute la courbe. */}
+      {draft.amountText.trim() !== '' && (
+        <Field label={t.savings.valueDate} required>
+          {(id) => (
+            <DateInput
+              id={id}
+              value={draft.valueDate}
+              onChange={(event) => {
+                if (event.target.value !== '') patch({ valueDate: event.target.value })
+              }}
+            />
+          )}
+        </Field>
+      )}
+    </>
+  )
 
   return (
     <>
@@ -209,158 +278,168 @@ export function SupportFields({
           n'ouvre jamais — c'est exactement pour ça que le plafond, lui, y vit :
           il ne fait que retenir une saisie future.
           Et rien n'y est présélectionné : voir `SupportDraft.role`. */}
-      <Field label={t.savings.supportRole} optional hint={t.savings.supportRoleHint}>
-        {(id, describedBy) => (
-          <Select
-            id={id}
-            aria-describedby={describedBy}
-            value={draft.role}
-            onChange={(event) => {
-              patch({ role: event.target.value as SavingRole | '' })
-            }}
-          >
-            <option value="">{t.savings.supportRoleNone}</option>
-            {SAVING_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {t.savings.roleLabel[role]}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
+      {!essentials && (
+        <Field label={t.savings.supportRole} optional hint={t.savings.supportRoleHint}>
+          {(id, describedBy) => (
+            <Select
+              id={id}
+              aria-describedby={describedBy}
+              value={draft.role}
+              onChange={(event) => {
+                patch({ role: event.target.value as SavingRole | '' })
+              }}
+            >
+              <option value="">{t.savings.supportRoleNone}</option>
+              {SAVING_ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {t.savings.roleLabel[role]}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      )}
 
-      <Field label={t.savings.supportNote} optional>
-        {(id) => (
-          <TextInput
-            id={id}
-            value={draft.note}
-            placeholder={t.savings.supportNotePlaceholder}
-            maxLength={140}
-            onChange={(event) => {
-              patch({ note: event.target.value })
-            }}
-          />
-        )}
-      </Field>
+      {!essentials && (
+        <Field label={t.savings.supportNote} optional>
+          {(id) => (
+            <TextInput
+              id={id}
+              value={draft.note}
+              placeholder={t.savings.supportNotePlaceholder}
+              maxLength={140}
+              onChange={(event) => {
+                patch({ note: event.target.value })
+              }}
+            />
+          )}
+        </Field>
+      )}
 
       {/* Ce que le contrat dit du compte, et que personne n'a besoin de revoir
           pour corriger un libellé : la cadence des relevés, l'hypothèse de
           rendement, le plafond de versements. Les trois sont facultatifs — la
           cadence a une réponse par défaut —, et leur résumé les rend lisibles
           repliés. */}
-      <Section
-        title={t.savings.sectionContract}
-        summary={contractSummary}
-        open={sections.isOpen('contract') || contractError}
-        onOpenChange={(open) => {
-          sections.setOpen('contract', open)
-        }}
-      >
-        {/* La cadence, et non un rendement : elle ne sert à projeter aucune
-            valeur, seulement à savoir quand l'écran doit réclamer un relevé et
-            quand il doit se taire. C'est une question à laquelle on répond sans
-            rien consulter — « est-ce que ce compte bouge tout seul ? » — d'où
-            deux réponses et pas un champ libre, et une présélection plutôt qu'une
-            case vide : elle n'exige rien de plus qu'un regard. */}
-        <Field label={t.savings.supportPace} hint={t.savings.supportPaceHint}>
-          {(id, describedBy) => (
-            <Select
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.pace}
-              onChange={(event) => {
-                patch({ pace: event.target.value as SavingPace })
-              }}
-            >
-              <option value="yearly">{t.savings.paceYearly}</option>
-              <option value="quarterly">{t.savings.paceQuarterly}</option>
-            </Select>
-          )}
-        </Field>
-
-        {/* Vide veut dire « je m'en remets à l'hypothèse du simulateur », jamais
-            « zéro pour cent » — les deux existent, et les confondre ferait
-            projeter à plat un support dont personne n'a rien dit. */}
-        {withValue && (
-          <>
-            <Field
-              label={t.savings.supportRate}
-              optional
-              hint={t.savings.supportRateHint}
-              {...(errors.rate === undefined ? {} : { error: errors.rate })}
-            >
-              {(id, describedBy) => (
-                <span className="flex items-center gap-2">
-                  <TextInput
-                    id={id}
-                    aria-describedby={describedBy}
-                    className="max-w-24"
-                    inputMode="decimal"
-                    value={draft.rateText}
-                    invalid={errors.rate !== undefined}
-                    onChange={(event) => {
-                      patch({ rateText: event.target.value })
-                    }}
-                  />
-                  {/* L'unité au bord du champ : « 3 » posé seul sous un libellé ne
-                      dit pas s'il s'agit d'un pourcentage ou d'un montant. */}
-                  <span className="t-label shrink-0" aria-hidden="true">
-                    {t.savings.ratePerYear}
-                  </span>
-                </span>
-              )}
-            </Field>
-
-            {/* La nature ne se demande qu'une fois un taux posé : sans chiffre,
-                elle ne qualifie rien. Elle ne change aucun calcul — elle change ce
-                que le taux engage, et c'est celui qui coche qui l'affirme. */}
-            {draft.rateText.trim() !== '' && (
-              <div className="flex flex-col gap-2">
-                <Segmented
-                  options={[
-                    { value: 'guaranteed' as const, label: t.savings.supportRateGuaranteed },
-                    { value: 'assumed' as const, label: t.savings.supportRateAssumed },
-                  ]}
-                  value={draft.rateKind}
-                  onChange={(rateKind) => {
-                    patch({ rateKind })
-                  }}
-                  label={t.savings.supportRateKind}
-                  className="w-fit"
-                />
-                {draft.rateKind === 'guaranteed' && (
-                  <p className="t-label">{t.savings.supportRateGuaranteedHint}</p>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Le plafond, lui, s'affiche **aussi en modification** — contrairement au
-            taux et au relevé, qui s'empilent. Un plafond ne réécrit rien : il ne
-            borne que ce qui reste à verser, donc l'avenir, et le corriger n'a
-            aucune conséquence rétroactive à protéger.
-            Il n'est plus décoratif : la saisie d'un versement s'y arrête, et une
-            règle qui remplirait le compte cesse d'y poser des échéances. */}
-        <Field
-          label={t.savings.supportCap}
-          optional
-          hint={t.savings.supportCapHint}
-          {...(errors.cap === undefined ? {} : { error: errors.cap })}
+      {/* Le contrat du compte — cadence, taux, plafond — n’a rien à faire
+          dans un premier lancement : on n’a pas son relevé sous les yeux,
+          et aucun de ces trois champs ne répond à « combien j’ai et où ».
+          Ils attendent la fiche du support. */}
+      {!essentials && (
+        <Section
+          title={t.savings.sectionContract}
+          summary={contractSummary}
+          open={sections.isOpen('contract') || contractError}
+          onOpenChange={(open) => {
+            sections.setOpen('contract', open)
+          }}
         >
-          {(id, describedBy) => (
-            <AmountInput
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.capText}
-              invalid={errors.cap !== undefined}
-              onChange={(event) => {
-                patch({ capText: event.target.value })
-              }}
-            />
+          {/* La cadence, et non un rendement : elle ne sert à projeter aucune
+              valeur, seulement à savoir quand l'écran doit réclamer un relevé et
+              quand il doit se taire. C'est une question à laquelle on répond sans
+              rien consulter — « est-ce que ce compte bouge tout seul ? » — d'où
+              deux réponses et pas un champ libre, et une présélection plutôt qu'une
+              case vide : elle n'exige rien de plus qu'un regard. */}
+          <Field label={t.savings.supportPace} hint={t.savings.supportPaceHint}>
+            {(id, describedBy) => (
+              <Select
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.pace}
+                onChange={(event) => {
+                  patch({ pace: event.target.value as SavingPace })
+                }}
+              >
+                <option value="yearly">{t.savings.paceYearly}</option>
+                <option value="quarterly">{t.savings.paceQuarterly}</option>
+              </Select>
+            )}
+          </Field>
+
+          {/* Vide veut dire « je m'en remets à l'hypothèse du simulateur », jamais
+              « zéro pour cent » — les deux existent, et les confondre ferait
+              projeter à plat un support dont personne n'a rien dit. */}
+          {withValue && (
+            <>
+              <Field
+                label={t.savings.supportRate}
+                optional
+                hint={t.savings.supportRateHint}
+                {...(errors.rate === undefined ? {} : { error: errors.rate })}
+              >
+                {(id, describedBy) => (
+                  <span className="flex items-center gap-2">
+                    <TextInput
+                      id={id}
+                      aria-describedby={describedBy}
+                      className="max-w-24"
+                      inputMode="decimal"
+                      value={draft.rateText}
+                      invalid={errors.rate !== undefined}
+                      onChange={(event) => {
+                        patch({ rateText: event.target.value })
+                      }}
+                    />
+                    {/* L'unité au bord du champ : « 3 » posé seul sous un libellé ne
+                        dit pas s'il s'agit d'un pourcentage ou d'un montant. */}
+                    <span className="t-label shrink-0" aria-hidden="true">
+                      {t.savings.ratePerYear}
+                    </span>
+                  </span>
+                )}
+              </Field>
+
+              {/* La nature ne se demande qu'une fois un taux posé : sans chiffre,
+                  elle ne qualifie rien. Elle ne change aucun calcul — elle change ce
+                  que le taux engage, et c'est celui qui coche qui l'affirme. */}
+              {draft.rateText.trim() !== '' && (
+                <div className="flex flex-col gap-2">
+                  <Segmented
+                    options={[
+                      { value: 'guaranteed' as const, label: t.savings.supportRateGuaranteed },
+                      { value: 'assumed' as const, label: t.savings.supportRateAssumed },
+                    ]}
+                    value={draft.rateKind}
+                    onChange={(rateKind) => {
+                      patch({ rateKind })
+                    }}
+                    label={t.savings.supportRateKind}
+                    className="w-fit"
+                  />
+                  {draft.rateKind === 'guaranteed' && (
+                    <p className="t-label">{t.savings.supportRateGuaranteedHint}</p>
+                  )}
+                </div>
+              )}
+            </>
           )}
-        </Field>
-      </Section>
+
+          {/* Le plafond, lui, s'affiche **aussi en modification** — contrairement au
+              taux et au relevé, qui s'empilent. Un plafond ne réécrit rien : il ne
+              borne que ce qui reste à verser, donc l'avenir, et le corriger n'a
+              aucune conséquence rétroactive à protéger.
+              Il n'est plus décoratif : la saisie d'un versement s'y arrête, et une
+              règle qui remplirait le compte cesse d'y poser des échéances. */}
+          <Field
+            label={t.savings.supportCap}
+            optional
+            hint={t.savings.supportCapHint}
+            {...(errors.cap === undefined ? {} : { error: errors.cap })}
+          >
+            {(id, describedBy) => (
+              <AmountInput
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.capText}
+                invalid={errors.cap !== undefined}
+                onChange={(event) => {
+                  patch({ capText: event.target.value })
+                }}
+              />
+            )}
+          </Field>
+        </Section>
+      )}
 
       {/* Le premier relevé est facultatif, et son absence a un sens : on ne
           connaît pas le capital. Le laisser vide n'écrit rien — surtout pas
@@ -368,52 +447,26 @@ export function SupportFields({
           Sans placeholder : « 0,00 » dans un champ vide est précisément le
           chiffre qu'on ne veut pas voir enregistré, et un champ de relevé ne
           peut pas se permettre de le suggérer. */}
-      {withValue && (
-        <Section
-          title={t.savings.sectionValue}
-          summary={valueSummary}
-          open={sections.isOpen('value') || valueError}
-          onOpenChange={(open) => {
-            sections.setOpen('value', open)
-          }}
-        >
-          <Field
-            label={t.savings.valueInitial}
-            optional
-            hint={t.savings.valueHint}
-            {...(errors.amount === undefined ? {} : { error: errors.amount })}
+      {withValue &&
+        (essentials ? (
+          /* À plat, et c'est tout l'objet du mode : ce montant est la seule
+             chose que l'onboarding vienne chercher ici, et il se rangeait sous
+             un pli fermé — replier la réponse qu'on demande, c'est la cacher.
+             Sans section non plus parce qu'il n'y a plus rien à replier autour :
+             une section d'un champ est un titre posé sur un champ. */
+          valueFields
+        ) : (
+          <Section
+            title={t.savings.sectionValue}
+            summary={valueSummary}
+            open={sections.isOpen('value') || valueError}
+            onOpenChange={(open) => {
+              sections.setOpen('value', open)
+            }}
           >
-            {(id, describedBy) => (
-              <AmountInput
-                id={id}
-                aria-describedby={describedBy}
-                value={draft.amountText}
-                invalid={errors.amount !== undefined}
-                onChange={(event) => {
-                  patch({ amountText: event.target.value })
-                }}
-              />
-            )}
-          </Field>
-
-          {/* La date du relevé, et non celle du jour : on saisit souvent le
-              chiffre d'un relevé qui date de la semaine dernière, et le dater
-              d'aujourd'hui décalerait toute la courbe. */}
-          {draft.amountText.trim() !== '' && (
-            <Field label={t.savings.valueDate} required>
-              {(id) => (
-                <DateInput
-                  id={id}
-                  value={draft.valueDate}
-                  onChange={(event) => {
-                    if (event.target.value !== '') patch({ valueDate: event.target.value })
-                  }}
-                />
-              )}
-            </Field>
-          )}
-        </Section>
-      )}
+            {valueFields}
+          </Section>
+        ))}
     </>
   )
 }

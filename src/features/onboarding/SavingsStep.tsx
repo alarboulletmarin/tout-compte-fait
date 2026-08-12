@@ -104,7 +104,11 @@ export function SavingsStep({ onSubmit, onSkip }: { onSubmit: () => void; onSkip
 
       {adding ? (
         <div key={round} className="flex flex-col gap-4">
-          <SupportFields draft={draft} patch={patch} errors={errors} autoFocus />
+          {/* `essentials` : quatre champs, et c'est enfin ce que la docstring
+              ci-dessus promet depuis toujours. Le formulaire complet arrivait
+              ici avec son rôle, sa note et ses deux sections repliées — onze
+              champs au premier lancement, dont le montant sous un pli. */}
+          <SupportFields draft={draft} patch={patch} errors={errors} essentials autoFocus />
           <Field
             label={t.savings.contribution}
             optional
