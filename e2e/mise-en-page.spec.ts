@@ -126,15 +126,26 @@ test.describe('sur un écran de 320 points', () => {
     await openApp(page)
     await loadExample(page)
 
-    const coupes = await page.evaluate(() => {
-      const bar = document.querySelector('nav ul')?.closest('nav')
-      if (bar === null || bar === undefined) return ['aucune barre d’onglets']
-      return Array.from(bar.querySelectorAll('a'))
+    /* Par un locator et non par une lecture du DOM d'un seul coup : `evaluate`
+       ne réessaie pas, et il tombait sur une barre pas encore montée. La
+       première version rendait alors « aucune barre d'onglets » — un test rouge
+       pour la seule raison qu'il avait regardé trop tôt, sur une mise en page
+       qui, elle, était juste.
+       La barre est la seule `nav` qui porte une liste : la colonne latérale
+       range ses liens en `div`, et le pied de la présentation en rangée. */
+    const bar = page.locator('nav').filter({ has: page.locator('ul') })
+    await expect(bar).toBeVisible()
+
+    const coupes = await bar.evaluate((nav) =>
+      Array.from(nav.querySelectorAll('a'))
         .map((link) => link.querySelector('span:last-child'))
         .filter((label): label is HTMLElement => label !== null)
         .filter((label) => label.scrollWidth - label.clientWidth > 1)
-        .map((label) => `« ${label.textContent ?? ''} » perd ${label.scrollWidth - label.clientWidth} px`)
-    })
+        .map(
+          (label) =>
+            `« ${label.textContent ?? ''} » perd ${label.scrollWidth - label.clientWidth} px`,
+        ),
+    )
 
     expect(coupes).toEqual([])
   })
