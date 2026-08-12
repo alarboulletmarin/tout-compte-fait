@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '@/i18n/strings'
 import { ChevronLeft } from '@/ui/Icons'
+import { PublicPreferences } from './PublicPreferences'
 import { LANDING_PATH } from './routes'
 
 /**
@@ -24,13 +25,22 @@ import { LANDING_PATH } from './routes'
 export function PlainShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pt-4 pb-10 md:px-8 md:pt-8">
-      <Link
-        to={LANDING_PATH}
-        className="mb-5 inline-flex h-11 w-fit items-center gap-1 rounded-input text-[13px] font-medium text-muted"
-      >
-        <ChevronLeft size={18} />
-        {t.nav.landing}
-      </Link>
+      {/* Le retour à gauche, la langue et le thème à droite, sur la même
+          rangée. Ces quatre pages se lisent avant qu'un foyer existe — elles
+          sont même les seules qu'un visiteur qui ne crée rien ouvrira jamais —
+          et elles héritaient donc du même cul-de-sac que la présentation : une
+          page de confidentialité affichée dans la mauvaise langue n'avait
+          aucun réglage à portée. */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to={LANDING_PATH}
+          className="inline-flex h-11 w-fit items-center gap-1 rounded-input text-[13px] font-medium text-muted"
+        >
+          <ChevronLeft size={18} />
+          {t.nav.landing}
+        </Link>
+        <PublicPreferences />
+      </div>
       {children}
     </div>
   )

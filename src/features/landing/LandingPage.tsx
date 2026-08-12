@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppFooter } from '@/app/AppFooter'
+import { PublicPreferences } from '@/app/PublicPreferences'
 import { ONBOARDING_PATH } from '@/app/routes'
 import { t } from '@/i18n/strings'
 import { landing } from '@/i18n/landing'
@@ -66,6 +67,12 @@ export function LandingPage() {
        page prétend montrer ; et sur une 2×1 à 320px, ces huit pixels sont huit
        pour cent de la place disponible. */
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-10 md:px-8 md:py-14">
+      {/* En tête et non dans le pied : c'est le premier écran d'un visiteur, et
+          celui qui le lit dans la mauvaise langue le lit depuis le haut. Un
+          réglage posé au bas d'une page de cette longueur demanderait de la
+          parcourir entière pour trouver comment ne pas avoir à la parcourir. */}
+      <PublicPreferences />
+
       <header className="flex flex-col gap-5">
         {/* L'étiquette colle à ce qu'elle nomme, comme partout ailleurs — la
             colonne latérale et l'en-tête des deux questions la posent juste
