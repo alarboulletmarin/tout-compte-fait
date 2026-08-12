@@ -144,9 +144,84 @@ export function Sidebar({ householdName }: { householdName: string }) {
  * `navRoutes()` ; ce qui change ici est mécanique — quatre `flex-1` rendent 25 %
  * de largeur chacun au lieu de 20, ce qui détend les libellés à 320px, où
  * « Récurrences » se tronquait.
+ *
+ * **Et la barre s'ouvre en son milieu**, sur 72px, parce que le bouton de saisie
+ * y descend (`QuickEntry`). C'est une fente et non un simple recouvrement, et la
+ * différence est tout le sujet : un disque de 56px posé au centre d'une barre à
+ * quatre onglets tombe sur la frontière entre le deuxième et le troisième, donc
+ * mange une part des deux — l'app a déjà perdu les appuis d'un coin entier une
+ * fois, et le scénario qui l'a rattrapé vérifie précisément Calendrier et
+ * Historique. La fente rend au disque la place qu'il prend, au lieu de la lui
+ * laisser voler.
+ *
+ * Deux onglets de chaque côté, dans l'ordre inchangé : les `flex-1` se partagent
+ * ce qui reste, donc la fente est centrée sans qu'on ait à la positionner. Le
+ * cadran de séparation est un `<li>` vide, retiré de l'arbre d'accessibilité —
+ * la liste continue d'annoncer quatre destinations, parce qu'il y en a quatre.
  */
+const TAB_SPLIT = 2
+
 export function TabBar() {
   const { pathname } = useLocation()
+  const routes = navRoutes()
+
+  /* Un seul rendu d'onglet pour les deux groupes : recopié de part et d'autre
+     de la fente, l'un des deux aurait fini par ne plus s'allumer comme
+     l'autre. */
+  const tab = (route: ReturnType<typeof navRoutes>[number]) => {
+    const Icon = route.icon
+    /* « Plus » reste allumé dans tout ce qu'il range — les récurrences,
+       l'épargne, la répartition, les crédits, les avances, les réglages,
+       « à propos ». `NavLink` n'apparie que son propre préfixe, et sans
+       cette table on quittait « Plus » dès le premier pas à l'intérieur :
+       quatre onglets éteints, sans rien pour dire d'où l'on venait.
+       C'est le défaut que le cas particulier d'« à propos » corrigeait
+       déjà à la main pour l'onglet des réglages, et qui vaut maintenant
+       pour six sections — d'où la table, dans `routes.ts`.
+       La colonne latérale n'a pas ce trou : elle déplie ces destinations
+       et porte son propre lien « À propos ». */
+    const inSection = route.path === MORE_PATH && isInMoreSection(pathname)
+    return (
+      <li key={route.path} className="min-w-0 flex-1">
+        <NavLink
+          to={route.path}
+          end={route.path === '/'}
+          onClick={scrollToTop}
+          className={({ isActive }) =>
+            cn(
+              /* `px-0.5` et non `px-1` : la fente reprend 64px à la rangée, et
+                 les quatre onglets se les partagent. Mesuré à 320 points, ces
+                 quatre pixels rendus sont ce qui sépare « Calendrier » de sa
+                 troncature — le cadre ne servait qu'à empêcher deux libellés de
+                 se toucher, et il reste 7px entre eux au pire cas. */
+              'flex h-14 flex-col items-center justify-center gap-0.5 px-0.5 text-center',
+              'text-[11px] leading-tight',
+              isActive || inSection ? 'text-text' : 'text-muted',
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              {/* L'onglet actif est une pilule lime derrière le glyphe.
+                  Le DS interdit lime en `color` — faute de contraste sur
+                  les deux fonds — mais pas en remplissage, et c'est
+                  justement là que la marque doit se voir. */}
+              <span
+                className={cn(
+                  'flex h-7 w-12 items-center justify-center rounded-chip',
+                  'transition-colors duration-[var(--dur)] ease-ds',
+                  (isActive || inSection) && 'bg-accent text-accent-fg',
+                )}
+              >
+                <Icon size={18} />
+              </span>
+              <span className="w-full truncate">{route.label}</span>
+            </>
+          )}
+        </NavLink>
+      </li>
+    )
+  }
 
   return (
     <nav
@@ -157,55 +232,20 @@ export function TabBar() {
       )}
     >
       <ul className="flex">
-        {navRoutes().map((route) => {
-          const Icon = route.icon
-          /* « Plus » reste allumé dans tout ce qu'il range — les récurrences,
-             l'épargne, la répartition, les crédits, les avances, les réglages,
-             « à propos ». `NavLink` n'apparie que son propre préfixe, et sans
-             cette table on quittait « Plus » dès le premier pas à l'intérieur :
-             quatre onglets éteints, sans rien pour dire d'où l'on venait.
-             C'est le défaut que le cas particulier d'« à propos » corrigeait
-             déjà à la main pour l'onglet des réglages, et qui vaut maintenant
-             pour six sections — d'où la table, dans `routes.ts`.
-             La colonne latérale n'a pas ce trou : elle déplie ces destinations
-             et porte son propre lien « À propos ». */
-          const inSection = route.path === MORE_PATH && isInMoreSection(pathname)
-          return (
-            <li key={route.path} className="min-w-0 flex-1">
-              <NavLink
-                to={route.path}
-                end={route.path === '/'}
-                onClick={scrollToTop}
-                className={({ isActive }) =>
-                  cn(
-                    'flex h-14 flex-col items-center justify-center gap-0.5 px-1 text-center',
-                    'text-[11px] leading-tight',
-                    isActive || inSection ? 'text-text' : 'text-muted',
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {/* L'onglet actif est une pilule lime derrière le glyphe.
-                        Le DS interdit lime en `color` — faute de contraste sur
-                        les deux fonds — mais pas en remplissage, et c'est
-                        justement là que la marque doit se voir. */}
-                    <span
-                      className={cn(
-                        'flex h-7 w-12 items-center justify-center rounded-chip',
-                        'transition-colors duration-[var(--dur)] ease-ds',
-                        (isActive || inSection) && 'bg-accent text-accent-fg',
-                      )}
-                    >
-                      <Icon size={18} />
-                    </span>
-                    <span className="w-full truncate">{route.label}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
-          )
-        })}
+        {routes.slice(0, TAB_SPLIT).map(tab)}
+        {/* La fente : 64px, et c'est la corde et non le diamètre qui la mesure.
+            Le disque a beau faire 56px, il ne descend que de 20px dans la barre
+            et son centre est 8px au-dessus d'elle : ce qu'il occupe *dans* la
+            rangée est un arc large de 54px au ras du filet, qui se referme à
+            zéro vingt pixels plus bas. Les libellés, eux, vivent trente pixels
+            plus bas encore — le disque ne les approche jamais. Réserver son
+            diamètre entier aurait coûté huit pixels à chaque onglet pour
+            dégager un espace que rien n'occupe.
+
+            `aria-hidden` la retire de l'arbre : un cinquième élément de liste
+            qui ne mène nulle part se compterait à voix haute. */}
+        <li aria-hidden="true" className="w-16 shrink-0" />
+        {routes.slice(TAB_SPLIT).map(tab)}
       </ul>
     </nav>
   )

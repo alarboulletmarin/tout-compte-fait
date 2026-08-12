@@ -150,12 +150,17 @@ export function QuickEntry() {
         )}
       />
 
-      {/* Au-dessus de la barre d'onglets — sa rangée, son filet, l'indicateur
-          d'accueil du système, et 16px par-dessus : le bouton s'adosse à la
-          barre sans la toucher, et c'est cette marge-là qui le sépare d'une
-          cible qu'on ne visait pas. Sous le bandeau de mise à jour (`z-50`) :
-          celui-ci est rare, il porte une décision, et un bouton qui lui
-          passerait devant en cacherait la moitié. */}
+      {/* Au milieu de la barre d'onglets, à cheval sur la fente qu'elle ouvre
+          pour lui (`TabBar`) : le disque descend de 20px dans la barre et en
+          dépasse de 36, si bien qu'il se rattache à elle au lieu de flotter
+          au-dessus. Le coin bas droite le mettait sous le pouce droit et hors
+          d'atteinte du gauche ; le milieu ne favorise aucune main, et c'est le
+          seul endroit d'une barre où l'on peut lui rendre sa place plutôt que
+          la lui laisser prendre à deux onglets.
+
+          Sous le bandeau de mise à jour (`z-50`) : celui-ci est rare, il porte
+          une décision, et un bouton qui lui passerait devant en cacherait la
+          moitié. */}
       {/* `data-open` vit ici et non sur le menu : c'est cet élément qui porte
           `.quick-doors`, donc la largeur de colonne dont les portes et la croix
           se servent, et le sélecteur qui les replie a besoin des deux sur le
@@ -179,9 +184,13 @@ export function QuickEntry() {
       <div
         data-open={open}
         className={cn(
-          'quick-doors pointer-events-none fixed right-4 z-40 flex flex-col items-end gap-3',
+          'quick-doors pointer-events-none fixed left-1/2 z-40 -translate-x-1/2',
+          'flex flex-col items-center gap-3',
           'lg:hidden',
-          'bottom-[calc(var(--nav-h)+1rem+env(safe-area-inset-bottom))]',
+          /* Le bas de la colonne est le bas du disque : 20px sous le haut de
+             la barre, dans la fente. Les portes se posent au-dessus, à la
+             gouttière du groupe. */
+          'bottom-[calc(var(--nav-h)+env(safe-area-inset-bottom)-1.25rem)]',
         )}
       >
         {/* Les portes restent montées, repliées comprises : c'est ce qui leur
@@ -242,13 +251,12 @@ export function QuickEntry() {
             se referme que deux icônes qui se succèdent. Le nom accessible, lui,
             change pour de bon — il dit ce que le prochain appui fait.
 
-            Déplié, il glisse sous le milieu de la colonne : replié il vit au
-            coin, où le pouce le trouve sans viser, et ce coin-là n'est pas le
-            milieu de trois boutons. Les deux positions ne peuvent pas être la
-            même, et c'est la fermeture qui cède — on ouvre bien plus souvent
-            qu'on ne renonce. Le déplacement est porté par la même transition
-            que la rotation, donc il se lit comme le dépliement lui-même et non
-            comme un saut. */}
+            Il ne se déplace plus en s'ouvrant. Au coin, les deux positions
+            étaient inconciliables — le bouton vivait au bord et les portes se
+            dépliaient à sa gauche, donc l'une des deux devait céder. Centré,
+            le bouton est déjà sous le milieu de la colonne : la rotation reste
+            le seul mouvement, et c'est la bonne quantité de mouvement pour ce
+            qu'elle dit. */}
         <button
           ref={trigger}
           type="button"
@@ -265,9 +273,9 @@ export function QuickEntry() {
                propriété `rotate`, et une transition déclarée sur `transform` ne
                la voit pas — le glyphe basculait d'un coup. Vérifié en lisant le
                style calculé, pas en relisant la classe. */
-            'shadow-tile transition-[rotate,translate,filter] duration-[var(--dur)] ease-ds',
+            'shadow-tile transition-[rotate,filter] duration-[var(--dur)] ease-ds',
             'hover:brightness-95 active:brightness-90',
-            open && 'translate-x-[calc((3.5rem-var(--quick-w))/2)] rotate-45',
+            open && 'rotate-45',
           )}
         >
           <Plus size={24} />

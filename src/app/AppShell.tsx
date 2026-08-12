@@ -77,18 +77,22 @@ export function AppShell({ children }: { children: ReactNode }) {
              une étape du parcours clavier, c'est là qu'on le dépose. */
           tabIndex={-1}
           /* Le cadre du bas dégage le bouton flottant, et pas seulement la barre
-             d'onglets. Il valait 96px quand le disque en occupe 129 depuis le
-             bas — barre, gouttière et ses 56px de diamètre : les trente
-             derniers pixels de chaque écran vivaient sous lui, à droite. On ne
-             le voyait pas tant que les écrans finissaient par une tuile ou un
-             bouton centré ; la légende du calendrier, elle, est du texte qui
-             file jusqu'au bord droit, et sa dernière ligne y disparaissait.
-             La mesure est celle de `QuickEntry`, aux mêmes tokens, plus une
-             gouttière — un cadre écrit en dur se décalerait le jour où le
-             bouton bouge. */
+             d'onglets : les trente derniers pixels de chaque écran vivaient
+             sous lui. On ne le voyait pas tant que les écrans finissaient par
+             une tuile ou un bouton centré ; la légende du calendrier, elle, est
+             du texte qui file jusqu'au bord, et sa dernière ligne y
+             disparaissait.
+
+             La mesure suit celle de `QuickEntry`, aux mêmes tokens — un cadre
+             écrit en dur se décalerait le jour où le bouton bouge, et il vient
+             justement de bouger. Le disque descend maintenant de 20px dans la
+             barre au lieu de s'en écarter de 16 : il ne dépasse plus que de
+             36px au-dessus d'elle, contre 72 auparavant. Plus une gouttière de
+             16, cela fait 52 — et le cadre se resserre d'autant, parce qu'il
+             dégageait une hauteur que le bouton n'occupe plus. */
           className={cn(
             'view-enter min-w-0 flex-1 px-4 pt-4 md:px-8 md:pt-8',
-            'pb-[calc(var(--nav-h)+5.5rem+env(safe-area-inset-bottom))] lg:pb-10',
+            'pb-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:pb-10',
           )}
         >
           {/* Un seul bandeau pour les trois façons de dire « garde une copie » —

@@ -113,10 +113,38 @@ test.describe('sur un écran de 320 points', () => {
     expect(cut).toEqual([])
   })
 
+  /* La barre d'onglets porte une fente de 64px en son milieu, pour le disque de
+     saisie qui descend dedans (DS §6). Ces 64px sont pris aux quatre onglets, et
+     c'est la seule chose que cette mise en page puisse casser sans rien faire
+     déborder : un libellé trop long ne pousse pas, il se fait trancher par le
+     `truncate` qui le tient sur une ligne.
+     320 points est la borne, « Calendrier » le mot le plus long, et le français
+     la langue de référence — mais le test lit ce qui est rendu plutôt que de
+     nommer un onglet, faute de quoi il resterait vert le jour où l'on ajoute une
+     destination au libellé plus long. */
+  test('ne tranche aucun libellé de la barre d’onglets', async ({ page }) => {
+    await openApp(page)
+    await loadExample(page)
+
+    const coupes = await page.evaluate(() => {
+      const bar = document.querySelector('nav ul')?.closest('nav')
+      if (bar === null || bar === undefined) return ['aucune barre d’onglets']
+      return Array.from(bar.querySelectorAll('a'))
+        .map((link) => link.querySelector('span:last-child'))
+        .filter((label): label is HTMLElement => label !== null)
+        .filter((label) => label.scrollWidth - label.clientWidth > 1)
+        .map((label) => `« ${label.textContent ?? ''} » perd ${label.scrollWidth - label.clientWidth} px`)
+    })
+
+    expect(coupes).toEqual([])
+  })
+
   /* Le bouton flottant a déjà volé les appuis d'un coin entier de l'écran une
      fois (voir le journal). Il est au-dessus de tout, donc rien ne dit qu'il ne
      recouvre pas une commande — sauf de vérifier que ce qui est sous lui reçoit
-     bien les appuis. */
+     bien les appuis. Depuis qu'il est centré, ce n'est plus un coin qu'il
+     surplombe mais le milieu de la rangée : les deux onglets que ce scénario
+     ouvre sont précisément ceux qui bordent la fente. */
   test('laisse la barre de navigation cliquable sous le bouton flottant', async ({ page }) => {
     await openApp(page)
     await loadExample(page)
