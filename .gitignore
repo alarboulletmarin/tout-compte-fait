@@ -28,3 +28,9 @@ npm-debug.log*
 test-results
 playwright-report
 .playwright
+
+# Assistants en ligne de commande — caches de session, propres à une machine et
+# à un instant. Le dossier n'est pas ignoré en bloc : une configuration
+# partagée y aurait sa place et devrait, elle, être commitée.
+.claude/tsc-cache
+.playwright-mcp
