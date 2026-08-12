@@ -2231,7 +2231,7 @@ export const fr = {
   },
 
   onboarding: {
-    step: 'Étape %s sur 3',
+    step: 'Étape %s sur 4',
     /* « Qui vit ici ? » supposait la cohabitation, que le calcul n'utilise
        jamais : le prorata marche aussi bien pour deux personnes à deux
        adresses. La question porte donc sur ce dont l'app se sert — le partage
@@ -2261,8 +2261,13 @@ export const fr = {
        jours plus tard par un bandeau : « rien ne sort d'ici » et « rien ne
        revient si tu vides ce navigateur » sont la même phrase, et n'en garder
        qu'une moitié se paie un jour. */
+    /* La contrepartie elle-même se dit maintenant à la première étape, en
+       tuile, avant qu'on ait rien saisi. Ce qui reste ici est ce qu'elle ne
+       peut pas dire : le geste, et où le faire. La phrase rouvrait sur
+       « c'est aussi la contrepartie » — la redire au bout de trois écrans en
+       ferait une insistance plutôt qu'un rappel. */
     backup:
-      'C’est aussi la contrepartie : vider ce navigateur les efface. Exporte un fichier de temps en temps, depuis les réglages.',
+      'Le geste qui la couvre tient en une minute : exporte un fichier de temps en temps, depuis les réglages.',
     /* La même contrepartie, quand ce navigateur a déjà répondu qu'il ne
        s'engageait pas. Elle ne remplace la phrase ordinaire que dans ce cas-là
        — pas sur un simple « on ne sait pas », pas avant d'avoir posé la
@@ -2319,7 +2324,35 @@ export const fr = {
        étape porte le sien, sans quoi on n'a plus qu'à répondre ou à fermer. */
     backToLanding: 'Revenir à la présentation',
     backToStep: 'Revenir à l’étape %s',
-    progress: 'Progression : étape %s sur 3',
+    progress: 'Progression : étape %s sur 4',
+
+    /* Première étape, et elle ne demande rien. L'onboarding ouvrait sur « avec
+       qui tu partages des dépenses ? » — une question posée avant d'avoir dit
+       ce que l'app fait, à quelqu'un qui vient de cliquer sur un bouton. La
+       thèse du produit tient en une phrase, et elle se dit avant qu'on
+       réponde, pas après.
+       Le titre est au présent et à la deuxième personne, comme la présentation
+       dont il reprend le fil : c'est la même promesse, redite à celui qui vient
+       de l'accepter. */
+    /* Trente-trois caractères, et c'est une mesure et non un goût : au chiffre
+       héros, une phrase de quarante-cinq prend six lignes et 288px sur un écran
+       de 320 — près de la moitié de la hauteur, avant même la contrepartie et
+       le bouton. La présentation tient en quatre lignes parce que sa phrase
+       fait trente caractères. Le titre dit donc le mécanisme, et la phrase
+       en-dessous le déplie. */
+    principleTitle: 'Écrit une fois, prévu chaque mois.',
+    principleBody:
+      'Loyer, abonnements, salaires : tu les écris une fois. Chaque nouveau mois s’ouvre déjà rempli de ce qui est prévu, tu confirmes au fil de l’eau ce qui est réellement tombé, et le reste se déduit tout seul.',
+    /* La contrepartie, en tuile et non en note de bas de page. Elle vivait en
+       13px sous la dernière étape, c'est-à-dire après les trois écrans où l'on
+       a déjà tout saisi : dire « et au fait, tout ça peut disparaître » une
+       fois le travail fait est le pire moment pour le dire. Le readme du DS en
+       fait une règle — le compromis se nomme dans la même phrase que la
+       promesse — et cette étape-ci est cette phrase. */
+    principleCatchTitle: 'La contrepartie',
+    principleCatch:
+      'Rien ne sort de ce navigateur : ni compte, ni serveur, ni mouchard. Si tu l’effaces, tout est effacé, et personne ne peut te le rendre. Le fichier d’export est la seule sortie — c’est toi qui l’ouvres.',
+    principleNext: 'Continuer',
 
     /* L'aperçu montre ce que la réponse change plutôt que de le promettre.
        Sans personne, il ne concède pas que « ça marche quand même » : c'est un

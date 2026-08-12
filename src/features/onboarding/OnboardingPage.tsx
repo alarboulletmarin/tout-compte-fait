@@ -8,13 +8,14 @@ import { useCategoryMap, useMembers } from '@/store/selectors'
 import { useStore } from '@/store/store'
 import { Tile } from '@/ui/Tile'
 import { MembersStep } from './MembersStep'
+import { PrincipleStep } from './PrincipleStep'
 import { SavingsPreview, SavingsStep } from './SavingsStep'
 import { StarterStep } from './StarterStep'
-import { StepProgress } from './StepProgress'
+import { StepProgress, type OnboardingStep } from './StepProgress'
 import { MembersPreview, StarterPreview } from './StepPreview'
 import { starterLines, starterRecurrences } from './starter'
 
-const LAST_STEP = 3
+const LAST_STEP = 4
 
 /**
  * Une question, une proposition, puis l'app est utilisable. Le jeu de
@@ -43,7 +44,7 @@ const LAST_STEP = 3
  * tâche, et c'est elle qui doit tomber sous le pouce.
  */
 export function OnboardingPage() {
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<OnboardingStep>(1)
   const members = useMembers()
   const categories = useCategoryMap()
   const finishOnboarding = useStore((s) => s.finishOnboarding)
@@ -98,56 +99,73 @@ export function OnboardingPage() {
        devenu une page à deux colonnes, et trois écrans voisins à trois marges
        différentes se voient dès qu'on passe de l'un à l'autre. */
     <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center gap-8 px-4 py-10 md:px-8">
+      {/* Le retour ramène au rang précédent, quel qu'il soit : la table
+          « 3 → 2, sinon 1 » n'était juste que tant qu'il y avait trois étapes,
+          et elle aurait renvoyé la quatrième à la première. */}
       <StepProgress
         step={step}
         {...(step === 1
           ? {}
           : {
               onBack: () => {
-                setStep(step === 3 ? 2 : 1)
+                setStep((step - 1) as OnboardingStep)
               },
             })}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <Tile>
-          {step === 1 && (
-            <MembersStep
-              members={members}
-              onAdd={(name) => {
-                addMember(name)
-              }}
-              onRename={renameMember}
-              onRemove={removeMember}
-              onNext={() => {
-                setStep(2)
-              }}
-            />
-          )}
-          {step === 2 && (
-            <StarterStep
-              lines={lines}
-              amounts={amounts}
-              onAmount={(key, value) => {
-                setAmounts((current) => ({ ...current, [key]: value }))
-              }}
-              onSubmit={() => {
-                setKeepStarter(true)
-                setStep(3)
-              }}
-              onSkip={() => {
-                setKeepStarter(false)
-                setStep(3)
-              }}
-            />
-          )}
-          {step === 3 && <SavingsStep onSubmit={finish} onSkip={finish} />}
-        </Tile>
+      {/* La première étape n'est ni une question ni une tuile : elle porte le
+          titre de l'écran et la contrepartie, et elle prend la largeur. La
+          grille à deux colonnes n'a de sens qu'à partir de la deuxième — « à
+          gauche ce qu'on répond, à droite ce que la réponse change » suppose
+          qu'il y ait une réponse, et un aperçu de rien à côté d'un énoncé
+          serait une colonne vide. */}
+      {step === 1 ? (
+        <PrincipleStep
+          onNext={() => {
+            setStep(2)
+          }}
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <Tile>
+            {step === 2 && (
+              <MembersStep
+                members={members}
+                onAdd={(name) => {
+                  addMember(name)
+                }}
+                onRename={renameMember}
+                onRemove={removeMember}
+                onNext={() => {
+                  setStep(3)
+                }}
+              />
+            )}
+            {step === 3 && (
+              <StarterStep
+                lines={lines}
+                amounts={amounts}
+                onAmount={(key, value) => {
+                  setAmounts((current) => ({ ...current, [key]: value }))
+                }}
+                onSubmit={() => {
+                  setKeepStarter(true)
+                  setStep(4)
+                }}
+                onSkip={() => {
+                  setKeepStarter(false)
+                  setStep(4)
+                }}
+              />
+            )}
+            {step === 4 && <SavingsStep onSubmit={finish} onSkip={finish} />}
+          </Tile>
 
-        {step === 1 && <MembersPreview members={members} />}
-        {step === 2 && <StarterPreview lines={lines} amounts={amounts} members={members} />}
-        {step === 3 && <SavingsPreview />}
-      </div>
+          {step === 2 && <MembersPreview members={members} />}
+          {step === 3 && <StarterPreview lines={lines} amounts={amounts} members={members} />}
+          {step === 4 && <SavingsPreview />}
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <p className="t-label">{t.onboarding.privacy}</p>

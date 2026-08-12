@@ -1277,7 +1277,7 @@ export const en: Strings = {
   },
 
   onboarding: {
-    step: 'Step %s of 3',
+    step: 'Step %s of 4',
     membersTitle: 'Who do you share expenses with?',
     membersHint:
       'First names are used as labels on expenses. Their incomes are set at the next step. You can skip: everything will be attributed to you.',
@@ -1292,7 +1292,7 @@ export const en: Strings = {
     start: 'Start',
     privacy: 'Your data stays on this device. Nothing is sent anywhere.',
     backup:
-      'That’s the trade-off too: clearing this browser erases it. Export a file from time to time, from the settings.',
+      'The habit that covers it takes a minute: export a file from time to time, from the settings.',
     backupFragile:
       'And this browser doesn’t guarantee it will keep it. Before entering a lot, get into the habit of exporting a file: it’s the only copy that doesn’t depend on it.',
 
@@ -1318,7 +1318,15 @@ export const en: Strings = {
 
     backToLanding: 'Back to the tour',
     backToStep: 'Back to step %s',
-    progress: 'Progress: step %s of 3',
+    progress: 'Progress: step %s of 4',
+
+    principleTitle: 'Written once, forecast every month.',
+    principleBody:
+      'Rent, subscriptions, salaries: you write them down once. Each new month opens already filled with what is forecast, you confirm what actually happened as it happens, and everything else follows.',
+    principleCatchTitle: 'The catch',
+    principleCatch:
+      'Nothing leaves this browser: no account, no server, no tracker. If you wipe it, everything is wiped, and nobody can give it back. The export file is the only way out — and you are the one who opens it.',
+    principleNext: 'Continue',
 
     previewMembersEmpty:
       'With nobody here, everything is attributed to you. That’s a use in its own right, not a fallback.',

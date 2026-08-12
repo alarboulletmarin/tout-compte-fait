@@ -22,16 +22,26 @@ function firstLaunch(): void {
 
 const state = () => useStore.getState()
 
-/* Aucun nom ne se demande plus : la première étape porte les personnes. Le
+/* Aucun nom ne se demande plus : les personnes sont la première *question*. Le
    nom affiché vit dans les réglages, facultatif — il n'a jamais rien décidé, et
-   l'exiger pour continuer était la seule question bloquante de l'app. */
-/** Répond à la première étape et s'arrête sur la seconde. */
-async function answerFirst(names: readonly string[]): Promise<void> {
+   l'exiger pour continuer était la seule question bloquante de l'app.
+
+   L'écran s'ouvre désormais sur un énoncé qui ne demande rien — la thèse et sa
+   contrepartie, avant qu'on saisisse quoi que ce soit. Il se franchit d'un
+   bouton, et c'est ce que fait `openPrinciple` : les scénarios ci-dessous
+   portent sur les réponses, pas sur la lecture qui les précède. */
+async function openPrinciple(): Promise<void> {
   render(
     <MemoryRouter>
       <OnboardingPage />
     </MemoryRouter>,
   )
+  await userEvent.click(screen.getByRole('button', { name: t.onboarding.principleNext }))
+}
+
+/** Répond à la première question et s'arrête sur la suivante. */
+async function answerFirst(names: readonly string[]): Promise<void> {
+  await openPrinciple()
 
   for (const name of names) {
     /* Sans `exact`, « Prénom » attraperait aussi les champs de renommage des
@@ -69,7 +79,7 @@ async function finishFrom(step: 2 | 3, keep: boolean): Promise<void> {
   await userEvent.click(screen.getByRole('button', { name: t.onboarding.savingsSkip }))
 }
 
-describe('les trois étapes du premier lancement', () => {
+describe('les quatre étapes du premier lancement', () => {
   beforeEach(firstLaunch)
 
   afterEach(() => {
@@ -243,11 +253,7 @@ describe('les trois étapes du premier lancement', () => {
   /* L'export ne se découvrait qu'au bout de trente jours, par un bandeau. Il se
      nomme désormais là où la promesse de confidentialité est faite. */
   it('nomme l’export à la dernière étape, et pas avant', async () => {
-    render(
-      <MemoryRouter>
-        <OnboardingPage />
-      </MemoryRouter>,
-    )
+    await openPrinciple()
     expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
@@ -257,19 +263,50 @@ describe('les trois étapes du premier lancement', () => {
     expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
   })
 
+  /* La contrepartie, elle, se dit d'entrée : c'est l'étape d'ouverture qui la
+     porte, avant qu'on ait rien saisi. Elle n'attend plus la fin — apprendre au
+     bout de trois écrans que tout peut disparaître, c'est l'apprendre trop tard
+     pour en tenir compte. */
+  it('dit la contrepartie avant de demander quoi que ce soit', async () => {
+    render(
+      <MemoryRouter>
+        <OnboardingPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText(t.onboarding.principleCatch)).toBeInTheDocument()
+    /* Aucun champ sur cet écran : c'est ce qui en fait un énoncé et non une
+       question de plus. */
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.principleNext }))
+    expect(screen.queryByText(t.onboarding.principleCatch)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(t.onboarding.membersLabel)).toBeInTheDocument()
+  })
+
+  /* Le retour rend le rang précédent, et non la première étape : la table qui
+     le calculait était juste pour trois étapes et renvoyait la quatrième à
+     l'énoncé. */
+  it('revient d’une étape à la fois', async () => {
+    await answerFirst([])
+    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
+    expect(screen.getByText(t.onboarding.savingsTitle)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: tpl(t.onboarding.backToStep, 3) }))
+    expect(screen.getByText(t.onboarding.starterTitle)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: tpl(t.onboarding.backToStep, 2) }))
+    expect(screen.getByLabelText(t.onboarding.membersLabel)).toBeInTheDocument()
+  })
+
   /* La phrase se durcit d'un cran là où le navigateur a répondu qu'il ne
      s'engageait pas — et là seulement. Un « on ne sait pas » n'est pas un refus,
      et l'annoncer à tout le monde ferait de la phrase honnête un avertissement
      de plus qu'on n'écoute pas. */
   it('ne durcit la phrase que sur un refus dont on est sûr', async () => {
     useStorageHealth.setState({ probed: true, durable: 'unknown', asked: true })
-    render(
-      <MemoryRouter>
-        <OnboardingPage />
-      </MemoryRouter>,
-    )
+    await openPrinciple()
     await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
-    // La phrase vit à la dernière étape, qui est la troisième depuis l'épargne.
+    // La phrase vit à la dernière étape, celle de l'épargne.
     await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
     expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
 

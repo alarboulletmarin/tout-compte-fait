@@ -6,6 +6,14 @@ import { ChevronLeft } from '@/ui/Icons'
 import { Ring } from '@/ui/Ring'
 
 /**
+ * Les quatre rangs de l'onboarding : ce qu'il énonce, puis les trois questions
+ * qu'il pose. Le type vit ici, avec la jauge qui le divise — écrit à la main
+ * dans la page et dans l'en-tête, l'un des deux aurait fini par compter une
+ * étape de moins que l'autre.
+ */
+export type OnboardingStep = 1 | 2 | 3 | 4
+
+/**
  * L'en-tête des deux étapes : le retour, le nom de l'app, et la progression.
  *
  * La progression était une phrase — « Étape 1 sur 2 ». Elle est maintenant
@@ -19,9 +27,9 @@ import { Ring } from '@/ui/Ring'
  * ou charger l'exemple n'a plus qu'à répondre ou à fermer.
  */
 /** Le nombre d'étapes. Vit ici parce que c'est ici que la jauge le divise. */
-const STEPS = 3
+const STEPS = 4
 
-export function StepProgress({ step, onBack }: { step: 1 | 2 | 3; onBack?: () => void }) {
+export function StepProgress({ step, onBack }: { step: OnboardingStep; onBack?: () => void }) {
   const label = tpl(t.onboarding.progress, step)
 
   return (
