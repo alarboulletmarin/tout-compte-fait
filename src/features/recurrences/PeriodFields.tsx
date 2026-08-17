@@ -1,4 +1,5 @@
 import { t } from '@/i18n/strings'
+import { weekdayNames } from '@/i18n/format'
 import { Field, Select, TextInput } from '@/ui/Field'
 import { LAST_DAY, periodOptions, type PeriodDraft, type PeriodKind } from './period'
 
@@ -57,7 +58,7 @@ export function PeriodFields({ draft, patch }: PeriodFieldsProps) {
                 patch({ weekday: Number(e.target.value) })
               }}
             >
-              {t.calendarNames.weekdays.map((day, index) => (
+              {weekdayNames().map((day, index) => (
                 <option key={day} value={index + 1}>
                   {day}
                 </option>

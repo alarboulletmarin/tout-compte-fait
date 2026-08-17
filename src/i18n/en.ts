@@ -28,43 +28,6 @@ export const en: Strings = {
     tagline: 'Your finances, on your device.',
   },
 
-  calendarNames: {
-    months: [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ],
-    monthsShort: [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ],
-    /** Index 0 = lundi, conformément à `dayOfWeek` (ISO 8601). */
-    weekdaysShort: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    /* Deux « T » et deux « S » se suivent : c'est l'usage anglais, et les
-       en-têtes de la grille sont de toute façon `aria-hidden` — la colonne se
-       dit au lecteur d'écran par le nom complet de la case. */
-    weekdaysNarrow: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-  },
 
   common: {
     add: 'Add',

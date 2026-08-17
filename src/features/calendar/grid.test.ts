@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dayOfWeek, daysInMonth, diffDays, parseYm } from '@/domain/date'
 import { makeEntry, eur } from '@/domain/fixtures'
-import { t } from '@/i18n/strings'
 import {
   CELLS,
   MAX_DOTS,
@@ -231,7 +230,7 @@ describe('grid — les en-têtes de colonnes', () => {
     expect(jours).toHaveLength(7)
     expect(jours[0]?.name).toBe('lundi')
     expect(jours.at(-1)?.name).toBe('dimanche')
-    expect(jours.map((j) => j.initial)).toEqual([...t.calendarNames.weekdaysNarrow])
+    expect(jours.map((j) => j.initial)).toEqual(['L', 'M', 'M', 'J', 'V', 'S', 'D'])
     // Les initiales ne sont pas uniques — mardi et mercredi donnent « M ».
     // Les noms, si : ce sont eux qui servent de clé de rendu.
     expect(new Set(jours.map((j) => j.name)).size).toBe(7)

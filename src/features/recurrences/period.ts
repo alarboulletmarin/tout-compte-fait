@@ -16,7 +16,7 @@
 import { type ISODate, dayOfWeek, parseISO } from '@/domain/date'
 import type { Period } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { formatDayMonthShort, formatMonthDay, tpl } from '@/i18n/format'
+import { formatDayMonthShort, formatMonthDay, tpl, weekdayName } from '@/i18n/format'
 
 export type PeriodKind =
   | 'weekly'
@@ -134,7 +134,7 @@ export function defaultsFrom(startedOn: ISODate): { monthDay: number; weekday: n
 
 /** Résumé lisible : « le 5 de chaque mois », « chaque année le 15 mars ». */
 export function describePeriod(period: Period, startedOn: ISODate): string {
-  const weekday = (): string => t.calendarNames.weekdays[period.anchorDay - 1] ?? ''
+  const weekday = (): string => weekdayName(period.anchorDay)
   /* Le jour du mois, ou son nom quand il en a un. Voir `LAST_DAY`. */
   const monthDay = (): string =>
     period.anchorDay >= LAST_DAY

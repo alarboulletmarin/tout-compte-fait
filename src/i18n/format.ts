@@ -13,7 +13,7 @@
 
 import type { Money } from '@/domain/money'
 import { type ISODate, type YearMonth, dayOfWeek, parseISO, parseYm } from '@/domain/date'
-import { currentLocale, t } from './strings'
+import { currentLocale } from './strings'
 
 const english = (): boolean => currentLocale() === 'en'
 
@@ -318,12 +318,77 @@ export function tpl(template: string, ...values: (string | number)[]): string {
 
 /* --- Dates ----------------------------------------------------------------*/
 
+/**
+ * Les noms de mois et de jours, tirés d'`Intl` et non d'une table.
+ *
+ * Ils vivaient en trente-huit chaînes par catalogue — douze mois, douze
+ * abrégés, sept jours, sept abrégés — recopiées à la main dans deux langues.
+ * C'est une donnée que le moteur possède déjà, exactement, et qu'il faut sinon
+ * réécrire à chaque langue ajoutée. Vérifié chaîne par chaîne : `Intl` rend les
+ * mêmes que les tables, à une près — « Sept » au lieu de « Sep » pour septembre
+ * en anglais britannique, qui est la forme juste.
+ *
+ * Les dates sont construites et lues **en UTC**. Sans ce cadrage, un fuseau à
+ * l'ouest de Greenwich décale le 1er du mois sur le mois précédent, et le
+ * calendrier changerait de nom selon l'endroit d'où on l'ouvre.
+ *
+ * Un formateur coûte cher à construire et sert à chaque ligne d'une liste : ils
+ * se gardent, mais par langue **et** par forme — un formateur français
+ * continuerait d'écrire « juillet » sous une app passée à l'anglais.
+ */
+const dateFormatters = new Map<string, Intl.DateTimeFormat>()
+
+function dateFormatter(options: Intl.DateTimeFormatOptions, key: string): Intl.DateTimeFormat {
+  const cacheKey = `${intlTag()}:${key}`
+  const cached = dateFormatters.get(cacheKey)
+  if (cached !== undefined) return cached
+  const made = new Intl.DateTimeFormat(intlTag(), { ...options, timeZone: 'UTC' })
+  dateFormatters.set(cacheKey, made)
+  return made
+}
+
+/** Le 15 d'un mois : jamais assez près d'un bord pour basculer de fuseau. */
+const midMonth = (month: number): Date => new Date(Date.UTC(2026, month - 1, 15))
+
 export function monthName(month: number): string {
-  return t.calendarNames.months[month - 1] ?? ''
+  return dateFormatter({ month: 'long' }, 'month-long').format(midMonth(month))
 }
 
 export function monthNameShort(month: number): string {
-  return t.calendarNames.monthsShort[month - 1] ?? ''
+  return dateFormatter({ month: 'short' }, 'month-short').format(midMonth(month))
+}
+
+/** Les douze abrégés dans l'ordre, pour les axes qui les égrènent. */
+export function monthNamesShort(): string[] {
+  return Array.from({ length: 12 }, (_, index) => monthNameShort(index + 1))
+}
+
+/* Un lundi, pour ancrer la semaine : le 5 janvier 2026 en est un. Les jours se
+   comptent ensuite de 1 (lundi) à 7 (dimanche), comme `dayOfWeek`. */
+const weekdayDate = (day: number): Date => new Date(Date.UTC(2026, 0, 4 + day))
+
+export function weekdayName(day: number): string {
+  return dateFormatter({ weekday: 'long' }, 'weekday-long').format(weekdayDate(day))
+}
+
+export function weekdayNameShort(day: number): string {
+  return dateFormatter({ weekday: 'short' }, 'weekday-short').format(weekdayDate(day))
+}
+
+/**
+ * L'initiale d'un jour, pour les sept en-têtes de la grille du calendrier.
+ *
+ * `narrow` rend « L M M J V S D » en français et « M T W T F S S » en anglais —
+ * c'est-à-dire des lettres qui se répètent, et c'est voulu : la grille les pose
+ * en `aria-hidden`, le nom complet étant dit par la case elle-même.
+ */
+export function weekdayNarrow(day: number): string {
+  return dateFormatter({ weekday: 'narrow' }, 'weekday-narrow').format(weekdayDate(day))
+}
+
+/** Les sept jours dans l'ordre, du lundi au dimanche. */
+export function weekdayNames(): string[] {
+  return Array.from({ length: 7 }, (_, index) => weekdayName(index + 1))
 }
 
 /** « juillet 2026 » */
@@ -398,8 +463,7 @@ export function formatMonthDay(day: number): string {
  * annoncé sept fois ne vaudrait pas la colonne dans laquelle on se trouve.
  */
 export function formatWeekdayDate(iso: ISODate): string {
-  const weekday = t.calendarNames.weekdays[dayOfWeek(iso) - 1] ?? ''
-  return `${weekday} ${formatDate(iso)}`
+  return `${weekdayName(dayOfWeek(iso))} ${formatDate(iso)}`
 }
 
 /** « 12 juil. » */
@@ -411,8 +475,7 @@ export function formatDayMonthShort(iso: ISODate): string {
 /** « mar. 12 juil. » */
 export function formatDayFull(iso: ISODate): string {
   const { m, d } = parseISO(iso)
-  const weekday = t.calendarNames.weekdaysShort[dayOfWeek(iso) - 1] ?? ''
-  return `${weekday} ${String(d)} ${monthNameShort(m)}`
+  return `${weekdayNameShort(dayOfWeek(iso))} ${String(d)} ${monthNameShort(m)}`
 }
 
 /** Date compacte pour un sous-libellé mono : « 12/07 ». */
@@ -421,20 +484,31 @@ export function formatDateCompact(iso: ISODate): string {
   return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`
 }
 
-/** « dans 3 jours », « aujourd'hui », « il y a 2 jours ». */
+/* Les mêmes règles de garde que les formateurs de nombres : coûteux à
+   construire, servis à chaque ligne d'une liste, et distincts par langue. */
+const relativeFormatters = new Map<string, Intl.RelativeTimeFormat>()
+
+function relativeFormatter(): Intl.RelativeTimeFormat {
+  const tag = intlTag()
+  const cached = relativeFormatters.get(tag)
+  if (cached !== undefined) return cached
+  /* `numeric: 'auto'` est tout l'intérêt : c'est lui qui rend « hier » plutôt
+     que « il y a 1 jour », et il connaît en prime « avant-hier » et
+     « après-demain », que les dix branches écrites à la main n'avaient pas. */
+  const made = new Intl.RelativeTimeFormat(tag, { numeric: 'auto' })
+  relativeFormatters.set(tag, made)
+  return made
+}
+
+/**
+ * « dans 3 jours », « aujourd'hui », « il y a 2 jours ».
+ *
+ * Dix branches l'écrivaient à la main, cinq par langue, et il aurait fallu en
+ * ajouter cinq à chaque langue nouvelle — pour un cas que le moteur traite
+ * mieux : il sait aussi les jours nommés au-delà du premier.
+ */
 export function formatRelativeDays(days: number): string {
-  if (english()) {
-    if (days === 0) return 'today'
-    if (days === 1) return 'tomorrow'
-    if (days === -1) return 'yesterday'
-    if (days > 0) return `in ${String(days)} days`
-    return `${String(-days)} days ago`
-  }
-  if (days === 0) return "aujourd'hui"
-  if (days === 1) return 'demain'
-  if (days === -1) return 'hier'
-  if (days > 0) return `dans ${String(days)} jours`
-  return `il y a ${String(-days)} jours`
+  return relativeFormatter().format(days, 'day')
 }
 
 /**

@@ -18,40 +18,6 @@ export const fr = {
      commencé n'a aucune raison d'y voyager. Seul son nom de lien reste
      ici, en `nav.landing` : « à propos » l'écrit sans charger la page. */
 
-  calendarNames: {
-    months: [
-      'janvier',
-      'février',
-      'mars',
-      'avril',
-      'mai',
-      'juin',
-      'juillet',
-      'août',
-      'septembre',
-      'octobre',
-      'novembre',
-      'décembre',
-    ],
-    monthsShort: [
-      'janv.',
-      'févr.',
-      'mars',
-      'avr.',
-      'mai',
-      'juin',
-      'juil.',
-      'août',
-      'sept.',
-      'oct.',
-      'nov.',
-      'déc.',
-    ],
-    /** Index 0 = lundi, conformément à `dayOfWeek` (ISO 8601). */
-    weekdaysShort: ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'],
-    weekdaysNarrow: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
-    weekdays: ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'],
-  },
 
   common: {
     add: 'Ajouter',

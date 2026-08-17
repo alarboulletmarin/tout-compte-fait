@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { en } from './en'
 import { fr } from './fr'
 import { applyLocale, currentLocale, setCatalog, subscribeLocale, t } from './strings'
+import { monthName, monthNamesShort, weekdayName, weekdayNames, weekdayNarrow } from './format'
 
 afterEach(() => {
   setCatalog('fr', fr)
@@ -85,16 +86,27 @@ describe('les deux catalogues', () => {
     expect(walk(fr, en, '')).toEqual([])
   })
 
-  /* Les douze mois, les sept jours : une liste courte d'un élément se voit à
-     l'écran, une liste courte de onze ne se voit que le mois qui manque. */
-  it('portent douze mois et sept jours de part et d’autre', () => {
-    for (const catalog of [fr, en]) {
-      expect(catalog.calendarNames.months).toHaveLength(12)
-      expect(catalog.calendarNames.monthsShort).toHaveLength(12)
-      expect(catalog.calendarNames.weekdays).toHaveLength(7)
-      expect(catalog.calendarNames.weekdaysShort).toHaveLength(7)
-      expect(catalog.calendarNames.weekdaysNarrow).toHaveLength(7)
+  /* Les douze mois et les sept jours ne vivent plus dans les catalogues : ils
+     viennent d'`Intl` (`i18n/format.ts`), qui les possède exactement et les
+     tiendra pour toute langue ajoutée. Ce qui se vérifie ici n'est donc plus
+     une longueur de table mais le fait que le moteur réponde dans les deux
+     langues — un `Intl` amputé de ses données rendrait des dates brutes, et le
+     calendrier afficherait des nombres à la place des jours. */
+  it('tirent leurs mois et leurs jours d’Intl, dans les deux langues', () => {
+    for (const [locale, catalog, janvier, lundi] of [
+      ['fr', fr, 'janvier', 'lundi'],
+      ['en', en, 'January', 'Monday'],
+    ] as const) {
+      setCatalog(locale, catalog)
+      expect(monthName(1)).toBe(janvier)
+      expect(weekdayName(1)).toBe(lundi)
+      expect(monthNamesShort()).toHaveLength(12)
+      expect(weekdayNames()).toHaveLength(7)
+      /* Sept initiales, même si elles se répètent : « M » vaut mardi et
+         mercredi en français, et c'est la grille qui porte le nom complet. */
+      expect(Array.from({ length: 7 }, (_, i) => weekdayNarrow(i + 1))).toHaveLength(7)
     }
+    setCatalog('fr', fr)
   })
 })
 
