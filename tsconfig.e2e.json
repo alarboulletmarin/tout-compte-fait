@@ -20,5 +20,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["e2e", "playwright.config.ts"]
+  // `audit` y entre pour la raison qui y met `e2e` : c'est du code Node qui
+  // pilote un navigateur, et ses sondes s'exécutent dans la page — donc `dom`
+  // et `node` à la fois. Sans cette ligne, `npm run lint` échoue sur des
+  // fichiers qu'aucun projet ne revendique.
+  "include": ["e2e", "audit", "playwright.config.ts"]
 }

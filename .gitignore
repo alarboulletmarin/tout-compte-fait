@@ -34,3 +34,10 @@ playwright-report
 # partagée y aurait sa place et devrait, elle, être commitée.
 .claude/tsc-cache
 .playwright-mcp
+audit/screenshots/
+audit/mesures/
+audit/axe/
+audit/bords/
+audit/zoom/
+audit/doublons/
+audit/*-avant/
