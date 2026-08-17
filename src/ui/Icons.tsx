@@ -28,6 +28,7 @@ import { ChartLineUp } from '@phosphor-icons/react/dist/csr/ChartLineUp'
 import { ChartPieSlice } from '@phosphor-icons/react/dist/csr/ChartPieSlice'
 import { Check as PhCheck } from '@phosphor-icons/react/dist/csr/Check'
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { CircleHalf } from '@phosphor-icons/react/dist/csr/CircleHalf'
 import { Clock as PhClock } from '@phosphor-icons/react/dist/csr/Clock'
 import { Bank } from '@phosphor-icons/react/dist/csr/Bank'
 import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
@@ -44,7 +45,9 @@ import { Plus as PhPlus } from '@phosphor-icons/react/dist/csr/Plus'
 import { MagnifyingGlass } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Minus as PhMinus } from '@phosphor-icons/react/dist/csr/Minus'
 import { Money } from '@phosphor-icons/react/dist/csr/Money'
+import { Moon } from '@phosphor-icons/react/dist/csr/Moon'
 import { Receipt } from '@phosphor-icons/react/dist/csr/Receipt'
+import { Sun } from '@phosphor-icons/react/dist/csr/Sun'
 import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { SquaresFour } from '@phosphor-icons/react/dist/csr/SquaresFour'
@@ -107,6 +110,21 @@ export const ExternalIcon = adapt(ArrowUpRight)
    seul de sa rangée à en porter un, et c'est ce qui fait son travail : l'export
    voisin est le geste courant, celui-ci est la sortie de côté. */
 export const ShareIcon = adapt(ShareNetwork)
+
+/* Les trois positions du thème, sur la bascule des écrans d'avant le foyer —
+   et là seulement : « Apparence » les nomme en toutes lettres, parce que c'est
+   la vue du réglage et qu'on y vient exprès. Ici on ne vient pas, on passe : le
+   glyphe rend au titre la largeur que trois mots lui prenaient.
+
+   Un demi-disque pour « Système », et pas un second astre : la position ne dit
+   pas une apparence, elle dit *qui décide* — le soleil et la lune sont les deux
+   réponses, celle-ci est la règle qui va chercher celle de l'appareil. Elle
+   reste une position visible et non un repli, parce qu'elle est le défaut :
+   une bascule à deux positions ne saurait pas montrer l'état de qui n'a rien
+   choisi. */
+export const ThemeLightIcon = adapt(Sun)
+export const ThemeDarkIcon = adapt(Moon)
+export const ThemeSystemIcon = adapt(CircleHalf)
 
 /* --- Repère — navigation --------------------------------------------------*/
 

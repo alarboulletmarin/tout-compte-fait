@@ -106,4 +106,58 @@ describe('Segmented', () => {
     await user.click(screen.getByRole('radio', { name: 'Année' }))
     expect(screen.getByRole('radio', { name: 'Année' })).toBeChecked()
   })
+
+  /* La densité courte : ce qui rétrécit est la boîte, pas le sens. Une position
+     qui n'affiche plus qu'un code ou un glyphe garde son libellé complet comme
+     nom accessible — sans quoi la bascule du thème n'annoncerait rien du tout,
+     ses trois positions n'ayant aucun texte. */
+  describe('position raccourcie', () => {
+    const SHORT = [
+      { value: 'fr', label: 'Français', short: 'FR' },
+      { value: 'en', label: 'English', short: 'EN' },
+    ] as const
+
+    it('garde le libellé complet comme nom accessible', () => {
+      render(<Segmented options={SHORT} value="fr" onChange={vi.fn()} label="Langue" />)
+
+      expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked()
+      expect(screen.getByRole('radio', { name: 'English' })).toBeInTheDocument()
+    })
+
+    it('n’affiche que la forme courte', () => {
+      render(<Segmented options={SHORT} value="fr" onChange={vi.fn()} label="Langue" />)
+
+      expect(screen.getByRole('radio', { name: 'Français' })).toHaveTextContent('FR')
+      expect(screen.queryByText('Français')).not.toBeInTheDocument()
+    })
+
+    /* Un glyphe est `aria-hidden` : sans le nom porté par le bouton, la
+       position n'aurait aucun nom accessible du tout. */
+    it('nomme une position qui n’a qu’un glyphe', () => {
+      const options = [
+        { value: 'light' as const, label: 'Clair', short: <svg aria-hidden="true" /> },
+        { value: 'dark' as const, label: 'Sombre', short: <svg aria-hidden="true" /> },
+      ]
+      render(<Segmented options={options} value="light" onChange={vi.fn()} label="Thème" />)
+
+      expect(screen.getByRole('radio', { name: 'Clair' })).toBeChecked()
+      expect(screen.getByRole('radio', { name: 'Sombre' })).not.toBeChecked()
+    })
+
+    /* Le clavier ne change pas d'une densité à l'autre : c'est la même bascule,
+       et non une seconde qui aurait sa propre règle. */
+    it('répond aux flèches comme la bascule pleine', async () => {
+      const user = userEvent.setup()
+      function ShortHarness() {
+        const [locale, setLocale] = useState<'fr' | 'en'>('fr')
+        return <Segmented options={SHORT} value={locale} onChange={setLocale} label="Langue" />
+      }
+      render(<ShortHarness />)
+      await user.tab()
+
+      await user.keyboard('{ArrowRight}')
+      expect(screen.getByRole('radio', { name: 'English' })).toBeChecked()
+      expect(screen.getByRole('radio', { name: 'English' })).toHaveFocus()
+    })
+  })
 })
