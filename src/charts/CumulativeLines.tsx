@@ -6,7 +6,7 @@ import { useState } from 'react'
 import type { Money } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { history } from '@/i18n/history'
-import { NO_VALUE, formatMoney, monthName, tpl } from '@/i18n/format'
+import { NO_VALUE, formatMoney, monthName, monthNamesShort, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import { useCurrency } from '@/ui/currency'
 import { ChartAxis, type AxisTick } from './ChartAxis'
@@ -101,7 +101,7 @@ export function CumulativeLines({
   const span = max - min || 1
   const yOf = (value: number): number => PAD + (1 - (value - min) / span) * (HEIGHT - 2 * PAD)
 
-  const months = series[0]?.values.length ?? t.calendarNames.monthsShort.length
+  const months = series[0]?.values.length ?? 12
   const valueAt = (serie: Serie, index: number): number | null => serie.values[index] ?? null
 
   /* Le dernier mois que sait chiffrer l'**année choisie**, et non n'importe
@@ -260,7 +260,7 @@ export function CumulativeLines({
           </div>
 
           <div className="chart-months flex" aria-hidden="true">
-            {t.calendarNames.monthsShort.slice(0, months).map((name) => (
+            {monthNamesShort().slice(0, months).map((name) => (
               <span key={name} className="t-axis min-w-0 flex-1 text-center">
                 <span className="chart-month-short">{name.slice(0, 1).toUpperCase()}</span>
                 <span className="chart-month-long">{name}</span>

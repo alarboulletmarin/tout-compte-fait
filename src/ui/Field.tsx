@@ -34,8 +34,8 @@ const CONTROL = cn(
  *
  * **Un plafond, jamais une largeur.** `max-width` borne le `w-full` sans entrer
  * en concurrence avec lui ; deux `width` sur le même élément se départageraient
- * par l'ordre de la feuille générée, `cn` ne fusionnant pas les classes
- * Tailwind. C'est exactement le piège que la colonne de `PendingSection` a déjà
+ * par l'ordre d'`utilities.css`, `cn` ne fusionnant rien du tout — il
+ * concatène. C'est exactement le piège que la colonne de `PendingSection` a déjà
  * rencontré, et c'est pour ça que le champ y garde sa largeur de colonne : 96px,
  * sous ce plafond, qui ne la touche donc pas.
  *

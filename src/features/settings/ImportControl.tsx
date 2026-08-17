@@ -39,11 +39,20 @@ export function ImportControl({
 
   return (
     <>
+      {/* Retiré de l'arbre d'accessibilité, et pas seulement caché à l'œil.
+          `sr-only` ne cache qu'aux yeux : le champ restait annoncé et atteignable
+          au clavier, sans nom — axe le relevait en gravité critique (WCAG 4.1.2).
+          Lui donner un `aria-label` aurait fait deux entrées pour un seul geste,
+          l'une nommée « Importer » et l'autre « Choisir un fichier », posées l'une
+          sur l'autre. Le bouton juste dessous est le contrôle, il porte déjà son
+          nom ; ceci n'est que le mécanisme qu'il déclenche. */}
       <input
         ref={fileInput}
         type="file"
         accept="application/json,.json"
         className="sr-only"
+        aria-hidden="true"
+        tabIndex={-1}
         onChange={(event) => {
           const file = event.target.files?.[0]
           event.target.value = ''

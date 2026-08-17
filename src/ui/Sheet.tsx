@@ -138,7 +138,7 @@ export function Sheet({
       }}
       className={cn(
         // `.sheet` porte l'entrée, la sortie et la couleur du fond. Le fond ne
-        // peut pas rester en utilitaire `backdrop:` : Tailwind émet la couche
+        // peut pas rester en utilitaire `backdrop:` : la feuille émet la couche
         // `utilities` après `components`, donc il gagnerait quel que soit
         // l'ordre d'écriture, et le fondu ne se verrait jamais.
         'sheet surface m-0 w-full bg-transparent p-0 text-text',

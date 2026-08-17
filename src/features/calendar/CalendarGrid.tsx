@@ -126,7 +126,7 @@ function Cell({
         /* Le pressé, que le DS §6 exige sur tout ce qu'on peut actionner et
            que la grille n'avait pas : quarante-deux cases visées au doigt, sur
            un écran qui n'a pas de curseur, ne répondaient rien du tout.
-           `scale` et non `transform` — Tailwind 4 pose `scale-*` sur la
+           `scale` et non `transform` — `scale-*` est posé sur la
            propriété du même nom, et une transition déclarée sur `transform` ne
            la verrait pas. Le retrait de 4 % tient dans la gouttière de la
            grille : une case ne peut pas chevaucher sa voisine. */

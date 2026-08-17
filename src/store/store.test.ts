@@ -31,10 +31,26 @@ import type { useStore as UseStore } from './store'
  * `tabs.test.ts`, et ce qui compte ici est la politique, qu'on appelle
  * directement par `onTabMessage`.
  */
+let previousStore: typeof UseStore | null = null
+
 async function freshStore(options: {
   write?: (data: Data, rev: number) => Promise<void>
   read?: () => Promise<LoadedDocument | null>
 } = {}): Promise<{ store: typeof UseStore; posted: TabMessage[] }> {
+  /* Le writer du store précédent finit **avant** qu'on jette son module.
+     `vi.resetModules()` ne l'attend pas : il l'abandonne, et l'instance jetée
+     continue d'écrire dans la même base `fake-indexeddb`. Son instantané
+     atterrissait alors au milieu du test suivant, après le ménage de celui-ci,
+     et `backupDaily` refusant de réécrire la clé du jour, ce que le test
+     observait dépendait du tempo. Un test sur deux tombait, et pas toujours le
+     même — la pire façon d'échouer.
+     `flush()` attend toute la chaîne d'écriture, archivage compris : c'est
+     exactement ce qu'il faut ici, et c'est le seul endroit d'où l'on connaisse
+     encore le store sortant. */
+  if (previousStore !== null) {
+    await previousStore.getState().flush()
+    previousStore = null
+  }
   vi.resetModules()
   const { write, read } = options
 
@@ -57,7 +73,9 @@ async function freshStore(options: {
     }),
   }))
 
-  return { store: (await import('./store')).useStore, posted }
+  const store = (await import('./store')).useStore
+  previousStore = store
+  return { store, posted }
 }
 
 /** jsdom ne pilote pas la visibilité : on la pose à la main. */

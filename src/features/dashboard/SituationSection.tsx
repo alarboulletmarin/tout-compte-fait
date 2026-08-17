@@ -58,8 +58,27 @@ export function SituationSection({ onExplain }: { onExplain: (metric: Metric) =>
      sur un mois passé l'horizon est déjà derrière, sur un mois à venir il est
      encore devant. Le chiffre se calcule dans les deux cas et ne veut rien dire
      ni dans l'un ni dans l'autre — d'où la rangée absente plutôt que fausse. */
-  const remainingHint =
-    nextIncomeDate(entries, today()) === null
+  const noIncomeLeft = nextIncomeDate(entries, today()) === null
+
+  /**
+   * Ce que la rangée dit sous son libellé, et le cas où elle doit dire plus.
+   *
+   * Les deux montants **coïncident au centime** dès qu'il ne reste aucune
+   * rentrée d'argent : `restToLive` prend alors la fin du mois pour horizon,
+   * c'est-à-dire exactement celui du prévisionnel. Sortir ces deux lectures du
+   * bento pour leur donner une description ne suffisait pas — chacune expliquait
+   * son propre horizon, aucune ne disait pourquoi les deux chiffres sont les
+   * mêmes, et deux fois la même valeur sous deux libellés se lit comme une
+   * erreur de calcul.
+   *
+   * La comparaison porte sur les valeurs et non sur la présence d'une rentrée :
+   * c'est la coïncidence elle-même qu'on annonce, pas la condition qui la
+   * produit d'habitude.
+   */
+  const sameAsForecast = remaining === totals.forecastBalance
+  const remainingHint = sameAsForecast
+    ? t.dashboard.remainingSame
+    : noIncomeLeft
       ? t.dashboard.remainingNoIncome
       : t.dashboard.remainingHint
 

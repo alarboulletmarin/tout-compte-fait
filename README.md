@@ -80,7 +80,7 @@ C'est une PWA : ouvrir [toutcomptefait.xyz](https://toutcomptefait.xyz), puis «
 
 ## Pile technique
 
-React 19 · TypeScript · Vite · Tailwind CSS 4 · zustand · IndexedDB (`idb`) · Vitest · vite-plugin-pwa.
+React 19 · TypeScript · Vite · CSS pur · zustand · IndexedDB (`idb`) · Vitest · vite-plugin-pwa.
 
 Aucune librairie de graphiques : l'anneau, les barres et les courbes sont des composants SVG maison. Aucun backend, donc aucun coût de fonctionnement.
 

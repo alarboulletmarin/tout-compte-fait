@@ -330,13 +330,21 @@ export function MonthHeader({
 
             Aucune borne à vérifier : `useMonthBounds` fait toujours entrer le
             mois courant entre son minimum et son maximum. */}
+        {/* La navigation prend toute la ligne, et le nom du mois se centre donc
+            sur la page. Elle était bornée à `max-w-sm` — 384px — dans une ligne
+            alignée à gauche : mesuré à 1920 points, « août » se centrait sur 768
+            pendant que les cartes en dessous se centraient sur 1072, soit trois
+            cents pixels d'écart entre un titre et ce qu'il coiffe. Un écran n'a
+            qu'un axe. Le bouton « ce mois-ci », lui, reste `shrink-0` à droite :
+            il ne déplace le centre que de sa propre largeur, et seulement quand
+            il existe. */}
         <div className="flex items-center gap-2">
           <MonthNav
             value={ym}
             onChange={setYm}
             min={bounds.min}
             max={bounds.max}
-            className="min-w-0 max-w-sm flex-1"
+            className="min-w-0 flex-1"
           />
           {ym !== currentYm && (
             <Button

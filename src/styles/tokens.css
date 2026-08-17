@@ -1,21 +1,22 @@
 /* ============================================================================
  * Tout compte fait — tokens du design system.
  *
- * Ce fichier est la SEULE déclaration des tokens. Quatre couches, dans l'ordre :
+ * Ce fichier est la SEULE déclaration des tokens. Trois couches, dans l'ordre :
  *
  *   1. Palette de base      — valeurs brutes. Jamais consommée par un composant.
  *   2. Tokens sémantiques   — la seule couche que les composants consomment.
  *   3. Couche dérivée       — tokens sémantiques déduits d'une règle du DS.
- *   4. Exposition Tailwind  — @theme inline, pour les utilitaires.
  *
  * Règle : un composant qui écrit `var(--pine-500)` est un bug.
+ *
+ * **Il y en avait une quatrième**, qui réexposait chaque token sous un second
+ * nom — `--color-bg` pour `--bg`, `--radius-tile` pour `--r-tile` — à seule fin
+ * qu'une librairie de style en tire ses utilitaires. Le projet est en CSS pur :
+ * la couche d'utilitaires est écrite à la main (`utilities.css`) et lit les
+ * tokens directement. Le second jeu de noms n'avait plus de lecteur, et deux
+ * noms pour une même valeur est exactement ce que ce fichier existe pour
+ * éviter.
  * ==========================================================================*/
-
-@import 'tailwindcss';
-
-/* Le thème est porté par [data-theme] sur <html>. Cette variante sert aux rares
-   cas où un token ne suffit pas (masques SVG, états de piste d'anneau). */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 /* ---------------------------------------------------------------------------
  * 1. Palette de base — DS §2.1. Ces valeurs ne changent jamais.
@@ -274,58 +275,7 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
- * 5. Exposition à Tailwind.
- *
- * `inline` est indispensable : sans lui, `--color-bg: var(--bg)` serait résolu
- * une fois sur :root et un sous-arbre portant [data-theme] ne suivrait plus.
- * Avec `inline`, l'utilitaire émet directement `var(--bg)`.
- * -------------------------------------------------------------------------*/
-@theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-border: var(--border);
-  --color-text: var(--text);
-  --color-muted: var(--text-muted);
-
-  --color-accent: var(--accent);
-  --color-accent-fg: var(--accent-fg);
-  --color-accent-2: var(--accent-2);
-  --color-accent-2-fg: var(--accent-2-fg);
-  --color-danger: var(--danger);
-  --color-danger-fill: var(--danger-fill);
-  --color-danger-fg: var(--danger-fg);
-  --color-danger-text: var(--danger-text);
-
-  --color-flow-in: var(--flow-in);
-  --color-flow-out: var(--flow-out);
-
-  --color-cat-1: var(--cat-1);
-  --color-cat-2: var(--cat-2);
-  --color-cat-3: var(--cat-3);
-  --color-cat-4: var(--cat-4);
-  --color-cat-5: var(--cat-5);
-  --color-cat-6: var(--cat-6);
-  --color-cat-rest: var(--cat-rest);
-  --color-member-1: var(--member-1);
-  --color-member-2: var(--member-2);
-  --color-member-3: var(--member-3);
-  --color-member-4: var(--member-4);
-  --color-member-5: var(--member-5);
-
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-
-  --radius-tile: var(--r-tile);
-  --radius-inner: var(--r-inner);
-  --radius-input: var(--r-input);
-  --radius-chip: var(--r-chip);
-
-  --shadow-tile: var(--shadow);
-
-  --ease-ds: var(--ease);
-
-  /* Échelle d'espacement — base 4px : 4 8 12 16 20 24 32 40 56 72 (DS §4). */
-  --spacing: 4px;
-}
+/* L'échelle d'espacement du DS §4 est une base 4 : 4 8 12 16 20 24 32 40 56 72.
+   Elle ne se déclare pas en token — `utilities.css` écrit ses gouttières et ses
+   rembourrages en pixels, ce qui se relit sans multiplication à faire de tête —
+   mais elle reste la règle : aucune valeur d'espacement hors de ces dix. */

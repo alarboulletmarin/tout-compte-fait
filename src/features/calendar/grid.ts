@@ -33,7 +33,7 @@ import {
 } from '@/domain/date'
 import { type Money, ZERO, compare, sub, sum } from '@/domain/money'
 import type { Entry } from '@/domain/types'
-import { t } from '@/i18n/strings'
+import { weekdayNames, weekdayNarrow } from '@/i18n/format'
 
 export const DAYS = 7
 
@@ -80,9 +80,9 @@ export type GridCell = {
  * clé de rendu doit l'être.
  */
 export function weekdays(): { name: string; initial: string }[] {
-  return t.calendarNames.weekdays.map((name, index) => ({
+  return weekdayNames().map((name, index) => ({
     name,
-    initial: t.calendarNames.weekdaysNarrow[index] ?? name.slice(0, 1),
+    initial: weekdayNarrow(index + 1),
   }))
 }
 

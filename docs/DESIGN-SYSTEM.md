@@ -333,7 +333,7 @@ Les trois paliers se règlent sur le conteneur le plus proche, et par défaut c'
 
 Les deux plafonds sont **mesurés, pas décidés** : « 12 345 678,90 » dans la fonte du champ demande 97px, soit 125 avec le cadre ; le capital restant dû d'un crédit, le plus gros chiffre de l'app, en réclame moins. Un `input[type=date]` veut 156px de largeur intrinsèque sous Chrome, davantage sous Safari iOS, qui écrit « 22 septembre 2026 » en toutes lettres là où Chrome écrit une date en chiffres. 12rem couvre les deux et leur laisse de l'air.
 
-**Un plafond, jamais une largeur.** `max-width` borne le `w-full` sans entrer en concurrence avec lui ; deux `width` sur le même élément se départageraient par l'ordre de la feuille générée, `cn` ne fusionnant pas les classes Tailwind. C'est le piège qu'a rencontré la colonne de « À confirmer », dont le champ garde sa largeur de colonne : 96px, sous le plafond, qui ne la touche donc pas.
+**Un plafond, jamais une largeur.** `max-width` borne le `w-full` sans entrer en concurrence avec lui ; deux `width` sur le même élément se départageraient par l'ordre de `utilities.css`, `cn` ne fusionnant rien du tout — il concatène. C'est le piège qu'a rencontré la colonne de « À confirmer », dont le champ garde sa largeur de colonne : 96px, sous le plafond, qui ne la touche donc pas.
 
 La date a son composant, `DateInput`, pour la même raison qu'un montant a le sien : une longueur connue n'a pas à être redécidée par sept appelants. Il reste le contrôle **natif**, qui apporte le clavier de la plateforme, le format local et la saisie au clavier, qu'aucune reconstitution ne rend aussi bien.
 

@@ -140,8 +140,17 @@ export function Amount({
       // atténué, lui, ne la subit pas du tout.
       className={before ? 'mr-[0.18em]' : 'ml-[0.18em]'}
       style={{
+        /* La taille ne bouge pas, et c'est délibéré. Ce qui était faux, c'est
+           l'**alignement** — voir le conteneur plus bas —, pas la réduction :
+           un symbole un peu plus petit que son chiffre est un usage courant et
+           lisible, tant qu'il repose sur la ligne de base.
+           L'essai à la taille des centimes a été mesuré et rendu : à 1024
+           points, « 3 655,85 € » débordait alors de 4px de la tuile Capacité
+           d'épargne, coupé par son `overflow-hidden` — `e2e/mise-en-page` le
+           relève, la sonde d'audit non, puisque le document, lui, ne déborde
+           pas. Le gain d'un symbole plus grand ne valait pas un chiffre
+           tranché. */
         fontSize: '0.55em',
-        lineHeight: 1.2,
         opacity: tone === 'default' ? 'var(--amount-symbol-opacity)' : 1,
       }}
     >
@@ -151,7 +160,20 @@ export function Amount({
 
   return (
     <span
-      className={cn('tnum inline-flex items-start', SIZE_CLASS[size], TONE_CLASS[tone], className)}
+      /* `items-baseline`, et c'est tout le sujet du symbole monétaire.
+         Aligné en tête de boîte — `items-start` — et réduit, il se rendait en
+         **exposant** : « 4 435,54 ᵉ ». C'est un choix graphique, mais il ne
+         survit à aucune des deux langues que l'app parle : ni « 4 435,54 € » ni
+         « €4,435.54 » ne s'écrivent avec un symbole surélevé, et un montant est
+         justement ce qu'on relit sans y penser. Sur la ligne de base, il reste
+         plus petit que l'unité — la hiérarchie du chiffre est intacte — mais il
+         est posé là où l'œil l'attend. */
+      className={cn(
+        'tnum inline-flex items-baseline',
+        SIZE_CLASS[size],
+        TONE_CLASS[tone],
+        className,
+      )}
     >
       {/* Le montant en toutes lettres, en texte et non en `aria-label` : cet
           attribut ne vaut que sur un élément qui porte un rôle, et un `span` nu

@@ -48,7 +48,7 @@ indexeddb
 react
 typescript
 vite
-tailwindcss
+css
 zustand
 french
 open-source

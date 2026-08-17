@@ -120,6 +120,11 @@ export function CalendarPage() {
       {/* Sans note de lecture : le calendrier montre les échéances réelles, où
           une charge commune tombe en entier et n'est à personne. */}
       <MonthHeader />
+      {/* Le calendrier se borne, et c'est l'un des rares écrans qui ait une
+          raison de le faire : sept colonnes de jours étalées sur les 992px d'un
+          grand écran donnent des cases de 140px, qui ne sont plus un calendrier
+          mais un tableau. C'est un écart assumé au bord unique de la page, et le
+          seul de l'app qui soit décidé par le contenu plutôt que subi. */}
       <div className="flex max-w-2xl flex-col gap-4">
         {/* La tuile reste une tuile à toutes les largeurs — coins, cadre, ombre,
             et la marge de la page de chaque côté. Elle resserre seulement son

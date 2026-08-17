@@ -325,7 +325,12 @@ export function SplitPage() {
           existe pour dire. */}
       <MonthHeader withMemberFilter={false} />
 
-      <div className="flex max-w-3xl flex-col gap-4">
+      {/* La largeur de la page. Elle était bornée à 768px pendant que l'en-tête
+          de mois et le bandeau de la coquille prenaient les 992 disponibles :
+          deux bords droits sur le même écran, à 224px l'un de l'autre. Les
+          blocs restent empilés — ils se lisent dans l'ordre, du total aux parts
+          puis au calcul — mais ils s'alignent sur ce qui les surmonte. */}
+      <div className="flex flex-col gap-4">
         <Tile variant="accent">
           <Eyebrow icon={SplitIcon}>{t.split.total}</Eyebrow>
           <Amount value={total} size="tile" className="mt-3" />

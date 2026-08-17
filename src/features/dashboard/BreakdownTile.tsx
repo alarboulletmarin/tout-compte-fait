@@ -96,7 +96,15 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
 
             « Autres » ne s'ouvre pas : ce n'est pas une famille mais le reste
             de la liste, et l'ouvrir promettrait un filtre qui n'existe pas. */}
-        <ul className="flex min-w-0 flex-1 flex-col gap-1">
+        {/* Sans gouttière, et c'est ce qui permet aux rangées d'être visables.
+            Chaque part est une cible de 24px de haut — le plancher de WCAG
+            2.5.8, que la ligne serrée sur son texte violait à 18,2px, mesuré à
+            toutes les largeurs. Cinq rangées de 24 tiennent dans les ~125px que
+            la 2×2 laisse à sa légende ; les mêmes avec 4px de gouttière n'y
+            tiennent pas. Rien n'est perdu au change : la pastille et le libellé
+            gardent leur place, et le survol dessine le bloc de la rangée, ce
+            qui dit mieux qu'une gouttière où commence et où finit la cible. */}
+        <ul className="flex min-w-0 flex-1 flex-col">
           {slices.map((slice) => {
             const openable = onShowFamily !== undefined && slice.categoryId !== OTHER_CATEGORY
             const row = (
@@ -113,7 +121,7 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
                 {openable ? (
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-inner transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2"
+                    className="flex min-h-6 w-full items-center gap-2 rounded-inner transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2"
                     aria-label={tpl(t.dashboard.showFamily, labelOf(slice.categoryId))}
                     onClick={() => {
                       onShowFamily(slice.categoryId)
@@ -122,7 +130,10 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
                     {row}
                   </button>
                 ) : (
-                  <span className="flex items-center gap-2">{row}</span>
+                  /* Même hauteur que ses voisines cliquables : une rangée plus
+                     courte que les autres se lirait comme une rangée d'un autre
+                     genre, alors qu'elle n'est que la seule qui n'ouvre rien. */
+                  <span className="flex min-h-6 items-center gap-2">{row}</span>
                 )}
               </li>
             )
