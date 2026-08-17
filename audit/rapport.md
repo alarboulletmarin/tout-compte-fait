@@ -201,34 +201,33 @@ et écrit dans le code.
 
 ---
 
-## Ce qui reste ouvert
+## Corrigé en cours de route, et ce qui reste ouvert
 
-**`store.test.ts` est instable — issue #97, et `npm run verify` en dépend.**
-Un test par passe échoue environ une fois sur deux, et **pas toujours le même** :
-trois cas différents ont été observés. Ils ne s'exécutaient **pas du tout** avant
-le lot 7 — ils mouraient sur `localStorage.clear()` —, donc ce n'est pas une
+**`store.test.ts` était instable — issue #97, corrigée.** Un test par passe
+échouait environ une fois sur deux, et **pas toujours le même** : trois cas
+différents ont été observés. Ces tests ne s'exécutaient **pas du tout** avant le
+lot 7 — ils mouraient sur `localStorage.clear()` —, donc ce n'était pas une
 régression mais une instabilité révélée.
 
-La cause est identifiée : `freshStore()` appelle `vi.resetModules()`, ce qui
-**abandonne le writer du test précédent** au lieu de l'attendre. `flush()`
-attend pourtant bien l'archivage — `persist` attend `backupDaily`, et
-`writer.flush()` attend sa chaîne —, mais un writer appartenant à une instance
-de module jetée continue d'écrire dans la même base `fake-indexeddb`, et son
-instantané atterrit après que le test suivant a fait son ménage. `backupDaily`
-refusant de réécrire la clé du jour, ce que le test suivant observe dépend du
-tempo.
+La cause : `freshStore()` appelle `vi.resetModules()`, ce qui **abandonne le
+writer du test précédent** au lieu de l'attendre. `flush()` attend pourtant bien
+l'archivage — `persist` attend `backupDaily`, et `writer.flush()` attend sa
+chaîne —, mais un writer appartenant à une instance de module jetée continue
+d'écrire dans la même base `fake-indexeddb`, et son instantané atterrit après que
+le test suivant a fait son ménage. `backupDaily` refusant de réécrire la clé du
+jour, ce que le test suivant observait dépendait du tempo.
 
-Trois correctifs ont été tentés et rendus : vider le document après
-`freshStore()` plutôt qu'avant (sans effet), ajouter `clearBackups()` aux deux
-`beforeEach` (de 1 à 2 fichiers rouges), vider les sauvegardes après `hydrate()`
-(déplace l'échec sur un troisième test). Le vrai remède est probablement
-d'attendre le writer sortant avant de réinitialiser les modules — c'est de la
-plomberie de test de persistance, hors du périmètre de cet audit, et je préfère
-le dire plutôt que de rustiner à l'aveugle. Le fichier passe 3/3 lancé seul.
+Trois correctifs ont d'abord été tentés et rendus, parce qu'ils visaient le
+symptôme : vider le document après `freshStore()` (sans effet), ajouter
+`clearBackups()` aux `beforeEach` (de 1 à 2 fichiers rouges), vider les
+sauvegardes après `hydrate()` (déplace l'échec sur un troisième test). Le
+correctif retenu vise la cause : `freshStore()` garde une référence au store
+sortant et **attend son writer** avant de jeter le module. Une seule variable de
+module, dans le fichier de test ; aucun fichier de production touché.
 
-**Conséquence à connaître :** `npm run verify` est vert environ une passe sur
-trois. Tout le reste de la porte de sortie — typecheck, lint, licences, build,
-budget de taille, CSP — passe systématiquement.
+Mesuré : **13 passes complètes de `npm run test` consécutives, toutes vertes**
+(8 par un agent dédié, 5 en vérification indépendante), puis `npm run verify` de
+bout en bout deux fois sur deux.
 
 **Défaut découvert en phase 3, non traité.** En anglais, le signe se pose entre
 le symbole et le nombre : « € +7,891.00 » là où l'usage écrit « +€7,891.00 ».
