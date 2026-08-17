@@ -520,6 +520,7 @@ export const en: Strings = {
     remaining: 'Left to live on',
     remainingHint: 'available until the next money in',
     remainingNoIncome: 'available until the end of the month',
+    remainingSame: 'same horizon as the forecast, so the same amount',
     breakdown: 'Breakdown',
     upcoming: 'Next payments',
     inflow: 'Money in',

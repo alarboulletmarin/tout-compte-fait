@@ -61,8 +61,13 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
      du prévisionnel — et les deux annoncent le même montant au centime. Ce
      n'est pas une erreur, mais rien ne le disait : la phrase qui les sépare
      vivait sur une lecture secondaire qu'aucune tuile plate n'affiche sous
-     1024px. En rangée, elle se lit à toutes les largeurs. */
-  it('dit l’horizon de chacun quand les deux montants coïncident', () => {
+     1024px. En rangée, elle se lit à toutes les largeurs.
+
+     Et elle dit désormais la coïncidence elle-même. Chaque rangée expliquait
+     son propre horizon, ce qui laissait au lecteur le soin de conclure que deux
+     chiffres identiques n'étaient pas une erreur de calcul — c'est exactement ce
+     qu'un écran ne doit pas laisser faire. */
+  it('dit pourquoi les deux montants coïncident, quand ils coïncident', () => {
     setUp(PAID)
     renderSection()
 
@@ -70,7 +75,9 @@ describe('« Situation » — deux soldes qui se ressemblent', () => {
     expect(amounts.length).toBeGreaterThanOrEqual(2)
 
     expect(screen.getByText(t.dashboard.forecastHint)).toBeInTheDocument()
-    expect(screen.getByText(t.dashboard.remainingNoIncome)).toBeInTheDocument()
+    expect(screen.getByText(t.dashboard.remainingSame)).toBeInTheDocument()
+    /* L'horizon seul ne suffit plus : il décrivait la cause sans nommer l'effet. */
+    expect(screen.queryByText(t.dashboard.remainingNoIncome)).not.toBeInTheDocument()
   })
 
   /* Avec une rentrée d'argent encore à venir, les horizons divergent — et la

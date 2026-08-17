@@ -813,6 +813,12 @@ export const fr = {
     remaining: 'Reste à vivre',
     remainingHint: 'disponible jusqu’à la prochaine rentrée d’argent',
     remainingNoIncome: 'disponible jusqu’à la fin du mois',
+    /* Quand les deux rangées tombent au même centime, et elles y tombent
+       souvent : sans rentrée d'argent à venir, « reste à vivre » prend la fin
+       du mois pour horizon, donc exactement celui du prévisionnel. Deux fois
+       le même chiffre sous deux libellés se lit comme une erreur de calcul ;
+       il faut donc que l'écran dise que c'en est une conséquence. */
+    remainingSame: 'même horizon que le prévisionnel, donc le même montant',
     breakdown: 'Répartition',
     upcoming: 'Prochaines échéances',
     inflow: 'Entrées',

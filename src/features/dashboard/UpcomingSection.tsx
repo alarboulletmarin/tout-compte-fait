@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { ymOf } from '@/domain/date'
 import { upcomingRows } from '@/domain/stats'
 import { t } from '@/i18n/strings'
 import { formatDate, formatRelativeDays } from '@/i18n/format'
 import { cn } from '@/lib/cn'
-import { useCategoryMap, useRecurrences, useUpcoming } from '@/store/selectors'
+import { useCategoryMap, useCurrentYm, useRecurrences, useUpcoming } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -39,9 +40,35 @@ const SOON_DAYS = 2
  * place dans la page suit désormais cette distinction.
  */
 export function UpcomingSection() {
-  const upcoming = useUpcoming(5)
+  /* Large devant cinq : le filtre ci-dessous en écarte, et couper à cinq avant
+     de filtrer rendrait une liste plus courte que ce que la tuile promet. */
+  const upcoming = useUpcoming(20)
   const categories = useCategoryMap()
-  const rows = useMemo(() => upcomingRows(upcoming), [upcoming])
+  const ym = useCurrentYm()
+
+  /**
+   * Ce qui vient **après** le mois affiché, et rien d'autre.
+   *
+   * Deux défauts d'un coup, et ils avaient la même cause. La liste redisait
+   * « À confirmer » ligne pour ligne — les deux blocs lisent les mêmes
+   * échéances non confirmées, l'un pour le mois affiché, l'autre depuis
+   * aujourd'hui —, et elle s'ouvrait sur « il y a 12 jours » alors qu'elle
+   * s'annonce comme ce qui arrive : `upcomingDue` compare au **mois** et non
+   * au jour, une échéance du 5 reste donc listée le 17.
+   *
+   * Écarter le mois affiché règle les deux : ce qui est en retard y est par
+   * définition, et ce qui est à confirmer aussi. Reste ce que l'autre bloc ne
+   * dit pas — ce qui tombe le mois prochain et après —, c'est-à-dire
+   * exactement ce qu'on vient chercher ici.
+   *
+   * Le filtre est posé sur l'affichage et non sur `upcomingDue` : le domaine
+   * répond juste à la question qu'on lui pose, c'est la tuile qui n'en voulait
+   * qu'une partie.
+   */
+  const rows = useMemo(
+    () => upcomingRows(upcoming.filter((item) => ymOf(item.entry.date) > ym)).slice(0, 5),
+    [upcoming, ym],
+  )
   /* Son vide n'a pas la même cause selon qu'une règle existe ou non : sans
      aucune récurrence, c'est un document qui n'a pas démarré, et la phrase dit
      alors le geste qui l'amorce. C'est la distinction que l'écran du mois fait
