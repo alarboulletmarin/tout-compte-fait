@@ -140,11 +140,17 @@ export function Amount({
       // atténué, lui, ne la subit pas du tout.
       className={before ? 'mr-[0.18em]' : 'ml-[0.18em]'}
       style={{
-        /* La taille des centimes, et non 0,55em choisi à part : c'est le même
-           traitement que le reste de la partie décimale, donc une décision de
-           moins et une cohérence de plus. Sur les quatre tailles où les centimes
-           ne se réduisent pas, le symbole ne se réduit pas non plus. */
-        fontSize: CENTS_EM[size],
+        /* La taille ne bouge pas, et c'est délibéré. Ce qui était faux, c'est
+           l'**alignement** — voir le conteneur plus bas —, pas la réduction :
+           un symbole un peu plus petit que son chiffre est un usage courant et
+           lisible, tant qu'il repose sur la ligne de base.
+           L'essai à la taille des centimes a été mesuré et rendu : à 1024
+           points, « 3 655,85 € » débordait alors de 4px de la tuile Capacité
+           d'épargne, coupé par son `overflow-hidden` — `e2e/mise-en-page` le
+           relève, la sonde d'audit non, puisque le document, lui, ne déborde
+           pas. Le gain d'un symbole plus grand ne valait pas un chiffre
+           tranché. */
+        fontSize: '0.55em',
         opacity: tone === 'default' ? 'var(--amount-symbol-opacity)' : 1,
       }}
     >
