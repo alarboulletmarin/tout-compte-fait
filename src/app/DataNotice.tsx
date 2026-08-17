@@ -17,6 +17,7 @@ import {
 } from '@/persistence/transfer'
 import { useHasAnyData } from '@/store/selectors'
 import { useStore } from '@/store/store'
+import { Banner } from '@/ui/Banner'
 import { IconButton } from '@/ui/Button'
 import { Close } from '@/ui/Icons'
 import { SwipeAway } from '@/ui/SwipeAway'
@@ -41,29 +42,23 @@ import { StorageAlert } from './StorageAlert'
 function DurabilityNotice({ onDismiss }: { onDismiss: () => void }) {
   return (
     <SwipeAway onDismiss={onDismiss} label={t.storage.durabilityLabel} className="mb-4 block">
-      {/* La mise en page du rappel d'export, aux mêmes tokens : ce sont deux
-          messages du même domaine, qui ne s'affichent jamais ensemble, et deux
-          gabarits pour un même objet auraient fini par diverger. */}
-      <div className="tile flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="t-body">{t.storage.durabilityTitle}</p>
-          <p className="t-label">{t.storage.durabilityBody}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-          {/* Vers la vue des données, qui porte l'export **et** l'état du
-              stockage depuis qu'elle le résume : le geste et sa raison au même
-              endroit. */}
-          <Link
-            to={DATA_PATH}
-            className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
-          >
-            {t.settings.export}
-          </Link>
-          <IconButton label={t.storage.durabilityDismiss} onClick={onDismiss}>
-            <Close size={18} />
-          </IconButton>
-        </div>
-      </div>
+      {/* Le gabarit du rappel d'export et de l'échec d'écriture, parce que c'est
+          le même objet : trois messages du même domaine, qui ne s'affichent
+          jamais ensemble. Écrit une fois, dans `ui/Banner`. */}
+      <Banner title={t.storage.durabilityTitle} body={t.storage.durabilityBody}>
+        {/* Vers la vue des données, qui porte l'export **et** l'état du
+            stockage depuis qu'elle le résume : le geste et sa raison au même
+            endroit. */}
+        <Link
+          to={DATA_PATH}
+          className="inline-flex h-11 items-center justify-center rounded-input bg-accent px-5 font-medium text-accent-fg"
+        >
+          {t.settings.export}
+        </Link>
+        <IconButton label={t.storage.durabilityDismiss} onClick={onDismiss}>
+          <Close size={18} />
+        </IconButton>
+      </Banner>
     </SwipeAway>
   )
 }

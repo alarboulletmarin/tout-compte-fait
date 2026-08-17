@@ -2,6 +2,7 @@ import { today } from '@/domain/date'
 import { t } from '@/i18n/strings'
 import { downloadExport } from '@/persistence/transfer'
 import { useStore } from '@/store/store'
+import { Banner } from '@/ui/Banner'
 import { Button } from '@/ui/Button'
 import { toast } from '@/ui/toast'
 
@@ -34,17 +35,15 @@ export function StorageAlert() {
   if (error === null) return null
 
   return (
-    <div
+    <Banner
       role="alert"
-      aria-label={t.storage.writeFailedLabel}
-      className="tile mb-4 flex flex-col gap-3 border-danger p-4 sm:flex-row sm:items-center"
+      label={t.storage.writeFailedLabel}
+      tone="danger"
+      className="mb-4"
+      title={error.message}
+      body={t.storage.writeFailedBody}
     >
-      <div className="flex min-w-0 flex-1 flex-col">
-        <p className="t-body font-semibold text-danger-text">{error.message}</p>
-        <p className="t-label">{t.storage.writeFailedBody}</p>
-      </div>
       <Button
-        className="shrink-0 self-end sm:self-auto"
         onClick={() => {
           downloadExport(data, today())
           toast(t.settings.exported)
@@ -52,6 +51,6 @@ export function StorageAlert() {
       >
         {t.storage.exportNow}
       </Button>
-    </div>
+    </Banner>
   )
 }
