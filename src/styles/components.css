@@ -92,13 +92,41 @@
     color: var(--accent-2-fg);
   }
 
+  /* L'étiquette d'une tuile — mono 11px majuscules (DS §6).
+   *
+   * **Sans fond par défaut, et c'est un retrait mesuré.** Elle portait une
+   * pilule grise partout : quatorze pilules identiques sur l'écran du mois à
+   * 375 points, comptées par le harnais d'audit. Un motif qui revient sur
+   * chaque carte cesse d'en repérer aucune — il devient la ponctuation du
+   * fond, et l'œil le saute.
+   *
+   * Le fond n'est pas supprimé, il est **rendu à ce qui le justifie** : une
+   * pilule détache l'étiquette d'un fond coloré, et sur du blanc elle ne
+   * détache rien. Les tuiles accentuées la gardent donc, par `--eyebrow-bg`
+   * qu'elles repointent déjà (voir `.tile--accent` plus haut), et elles seules.
+   * Le DS §6 le permet sans se contredire : ce qui donne le rythme est
+   * l'étiquette — sa casse, sa graisse, son mono —, pas le jeton qui l'entoure.
+   *
+   * Rien n'est perdu du côté du sens : le libellé, son glyphe et son contraste
+   * ne bougent pas.
+   */
   .eyebrow-pill {
-    background-color: var(--eyebrow-bg, var(--surface-2));
+    background-color: var(--eyebrow-bg, transparent);
     color: var(--eyebrow-fg, var(--text-muted));
     /* Une étiquette sur deux lignes pousse le chiffre hors de sa tuile : elle
        tient sur une ligne, et c'est la tuile qui décide ce qu'elle peut y
        mettre — voir la requête de conteneur plus bas. */
     white-space: nowrap;
+  }
+
+  /* Le rembourrage horizontal suit le fond : sans pilule, il décalerait
+     l'étiquette de huit pixels par rapport au chiffre qu'elle coiffe, et la
+     tuile perdrait son alignement gauche. Le vertical reste, lui, pour que la
+     hauteur des tuiles ne bouge pas d'un pixel — c'est un retrait de décor, pas
+     une reprise de la grille. */
+  .tile--accent .eyebrow-pill,
+  .tile--accent-2 .eyebrow-pill {
+    padding-inline: 8px;
   }
 
   /* Les 2×1 de la grille mobile n'offrent qu'une centaine de pixels utiles : à
@@ -112,8 +140,16 @@
      le texte, et le texte jamais. */
   @container (max-width: 200px) {
     .eyebrow-pill {
-      padding-inline: 6px;
       letter-spacing: 0.04em;
+    }
+
+    /* Le rembourrage ne se resserre que là où il existe — sur les tuiles
+       accentuées, seules à garder la pilule. Ailleurs il vaut déjà zéro, et
+       une règle qui en poserait six ici *ajouterait* de la marge au palier
+       censé en rendre. */
+    .tile--accent .eyebrow-pill,
+    .tile--accent-2 .eyebrow-pill {
+      padding-inline: 6px;
     }
 
     /* Le glyphe part dès ce palier quand la mesure porte sur **la place qui
@@ -156,8 +192,12 @@
      ne reste que le libellé, et un libellé ne se coupe pas. */
   @container (max-width: 124px) {
     .eyebrow-pill {
-      padding-inline: 4px;
       letter-spacing: 0;
+    }
+
+    .tile--accent .eyebrow-pill,
+    .tile--accent-2 .eyebrow-pill {
+      padding-inline: 4px;
     }
 
     .eyebrow-pill > svg {

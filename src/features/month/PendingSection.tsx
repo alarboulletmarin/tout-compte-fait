@@ -96,8 +96,23 @@ function ConfirmButton({
   disabled?: boolean
 }) {
   return (
+    /* `secondary`, et c'est une économie d'accent plutôt qu'une rétrogradation.
+       Ces coches étaient en accent, donc cinq à sept pastilles lime empilées
+       dans la carte, juste sous le bouton « Confirmer le mois » qui l'est
+       aussi : sur l'écran du mois, l'accent portait huit rôles à la fois — la
+       tuile du solde, l'onglet actif, le bouton flottant, l'action principale,
+       deux jeux de pilules, le bandeau, et ces coches. Une couleur qui dit tout
+       ne signale plus rien.
+
+       Ce qu'on garde, ce sont les rôles **uniques** de l'écran : une tuile, une
+       action principale, une position dans la navigation. Ce qu'on rend, ce
+       sont les rôles **répétés** — et une coche par ligne est le cas le plus
+       répété de l'app. Le geste ne perd rien : le glyphe dit ce qu'il fait, sa
+       cible tactile ne bouge pas, et le bouton qui confirme tout d'un coup
+       reste, lui, en accent. */
     <Button
       size="sm"
+      variant="secondary"
       aria-label={tpl(t.month.confirmEntry, label)}
       className="shrink-0"
       {...(disabled === undefined ? {} : { disabled })}
