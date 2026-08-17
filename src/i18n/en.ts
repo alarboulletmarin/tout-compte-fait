@@ -294,7 +294,7 @@ export const en: Strings = {
       'The browser promised nothing: it may erase your data if it runs short of space. A regular export remains the real protection.',
     persistUnknown:
       'This browser doesn’t say whether it keeps your data. That isn’t a refusal, but it can’t be relied on: a regular export remains the real protection.',
-    persistAsked: 'Retention has already been asked of it.',
+    persistAsked: 'Persistent storage has already been requested from it.',
     installHint:
       'An app installed on the home screen is less exposed: iOS erases the data of sites you haven’t opened for about a week.',
     persistAsk: 'Ask it to keep them',
@@ -508,7 +508,7 @@ export const en: Strings = {
     balance: 'Month balance',
     income: 'Income',
     incomeLeft: 'of which %s still to come',
-    incomeAllIn: 'everything is already in',
+    incomeAllIn: 'all of it has come in',
     incomeNone: 'no income this month',
     charges: 'Costs',
     chargesLeft: '%s left to pay',
@@ -555,7 +555,7 @@ export const en: Strings = {
     split: 'Split',
     splitHint: 'shared costs of the month',
     showSplit: 'See the detail of the split',
-    showMemberShare: 'See the detail of what there is to pay',
+    showMemberShare: 'See the detail of what each one owes',
 
     memberShare: 'To pay into the pot',
     memberShareOf: 'To pay into the pot · %s',
@@ -641,7 +641,7 @@ export const en: Strings = {
     pendingMore: '… and %s more to confirm.',
     pendingShowAll: 'Show all',
     toFill: 'to fill in',
-    confirmAllHint: 'Amounts still to fill in stay to be confirmed one by one.',
+    confirmAllHint: 'Amounts you still have to fill in stay unconfirmed, one by one.',
     openEntry: 'Edit %s',
     done: 'Everything is confirmed for this month.',
     unconfirm: 'Put back to confirm',
