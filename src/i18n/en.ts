@@ -145,6 +145,10 @@ export const en: Strings = {
     label: 'Language',
     fr: 'Français',
     en: 'English',
+    /* Les codes ISO sont les mêmes des deux côtés, pour la même raison que les
+       noms de langue au-dessus : un code ne se traduit pas. Voir `fr.ts`. */
+    frShort: 'FR',
+    enShort: 'EN',
     hint: 'Only the interface changes, not your entries.',
   },
 

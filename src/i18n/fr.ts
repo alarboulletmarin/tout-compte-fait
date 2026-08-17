@@ -180,6 +180,20 @@ export const fr = {
     label: 'Langue',
     fr: 'Français',
     en: 'English',
+    /**
+     * Les deux mêmes langues, en deux lettres, pour la bascule des écrans
+     * d'avant le foyer — où le réglage n'est pas le sujet et n'a pas à prendre
+     * la largeur d'un titre.
+     *
+     * Ce n'est pas une entorse à la règle du dessus, c'est la même : un code
+     * ISO 639-1 ne se traduit pas — il vaut « FR » et « EN » dans les deux
+     * catalogues, comme « Français » et « English » y valaient déjà eux-mêmes.
+     * Il se reconnaît donc sans lire un mot de ce qui l'entoure, ce qui est
+     * tout ce qu'on demande à ce sélecteur. Le nom complet, lui, ne disparaît
+     * pas : il reste le nom accessible du bouton.
+     */
+    frShort: 'FR',
+    enShort: 'EN',
     /* Ce que le réglage ne fait pas, comme la devise juste en dessous : il
        traduit l'interface, pas ce qu'on a saisi. Un foyer qui a nommé ses
        catégories en français les garde en français. */

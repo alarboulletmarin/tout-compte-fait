@@ -393,6 +393,10 @@ Une feuille dont le **texte est le propos**, et non le décor d'un formulaire, d
 
 **Amount** — composant unique pour tout montant. Props : valeur en centimes, taille, sens. Gère seul le tabular-nums, le symbole, les centimes réduits et la couleur.
 
+**Segmented** — groupe de boutons radio, deux à six positions qui s'excluent. Il annonce `radiogroup` et se comporte comme tel : une seule tabulation pour tout le groupe, sur la position cochée, les flèches déplacent choix et focus ensemble et en boucle, Origine et Fin vont aux extrémités. Il passe à la ligne plutôt que de déborder — l'anneau de focus mord de 4px hors du bouton, et un `overflow` le rognerait.
+
+Une position peut se dire **court** (`short`) : un carré de 44px où tient un code de langue ou un glyphe, le libellé complet passant en `aria-label`. Ce qui rétrécit est la boîte, pas le sens — même forme, même vert de position active, même clavier. Un groupe l'emploie pour toutes ses positions ou pour aucune : trois pilules dont une seule serait un carré ne se liraient plus comme un même choix, et les cibles cesseraient d'avoir la même valeur. Réservé aux écrans où le réglage **n'est pas le sujet** — la présentation et `PlainShell` ; voir plus bas « un réglage qui peut être faux se règle là où il peut l'être », qui dit à quelle condition on a le droit de raccourcir. La vue qui a le réglage pour titre garde les libellés pleins.
+
 **Checkbox** — un attribut vrai ou faux, pas un choix entre deux modes : `Segmented` sert à choisir parmi des positions qui s'excluent, la case dit qu'une chose est vraie ou ne l'est pas. Carré de 24px dans une cible de 44px, coché en `--accent` sur texte encre — lime reste un remplissage. La case native reste dans le DOM, masquée : c'est elle qui porte l'état pour un lecteur d'écran et qui répond à la barre d'espace. Elle peut être **verrouillée** — cochée, non modifiable, et alors toujours accompagnée d'un `hint` qui dit pourquoi : une case bloquée sans raison se lit comme une panne. Elle garde sa couleur de texte pleine, contrairement aux boutons désactivés : elle n'est pas hors service, elle informe, et atténuer sous le plancher AA du §8 ce qu'on met là pour être lu reviendrait à le cacher. Elle reste affichée plutôt que de disparaître quand elle informe de ce qui va se passer ; elle se retire quand la question ne se pose pas.
 
 **Disclosure** — section repliable, sur `<details>` natif : il porte déjà l'état pour un lecteur d'écran, répond au clavier, et la recherche dans la page sait ouvrir ce qui est replié. En-tête de 44px, chevron qui pivote, et une lecture de droite — total ou compte — qui reste visible replié : une section qu'il faut ouvrir pour savoir si elle vaut la peine ne fait pas gagner de défilement. Une liste longue s'accompagne d'un « tout replier ».
@@ -454,9 +458,17 @@ Le prix est assumé et se dit : les récurrences passent de un à deux appuis, e
 
 **Un réglage qui peut être faux se règle là où il peut l'être.** La langue et le thème vivaient derrière l'app — « Plus » pour l'une, « Apparence » pour l'autre —, c'est-à-dire **derrière la création d'un document**. Or la langue est *détectée* sur `navigator.languages`, et une détection se trompe : un francophone sur un système en anglais lisait toute la présentation et tout l'onboarding en anglais, et la seule façon d'en sortir était de créer un foyer dans une langue dont il ne voulait pas, puis d'aller le corriger.
 
-Les deux réglages sont donc aussi sur les écrans d'avant le foyer — la présentation et les quatre pages de `PlainShell` —, dans les mêmes contrôles qu'à l'intérieur : un concept garde sa forme partout. Le `Segmented` est ce qu'il faut ici plus qu'ailleurs, parce qu'on vient l'y chercher *précisément parce qu'on ne lit pas* ce qui est affiché — « English » se reconnaît sans comprendre un mot de ce qui l'entoure, ce qu'un sélecteur replié ne permet pas. En tête et non en pied : celui qui lit dans la mauvaise langue lit depuis le haut.
+Les deux réglages sont donc aussi sur les écrans d'avant le foyer — la présentation et les quatre pages de `PlainShell` —, dans le même contrôle qu'à l'intérieur : un concept garde sa forme partout. Le `Segmented` est ce qu'il faut ici plus qu'ailleurs, parce qu'on vient l'y chercher *précisément parce qu'on ne lit pas* ce qui est affiché — un contrôle replié, qui n'affiche que sa valeur courante, demanderait de l'ouvrir pour savoir ce qu'il propose. En tête et non en pied : celui qui lit dans la mauvaise langue lit depuis le haut.
+
+**Mais un réglage secondaire ne prend pas la première position.** Les deux bascules l'ont prise : cinq pilules à libellé plein — « Français | English » et « Clair | Sombre | Système » — ouvraient la présentation, remplissaient la largeur d'un téléphone et se lisaient avant le nom du produit. Le parcours de cette page est « produit → promesse → explication → action », et il commençait par « réglages ». Ce qui est là ne sert pas le job-to-be-done de la page, il sert **celui qui est arrivé au mauvais endroit du réglage** : il faut qu'il le trouve, pas qu'on le lui mette devant le titre.
+
+D'où la **densité courte** du `Segmented` (`short`), qui est la même bascule et non une seconde : « FR | EN » et trois glyphes — soleil, lune, demi-disque —, cinq carrés de 44px au lieu de cinq pilules, environ 250px contre la largeur entière d'une 320. Ce qui rétrécit est la boîte, pas le sens : le libellé complet reste le **nom accessible** du bouton, et un code ISO se reconnaît sans lire un mot de ce qui l'entoure, exactement comme « English » — c'est tout ce qu'on demande à ce sélecteur. La rangée est alors collée au-dessus de l'étiquette du titre plutôt que séparée par la gouttière de section : à `gap-10` elle formait une bande à elle seule, que l'œil comptait comme une section.
+
+**« Système » reste une position visible**, et non un repli derrière un appui long. Un appui long ne s'annonce nulle part et n'existe pas au clavier, ce qui rangerait le mode le plus utile là où personne ne le trouve — mais l'argument dirimant est ailleurs : c'est le **défaut**, donc l'état de la quasi-totalité des visiteurs, et une bascule à deux positions ne saurait pas le montrer. Ni le soleil ni la lune ne serait allumé, ou l'un des deux mentirait. Un glyphe de plus coûte 44px et dit l'état vrai.
 
 Rien ne s'enregistre pour autant. `setLocale` et `setTheme` mirent leur préférence en `localStorage` *avant* de toucher au document, et `mutate` ne programme aucune écriture tant que le statut vaut « onboarding » — la garde qui empêche un foyer fantôme est celle qui rend ces contrôles possibles sans exception nouvelle. L'onboarding, lui, ne les porte pas : son en-tête est une jauge, cinq positions de plus l'écrasent à 320px, et son premier retour ramène à la présentation, qui les a.
+
+La densité courte s'arrête là. « Apparence » et « Plus » gardent les libellés pleins : ce sont les vues du réglage, on y vient exprès, et un écran qui a pour sujet le thème n'a pas à faire deviner ce que désigne un demi-disque.
 
 **Bouton de saisie flottant** — un disque de 56px en lime, **au milieu de la barre d'onglets et à cheval sur elle**, sous les surcouches. Il n'existe que sous 1024px : au-delà, la rangée de boutons en tête de l'écran du mois est à l'écran et ne défile jamais hors de vue. Une porte par largeur et pas deux — les mêmes trois boutons deux fois sur un écran ne font pas deux occasions.
 
@@ -522,7 +534,7 @@ Un seul point d'entrée, `ui/Icons.tsx`, qui réexporte sous des noms à nous. A
 
 | Emploi | Où | Taille |
 |---|---|---|
-| **Action** | Sur un contrôle qui fait quelque chose : chevron, plus, croix, coche | 16–20px |
+| **Action** | Sur un contrôle qui fait quelque chose : chevron, plus, croix, coche, les trois positions du thème en densité courte | 16–20px |
 | **Repère** | Sur un onglet, une tuile, une section, une rangée de navigation — pour la retrouver à l'œil sans relire son libellé | 13px dans un eyebrow, 18px en navigation |
 
 Rien en dehors. Une icône qui n'aide ni à agir ni à se repérer décore, et §1 ne veut pas de décor. En particulier : **jamais d'icône sur une ligne de données** — une entrée du mois porte déjà sa pastille de catégorie, et deux marqueurs à la même place n'en font plus aucun.
@@ -534,6 +546,7 @@ La frontière est là, et pas ailleurs : une `ListRow` montre une **donnée** �
 | Règle | Pourquoi |
 |---|---|
 | `aria-hidden` systématique | Le libellé adjacent porte déjà le sens ; annoncer le glyphe le dirait deux fois |
+| Un glyphe seul dans un contrôle : le libellé passe en `aria-label` du contrôle | La règle du dessus rendrait le bouton muet — il faut que le nom existe quelque part, et c'est le contrôle qui le porte, jamais le glyphe |
 | Un glyphe par destination, déclaré une seule fois (`app/routes.ts`) | La barre d'onglets et la colonne latérale ne peuvent pas diverger |
 | L'onglet actif est une pilule `--accent` derrière le glyphe | Lime reste un remplissage, jamais une `color` (§2.3) |
 | Le même concept garde le même glyphe partout | « Abonnements » est le même cycle en navigation, en tuile et en total |

@@ -12,6 +12,41 @@ qu'un fichier exporté aujourd'hui se rouvre demain.
 
 ## [Non publié]
 
+### Modifié — la présentation s'ouvre sur le produit, pas sur ses réglages
+
+- **La langue et le thème rétrécissent.** Ils ouvraient la page en cinq pilules
+  à libellé plein — « Français | English » et « Clair | Sombre | Système » —,
+  soit la largeur entière d'un téléphone occupée par deux préférences
+  secondaires, lues avant le nom du produit. Le parcours de cette page est
+  « produit → promesse → explication → action », et il commençait par
+  « réglages ». C'est désormais « FR | EN » et trois glyphes : cinq carrés de
+  44px, environ 250px en tout, collés au-dessus de l'étiquette du titre plutôt
+  que séparés par la gouttière de section, où ils formaient une bande à eux
+  seuls que l'œil comptait comme une section.
+- **Le contrôle ne change pas**, seulement sa densité : c'est le même
+  `Segmented`, pas un menu ni un sélecteur replié. L'argument qui l'avait mis là
+  tient toujours — on vient le chercher *précisément parce qu'on ne lit pas* ce
+  qui est affiché, et un contrôle qui n'affiche que sa valeur courante demande
+  de l'ouvrir pour savoir ce qu'il propose. « EN » se reconnaît sans comprendre
+  un mot de ce qui l'entoure, exactement comme « English », et pour la même
+  raison qu'une langue se nomme dans la sienne : un code ISO ne se traduit pas.
+- **Ce qui rétrécit est la boîte, pas le sens.** Le libellé complet reste le nom
+  accessible de chaque position : un lecteur d'écran annonce « Français » et
+  « Système » là où l'œil voit « FR » et un demi-disque. Sans quoi la bascule du
+  thème, qui n'a plus aucun texte, n'aurait plus rien annoncé du tout.
+- **« Système » reste une position visible**, et non un repli derrière un appui
+  long. Un appui long ne s'annonce nulle part et n'existe pas au clavier — ce
+  serait ranger le mode le plus utile là où personne ne le trouve. Mais surtout
+  c'est le **défaut**, donc l'état de presque tous les visiteurs, et une bascule
+  à deux positions ne saurait pas le montrer : ni le soleil ni la lune ne serait
+  allumé, ou l'un des deux mentirait. Un glyphe de plus coûte 44px et dit l'état
+  vrai.
+- **Les vues du réglage gardent leurs libellés pleins.** « Apparence » et
+  « Plus » ne bougent pas : on y vient exprès, elles ont le réglage pour titre,
+  et un écran qui traite du thème n'a pas à faire deviner ce que désigne un
+  demi-disque. La densité courte est réservée aux écrans où le réglage n'est
+  pas le sujet.
+
 ### Modifié — la simulation ne projette plus que des comptes, et tient dans une page
 
 - **On coche des comptes, et c'est tout.** L'écran demandait d'abord *d'où

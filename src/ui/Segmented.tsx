@@ -1,7 +1,20 @@
-import { type KeyboardEvent, useRef } from 'react'
+import { type KeyboardEvent, type ReactNode, useRef } from 'react'
 import { cn } from '@/lib/cn'
 
-export type SegmentedOption<T extends string> = { value: T; label: string }
+export type SegmentedOption<T extends string> = {
+  value: T
+  label: string
+  /**
+   * Ce qu'on voit, quand ce n'est pas ce qui se dit — « FR » pour
+   * « Français », un soleil pour « Clair ». Le libellé reste le **nom
+   * accessible** du bouton : ce qui rétrécit est la boîte, pas le sens.
+   *
+   * Un groupe l'emploie pour toutes ses positions ou pour aucune. Trois
+   * pilules dont une seule serait un carré ne se liraient plus comme un même
+   * choix, et les cibles cesseraient d'avoir la même valeur.
+   */
+  short?: ReactNode
+}
 
 export type SegmentedProps<T extends string> = {
   options: readonly SegmentedOption<T>[]
@@ -41,6 +54,13 @@ export type SegmentedProps<T extends string> = {
  * `preventDefault` sur les touches prises : c'est ce qui empêche les flèches de
  * changer aussi de mois (voir `useHotkeys`), et le motif que suit déjà le
  * curseur des graphiques.
+ *
+ * **Une position peut se dire court** (`short`) : un carré de 44px où tient un
+ * code de langue ou un glyphe, le libellé complet passant en nom accessible.
+ * C'est la même bascule et non une seconde — la forme, le vert de la position
+ * active, le clavier et le repli sont ceux d'au-dessus. Elle sert là où le
+ * réglage n'est pas le sujet de l'écran : voir `app/PublicPreferences.tsx`, qui
+ * dit à quelle condition on a le droit de raccourcir.
  */
 export function Segmented<T extends string>({
   options,
@@ -101,6 +121,7 @@ export function Segmented<T extends string>({
     >
       {options.map((option, index) => {
         const active = option.value === value
+        const short = option.short !== undefined
         return (
           <button
             key={option.value}
@@ -111,16 +132,27 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={active}
             tabIndex={index === stop ? 0 : -1}
+            /* Le libellé complet reste le nom accessible d'une position
+               raccourcie : la boîte rétrécit, ce qu'un lecteur d'écran annonce
+               ne bouge pas. Rien quand le bouton porte déjà son libellé — un
+               `aria-label` qui répète le texte visible n'ajoute que le risque
+               qu'ils divergent un jour. */
+            aria-label={short ? option.label : undefined}
             onClick={() => {
               onChange(option.value)
             }}
             className={cn(
-              'min-h-11 rounded-chip px-3.5 text-[13px] font-medium',
+              'min-h-11 rounded-chip text-[13px] font-medium',
               'transition-colors duration-[var(--dur)] ease-ds',
+              /* Le carré exact du §8 plutôt qu'une pilule de deux lettres :
+                 « FR » et « EN » n'ont pas la même largeur de rendu, et deux
+                 cibles inégales pour deux choix de même poids se lisent comme
+                 une hiérarchie qui n'existe pas. */
+              short ? 'inline-flex w-11 items-center justify-center' : 'px-3.5',
               active ? 'bg-accent text-accent-fg' : 'text-muted hover:text-text',
             )}
           >
-            {option.label}
+            {option.short ?? option.label}
           </button>
         )
       })}

@@ -67,91 +67,103 @@ export function LandingPage() {
        page prétend montrer ; et sur une 2×1 à 320px, ces huit pixels sont huit
        pour cent de la place disponible. */
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-10 md:px-8 md:py-14">
-      {/* En tête et non dans le pied : c'est le premier écran d'un visiteur, et
-          celui qui le lit dans la mauvaise langue le lit depuis le haut. Un
-          réglage posé au bas d'une page de cette longueur demanderait de la
-          parcourir entière pour trouver comment ne pas avoir à la parcourir. */}
-      <PublicPreferences />
+      {/* Les réglages et le titre dans le même bloc, à `gap-4` : c'est ce qui
+          les rend accessoires. Séparés par le `gap-10` de la page, ils
+          formaient une bande à eux seuls, en première position, et l'œil les
+          comptait comme une section — alors que le parcours de cette page est
+          « produit → promesse → explication → action » et qu'ils n'en sont
+          aucune des quatre. Collés au-dessus de l'étiquette et alignés à
+          droite, ils redeviennent ce qu'ils sont : le coin où l'on va quand on
+          est arrivé dans la mauvaise langue.
 
-      <header className="flex flex-col gap-5">
-        {/* L'étiquette colle à ce qu'elle nomme, comme partout ailleurs — la
-            colonne latérale et l'en-tête des deux questions la posent juste
-            au-dessus de leur titre. Laissée dans le `gap-5` du bloc, elle se
-            détachait à la même distance que le paragraphe : cinq éléments à
-            intervalle égal ne font plus une hiérarchie, ils font une liste. */}
-        <div className="flex flex-col gap-2">
-          <span className="t-eyebrow text-muted">{t.app.name}</span>
-          <h1 className="t-hero-fit max-w-[16ch]">{t.app.tagline}</h1>
-        </div>
-        <p className="t-body max-w-prose">{landing.intro}</p>
+          En tête et non dans le pied, pour autant : c'est le premier écran d'un
+          visiteur, et celui qui le lit dans la mauvaise langue le lit depuis le
+          haut. Un réglage posé au bas d'une page de cette longueur demanderait
+          de la parcourir entière pour trouver comment ne pas avoir à la
+          parcourir. */}
+      <div className="flex flex-col gap-4">
+        <PublicPreferences />
 
-        {/* Tant que l'hydratation n'a pas répondu, on ne sait pas encore quoi
-            proposer. Rien plutôt qu'un bouton qui changerait de sens sous le
-            doigt — la lecture de la base se compte en dizaines de
-            millisecondes, et un libellé qui se corrige se remarque plus qu'une
-            rangée qui apparaît. */}
-        {/* Rien non plus quand le document ne se lit pas : « Créer mon suivi »
-            écraserait ce qu'on n'a pas su ouvrir, et le bloc de récupération
-            juste dessous porte déjà les quatre recours, dans leur ordre. */}
-        {status !== 'loading' && !unreadable && (
-          <>
-            {empty ? (
-              /* La rangée et sa légende, en colonne : « Charger l'exemple » dit
-                 le geste sans dire pourquoi on le ferait, et la phrase qui le
-                 disait — `landing.exampleHint` — était écrite depuis le début
-                 sans être branchée nulle part. Sous les deux boutons plutôt
-                 qu'à côté du second : une légende posée dans une rangée qui
-                 passe à la ligne à 320px se retrouve un jour au-dessus de ce
-                 qu'elle légende. */
-              <div className="flex flex-col gap-2">
+        <header className="flex flex-col gap-5">
+          {/* L'étiquette colle à ce qu'elle nomme, comme partout ailleurs — la
+              colonne latérale et l'en-tête des deux questions la posent juste
+              au-dessus de leur titre. Laissée dans le `gap-5` du bloc, elle se
+              détachait à la même distance que le paragraphe : cinq éléments à
+              intervalle égal ne font plus une hiérarchie, ils font une liste. */}
+          <div className="flex flex-col gap-2">
+            <span className="t-eyebrow text-muted">{t.app.name}</span>
+            <h1 className="t-hero-fit max-w-[16ch]">{t.app.tagline}</h1>
+          </div>
+          <p className="t-body max-w-prose">{landing.intro}</p>
+
+          {/* Tant que l'hydratation n'a pas répondu, on ne sait pas encore quoi
+              proposer. Rien plutôt qu'un bouton qui changerait de sens sous le
+              doigt — la lecture de la base se compte en dizaines de
+              millisecondes, et un libellé qui se corrige se remarque plus qu'une
+              rangée qui apparaît. */}
+          {/* Rien non plus quand le document ne se lit pas : « Créer mon suivi »
+              écraserait ce qu'on n'a pas su ouvrir, et le bloc de récupération
+              juste dessous porte déjà les quatre recours, dans leur ordre. */}
+          {status !== 'loading' && !unreadable && (
+            <>
+              {empty ? (
+                /* La rangée et sa légende, en colonne : « Charger l'exemple » dit
+                   le geste sans dire pourquoi on le ferait, et la phrase qui le
+                   disait — `landing.exampleHint` — était écrite depuis le début
+                   sans être branchée nulle part. Sous les deux boutons plutôt
+                   qu'à côté du second : une légende posée dans une rangée qui
+                   passe à la ligne à 320px se retrouve un jour au-dessus de ce
+                   qu'elle légende. */
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      onClick={() => {
+                        void navigate(ONBOARDING_PATH)
+                      }}
+                    >
+                      {landing.start}
+                    </Button>
+                    {/* Aucune confirmation : rien n'a encore été enregistré, et
+                        faire confirmer la perte de rien n'apprend qu'une chose —
+                        que les questions de cette app ne veulent rien dire. */}
+                    <ExampleControl confirm={false} />
+                  </div>
+                  <p className="t-label">{landing.exampleHint}</p>
+                </div>
+              ) : (
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     onClick={() => {
-                      void navigate(ONBOARDING_PATH)
+                      void navigate('/')
                     }}
                   >
-                    {landing.start}
+                    {landing.open}
                   </Button>
-                  {/* Aucune confirmation : rien n'a encore été enregistré, et
-                      faire confirmer la perte de rien n'apprend qu'une chose —
-                      que les questions de cette app ne veulent rien dire. */}
-                  <ExampleControl confirm={false} />
                 </div>
-                <p className="t-label">{landing.exampleHint}</p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={() => {
-                    void navigate('/')
-                  }}
-                >
-                  {landing.open}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
 
-        {/* Les deux moitiés de la même réponse, dans un seul bloc. La première
-            dit d'où ne viennent pas les données ; la seconde dit pourquoi c'est
-            gratuit, et son silence se lisait comme un piège. Le raisonnement
-            était écrit dans le README — « aucun backend, donc aucun coût de
-            fonctionnement » — et n'avait jamais atteint la page qui en a
-            besoin. `gap-1` : elles se répondent, elles ne font pas deux points
-            d'une liste. */}
-        <div className="flex flex-col gap-1">
-          <p className="t-label">{landing.privacy}</p>
-          <p className="t-label">{landing.free}</p>
-        </div>
+          {/* Les deux moitiés de la même réponse, dans un seul bloc. La première
+              dit d'où ne viennent pas les données ; la seconde dit pourquoi c'est
+              gratuit, et son silence se lisait comme un piège. Le raisonnement
+              était écrit dans le README — « aucun backend, donc aucun coût de
+              fonctionnement » — et n'avait jamais atteint la page qui en a
+              besoin. `gap-1` : elles se répondent, elles ne font pas deux points
+              d'une liste. */}
+          <div className="flex flex-col gap-1">
+            <p className="t-label">{landing.privacy}</p>
+            <p className="t-label">{landing.free}</p>
+          </div>
 
-        {/* Juste sous les phrases qui disent qu'il n'y a ni compte ni serveur :
-            ce sont elles qui posent la question à laquelle l'installation
-            répond — s'il n'y a de copie nulle part, qu'est-ce qui garde
-            celle-ci ? Elle ne s'affiche que quand le navigateur a de quoi la
-            tenir. */}
-        <InstallBanner />
-      </header>
+          {/* Juste sous les phrases qui disent qu'il n'y a ni compte ni serveur :
+              ce sont elles qui posent la question à laquelle l'installation
+              répond — s'il n'y a de copie nulle part, qu'est-ce qui garde
+              celle-ci ? Elle ne s'affiche que quand le navigateur a de quoi la
+              tenir. */}
+          <InstallBanner />
+        </header>
+      </div>
 
       {/* Avant les tuiles de démonstration : une alerte sous une grille de
           chiffres inventés n'est pas une alerte, c'est une note de bas de page. */}
