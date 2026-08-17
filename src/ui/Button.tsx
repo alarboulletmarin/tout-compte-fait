@@ -52,7 +52,7 @@ export function Button({
         /* Le retrait accompagne l'assombrissement, et il porte à lui seul le
            pressé de la variante `secondary` en thème sombre, où `--surface-2`
            est presque noir et où l'assombrir ne se voit pas. `scale` et non
-           `transform` : Tailwind 4 pose `scale-*` sur la propriété du même nom,
+           `transform` : `scale-*` est posé sur la propriété du même nom,
            et une transition déclarée sur `transform` ne la verrait pas. */
         'transition-[filter,background-color,scale] duration-[var(--dur)] ease-ds',
         'active:scale-[0.98]',

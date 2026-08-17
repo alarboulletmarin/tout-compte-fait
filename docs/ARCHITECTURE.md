@@ -4,7 +4,9 @@ Comment le code est rangé, et pourquoi il l'est comme ça. Ce document explique
 
 ## Repères
 
-- `src/styles/tokens.css` : les tokens du design system, déclarés une seule fois, en quatre couches : palette de base, tokens sémantiques, couche dérivée, exposition à Tailwind. Un composant qui écrit `var(--pine-500)` est un bug.
+- `src/styles/tokens.css` : les tokens du design system, déclarés une seule fois, en trois couches : palette de base, tokens sémantiques, couche dérivée. Un composant qui écrit `var(--pine-500)` est un bug.
+- `src/styles/utilities.css` : la couche d'utilitaires, écrite à la main. Elle ne contient que ce que l'app pose — `node scripts/classes.mjs` relève ce que le source emploie. L'ordre du fichier *est* la cascade : mise en page, boîte, cadre, typographie, couleur, mouvement, états, puis les paliers de largeur du plus étroit au plus large.
+- `src/styles/reset.css` : la remise à zéro, courte et limitée aux balises que l'app pose vraiment.
 - `src/styles/palettes.css` : les cinq autres identités colorimétriques, en surcharges de la couche sémantique. `tokens.css` *est* la palette Classique, qui n'y figure donc pas. Aucun composant n'a jamais à savoir laquelle est active, et `src/theme/palettes.test.ts` mesure les douze couples palette × thème plutôt que de croire ce qui est écrit.
 - `/styleguide` : chaque token, chaque échelle typographique et chaque composant, dans les deux thèmes. Livrable permanent, maintenu à jour.
 - `src/domain/` : logique métier pure, sans UI, entièrement testée.

@@ -1,0 +1,226 @@
+/* ============================================================================
+ * La remise à zéro du navigateur.
+ *
+ * Elle a longtemps été celle de Tailwind, injectée par `@import 'tailwindcss'`.
+ * Le projet est en CSS pur : elle s'écrit donc ici, et elle s'écrit **courte**.
+ * Le préambule d'une librairie doit couvrir tous les usages possibles ; celui-ci
+ * ne couvre que les balises que l'app pose réellement, ce qui se vérifie et se
+ * relit.
+ *
+ * Ce qui est gardé l'est parce qu'un écran en dépend, pas parce que c'est
+ * l'usage. Ce qui a disparu — les vingt règles de `::-webkit-datetime-edit-*`,
+ * les boutons de sélection de fichier, les `optgroup` — visait des contrôles que
+ * l'app n'emploie pas ; les remettre au cas où serait exactement le poids mort
+ * qu'on vient de retirer.
+ * ==========================================================================*/
+
+@layer base {
+  /* Le modèle de boîte, la seule règle qui change tout. Les marges et les
+     rembourrages partent aussi : chaque écart de l'app est posé par une classe,
+     et un `<p>` qui arriverait avec sa marge de navigateur décalerait tout ce
+     qui est mesuré ailleurs. */
+  *,
+  *::before,
+  *::after,
+  ::backdrop {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* `0 solid` et non `none` : une bordure se pose ensuite par sa seule
+       largeur — `border`, `border-t` —, sans avoir à redire son style. */
+    border: 0 solid;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* Sans lui, un appui laisse un voile gris sur iOS — sur des tuiles qui font
+       toutes la cible, ça se voit. */
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+
+  html[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Les titres portent leur taille par une classe de l'échelle (`t-section`,
+     `t-hero`…), jamais par leur niveau : un `<h2>` dit la structure, pas une
+     taille de caractère. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  /* Un lien ne se souligne que si on le lui demande : dans cette app, la
+     plupart sont des rangées et des tuiles entières. */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  b,
+  strong {
+    font-weight: bolder;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+    font-size: 1em;
+  }
+
+  small {
+    font-size: 80%;
+  }
+
+  /* Les listes de l'app sont des structures, pas des énumérations à puces —
+     sauf celles qui demandent `list-disc`, et qui le disent. */
+  ol,
+  ul,
+  menu {
+    list-style: none;
+  }
+
+  /* `display: block` sur les médias : sans lui, l'interligne de la ligne de
+     texte qui les contient ajoute quelques pixels sous chaque icône, et une
+     rangée de glyphes cesse d'être alignée sur sa boîte. */
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    display: block;
+    vertical-align: middle;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Les contrôles héritent de la typographie de la page. C'est ce qui fait
+     qu'un `<input>` et le texte à côté de lui sont de la même famille — les
+     navigateurs, eux, y mettent leur police système. */
+  button,
+  input,
+  select,
+  optgroup,
+  textarea {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    opacity: 1;
+    background-color: transparent;
+    border-radius: 0;
+  }
+
+  button,
+  input:where([type='button'], [type='reset'], [type='submit']) {
+    appearance: button;
+  }
+
+  ::placeholder {
+    opacity: 1;
+    color: currentColor;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    ::placeholder {
+      color: color-mix(in oklab, currentcolor 50%, transparent);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  ::-webkit-inner-spin-button,
+  ::-webkit-outer-spin-button {
+    height: auto;
+  }
+
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+
+  summary {
+    display: list-item;
+  }
+
+  progress {
+    vertical-align: baseline;
+  }
+
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+
+  abbr:where([title]) {
+    text-decoration: underline dotted;
+  }
+
+  sub,
+  sup {
+    position: relative;
+    font-size: 75%;
+    line-height: 0;
+    vertical-align: baseline;
+  }
+
+  sub {
+    bottom: -0.25em;
+  }
+
+  sup {
+    top: -0.5em;
+  }
+
+  /* `!important` parce que l'attribut doit gagner contre n'importe quel
+     `display` de classe : `hidden` est une affirmation du balisage. */
+  [hidden]:where(:not([hidden='until-found'])) {
+    display: none !important;
+  }
+
+  /* DS §8 — focus clavier visible sur tout élément interactif. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-fg);
+  }
+}

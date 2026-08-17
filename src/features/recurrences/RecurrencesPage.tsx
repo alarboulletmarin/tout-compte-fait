@@ -172,7 +172,7 @@ function SortField({
         {t.recurrences.sortBy}
       </label>
       {/* La largeur vit sur le cadre et non sur le contrôle : `cn` ne fusionne
-          pas les classes de Tailwind, un `w-auto` posé sur un `Select` qui porte
+          pas les classes, un `w-auto` posé sur un `Select` qui porte
           déjà `w-full` laisserait la cascade trancher. Le sélecteur remplit son
           cadre, et le cadre tient la plus longue des deux options. */}
       <span className="relative inline-flex w-32 items-center">

@@ -269,7 +269,7 @@ export function QuickEntry() {
           className={cn(
             'pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full',
             'bg-accent text-accent-fg',
-            /* `rotate` et non `transform` : Tailwind 4 pose `rotate-45` sur la
+            /* `rotate` et non `transform` : `rotate-45` est posé sur la
                propriété `rotate`, et une transition déclarée sur `transform` ne
                la voit pas — le glyphe basculait d'un coup. Vérifié en lisant le
                style calculé, pas en relisant la classe. */

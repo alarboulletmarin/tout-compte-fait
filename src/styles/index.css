@@ -1,7 +1,19 @@
+/* L'ordre de la cascade, et il compte : sans librairie pour trier les couches,
+   c'est ce fichier qui décide qui l'emporte à spécificité égale.
+
+   Les trois couches sont déclarées avant tout import : `@layer` posé en tête
+   fixe leur priorité une fois pour toutes, quel que soit l'ordre dans lequel
+   les fichiers déclarent leurs règles. Une utilitaire l'emporte donc toujours
+   sur un composant, et un composant sur la remise à zéro — c'est ce qui permet
+   d'écrire `class="tile p-4"` sans que le rembourrage du composant gagne. */
+@layer base, components, utilities;
+
 @import './fonts.css';
 @import './tokens.css';
 /* Après les tokens, dont il surcharge une partie — et avant les styles, qui ne
    lisent que des tokens sans savoir lequel a gagné. */
 @import './palettes.css';
+@import './reset.css';
 @import './base.css';
 @import './components.css';
+@import './utilities.css';

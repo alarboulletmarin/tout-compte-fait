@@ -31,8 +31,8 @@ type Theme = (typeof THEMES)[number]
 
 /* Les feuilles se lisent sur le disque et non par `?raw` : la configuration de
    vitest pose `css: false` (vite.config.ts), ce qui vide tout import de `.css`,
-   extension `?raw` comprise. L'activer ferait passer Tailwind sur chaque
-   exécution de test pour trois fichiers qu'on ne veut lire qu'en texte.
+   extension `?raw` comprise. L'activer ferait traverser toute la chaîne CSS à
+   chaque exécution de test, pour trois fichiers qu'on ne veut lire qu'en texte.
    Chemin depuis la racine et non depuis `import.meta.url` : sous jsdom, celle-ci
    est une URL http, dont `new URL()` ne fait pas un chemin de fichier. */
 const sheet = (name: string): string =>

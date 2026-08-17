@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 /* La version se lit sur le manifeste npm, jamais recopiée dans le source : deux
@@ -58,7 +57,6 @@ export default defineConfig({
   plugins: [
     noticeAGPL(),
     react(),
-    tailwindcss(),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],

@@ -140,7 +140,7 @@ if (typeof globalThis.ResizeObserver !== 'function') {
  * qui regardent la forme. */
 if (typeof globalThis.localStorage === 'undefined') {
   const store = new Map<string, string>()
-  const proto: object = typeof Storage === 'function' ? (Storage.prototype as object) : {}
+  const proto: object = typeof Storage === 'function' ? Storage.prototype : {}
   Object.defineProperties(proto, {
     length: { get: () => store.size, configurable: true },
     key: {
