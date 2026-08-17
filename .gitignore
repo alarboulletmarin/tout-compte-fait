@@ -41,3 +41,5 @@ audit/bords/
 audit/zoom/
 audit/doublons/
 audit/*-avant/
+audit/focus/
+audit/lighthouse/

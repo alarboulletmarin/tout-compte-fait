@@ -1,334 +1,225 @@
 # Audit d'interface — Tout compte fait
 
-Relevé du 17 août 2026, sur `main` à `4a0b436`, jeu d'exemple chargé.
+Relevé initial du 17 août 2026 sur `main` à `4a0b436`, puis huit lots de
+correction sur la branche `audit/ui-2026-08`. Jeu d'exemple chargé.
 
-Chaque défaut porte sa preuve : une mesure du harnais (`audit/mesures`,
-`audit/bords`, `audit/axe`, `audit/zoom`, `audit/doublons`), une capture, ou une
-ligne de code. Ce qui n'est pas prouvé n'est pas listé ; ce qui est prouvé mais
-discutable est marqué comme tel.
-
-## Comment lire
-
-`[route] [largeur] [thème] — description — preuve — sévérité`
-
-Sévérités : **bloquant** (empêche d'utiliser ou viole AA), **majeur** (dégrade
-sérieusement la lecture ou la cohérence), **mineur** (défaut réel sans
-conséquence d'usage).
+Chaque défaut porte sa preuve : une mesure du harnais (`audit/`), une capture,
+ou une ligne de code. Ce qui n'est pas prouvé n'est pas listé ; ce qui a été
+détecté puis écarté est dit avec sa raison.
 
 ## Périmètre mesuré
 
 33 écrans × 8 largeurs (320 → 1920) × 2 thèmes × 2 langues = 1 056 captures et
 1 056 relevés. axe-core sur 33 écrans × 3 largeurs × 2 thèmes × 2 langues.
+Focus clavier tabulé sur 33 écrans × 2 largeurs. Zoom 200 % et 400 %.
+Lighthouse sur 4 écrans, mobile et desktop.
+
+Comment rejouer : voir `audit/README.md`.
 
 ---
 
-## Ce qui est déjà bon, et qu'il ne faut pas casser
+## Résultat, case par case (phase 4)
 
-Ces points sont mesurés, pas supposés. Ils bornent le chantier : toute
-correction doit les préserver.
+| Critère | État | Preuve |
+|---|---|---|
+| Zéro scroll horizontal à 320 px | ☑ **sur les 32 écrans de l'app** · ☐ `/styleguide` | `audit/mesures/*.json` |
+| Zéro chevauchement et zéro troncature à 200 % | ☑ | `audit/zoom/fr-light.json` — 0 débordement, 0 chevauchement reproduit |
+| Zéro violation axe sérieuse ou critique | ☑ **sur les 32 écrans de l'app** · ☐ `/styleguide` | `audit/axe/*.json` |
+| Contrastes texte ≥ 4.5:1, interface ≥ 3:1, deux thèmes | ☑ **sur les 32 écrans de l'app** · ☐ `/styleguide` | 92 assertions `src/theme/palettes.test.ts` + axe |
+| Zéro information portée par la seule couleur | ☑ | `Dot` est `aria-hidden`, toujours doublé d'un libellé |
+| Zéro cible interactive sous 24×24 | ☑ | `audit/mesures/*.json` — 0 sur les 4 combinaisons |
+| Focus visible et jamais masqué | ☑ **sur les 32 écrans de l'app** · ☐ `/styleguide` | `audit/focus/fr-light.json` — 0 masqué partout |
+| Aucune valeur affichée deux fois sans distinction explicite | ☑ | `audit/doublons/fr-light.json` + lot 3 |
+| 100 % des chaînes en i18n, FR et EN complets | ☑ | 11 assertions `src/i18n/strings.test.ts`, 0 chaîne en dur |
+| 100 % des montants et dates par `Intl` | ☑ | 12 `NumberFormat`, 3 `DateTimeFormat`, 3 `RelativeTimeFormat` ; 0 `toFixed`/`toLocaleString` hors `format.ts` |
+| Chaque route a un état vide, de chargement et d'erreur | ☐ **critère reformulé** — voir plus bas | 11 écrans avec `EmptyState`, `BootScreen` et `ErrorBoundary` globaux |
+| Parité fonctionnelle mobile / desktop | ☑ | Aucun écart trouvé ; `/calendrier` documenté |
+| `prefers-reduced-motion` respecté | ☑ | CSS (`base.css:196`, `tokens.css:270`) et JS (`lib/reveal.ts:45`, `ui/useCountUp.ts`) |
+| Aucune dépendance runtime ajoutée | ☑ **et deux retirées** | `tailwindcss` et `@tailwindcss/vite` désinstallés ; axe-core en `devDependencies` |
+| Lighthouse ≥ 95 Accessibility et Best Practices | ☑ **sur les 4 écrans mesurés** | 100 / 100 sur `/bienvenue`, `/`, `/epargne`, `/repartition`, mobile et desktop |
 
-| Critère | Mesure |
-|---|---|
-| Débordement horizontal à 320px | **0** sur les 32 écrans de l'app. Seul `/styleguide` déborde (558px dans 320) |
-| Zoom 200 % | **0** débordement horizontal sur 33 écrans |
-| Cibles < 44px en mobile | **0** à 375px (`smallTargets: 0` partout) |
-| Contrastes des palettes | 92 assertions vertes (`src/theme/palettes.test.ts`), 12 couples palette × thème |
-| Parité des clés i18n FR/EN | 11 assertions vertes (`src/i18n/strings.test.ts`) |
-| `prefers-reduced-motion` | Respecté en CSS (`base.css:196`, `tokens.css:270`) **et** en JS (`lib/reveal.ts:45`, `ui/useCountUp.ts:39`) |
-| Montants via `Intl.NumberFormat` | 12 usages, tous dans `i18n/format.ts` ; aucun `toLocaleString` ni `toFixed` ailleurs |
-| Centrage du shell desktop | À 1920 : shell 320→1600, soit 320px de marge de chaque côté. Symétrique |
-| Échelle de `z-index` | 10 usages, sur 6 valeurs (10, 20, 30, 40, 50), tous en utilitaires. Non déclarée en token, mais cohérente par paliers |
-| Regroupement « par personne » | Présent à toutes les largeurs (`EntriesSection.tsx:236`) |
+### Ce qui n'est pas coché, et pourquoi
 
-Les défauts 1, 2, 4, 5 (partiel), 14 de l'annexe A sont **corrigés**. Le détail
-est en fin de document.
+**`/styleguide`** porte les quatre écarts restants : débordement horizontal sous
+414 px (558 px de contenu dans 320), contraste 3,39:1 sur la pilule violette,
+et deux champs de démonstration sans anneau de focus. C'est un outil de
+développement, pas un écran de l'app — il n'est atteignable que par son URL et
+par un lien en pied de colonne. Le contraste est en outre l'**écart déjà
+déclaré** dans `src/styles/components.css:80-86`, couvert par un test, et il
+n'apparaît sur aucun écran réel : aucune tuile `--accent-2` ne porte d'eyebrow
+ailleurs que sur le nuancier.
 
----
+**Le critère « chaque route a un état vide »** est mal calibré pour cette app et
+je ne l'ai pas ajusté en silence : `/apparence`, `/mentions-legales` ou
+`/stockage` n'ont pas d'état vide possible — leurs données n'existent pas. La
+formulation qui se mesure est : *chaque route dont les données peuvent être
+vides a un état vide* (11 écrans l'ont), *le chargement et l'erreur sont
+couverts globalement* par `BootScreen` et `ErrorBoundary`. Sous cette forme, il
+est vert.
 
-## `/` — Le mois
-
-L'écran le plus dense et le plus chargé en défauts.
-
-### Trois axes de centrage sur le même écran — majeur
-
-À 1920 px, mesuré (`audit/bords/fr-light.json`) :
-
-| Élément | gauche | droite | centre |
-|---|---|---|---|
-| `main`, en-tête collant | 544 | 1600 | **1072** |
-| Grilles bento | 576 | 1568 | **1072** |
-| Blocs « Situation » et « Prochaines échéances » | 576 | **1344** | **960** |
-| Libellé du mois « août » | 747 | 789 | **768** |
-
-Le bord droit varie de **224 px** entre les grilles bento et les blocs
-`max-w-3xl`, empilés dans la même colonne. Et le libellé du mois est centré
-**304 px à gauche** de l'axe des cartes qu'il coiffe.
-
-Causes, au code :
-- `src/app/MonthHeader.tsx:339` — `MonthNav` porte `max-w-sm` (384 px) dans un
-  conteneur aligné à gauche. Le mois se centre donc sur 384 px, pas sur la page.
-- `src/features/month/MonthPage.tsx:206` et `:211` — `max-w-3xl` (768 px) sur
-  deux blocs, quand le bento occupe les 992 px disponibles.
-
-Preuve visuelle : `audit/screenshots/fr-light/month/1920.jpg`.
-Vérifié identique en `fr-dark`, `en-light`, `en-dark`.
-
-### La même valeur affichée trois fois — majeur
-
-`2 922,35 €` apparaît sous trois libellés (`audit/doublons/fr-light.json`) :
-
-1. « Prévisionnel » — *solde attendu en fin de mois, échéances prévues comprises*
-2. « Reste à vivre » — *disponible jusqu'à la fin du mois*
-3. « 2 922,35 € encore disponibles », lecture secondaire de la tuile « Capacité
-   d'épargne »
-
-`src/features/dashboard/SituationSection.tsx:16-47` documente le cas et le
-traite : les deux rangées ont quitté le bento pour porter une description qui
-tient à toutes les largeurs. Le traitement est réel mais **insuffisant** — le
-lecteur voit deux fois le même centime, et la troisième occurrence n'est pas
-couverte du tout.
-
-Preuve : `audit/screenshots/fr-light/month/320.jpg` et `.../1920.jpg`.
-
-### « Prochaines échéances » contient du passé — majeur
-
-À la date du relevé, la première ligne du bloc dit **« il y a 12 jours »**.
-
-Cause, au code : `src/domain/stats.ts:396` filtre au **mois**, pas au jour —
-`ymOf(e.date) >= fromMonth`. Une échéance du 5 août non confirmée reste donc
-listée le 17 août sous un titre qui promet du futur.
-
-Preuve : `audit/screenshots/fr-light/month/1920.jpg`, bloc « Prochaines
-échéances ».
-
-> Toucher au filtre relève du domaine, donc hors périmètre. L'arbitrage est
-> porté en phase 2.
-
-### « Prochaines échéances » redit « À confirmer » — majeur
-
-Les cinq lignes du bloc sont les cinq lignes du bloc « À confirmer » situé
-au-dessus, dans un autre ordre : Mobile 11,99 / Courses 152,00 / Carburant
-203,00 / Transports 91,60 / Croquettes 52,00.
-
-C'est structurel : `useMonthPending` rend les `planned` du mois affiché,
-`useUpcoming` (`src/store/selectors.ts:509`) rend les `planned` du mois courant
-et des suivants. Sur le mois courant, les deux ensembles se recouvrent.
-
-### Cibles interactives sous 24×24 — bloquant (WCAG 2.5.8)
-
-Les quatre boutons de légende du donut « Où part l'argent » mesurent **18,2 px
-de haut** à toutes les largeurs, dans les deux thèmes et les deux langues.
-
-Confirmé par axe-core (`target-size`, gravité *serious*, 12 occurrences) et par
-la sonde (`audit/mesures/*.json`, `tinyTargets`).
-
-Cause : `src/features/dashboard/BreakdownTile.tsx:114-123` — le bouton n'a
-aucune hauteur minimale.
-
-### Quatorze repères d'en-tête sur un écran — majeur
-
-À 375 px, `eyebrowCount: 14` (`audit/mesures/fr-light.json`). Soit : SOLDE DU
-MOIS, REVENUS, CHARGES, SUIVI DU MOIS, À CONFIRMER, SITUATION, OÙ PART L'ARGENT,
-CAPACITÉ D'ÉPARGNE, RÉPARTITION, CRÉDITS, PROCHAINES ÉCHÉANCES, CE MOIS, plus
-deux pilules de contrôle.
-
-Le DS §6 les définit comme un repère. Quatorze repères sur un écran ne repèrent
-plus rien : c'est devenu la ponctuation par défaut de toute carte.
-
-### Densité — mineur
-
-3 530 px à 375 px, soit **4,3 écrans** de défilement. C'est le seul écran de
-l'app au-dessus du seuil de 4 ; le deuxième, `/recurrences`, est à 2,8.
-
-### L'accent lime porte huit rôles — majeur
-
-Sur la seule capture 320 px : tuile du solde, bouton « Exporter mes données »,
-pilule de filtre active, bouton « Confirmer le mois », cinq coches de
-validation, onglet actif de la barre, bouton d'ajout flottant, deux pilules de
-regroupement actives.
-
-Le DS §2.3 impose que l'accent reste un remplissage, ce qui est respecté ; il ne
-dit rien de sa **fréquence**. Preuve : `audit/screenshots/fr-light/month/320.jpg`.
+**Lighthouse** a été mesuré sur 4 écrans, pas 33 : l'outil n'a pas de mode
+batch ici et chaque passe coûte ~2 s d'audit plus la navigation. Les 4 couvrent
+les deux coquilles (publique et applicative) et les deux formes de contenu
+(bento et colonne). Rien n'indique que les 29 autres divergeraient — axe, qui
+tourne sur les 33, ne relève rien de sérieux ailleurs — mais ce n'est pas
+mesuré, et je ne le compte donc pas comme tel.
 
 ---
 
-## `/repartition` — Répartition
+## Les huit lots
 
-### Bord droit incohérent avec le shell — majeur
+| Lot | Issue | Commit |
+|---|---|---|
+| Harnais d'audit | — | `e185a6c` |
+| 1 — accessibilité bloquante | #92 | `62392b5` |
+| 8 — chaînes anglaises | #93 | `5069fe6` |
+| 7 — doublon des bandeaux | #94 | `c7806a7`, `c3bd356` |
+| 0b — sortie de Tailwind | #95 | `9d9b8e4` |
+| 2 — un bord, un axe | #96 | `8065bb3` |
+| 4 — symbole monétaire | — | `37ad6d0`, `ffbc9b2` |
+| 3 — déduplication | — | `566e453` |
+| 5 — accent et repères | — | `266e5b4` |
+| 6 — dates par `Intl` | — | `03081c8` |
 
-À 1440 px : tout le contenu de la page est à **768 px** de large, le bandeau
-d'information posé par le shell à **992 px**. Le bandeau dépasse donc de 224 px
-à droite de toutes les cartes qu'il surmonte.
+### Ce que chaque lot a changé, mesuré
 
-Mesure : `audit/bords/fr-light.json`, `slug: "split"`, `width: 1440`.
-Même défaut sur `/avances`.
+**Lot 1 — accessibilité bloquante.** Le champ fichier de l'import laissait un
+contrôle sans nom dans l'arbre d'accessibilité (axe `label`, *critical*, 4
+occurrences). Les quatre boutons de légende du donut mesuraient 18,2 px de haut
+(axe `target-size`, *serious*, 12 occurrences). Après : **0 et 0**, hauteurs de
+page inchangées aux 8 largeurs.
 
-### Le même total sous deux libellés — mineur
+**Lot 8 — chaînes anglaises.** `en.ts:511` et `en.ts:644` étaient les deux
+signalées ; deux autres calques ont été trouvés à côté (`persistAsked`,
+`showMemberShare`).
 
-`3 824,59 €` apparaît sous « Total des parts » et sous « Ce qui est partagé »
-(`audit/doublons/fr-light.json`). Les deux lectures sont voisines mais la
-coïncidence n'est pas expliquée.
+**Lot 7 — doublon des bandeaux.** Quatre composants rendaient la même surface de
+quatre façons, dont une qui recopiait la définition de `.tile` en cinq
+utilitaires. Un seul composant `ui/Banner` désormais. Le lot a aussi rendu à
+jsdom un `localStorage` que Node 26 masquait : **39 tests mouraient dans leur
+propre préambule** et ne s'exécutaient pas du tout.
 
----
+**Lot 0b — sortie de Tailwind.** La contrainte du projet est le CSS pur ; la
+librairie était active (`@import 'tailwindcss'`, `@theme inline`, plugin Vite,
+~2 000 occurrences d'utilitaires). La couche est maintenant écrite à la main
+dans `src/styles/utilities.css`, avec un reset court à côté. Les noms de classes
+n'ont pas bougé — ce qui change est *ce qui produit les règles*, pas le
+balisage, ce qui rend la non-régression mesurable. Après : **hauteurs de page et
+bords de blocs identiques au pixel sur les 32 écrans de l'app**, dans les deux
+thèmes ; seul `/styleguide` bouge, de 192 px. CSS de 88,9 → 76,2 Ko.
 
-## `/calendrier` — Calendrier
+**Lot 2 — un bord, un axe.** À 1920, `/` portait trois axes de centrage (bento
+1072, blocs `max-w-3xl` 960, libellé du mois 768) et son bord droit alternait
+992/768/992/768 en descendant la page. Après : **un seul axe** — mesuré à 752 à
+1280 et 1072 à 1920 pour le mois, le bento et `main` — et le bord 1344 a disparu
+partout. `/avances` gagne deux colonnes de fiches : **2 061 → 1 162 px** de
+défilement à 1280 et au-delà.
 
-### Une troisième largeur de colonne — majeur
+**Lot 4 — symbole monétaire.** Il était rendu à 0,55 em avec `items-start`,
+c'est-à-dire en exposant : « 4 435,54 ᵉ ». Il repose désormais sur la ligne de
+base. Un premier essai l'agrandissait aussi à la taille des centimes ; il a été
+**rendu** parce que `e2e/mise-en-page` a montré qu'il poussait « 3 655,85 € »
+4 px hors de la tuile Capacité à 1024 — un défaut que la sonde d'audit ne voyait
+pas, le document ne débordant pas.
 
-À 1440 px, la grille du calendrier fait **672 px**, le bandeau **992 px**.
-L'app compte donc, à cette largeur, quatre gabarits : 992 (majorité), 768
-(month, split, advances, onboarding), 672 (calendar), 576 (formulaires de
-saisie).
+**Lot 3 — déduplication.** « Prochaines échéances » ouvrait sur « il y a
+12 jours » et répétait les cinq lignes d'« À confirmer » : les deux blocs lisent
+les mêmes échéances non confirmées. Le bloc montre maintenant ce qui tombe
+*après* le mois affiché, ce qui retire le recoupement et le passé d'un même
+geste. « Prévisionnel » et « Reste à vivre » coïncident au centime dès qu'aucune
+rentrée n'est attendue : l'écran le dit désormais, au lieu de laisser conclure à
+une erreur de calcul.
 
-Mesure : `audit/bords/fr-light.json`.
+**Lot 5 — accent et repères.** L'accent lime portait huit rôles sur l'écran du
+mois. Les rôles **répétés** le rendent : les coches de confirmation passent en
+secondaire, le bouton qui confirme le mois entier le garde. L'eyebrow garde son
+libellé, son glyphe et son contraste, et perd sa pilule grise sur les surfaces
+plates — 14 pilules identiques sur un écran ne repèrent plus rien. Elle est
+rendue à ce qui la justifie : détacher l'étiquette d'une tuile colorée. Il en
+reste exactement une par écran.
 
----
-
-## `/bienvenue` — Présentation
-
-### Champ de fichier sans nom accessible — bloquant (WCAG 4.1.2)
-
-`<input accept="application/json,.json" class="sr-only" type="file">` n'a ni
-`label`, ni `aria-label`, ni `aria-labelledby`.
-
-Preuve : axe-core, règle `label`, gravité **critical**, 4 occurrences (une par
-combinaison langue × thème). Seule violation critique de tout l'audit.
-
-Cause : `src/features/settings/ImportControl.tsx:42-49`. Le champ est piloté par
-le bouton adjacent ; il est donc atteignable au clavier sans jamais être
-annonçable.
-
----
-
-## `/styleguide` — Nuancier
-
-### Débordement horizontal sous 414 px — mineur
-
-558 px de contenu dans 320, 375 et 414. Seul écran du dépôt à déborder.
-Mesure : `audit/mesures/*.json`.
-
-### Contraste sous AA sur la pilule violette — mineur
-
-`color-contrast` *serious*, 3,39:1 (blanc sur `#887dec`), 12 occurrences, sur
-`/styleguide` uniquement.
-
-C'est l'**écart déjà déclaré** dans `src/styles/components.css:80-86` et couvert
-par `palettes.test.ts`. Il n'apparaît sur aucun écran réel : aucune tuile
-`--accent-2` ne porte d'eyebrow ailleurs que sur le nuancier.
-
-> C'est un écart connu, documenté, et sans effet hors du nuancier.
-> Recommandation en phase 2 : ne pas le traiter dans ce chantier.
-
----
-
-## Défauts transverses
-
-### Le symbole monétaire est un exposant — majeur
-
-`src/ui/Amount.tsx:135-150` rend le symbole à `fontSize: '0.55em'`, avec
-`items-start` sur le conteneur et `opacity: 0.6`. Le résultat est un € **réduit
-de moitié et aligné en haut**, sur tous les montants de l'app.
-
-La *position* est correctement internationalisée (`symbolFirst()`, `€1,284.50`
-en anglais, `1 284,50 €` en français). C'est le **traitement graphique** qui ne
-survit à aucune des deux locales : ni `4 435,54 €` ni `€4,435.54` ne s'écrivent
-avec un symbole en exposant.
-
-Preuve visuelle nette : `audit/zoom/recurrences-200.jpg` — « 5 453,96 ᵉ ».
-
-L'atténuation à 0,6 pose en outre une question de contraste sur laquelle le
-harnais ne tranche pas : axe-core ne signale rien, mais il mesure le texte, pas
-un `span` en `aria-hidden`.
-
-### Dates et durées composées à la main — majeur
-
-`Intl.DateTimeFormat` et `Intl.RelativeTimeFormat` ne sont **utilisés nulle
-part** (0 occurrence dans tout le dépôt). Toutes les dates sont assemblées à
-partir de tables de noms (`t.calendarNames`) et de gabarits littéraux :
-
-- `src/i18n/format.ts:400-422` — `formatWeekdayDate`, `formatDayMonthShort`,
-  `formatDayFull`, `formatDateCompact`
-- `src/i18n/format.ts:425-437` — `formatRelativeDays`, avec ses dix branches
-  écrites en dur dans les deux langues
-
-Les sorties sont correctes pour `fr-FR` et `en-GB`, et le choix est argumenté en
-tête de fichier. Mais le critère de la mission demande `Intl` ; le formatage
-manuel est une dette, pas un bug constaté.
-
-### Trois bandeaux, trois implémentations de la même carte — mineur
-
-Les trois bandeaux du shell rendent la même surface de trois façons :
-
-| Composant | Implémentation |
-|---|---|
-| `src/app/DataNotice.tsx` | `className="tile …"` — la classe, sans le composant |
-| `src/app/StorageAlert.tsx` | `className="tile …"` — idem, plus `border-danger` |
-| `src/app/UpdatePrompt.tsx` | `rounded-tile border border-border bg-surface shadow-tile` — la définition de `.tile` recopiée en cinq utilitaires |
-
-Aucun des trois n'importe `<Tile>`, que 59 autres fichiers utilisent. La
-troisième forme est la plus coûteuse : elle recopie une définition qui, si elle
-change dans `components.css`, ne la suivra pas.
-
-C'est le seul doublon d'implémentation trouvé dans le dépôt. `RowGroup` compose
-bien `Tile` ; `ListRow` et `Row` sont deux composants distincts, et le DS §9.1
-dit pourquoi.
-
-### Le lien d'évitement compte comme cible de 1×1 — non-défaut
-
-208 combinaisons signalent une cible sous 24×24 : c'est le lien « Aller au
-contenu » en `sr-only`, qui reprend sa taille au focus. WCAG 2.5.8 ne s'applique
-pas aux cibles non rendues. **Faux positif de la sonde**, écarté.
-
-### Chevauchements au zoom — non reproduit
-
-La sonde signale 2 écrans avec chevauchement à 200 % et 400 %
-(`audit/zoom/fr-light.json`). La capture de contrôle à 200 % sur `/recurrences`
-(`audit/zoom/recurrences-200.jpg`) ne montre **aucun** chevauchement : rien
-n'est tronqué, rien ne se superpose, la page tient.
-
-Les cas restants viennent d'éléments situés dans des groupes repliés, plus bas
-dans la page. Je les déclare **non confirmés** plutôt que de les compter.
+**Lot 6 — dates par `Intl`.** 38 chaînes par catalogue redisaient ce que le
+moteur sait exactement, et 10 branches faisaient le travail de
+`RelativeTimeFormat`. Vérifié chaîne par chaîne : `Intl` rend les mêmes valeurs,
+avec une correction (« Sept » plutôt que « Sep » en `en-GB`) et deux ajouts que
+le français obtient gratuitement, « avant-hier » et « après-demain ».
 
 ---
 
 ## État de l'annexe A
 
-| # | Défaut signalé | État | Preuve |
+| # | Défaut signalé | État à l'ouverture | État final |
 |---|---|---|---|
-| 1 | Nav basse et FAB recouvrent le contenu | **Corrigé** | `hiddenUnderFixed` nul après défilement complet ; capture 320 |
-| 2 | « Confirmer le mois » chevauche « À confirmer » | **Corrigé** | Capture 320 : le bouton est sur sa propre ligne |
-| 3 | Rail de filtre coupé sans affordance | **Partiel** | Rail à 498 px dans 320/375/414 ; `scroll-snap` et pilule coupée en place (`components.css:329`), affordance faible |
-| 4 | ~500 px de vide mort à droite, bloc non centré | **Corrigé** | Shell 320→1600 sur 1920, marges symétriques |
-| 5 | En-tête de mois centré sur une bande plus étroite | **Confirmé** | Axe à 768 contre 1072 pour les cartes |
-| 6 | Carte au bord droit incohérent | **Confirmé et généralisé** | 4 gabarits : 992 / 768 / 672 / 576 |
-| 7 | Alternance de largeurs sans logique | **Confirmé** | `/` alterne bento 992 → bloc 768 → bento 992 → bloc 768 |
-| 8 | « Prévisionnel » = « Reste à vivre » = « Capacité » | **Confirmé** | Trois occurrences de `2 922,35 €` |
-| 9 | « Prochains paiements » redit « À confirmer », et affiche du passé | **Confirmé** | Cinq lignes identiques ; « il y a 12 jours » |
-| 10 | L'accent lime porte tous les rôles | **Confirmé** | Huit rôles sur une capture |
-| 11 | Membres distingués par la seule couleur | **Corrigé** | `Dot` est `aria-hidden` et toujours accompagné du nom (`Chip.tsx:34`) |
-| 12 | Étiquette grise répétée huit fois | **Confirmé, aggravé** | 14 occurrences à 375 px |
-| 13 | Chaînes i18n cassées | **Confirmé** | `en.ts:511` et `en.ts:644`, intactes |
-| 14 | « Par personne » disparaît en mobile | **Corrigé** | `EntriesSection.tsx:236`, sans classe responsive |
-| 15 | Symbole € en exposant | **Partiel** | Position internationalisée ; exposant intact |
+| 1 | Nav basse et FAB recouvrent le contenu | Déjà corrigé | ☑ |
+| 2 | « Confirmer le mois » chevauche son étiquette | Déjà corrigé | ☑ |
+| 3 | Rail de filtre coupé sans affordance | Partiel | Inchangé — `scroll-snap` et pilule coupée en place ; affordance faible, assumée |
+| 4 | ~500 px de vide mort à droite | Déjà corrigé | ☑ |
+| 5 | En-tête de mois sur un axe plus étroit | Confirmé (768 vs 1072) | ☑ lot 2 |
+| 6 | Bord droit incohérent | Confirmé et généralisé (4 gabarits) | ☑ lot 2 |
+| 7 | Alternance de largeurs sans logique | Confirmé | ☑ lot 2 |
+| 8 | Trois lectures, une seule valeur | Confirmé | ☑ lot 3 |
+| 9 | « Prochaines échéances » redit et affiche du passé | Confirmé | ☑ lot 3 |
+| 10 | L'accent lime porte tous les rôles | Confirmé (8 rôles) | ☑ lot 5 |
+| 11 | Membres distingués par la seule couleur | Déjà corrigé | ☑ |
+| 12 | Étiquette grise répétée | Confirmé, aggravé (14×) | ☑ lot 5 |
+| 13 | Chaînes i18n cassées | Confirmé | ☑ lot 8 |
+| 14 | « Par personne » disparaît en mobile | Déjà corrigé | ☑ |
+| 15 | Symbole € en exposant | Partiel | ☑ lot 4 |
 
 ---
 
-## Cases de la phase 4, à l'ouverture du chantier
+## Détecté, examiné, non-défaut
 
-| Critère | État |
-|---|---|
-| Zéro scroll horizontal à 320 px | ☐ — 32/33 écrans conformes, `/styleguide` déborde |
-| Zéro chevauchement à 200 % | ☑ — 0 débordement, chevauchements non reproduits |
-| Zéro violation axe sérieuse ou critique | ☐ — 1 critique (`label`), 2 sérieuses (`target-size`, `color-contrast`) |
-| Contrastes texte ≥ 4.5:1, interface ≥ 3:1 | ☐ — vrai sur les écrans réels, faux sur `/styleguide` |
-| Zéro information par la seule couleur | ☑ |
-| Zéro cible sous 24×24 | ☐ — 4 boutons de légende à 18 px |
-| Focus visible et jamais masqué | ☐ — non mesuré, à instrumenter |
-| Aucune valeur affichée deux fois sans distinction | ☐ — 2 cas réels |
-| 100 % des chaînes en i18n | ☑ — aucune chaîne en dur trouvée |
-| 100 % des montants et dates par `Intl` | ☐ — montants oui, dates non |
-| Chaque route a vide / chargement / erreur | ☐ — 11 écrans avec `EmptyState`, chargement et erreur globaux uniquement |
-| Parité mobile / desktop | ☑ |
-| `prefers-reduced-motion` respecté | ☑ |
-| Aucune dépendance runtime ajoutée | ☑ — `@axe-core/playwright` et `axe-core` en `devDependencies` |
-| Lighthouse ≥ 95 A11y et Best Practices | ☐ — non mesuré |
+Ce que le harnais signale et qui n'en est pas. Chacun a été vérifié plutôt
+qu'écarté d'office.
+
+**Le lien d'évitement compte comme cible de 1×1.** 208 occurrences dans la
+première passe. Il reprend sa taille au focus, et WCAG 2.5.8 ne s'applique pas
+aux cibles non rendues. La sonde le filtre désormais.
+
+**Chevauchements au zoom.** La sonde en signalait 4 écrans, puis 2 après avoir
+appris à ignorer les groupes repliés. La capture de contrôle à 200 % sur
+`/recurrences` (`audit/zoom/recurrences-200.jpg`) n'en montre aucun. Déclarés
+**non confirmés** plutôt que comptés.
+
+**Contenu masqué par la barre du bas.** La première mesure annonçait 37 cas sur
+37 : elle regardait sans avoir défilé, question à laquelle toute page plus haute
+qu'un écran répond oui. Après correction — défiler à fond, puis borner chaque
+élément par ses ancêtres coupants — **il n'en reste aucun**.
+
+**Montants répétés dans `/recurrences`, `/split`, `/month`.** Sept cas restants
+sont des coïncidences du jeu d'exemple : deux récurrences distinctes qui valent
+150 €, deux catégories à 311 €. Un seul est structurel et il est voulu : sur
+`/repartition`, « Total des parts » vaut « Ce qui est partagé » **par
+construction** — c'est une vérification, et `checkHint` l'annonce déjà (« La
+somme des parts vaut le total au centime près »).
+
+**`/calendrier` à 672 px.** C'est le seul écran de l'app qui garde une largeur
+propre, et c'est décidé par le contenu : sept colonnes de jours étalées sur
+992 px donnent des cases de 140 px, qui ne sont plus un calendrier. Écart assumé
+et écrit dans le code.
+
+---
+
+## Ce qui reste ouvert
+
+**`store.test.ts` est instable.** Deux tests d'archivage échouent environ 40 %
+du temps selon l'ordre d'exécution. Ils ne s'exécutaient **pas du tout** avant le
+lot 7 — ils mouraient sur `localStorage.clear()` —, donc ce n'est pas une
+régression mais une fuite d'état révélée : les deux `describe` vident le document
+en `beforeEach` mais pas les sauvegardes, et `backupDaily` ne réécrit pas une
+clé du jour déjà posée. Deux correctifs ont été tentés et rendus (l'un sans
+effet, l'autre faisant passer de 1 à 2 fichiers rouges). Laissé en l'état plutôt
+que rustiné à l'aveugle : c'est de la plomberie de test de persistance, hors du
+périmètre de cet audit. Le fichier passe 3/3 lancé seul.
+
+**Défaut découvert en phase 3, non traité.** En anglais, le signe se pose entre
+le symbole et le nombre : « € +7,891.00 » là où l'usage écrit « +€7,891.00 ».
+Antérieur à cet audit et sans rapport avec les lots livrés — signalé ici comme
+la phase 3 le demande, plutôt qu'embarqué dans un lot en cours.
+
+**Le rail de filtre par personne** déborde à 320, 375 et 414 px (498 px de
+contenu). Son affordance est une pilule coupée au bord, avec `scroll-snap`. Elle
+est faible mais existante et documentée (`components.css:329`) ; la renforcer
+demanderait un dégradé de bord, qui éteindrait l'anneau de focus de la pilule —
+c'est l'objection que le code écrit déjà.

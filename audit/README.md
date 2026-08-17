@@ -19,6 +19,7 @@ npx playwright test -c audit/playwright.audit.config.ts axe.spec.ts
 npx playwright test -c audit/playwright.audit.config.ts edges.spec.ts
 npx playwright test -c audit/playwright.audit.config.ts zoom.spec.ts
 npx playwright test -c audit/playwright.audit.config.ts duplicates.spec.ts
+npx playwright test -c audit/playwright.audit.config.ts focus.spec.ts
 ```
 
 ## Ce que ça produit
@@ -31,6 +32,7 @@ npx playwright test -c audit/playwright.audit.config.ts duplicates.spec.ts
 | `axe/<langue>-<thème>.json` | Le rapport brut d'axe-core, à trois largeurs |
 | `zoom/fr-light.json` | Débordements et chevauchements à 200 % et 400 % |
 | `doublons/fr-light.json` | Les montants affichés deux fois sous deux libellés |
+| `focus/fr-light.json` | Focus clavier : anneau absent, ou recouvert par un élément fixe |
 
 Rien de tout cela n'est versionné : ce sont des relevés, ils se rejouent. Seuls
 le harnais et `rapport.md` le sont.
