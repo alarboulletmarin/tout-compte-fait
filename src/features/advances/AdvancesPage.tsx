@@ -104,7 +104,11 @@ export function AdvancesPage() {
   }
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
+    /* La largeur de la page, et non une colonne de 768px au milieu de l'écran :
+       le bandeau de la coquille, lui, prend cette largeur, et une liste bornée
+       plus étroit que le bandeau qui la surmonte donne deux bords droits sur le
+       même écran — mesuré à 224px d'écart à 1920 points. */
+    <div className="flex flex-col gap-4">
       {/* L'état vide porte déjà le même bouton : le garder en titre l'afficherait
           deux fois dans le même écran. */}
       <PageTitle
@@ -132,7 +136,12 @@ export function AdvancesPage() {
           onAction={openCreate}
         />
       ) : (
-        <ul className="flex flex-col gap-3">
+        /* Deux colonnes de fiches au-delà de 768px, une seule en deçà — et une
+           seule aussi tant qu'il n'y a qu'une avance : deux colonnes dont une
+           est vide ne sont pas une mise en page (DS §5). Une avance est une
+           fiche autonome, pas une rangée : elle se range côte à côte sans qu'on
+           ait à suivre une colonne du regard. */
+        <ul className={statuses.length > 1 ? 'cols' : 'flex flex-col gap-3'}>
           {statuses.map((status) => (
             <li key={status.advance.id}>
               <AdvanceCard

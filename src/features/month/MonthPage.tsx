@@ -194,21 +194,31 @@ export function MonthPage() {
            composants, dans un autre ordre, et une grille coupée en deux là où la
            narration se coupe.
 
-           Les deux grilles prennent la pleine largeur, les sections restent dans
-           une colonne bornée : c'est la convention de toute l'app — un bento
-           s'étale, une liste se lit. */
+           **Tout est à la largeur de la page, sections comprises.** Elles
+           étaient bornées à 768px pendant que les deux bentos prenaient les 992
+           disponibles, et comme elles s'intercalent entre eux, le bord droit
+           alternait quatre fois en descendant l'écran : 992, 768, 992, 768.
+           Mesuré à 1920 points, 224px d'écart entre deux blocs empilés dans la
+           même colonne — la grille bento se rompt à chaque section.
+
+           La convention « un bento s'étale, une liste se lit » n'est pas
+           abandonnée pour autant : ce qui borne une lecture, c'est la mesure de
+           ses lignes, et c'est aux blocs de la tenir — une rangée garde son
+           `max-w` sur les textes, un groupe se coupe en deux colonnes s'il s'y
+           prête. Ce qui ne se négocie pas, c'est le bord : un écran n'en a
+           qu'un. */
         <div className="flex flex-col gap-4">
           <SituationGrid
             onShowNature={showNature}
             onShowPending={showPending}
             onExplain={setMetric}
           />
-          <div className="flex max-w-3xl flex-col gap-4">
+          <div className="flex flex-col gap-4">
             <SituationSection onExplain={setMetric} />
             <PendingSection focus={pendingFocus} />
           </div>
           <AnalysisGrid onShowFamily={showFamily} onExplain={setMetric} />
-          <div className="flex max-w-3xl flex-col gap-4">
+          <div className="flex flex-col gap-4">
             <UpcomingSection />
             <EntriesSection
               nature={nature}
