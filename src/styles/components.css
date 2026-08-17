@@ -375,15 +375,78 @@
     scroll-snap-type: x proximity;
     /* Une pilule qui prend le focus au clavier ne se colle pas au bord. */
     scroll-padding-inline: 16px;
-    /* Pas de barre : c'est la pilule coupée en fin de piste qui dit qu'il y en
-       a d'autres. Un dégradé de bord le dirait aussi, mais il éteindrait
-       l'anneau de focus de cette même pilule. */
+    /* Pas de barre : elle prendrait quatre pixels de haut dans un bandeau
+       collant, et sur un téléphone elle n'apparaît de toute façon qu'au
+       défilement. Ce qui dit qu'il y a de la suite, c'est l'estompe de bord
+       ci-dessous. */
     scrollbar-width: none;
   }
 
   .filter-scroller::-webkit-scrollbar {
     display: none;
   }
+
+  /**
+   * L'estompe de bord : ce qui dit qu'il y a d'autres pilules.
+   *
+   * La piste déborde dès trois membres — mesuré à 498px de pilules dans 320,
+   * 375 et 414 points — et rien ne le disait qu'une pilule tranchée au bord,
+   * ce qui se confond avec un libellé long. L'audit la relève comme une
+   * affordance faible.
+   *
+   * **Deux objections l'interdisaient, et chacune est levée par une ligne.**
+   *
+   * La première : un dégradé éteindrait l'anneau de focus de la pilule qui
+   * arrive au bord. Il s'efface donc dès qu'une pilule prend le focus clavier —
+   * personne n'a besoin d'une affordance de défilement pendant qu'il tabule, il
+   * a déjà la touche qui l'y emmène.
+   *
+   * La seconde : une estompe fixe ment en fin de course, où il n'y a plus rien
+   * à révéler, et sur une piste qui ne déborde pas du tout. Elle suit donc la
+   * position réelle du défilement — à gauche ce qui est déjà passé, à droite ce
+   * qui reste. Sans plage de défilement, l'animation n'a pas de progression et
+   * rien n'est estompé.
+   *
+   * Sous `@supports` parce que c'est exactement une amélioration progressive :
+   * un navigateur sans `animation-timeline` retrouve la piste d'avant, pilule
+   * tranchée comprise. Rien ne se dégrade, quelque chose s'ajoute.
+   */
+  @supports (animation-timeline: scroll()) {
+    .filter-scroller {
+      animation: filter-edges linear both;
+      animation-timeline: scroll(self inline);
+    }
+
+    .filter-scroller:has(:focus-visible) {
+      animation: none;
+    }
+
+    @keyframes filter-edges {
+      from {
+        mask-image: linear-gradient(
+          to right,
+          rgb(0 0 0 / 1) 0,
+          rgb(0 0 0 / 1) calc(100% - 32px),
+          rgb(0 0 0 / 0) 100%
+        );
+      }
+
+      to {
+        mask-image: linear-gradient(
+          to right,
+          rgb(0 0 0 / 0) 0,
+          rgb(0 0 0 / 1) 32px,
+          rgb(0 0 0 / 1) 100%
+        );
+      }
+    }
+  }
+
+  /* DS §4 — rien ne bouge sous `prefers-reduced-motion`. L'estompe n'est pas un
+     mouvement : elle ne se déplace pas, elle suit un défilement que la personne
+     conduit elle-même, et la neutraliser retirerait une information sans rien
+     calmer. Elle reste donc, et c'est le même raisonnement que `useSheetDrag`
+     tient pour son geste. */
 
   .filter-scroller > * {
     scroll-snap-align: start;

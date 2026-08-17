@@ -188,9 +188,19 @@ export function Amount({
           décision est prise par `format.ts` et non ici, comme le séparateur
           décimal juste en dessous : ce composant assemble, il ne tranche pas de
           règle de langue. */}
+      {/* Le signe reste en tête, y compris quand le symbole passe devant lui.
+          Il était posé avec le chiffre, ce qui rendait « € +7 891,00 » en
+          anglais : le symbole, puis le signe, puis le nombre. On n'écrit pas
+          « € +7,891.00 » mais « +€7,891.00 » — le signe qualifie le montant
+          entier, symbole compris, et le glisser entre les deux le fait lire
+          comme un opérateur.
+          C'est déjà ce que rend `formatMoney`, donc ce que le lecteur d'écran
+          annonçait pendant que l'œil lisait autre chose : les deux disent
+          maintenant la même chose. En français le symbole ferme le montant, et
+          rien ne bouge. */}
+      {sign !== '' && <span aria-hidden="true">{sign}</span>}
       {before && symbol}
       <span aria-hidden="true">
-        {sign}
         {parts.integer}
         {withCents && (
           <span style={{ fontSize: CENTS_EM[size] }}>

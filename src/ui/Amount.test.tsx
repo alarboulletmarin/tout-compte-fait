@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { en } from '@/i18n/en'
+import { fr } from '@/i18n/fr'
+import { setCatalog } from '@/i18n/strings'
 import { money } from '@/domain/money'
 import { Amount } from './Amount'
 
@@ -69,5 +72,32 @@ describe('Amount', () => {
     for (const hidden of container.querySelectorAll('[aria-hidden="true"]')) {
       expect(hidden).not.toHaveClass('sr-only-text')
     }
+  })
+
+  /* Ce que l'œil lit et ce que l'oreille entend doivent être le même montant.
+     Le signe vivait avec le chiffre, donc **après** le symbole quand celui-ci
+     passe devant : l'anglais affichait « € +7 891,00 » pendant que le nom
+     accessible, lui, disait « +€7,891.00 ». Deux lectures du même chiffre, dont
+     une fausse. */
+  describe('la place du signe', () => {
+    afterEach(() => {
+      setCatalog('fr', fr)
+    })
+
+    it('garde le signe en tête quand le symbole passe devant, en anglais', () => {
+      setCatalog('en', en)
+      const { container } = render(<Amount value={money(789100)} signed />)
+      const seen = (container.firstElementChild?.textContent ?? '').replace(/\s/g, '')
+      /* Le texte du nœud contient le doublon accessible : on ne garde que ce qui
+         suit, c'est-à-dire le rendu visuel. */
+      expect(seen).toContain('+€7,891.00')
+      expect(seen).not.toContain('€+7,891.00')
+    })
+
+    it('laisse le symbole fermer le montant en français', () => {
+      const { container } = render(<Amount value={money(789100)} signed />)
+      const seen = (container.firstElementChild?.textContent ?? '').replace(/\s/g, '')
+      expect(seen).toContain('+7891,00€')
+    })
   })
 })
