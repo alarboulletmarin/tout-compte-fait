@@ -1,11 +1,7 @@
 <!--
 Merci pour ta proposition.
 
-Rappel utile avant d'aller plus loin : ce dépôt est un projet personnel ouvert.
-Les PR ne sont pas refusées par principe, mais le périmètre est fixé par le
-cahier des charges et l'apparence par le design system. Si ta PR n'est rattachée
-à aucune issue discutée, elle risque d'être refusée sur le périmètre plutôt que
-sur le code — ce serait dommage pour le travail déjà fait.
+Rappel utile avant d'aller plus loin : ce dépôt est un projet personnel ouvert. Les PR ne sont pas refusées par principe, mais le périmètre est fixé par le cahier des charges et l'apparence par le design system. Si ta PR n'est rattachée à aucune issue discutée, elle risque d'être refusée sur le périmètre plutôt que sur le code, ce serait dommage pour le travail déjà fait.
 
 CONTRIBUTING.md dit tout ça en détail.
 -->
@@ -20,8 +16,10 @@ CONTRIBUTING.md dit tout ça en détail.
 
 ## Comment
 
-<!-- L'approche retenue, et surtout celles écartées et pourquoi — c'est ce qui
-     se perd le plus vite, et c'est ce qui manque le plus à la relecture. -->
+<!--
+L'approche retenue, et surtout celles écartées et pourquoi : c'est ce qui
+     se perd le plus vite, et c'est ce qui manque le plus à la relecture.
+-->
 
 ## Vérifications
 
