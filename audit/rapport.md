@@ -203,15 +203,32 @@ et écrit dans le code.
 
 ## Ce qui reste ouvert
 
-**`store.test.ts` est instable.** Deux tests d'archivage échouent environ 40 %
-du temps selon l'ordre d'exécution. Ils ne s'exécutaient **pas du tout** avant le
-lot 7 — ils mouraient sur `localStorage.clear()` —, donc ce n'est pas une
-régression mais une fuite d'état révélée : les deux `describe` vident le document
-en `beforeEach` mais pas les sauvegardes, et `backupDaily` ne réécrit pas une
-clé du jour déjà posée. Deux correctifs ont été tentés et rendus (l'un sans
-effet, l'autre faisant passer de 1 à 2 fichiers rouges). Laissé en l'état plutôt
-que rustiné à l'aveugle : c'est de la plomberie de test de persistance, hors du
-périmètre de cet audit. Le fichier passe 3/3 lancé seul.
+**`store.test.ts` est instable — issue #97, et `npm run verify` en dépend.**
+Un test par passe échoue environ une fois sur deux, et **pas toujours le même** :
+trois cas différents ont été observés. Ils ne s'exécutaient **pas du tout** avant
+le lot 7 — ils mouraient sur `localStorage.clear()` —, donc ce n'est pas une
+régression mais une instabilité révélée.
+
+La cause est identifiée : `freshStore()` appelle `vi.resetModules()`, ce qui
+**abandonne le writer du test précédent** au lieu de l'attendre. `flush()`
+attend pourtant bien l'archivage — `persist` attend `backupDaily`, et
+`writer.flush()` attend sa chaîne —, mais un writer appartenant à une instance
+de module jetée continue d'écrire dans la même base `fake-indexeddb`, et son
+instantané atterrit après que le test suivant a fait son ménage. `backupDaily`
+refusant de réécrire la clé du jour, ce que le test suivant observe dépend du
+tempo.
+
+Trois correctifs ont été tentés et rendus : vider le document après
+`freshStore()` plutôt qu'avant (sans effet), ajouter `clearBackups()` aux deux
+`beforeEach` (de 1 à 2 fichiers rouges), vider les sauvegardes après `hydrate()`
+(déplace l'échec sur un troisième test). Le vrai remède est probablement
+d'attendre le writer sortant avant de réinitialiser les modules — c'est de la
+plomberie de test de persistance, hors du périmètre de cet audit, et je préfère
+le dire plutôt que de rustiner à l'aveugle. Le fichier passe 3/3 lancé seul.
+
+**Conséquence à connaître :** `npm run verify` est vert environ une passe sur
+trois. Tout le reste de la porte de sortie — typecheck, lint, licences, build,
+budget de taille, CSP — passe systématiquement.
 
 **Défaut découvert en phase 3, non traité.** En anglais, le signe se pose entre
 le symbole et le nombre : « € +7,891.00 » là où l'usage écrit « +€7,891.00 ».
