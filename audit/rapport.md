@@ -229,13 +229,20 @@ Mesuré : **13 passes complètes de `npm run test` consécutives, toutes vertes*
 (8 par un agent dédié, 5 en vérification indépendante), puis `npm run verify` de
 bout en bout deux fois sur deux.
 
-**Défaut découvert en phase 3, non traité.** En anglais, le signe se pose entre
-le symbole et le nombre : « € +7,891.00 » là où l'usage écrit « +€7,891.00 ».
-Antérieur à cet audit et sans rapport avec les lots livrés — signalé ici comme
-la phase 3 le demande, plutôt qu'embarqué dans un lot en cours.
+**Défaut découvert en phase 3, corrigé depuis.** En anglais, le signe se posait
+entre le symbole et le nombre : « € +7,891.00 » là où l'usage écrit
+« +€7,891.00 ». Le nom accessible, lui, disait déjà la bonne forme — l'œil et
+l'oreille lisaient donc deux montants différents. Le signe passe en tête, symbole
+compris, et un test le verrouille dans les deux langues (il échoue sans le
+correctif).
 
-**Le rail de filtre par personne** déborde à 320, 375 et 414 px (498 px de
-contenu). Son affordance est une pilule coupée au bord, avec `scroll-snap`. Elle
-est faible mais existante et documentée (`components.css:329`) ; la renforcer
-demanderait un dégradé de bord, qui éteindrait l'anneau de focus de la pilule —
-c'est l'objection que le code écrit déjà.
+**Le rail de filtre par personne** débordait à 320, 375 et 414 px (498 px de
+pilules) sans autre affordance qu'une pilule tranchée au bord, ce qui se confond
+avec un libellé long. Deux objections avaient tenu un dégradé à l'écart, et
+chacune se lève d'une ligne : il s'efface sur `:focus-visible`, donc il ne peut
+jamais éteindre l'anneau de la pilule qu'il estompe ; et il suit la position de
+défilement, donc il n'annonce pas de la suite là où il n'y en a plus, ni sur un
+rail qui ne déborde pas. Sous `@supports` : sans `animation-timeline`, le rail
+est exactement celui d'avant. Mesuré : progression 0 → 1 le long du défilement,
+masque qui bascule de droite à gauche, et `none` tant qu'une pilule tient le
+focus clavier.
