@@ -114,3 +114,82 @@ if (typeof globalThis.ResizeObserver !== 'function') {
     disconnect() {}
   }
 }
+
+/* Le sixième trou, et le seul qui vienne du **moteur** plutôt que de jsdom.
+ *
+ * Node 26 expose son propre `localStorage`, mais refuse de le servir sans
+ * `--localstorage-file` ; il masque au passage celui que jsdom posait, si bien
+ * que `localStorage` vaut `undefined` des deux côtés. Trente-neuf tests
+ * tombaient là-dessus — la langue, le thème, la notice, les rappels d'export :
+ * tout ce qui garde un miroir hors d'IndexedDB —, et ils tombaient sur
+ * `localStorage.clear()`, c'est-à-dire dans leur préambule, loin de ce qu'ils
+ * vérifient.
+ *
+ * Le bouchon est une `Storage` complète et en mémoire, pas un objet à trois
+ * méthodes : `key()` et `length` font partie du contrat, et un test qui
+ * énumère les clés doit lire la même chose qu'un navigateur. Les valeurs sont
+ * converties en chaîne comme le fait la vraie API — c'est ce qui distingue un
+ * bouchon d'une approximation qui laisserait passer un bug de sérialisation.
+ *
+ * **Les méthodes vivent sur `Storage.prototype`, pas sur l'instance**, et ce
+ * n'est pas une coquetterie : un test de `transfer.ts` espionne
+ * `Storage.prototype.setItem` pour compter les écritures d'une date d'export.
+ * Une méthode posée en propriété propre masque celle du prototype, l'espion ne
+ * voit alors rien passer, et le test échoue en annonçant zéro écriture là où
+ * l'app en fait une. Un bouchon qui ment sur sa forme fait échouer les tests
+ * qui regardent la forme. */
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>()
+  const proto: object = typeof Storage === 'function' ? (Storage.prototype as object) : {}
+  Object.defineProperties(proto, {
+    length: { get: () => store.size, configurable: true },
+    key: {
+      value: (index: number) => [...store.keys()][index] ?? null,
+      configurable: true,
+      writable: true,
+    },
+    getItem: {
+      value: (key: string) => store.get(String(key)) ?? null,
+      configurable: true,
+      writable: true,
+    },
+    setItem: {
+      value: (key: string, value: string) => {
+        store.set(String(key), String(value))
+      },
+      configurable: true,
+      writable: true,
+    },
+    removeItem: {
+      value: (key: string) => {
+        store.delete(String(key))
+      },
+      configurable: true,
+      writable: true,
+    },
+    clear: {
+      value: () => {
+        store.clear()
+      },
+      configurable: true,
+      writable: true,
+    },
+  })
+  const memory = Object.create(proto) as Storage
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: memory })
+  /* `window` et `globalThis` sont le même objet sous jsdom, mais l'écrire
+     protège du jour où ils cesseraient de l'être. */
+  if (typeof window !== 'undefined' && window !== (globalThis as unknown)) {
+    Object.defineProperty(window, 'localStorage', { configurable: true, value: memory })
+  }
+
+  /* Vidé entre deux tests, comme la langue plus haut et pour la même raison :
+     le stockage est un état de module, donc partagé par tout un fichier. Sans
+     ce retour, un test qui écarte un rappel d'export le laisse écarté pour les
+     suivants — et ceux-là échouent loin de la ligne qui a écrit la clé. Quatre
+     tests le montraient dès que le bouchon a existé : ils passaient parce que
+     l'écriture échouait, pas parce qu'elle était propre. */
+  afterEach(() => {
+    store.clear()
+  })
+}
