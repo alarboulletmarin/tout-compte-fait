@@ -61,6 +61,64 @@ export async function openApp(page: Page): Promise<void> {
   await dismissNotice(page)
 }
 
+/* La base, le magasin et la clé où l'app pose son document. Recopiés de
+   `src/persistence/db.ts` plutôt qu'importés : ces tests lisent l'app
+   **construite**, et n'ont aucun accès à ses modules. S'ils changeaient là-bas,
+   `storedMembers` ne trouverait plus rien et l'attente ci-dessous échouerait en
+   le disant — c'est le prix, et il est visible. */
+const DB_NAME = 'tout-compte-fait'
+const DOCUMENT_STORE = 'document'
+const DOCUMENT_KEY = 'current'
+
+/**
+ * Le nombre de membres du foyer **enregistré en base**, et zéro tant qu'il n'y
+ * a rien à lire.
+ *
+ * C'est la seule question dont la réponse ne dépend pas de ce que l'écran
+ * montre : le document vit en mémoire dès que l'app l'a construit, et l'écran
+ * l'affiche à cet instant — mais un rechargement, lui, ne relit que ce qui a
+ * atteint IndexedDB.
+ */
+async function storedMembers(page: Page): Promise<number> {
+  return page.evaluate(
+    ({ name, store, key }) =>
+      new Promise<number>((resolve, reject) => {
+        const opening = indexedDB.open(name)
+        /* La base n'existe pas encore : l'ouverture sans numéro de version en
+           créerait une, vide, sous le nez de l'app qui ouvre la sienne en v2.
+           On annule, et on répond « rien d'enregistré » — ce qui est le cas. */
+        let absent = false
+        opening.onupgradeneeded = () => {
+          absent = true
+          opening.transaction?.abort()
+        }
+        opening.onerror = () => {
+          if (absent) resolve(0)
+          else reject(opening.error ?? new Error('ouverture de la base refusée'))
+        }
+        opening.onsuccess = () => {
+          const db = opening.result
+          if (!db.objectStoreNames.contains(store)) {
+            db.close()
+            resolve(0)
+            return
+          }
+          const read = db.transaction(store, 'readonly').objectStore(store).get(key)
+          read.onerror = () => {
+            db.close()
+            reject(read.error ?? new Error('lecture du document refusée'))
+          }
+          read.onsuccess = () => {
+            db.close()
+            const saved = read.result as { household?: { members?: unknown[] } } | undefined
+            resolve(saved?.household?.members?.length ?? 0)
+          }
+        }
+      }),
+    { name: DB_NAME, store: DOCUMENT_STORE, key: DOCUMENT_KEY },
+  )
+}
+
 /**
  * Charge le jeu d'exemple, et attend qu'il soit vraiment là.
  *
@@ -70,11 +128,23 @@ export async function openApp(page: Page): Promise<void> {
  * machine-ci et nulle part ailleurs. On attend donc que la barre de navigation
  * de l'app soit affichée — elle ne l'est pas sur la page de présentation — et
  * que le solde du mois soit chiffré.
+ *
+ * Puis on attend un second fait, que l'écran ne dit pas : que le document soit
+ * **enregistré**. L'app pose le document dans son état, rend l'écran, et écrit
+ * ensuite — un demi-mégaoctet, cinq ans d'échéances. Tout scénario qui enchaîne
+ * sur un `goto` ou un `reload` recharge l'app pour de bon, et une écriture
+ * encore en vol se fait interrompre par la navigation : l'app repart alors sans
+ * document, c'est-à-dire sur la page de présentation. Elle y montre un exemple
+ * de répartition entre Alix et Camille — de quoi faire passer les premières
+ * assertions d'un scénario et échouer sur la troisième personne du foyer, à
+ * cinq secondes de là. C'est arrivé en intégration continue, où la machine est
+ * lente et deux navigateurs se partagent deux cœurs.
  */
 export async function loadExample(page: Page): Promise<void> {
   await page.getByRole('button', { name: /charger l’exemple/i }).first().click()
   await expect(page.getByRole('navigation').first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText(/solde du mois/i).first()).toBeVisible({ timeout: 30_000 })
+  await expect.poll(() => storedMembers(page), { timeout: 30_000 }).toBeGreaterThan(0)
 }
 
 /**
