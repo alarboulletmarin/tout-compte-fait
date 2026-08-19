@@ -25,15 +25,12 @@ export const en: ProjectionStrings = {
   modeAxis: 'What is simulated',
   modeSimple: 'Simple',
   modeAccounts: 'My accounts',
-  modeSimpleHint: 'Nothing you type here is saved to your accounts.',
   settings: 'Your simulation',
   more: 'Frequency and inflation',
 
   simpleStart: 'Starting capital',
-  simpleStartHint: 'Left empty: it starts from zero.',
   simpleRate: 'Annual return',
-  simpleRateHint:
-    'No rate is guessed here: this one is yours, and it is entered net of fees and tax.',
+  simpleRateHint: 'Net of fees and tax.',
   simpleEmpty: 'Enter a contribution or a starting capital to see the trajectory.',
 
   pillAccounts: 'Accounts simulated',
@@ -122,13 +119,12 @@ export const en: ProjectionStrings = {
   durationOther: 'Other term',
   durationPreset: '%s years',
   durationInvalid: 'Between %s and %s years.',
-  cadence: 'Contribution frequency',
+  cadence: 'Frequency',
   cadenceMonthly: 'Monthly',
   cadenceQuarterly: 'Quarterly',
   cadenceHalf: 'Half-yearly',
   cadenceYearly: 'Yearly',
-  cadenceHint:
-    'For the same effort, paying in once a year returns slightly less than paying in every month: the money spends less time earning.',
+  cadenceHint: 'For the same effort, paying in once a year returns slightly less.',
   perMonth: '%s/month',
   perQuarter: '%s/quarter',
   perHalf: '%s/half-year',
@@ -136,10 +132,9 @@ export const en: ProjectionStrings = {
 
   inflationAxis: 'Which euros to read',
   inflationCurrent: 'Nominal',
-  inflationConstant: 'Today’s money',
+  inflationConstant: 'Today’s',
   inflation: 'Annual inflation',
-  inflationHint:
-    'In today’s money, each amount is deflated at its own date: a contribution made ten years from now doesn’t have the purchasing power of one made today.',
+  inflationHint: 'Each amount is deflated at its own date.',
   constantOn: 'Amounts in today’s money, inflation at %s.',
 
   explain: 'Understanding this simulation',

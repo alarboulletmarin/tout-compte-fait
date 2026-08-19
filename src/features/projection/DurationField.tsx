@@ -12,6 +12,10 @@
  * Le cinquième choix ouvre le champ libre, et le champ revient de lui-même sur
  * une durée hors raccourci : sans quoi sept ans reviendraient d'une visite à
  * l'autre sans rien pour les relire.
+ *
+ * **Sans grille à lui** : ce sont des cases dans celle de l'écran, où la durée
+ * se pose à côté du rendement. Une boîte ici l'aurait renvoyée sous les autres
+ * champs, sur une rangée à elle.
  * ==========================================================================*/
 
 import { useState } from 'react'
@@ -38,12 +42,12 @@ export function DurationField({ years, onChange, error }: DurationFieldProps) {
   const showField = custom || !isPreset(years)
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <>
       <Field label={projection.duration}>
         {(id) => (
           <Select
             id={id}
-            className="max-w-48"
+            className="min-w-0 max-w-48"
             value={showField ? CUSTOM : String(years)}
             onChange={(event) => {
               const value = event.target.value
@@ -71,7 +75,7 @@ export function DurationField({ years, onChange, error }: DurationFieldProps) {
             <TextInput
               id={id}
               aria-describedby={describedBy}
-              className="max-w-24"
+              className="min-w-0 max-w-24"
               inputMode="numeric"
               value={String(years)}
               invalid={error !== undefined}
@@ -82,6 +86,6 @@ export function DurationField({ years, onChange, error }: DurationFieldProps) {
           )}
         </Field>
       )}
-    </div>
+    </>
   )
 }

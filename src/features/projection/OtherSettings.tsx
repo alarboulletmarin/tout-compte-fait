@@ -56,14 +56,14 @@ export function OtherSettings({
   error,
 }: OtherSettingsProps) {
   return (
-    <div className="flex flex-col gap-4 border-t border-border pt-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="border-t border-border pt-4">
+      <div className="grid grid-cols-2 gap-4">
         <Field label={projection.cadence} hint={projection.cadenceHint}>
           {(id, describedBy) => (
             <Select
               id={id}
               aria-describedby={describedBy}
-              className="max-w-48"
+              className="min-w-0 max-w-48"
               value={String(every)}
               onChange={(event) => {
                 const found = PERIODS.find((one) => String(one) === event.target.value)
@@ -84,7 +84,7 @@ export function OtherSettings({
             <Select
               id={id}
               aria-describedby={describedBy}
-              className="max-w-48"
+              className="min-w-0 max-w-48"
               value={constant ? CONSTANT : CURRENT}
               onChange={(event) => {
                 onConstant(event.target.value === CONSTANT)
@@ -103,7 +103,7 @@ export function OtherSettings({
                 <TextInput
                   id={id}
                   aria-describedby={describedBy}
-                  className="max-w-24"
+                  className="min-w-0 max-w-24"
                   inputMode="decimal"
                   value={inflationText}
                   invalid={error !== undefined}

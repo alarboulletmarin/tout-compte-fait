@@ -303,27 +303,7 @@ export function ProjectionPage() {
             />
           </div>
 
-          {simple ? (
-            <>
-              <SimpleFields
-                startText={draft.startText}
-                payText={draft.payText}
-                rateText={draft.rateText}
-                every={draft.every}
-                errors={errors}
-                onStart={(startText) => {
-                  patch({ startText })
-                }}
-                onPay={(payText) => {
-                  patch({ payText })
-                }}
-                onRate={(rateText) => {
-                  patch({ rateText })
-                }}
-              />
-              <p className="t-label">{projection.modeSimpleHint}</p>
-            </>
-          ) : (
+          {!simple && (
             /* Trois réglages qui se posent **compte par compte** : ils gardent
                leur feuille, parce que dix comptes à plat font une page de
                formulaire. Chaque pilule dit ce que vaut le réglage qu'elle
@@ -360,13 +340,42 @@ export function ProjectionPage() {
             </div>
           )}
 
-          <DurationField
-            years={draft.years}
-            onChange={(years) => {
-              patch({ years })
-            }}
-            {...(errors.years === undefined ? {} : { error: errors.years })}
-          />
+          {/* Une grille de champs, et **deux colonnes dès le plus petit écran**.
+              Empilés, quatre champs et leurs aides poussaient la réponse à huit
+              cents pixels du haut : on réglait un versement sans voir le chiffre
+              qu'il produit. Les paires se lisent d'elles-mêmes — ce qu'on verse
+              et ce qu'on a déjà, le taux et l'horizon.
+
+              La durée y entre au même titre que les autres, dans les deux
+              modes : elle ne se pose pas compte par compte, c'est l'horizon de
+              toute la simulation. */}
+          <div className="grid grid-cols-2 gap-4">
+            {simple && (
+              <SimpleFields
+                startText={draft.startText}
+                payText={draft.payText}
+                rateText={draft.rateText}
+                every={draft.every}
+                errors={errors}
+                onStart={(startText) => {
+                  patch({ startText })
+                }}
+                onPay={(payText) => {
+                  patch({ payText })
+                }}
+                onRate={(rateText) => {
+                  patch({ rateText })
+                }}
+              />
+            )}
+            <DurationField
+              years={draft.years}
+              onChange={(years) => {
+                patch({ years })
+              }}
+              {...(errors.years === undefined ? {} : { error: errors.years })}
+            />
+          </div>
 
           <Disclosure title={projection.more} open={more} onOpenChange={setMore}>
             <OtherSettings
