@@ -202,13 +202,21 @@ describe('les repères', () => {
   })
 
   /* La devise ne mène nulle part — elle se règle sur place —, donc pas de
-     chevron ; elle garde son repère, sans quoi la colonne de glyphes
-     s'interromprait au milieu du groupe. */
+     chevron de navigation ; elle garde son repère, sans quoi la colonne de
+     glyphes s'interromprait au milieu du groupe.
+
+     Sa liste déroulante porte le sien, et les deux ne se confondent pas : le
+     chevron d'une rangée pointe à droite et promet un écran, celui d'un
+     contrôle pointe en bas et annonce ce qui s'ouvre sur place. */
   it('en donne un aussi à la rangée qui ne mène nulle part', () => {
     open()
 
     const row = screen.getByText(t.settings.currency).closest('div')
-    expect(row?.querySelectorAll('svg')).toHaveLength(1)
+    const control = row?.querySelector('select')?.parentElement
+    expect(control?.querySelectorAll('svg')).toHaveLength(1)
+    // Le repère et ce chevron-là, et rien d'autre : la rangée n'est pas un lien.
+    expect(row?.querySelectorAll('svg')).toHaveLength(2)
+    expect(row?.querySelector('a')).toBeNull()
   })
 })
 

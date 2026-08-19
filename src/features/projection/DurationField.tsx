@@ -1,21 +1,26 @@
 /* ============================================================================
- * La durée : quatre raccourcis, et un champ pour le reste.
+ * La durée : une liste, et un champ pour ce qu'elle ne dit pas.
  *
- * Sur la page et non dans une feuille — l'horizon est le deuxième réglage qu'on
- * tourne, et il valait un aller-retour modal pour quatre boutons. Le cinquième
- * segment ouvre le champ, et le champ revient de lui-même sur une durée hors
- * raccourci : sans quoi sept ans reviendraient d'une visite à l'autre sans rien
- * pour les relire.
+ * **La forme d'un champ, et non celle d'une bascule.** Quatre raccourcis et un
+ * cinquième segment tenaient dans une pilule de quatre cent quatre-vingt-dix
+ * pixels de rayon, qui passait à la ligne sous 400 points : un pavé arrondi de
+ * deux rangées, posé entre trois champs à douze pixels de rayon. Deux langages
+ * de formes sur la même carte, et le plus bruyant portait le réglage le moins
+ * intéressant — on choisit un horizon une fois, on retouche un versement dix
+ * fois. La liste déroulante en fait une ligne, à la forme des champs voisins.
+ *
+ * Le cinquième choix ouvre le champ libre, et le champ revient de lui-même sur
+ * une durée hors raccourci : sans quoi sept ans reviendraient d'une visite à
+ * l'autre sans rien pour les relire.
  * ==========================================================================*/
 
 import { useState } from 'react'
 import { tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
-import { Field, TextInput } from '@/ui/Field'
-import { Segmented } from '@/ui/Segmented'
+import { Field, Select, TextInput } from '@/ui/Field'
 import { YEAR_PRESETS, isPreset } from './model'
 
-/** La valeur du cinquième segment — celui qui ouvre le champ. */
+/** La valeur du dernier choix — celui qui ouvre le champ. */
 const CUSTOM = 'custom'
 
 export type DurationFieldProps = {
@@ -33,30 +38,32 @@ export function DurationField({ years, onChange, error }: DurationFieldProps) {
   const showField = custom || !isPreset(years)
 
   return (
-    <div className="flex flex-col gap-1.5">
-      {/* Le nom du réglage se voit, comme celui des champs voisins : une bascule
-          dont le libellé ne vit que dans son étiquette accessible se lit à
-          l'oreille et pas à l'œil, et la page en aligne trois. */}
-      <p className="t-label text-text">{projection.duration}</p>
-      <Segmented
-        options={[
-          ...YEAR_PRESETS.map((preset) => ({
-            value: String(preset),
-            label: tpl(projection.durationPreset, preset),
-          })),
-          { value: CUSTOM, label: projection.durationOther },
-        ]}
-        value={showField ? CUSTOM : String(years)}
-        onChange={(value) => {
-          if (value === CUSTOM) {
-            setCustom(true)
-            return
-          }
-          setCustom(false)
-          onChange(Number(value))
-        }}
-        label={projection.duration}
-      />
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label={projection.duration}>
+        {(id) => (
+          <Select
+            id={id}
+            className="max-w-48"
+            value={showField ? CUSTOM : String(years)}
+            onChange={(event) => {
+              const value = event.target.value
+              if (value === CUSTOM) {
+                setCustom(true)
+                return
+              }
+              setCustom(false)
+              onChange(Number(value))
+            }}
+          >
+            {YEAR_PRESETS.map((preset) => (
+              <option key={preset} value={preset}>
+                {tpl(projection.durationPreset, preset)}
+              </option>
+            ))}
+            <option value={CUSTOM}>{projection.durationOther}</option>
+          </Select>
+        )}
+      </Field>
 
       {showField && (
         <Field label={projection.durationYears} {...(error === undefined ? {} : { error })}>

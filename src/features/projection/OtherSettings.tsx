@@ -11,24 +11,30 @@
  * il annonce ce qu'il porte. La réserve du pied, elle, ne se replie jamais —
  * c'est la seule chose de cet écran qui soit vraie quels que soient les réglages.
  *
- * La cadence n'est pas un détail d'affichage : le moteur capitalise, donc
- * 1 200 € versés une fois l'an ne valent pas 100 € versés douze fois, et l'écart
- * est exactement ce qu'on vient mesurer en la changeant.
+ * **Deux listes déroulantes, à la forme des champs.** Ce sont des choix à quatre
+ * et à deux positions, qu'une bascule aurait posés en pavés de pilules sur deux
+ * rangées ; ici la valeur courante se lit sur une ligne, et le reste s'ouvre.
+ * La cadence n'est pas un détail d'affichage pour autant : le moteur capitalise,
+ * donc 1 200 € versés une fois l'an ne valent pas 100 € versés douze fois, et
+ * l'écart est exactement ce qu'on vient mesurer en la changeant.
  * ==========================================================================*/
 
 import { projection } from '@/i18n/projection'
-import { Field, TextInput } from '@/ui/Field'
-import { Segmented } from '@/ui/Segmented'
+import { Field, Select, TextInput } from '@/ui/Field'
 import { Unit } from './Unit'
 import { PERIODS, type Period } from './model'
 
 /** Le nom d'une cadence, et la valeur qu'elle porte en mois. */
-const CADENCES = (): { value: string; label: string }[] => [
-  { value: '1', label: projection.cadenceMonthly },
-  { value: '3', label: projection.cadenceQuarterly },
-  { value: '6', label: projection.cadenceHalf },
-  { value: '12', label: projection.cadenceYearly },
+const CADENCES = (): { value: Period; label: string }[] => [
+  { value: 1, label: projection.cadenceMonthly },
+  { value: 3, label: projection.cadenceQuarterly },
+  { value: 6, label: projection.cadenceHalf },
+  { value: 12, label: projection.cadenceYearly },
 ]
+
+/** Les deux lectures, et elles s'excluent : euros du jour, ou euros d'aujourd'hui. */
+const CURRENT = 'current'
+const CONSTANT = 'constant'
 
 export type OtherSettingsProps = {
   every: Period
@@ -51,36 +57,44 @@ export function OtherSettings({
 }: OtherSettingsProps) {
   return (
     <div className="flex flex-col gap-4 border-t border-border pt-4">
-      <div className="flex flex-col gap-1.5">
-        <p className="t-label text-text">{projection.cadence}</p>
-        <Segmented
-          options={CADENCES()}
-          value={String(every)}
-          onChange={(next) => {
-            const found = PERIODS.find((one) => String(one) === next)
-            if (found !== undefined) onEvery(found)
-          }}
-          label={projection.cadence}
-        />
-        <p className="t-label">{projection.cadenceHint}</p>
-      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={projection.cadence} hint={projection.cadenceHint}>
+          {(id, describedBy) => (
+            <Select
+              id={id}
+              aria-describedby={describedBy}
+              className="max-w-48"
+              value={String(every)}
+              onChange={(event) => {
+                const found = PERIODS.find((one) => String(one) === event.target.value)
+                if (found !== undefined) onEvery(found)
+              }}
+            >
+              {CADENCES().map((cadence) => (
+                <option key={cadence.value} value={cadence.value}>
+                  {cadence.label}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
 
-      <div className="flex flex-col gap-1.5">
-        <p className="t-label text-text">{projection.inflationAxis}</p>
-        {/* Une bascule à deux positions nommées, et non une case à cocher : ce
-            n'est pas un attribut vrai ou faux, c'est le choix entre deux lectures
-            qui s'excluent — et les deux méritent leur nom. */}
-        <Segmented
-          options={[
-            { value: 'current', label: projection.inflationCurrent },
-            { value: 'constant', label: projection.inflationConstant },
-          ]}
-          value={constant ? 'constant' : 'current'}
-          onChange={(next) => {
-            onConstant(next === 'constant')
-          }}
-          label={projection.inflationAxis}
-        />
+        <Field label={projection.inflationAxis} hint={projection.inflationHint}>
+          {(id, describedBy) => (
+            <Select
+              id={id}
+              aria-describedby={describedBy}
+              className="max-w-48"
+              value={constant ? CONSTANT : CURRENT}
+              onChange={(event) => {
+                onConstant(event.target.value === CONSTANT)
+              }}
+            >
+              <option value={CURRENT}>{projection.inflationCurrent}</option>
+              <option value={CONSTANT}>{projection.inflationConstant}</option>
+            </Select>
+          )}
+        </Field>
 
         {constant && (
           <Field label={projection.inflation} {...(error === undefined ? {} : { error })}>
@@ -101,8 +115,6 @@ export function OtherSettings({
             )}
           </Field>
         )}
-
-        <p className="t-label">{projection.inflationHint}</p>
       </div>
     </div>
   )

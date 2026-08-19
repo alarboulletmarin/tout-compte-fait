@@ -404,7 +404,7 @@ describe('le versement et sa cadence', () => {
     show()
     await useAccounts()
     await openMore()
-    await userEvent.click(screen.getByRole('radio', { name: projection.cadenceYearly }))
+    await userEvent.selectOptions(screen.getByLabelText(projection.cadence), '12')
 
     /* Le même effort à la nouvelle cadence : 350 €/mois deviennent 4 200 €/an, et
        le champ le propose plutôt que de le faire deviner. */
@@ -463,7 +463,7 @@ describe('la durée et l’inflation', () => {
   it('change d’horizon d’un appui, sans quitter la page', async () => {
     seed()
     show()
-    await userEvent.click(screen.getByRole('radio', { name: tpl(projection.durationPreset, 25) }))
+    await userEvent.selectOptions(screen.getByLabelText(projection.duration), '25')
     expect(
       screen.getByText(tpl(projection.resultIn, projection.years.replace('%s', '25'))),
     ).toBeInTheDocument()
@@ -473,7 +473,7 @@ describe('la durée et l’inflation', () => {
     seed()
     show()
     await openMore()
-    await userEvent.click(screen.getByRole('radio', { name: projection.inflationConstant }))
+    await userEvent.selectOptions(screen.getByLabelText(projection.inflationAxis), 'constant')
 
     expect(screen.getByText(new RegExp(projection.constantOn.replace('%s', '')))).toBeInTheDocument()
   })
@@ -501,7 +501,7 @@ describe('ce que l’écran ne fait pas', () => {
   it('garde ses réglages hors du document, dans le stockage local', async () => {
     seed()
     show()
-    await userEvent.click(screen.getByRole('radio', { name: tpl(projection.durationPreset, 15) }))
+    await userEvent.selectOptions(screen.getByLabelText(projection.duration), '15')
     expect(localStorage.getItem(PROJECTION_STORAGE_KEY)).toContain('"years":15')
   })
 
