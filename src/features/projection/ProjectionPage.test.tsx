@@ -42,8 +42,26 @@ import { ProjectionPage } from './ProjectionPage'
 
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
-/** Le chiffre de la réponse — celui qu'on vient chercher, et le seul en `t-tile-fit`. */
-const hero = (): string => said(document.querySelector('.t-tile-fit')?.textContent ?? '')
+/**
+ * Le chiffre de la réponse — celui qu'on vient chercher.
+ *
+ * Deux tailles pour un seul rôle : le chiffre héros quand la simulation arrive
+ * sur un montant, la taille en dessous quand elle arrive sur une fourchette, qui
+ * porte deux montants et un tiret. C'est le même chiffre, et le test le lit
+ * comme tel.
+ */
+const hero = (): string =>
+  said(document.querySelector('.t-hero-fit, .t-tile-fit')?.textContent ?? '')
+
+/**
+ * De quoi le capital est fait, tel que la réponse le décompose.
+ *
+ * Lu sur les rangées et non dans la page entière : la légende de la figure porte
+ * les mêmes mots — c'est le même vocabulaire des deux côtés, et c'est voulu —,
+ * donc une recherche globale en trouverait deux de chaque.
+ */
+const layers = (): string[] =>
+  [...document.querySelectorAll('dl dt')].map((node) => said(node.textContent ?? ''))
 
 /** La pilule d'un réglage, nommée par ce qu'elle règle. */
 const pill = (label: string): HTMLElement =>
@@ -61,6 +79,21 @@ const sheet = (): HTMLElement => screen.getByRole('dialog')
 const open = async (label: string): Promise<HTMLElement> => {
   await userEvent.click(pill(label))
   return sheet()
+}
+
+/**
+ * Passe l'écran sur les comptes du document.
+ *
+ * L'écran s'ouvre en mode simple — trois nombres tapés, aucun compte —, donc
+ * tout ce qui se règle compte par compte commence par cette bascule.
+ */
+const useAccounts = async (): Promise<void> => {
+  await userEvent.click(screen.getByRole('radio', { name: projection.modeAccounts }))
+}
+
+/** Déplie les deux réglages qu'on ne tourne pas en arrivant : cadence, inflation. */
+const openMore = async (): Promise<void> => {
+  await userEvent.click(screen.getByText(projection.more))
 }
 
 const pristine = useStore.getState().data
@@ -138,19 +171,20 @@ describe('l’écran de simulation', () => {
   })
 
   it('répond avant qu’on ait réglé quoi que ce soit', () => {
-    /* L'écran s'ouvre sur les comptes du document, à leur capital et à leurs
-       versements : il n'y a rien à taper pour obtenir une réponse. */
+    /* L'écran s'ouvre sur un versement d'exemple et le taux le plus modeste
+       qu'il connaisse : il n'y a rien à taper pour obtenir une réponse, et rien
+       à posséder non plus. */
     seed()
     show()
     expect(hero()).toMatch(/≈/)
     expect(screen.getByText(tpl(projection.resultIn, projection.years.replace('%s', '10')))).toBeInTheDocument()
   })
 
-  it('décompose le chiffre en départ, versé et rendement', () => {
-    // « ≈ 57 k€ » impressionne ; « 8,5 k€ au départ · 42 k€ versés » informe.
+  it('décompose le chiffre en versé et rendement', () => {
+    // « ≈ 57 k€ » impressionne ; « 12 000 € versés, 1 900 € de rendement » informe.
     seed()
     show()
-    expect(screen.getByText(/au départ · .* versés · .* de rendement/)).toBeInTheDocument()
+    expect(layers()).toEqual([projection.layerPaid, projection.layerGain])
   })
 
   it('n’affiche aucun centime, où que ce soit dans la réponse', () => {
@@ -162,7 +196,7 @@ describe('l’écran de simulation', () => {
     expect(hero()).not.toMatch(/\d,\d\d\s/)
   })
 
-  it('dit quoi faire quand le document n’a aucun compte d’épargne', () => {
+  it('dit quoi faire quand on demande ses comptes et qu’il n’y en a aucun', async () => {
     useStore.setState({
       data: makeData({
         household: { name: 'Maison', members: [makeMember({ id: 'm-1', name: 'Andrea' })] },
@@ -170,21 +204,103 @@ describe('l’écran de simulation', () => {
       filter: ALL_FILTER,
     })
     show()
+    await useAccounts()
     expect(screen.getByText(projection.noSupports)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: projection.newSupport })).toBeInTheDocument()
   })
 })
 
+describe('le mode simple', () => {
+  it('répond sans le moindre compte dans le document', () => {
+    /* C'est la première question qu'on pose — « et si je mettais 100 € par
+       mois ? » —, et elle arrive avant d'avoir ouvert quoi que ce soit. */
+    useStore.setState({
+      data: makeData({
+        household: { name: 'Maison', members: [makeMember({ id: 'm-1', name: 'Andrea' })] },
+      }),
+      filter: ALL_FILTER,
+    })
+    show()
+    expect(hero()).toMatch(/≈/)
+  })
+
+  it('ne devine aucun rendement : il s’affiche, et il se tape', async () => {
+    /* Le champ s'ouvre sur la valeur la plus modeste que l'app connaisse, à
+       l'opposé des 11 % « constatés sur la dernière décennie » qu'un simulateur
+       de vente présélectionne. */
+    seed()
+    show()
+    const field = screen.getByLabelText(projection.simpleRate)
+    expect(field).toHaveValue('2')
+
+    const before = hero()
+    await userEvent.clear(field)
+    await userEvent.type(field, '6')
+    expect(hero()).not.toBe(before)
+  })
+
+  it('change la réponse quand on change le versement', async () => {
+    seed()
+    show()
+    const before = hero()
+    const field = screen.getByLabelText(projection.amount)
+    await userEvent.clear(field)
+    await userEvent.type(field, '300')
+    expect(hero()).not.toBe(before)
+  })
+
+  it('part de zéro sans capital de départ, et compte celui qu’on tape', async () => {
+    seed()
+    show()
+    const before = hero()
+    await userEvent.type(screen.getByLabelText(projection.simpleStart), '5000')
+    expect(hero()).not.toBe(before)
+    expect(layers()).toContain(projection.layerInitial)
+  })
+
+  it('signale un montant illisible sans vider l’écran', async () => {
+    seed()
+    show()
+    const field = screen.getByLabelText(projection.amount)
+    await userEvent.clear(field)
+    await userEvent.type(field, 'beaucoup')
+
+    expect(screen.getByText(projection.amountInvalid)).toBeInTheDocument()
+    // Le capital de départ manque aussi : il n'y a rien à tracer, et c'est dit.
+    expect(screen.getByText(projection.simpleEmpty)).toBeInTheDocument()
+  })
+
+  it('ne lit rien du document, et n’y écrit rien', async () => {
+    seed()
+    const before = JSON.stringify(useStore.getState().data)
+    show()
+    await userEvent.type(screen.getByLabelText(projection.simpleStart), '1000')
+    expect(JSON.stringify(useStore.getState().data)).toBe(before)
+  })
+
+  it('garde le mode choisi d’une visite à l’autre', async () => {
+    seed()
+    show()
+    await useAccounts()
+    cleanup()
+    show()
+    expect(screen.getByRole('radio', { name: projection.modeAccounts })).toBeChecked()
+    expect(pill(projection.pillAccounts)).toBeInTheDocument()
+  })
+})
+
 describe('les comptes, un par un', () => {
-  it('part de tous les comptes, et le dit sur sa pilule', () => {
+  it('part de tous les comptes, et le dit sur sa pilule', async () => {
     seedTwo()
     show()
+    await useAccounts()
     expect(pill(projection.pillAccounts)).toHaveTextContent(tpl(projection.accountsMany, 2))
   })
 
   it('décoche un compte, et la réponse suit', async () => {
     seedTwo()
     show()
+    await useAccounts()
     const both = hero()
 
     const panel = await open(projection.pillAccounts)
@@ -199,6 +315,7 @@ describe('les comptes, un par un', () => {
        trajectoire, et la feuille dit déjà ce que chacun vaut à part. */
     seedTwo()
     show()
+    await useAccounts()
     const panel = await open(projection.pillAccounts)
     expect(within(panel).getAllByText(/à l’arrivée/)).toHaveLength(2)
   })
@@ -208,6 +325,7 @@ describe('les comptes, un par un', () => {
     const data = useStore.getState().data
     useStore.setState({ data: { ...data, savingValuations: [] } })
     show()
+    await useAccounts()
     const panel = await open(projection.pillAccounts)
     expect(within(panel).getByText(/Aucun relevé/)).toBeInTheDocument()
   })
@@ -217,6 +335,7 @@ describe('le rendement, compte par compte', () => {
   it('reprend le taux de la fiche, et prête une fourchette au compte muet', async () => {
     seedTwo()
     show()
+    await useAccounts()
     /* La pilule dit l'étendue de ce qui **court** — de la borne basse du compte
        muet à sa borne haute, le livret posé à 2,50 % étant au milieu. */
     expect(pill(projection.pillRate)).toHaveTextContent('2 %')
@@ -233,6 +352,7 @@ describe('le rendement, compte par compte', () => {
   it('essaie une valeur sur un compte, et la fourchette se referme', async () => {
     seed()
     show()
+    await useAccounts()
     const panel = await open(projection.pillRate)
     await userEvent.click(within(panel).getByRole('radio', { name: projection.rateFlat }))
 
@@ -250,6 +370,7 @@ describe('le rendement, compte par compte', () => {
   it('signale un taux illisible sans vider l’écran', async () => {
     seedTwo()
     show()
+    await useAccounts()
     const panel = await open(projection.pillRate)
     await userEvent.click(
       within(panel).getAllByRole('radio', { name: projection.rateFlat })[0] as HTMLElement,
@@ -268,17 +389,22 @@ describe('le versement et sa cadence', () => {
   it('propose ce que les règles versent, et le dit', async () => {
     seed()
     show()
+    await useAccounts()
     expect(pill(projection.pillAmount)).toHaveTextContent('350')
 
     const panel = await open(projection.pillAmount)
     expect(within(panel).getByText(/Repris de tes règles/)).toBeInTheDocument()
   })
 
-  it('change la cadence, et l’unité du versement avec elle', async () => {
+  it('change la cadence sur la page, et l’unité du versement avec elle', async () => {
+    /* La cadence vaut pour toute la simulation — les deux modes, tous les
+       comptes —, donc elle se règle sur la page et non dans la feuille d'un
+       réglage qui, lui, se pose compte par compte. */
     seed()
     show()
-    const panel = await open(projection.pillAmount)
-    await userEvent.click(within(panel).getByRole('radio', { name: projection.cadenceYearly }))
+    await useAccounts()
+    await openMore()
+    await userEvent.click(screen.getByRole('radio', { name: projection.cadenceYearly }))
 
     /* Le même effort à la nouvelle cadence : 350 €/mois deviennent 4 200 €/an, et
        le champ le propose plutôt que de le faire deviner. */
@@ -289,6 +415,7 @@ describe('le versement et sa cadence', () => {
   it('remplace le versement d’un compte par celui qu’on tape', async () => {
     seed()
     show()
+    await useAccounts()
     const before = hero()
     const panel = await open(projection.pillAmount)
     await userEvent.type(within(panel).getByLabelText('Livret A'), '600')
@@ -301,6 +428,7 @@ describe('les deux lectures', () => {
   it('double la figure d’un tableau qui porte les mêmes nombres', async () => {
     seed()
     show()
+    await useAccounts()
     const arrival = hero()
 
     await userEvent.click(screen.getByRole('radio', { name: projection.viewTable }))
@@ -324,7 +452,7 @@ describe('les deux lectures', () => {
   })
 
   it('donne une lecture textuelle à la figure', () => {
-    // Ce qui se lit à l'œil se lit à l'oreille, ou l'un des deux mente.
+    // Ce qui se lit à l'œil se lit à l'oreille, ou l'un des deux ment.
     seed()
     show()
     expect(screen.getByText(/aujourd’hui à/)).toBeInTheDocument()
@@ -332,23 +460,20 @@ describe('les deux lectures', () => {
 })
 
 describe('la durée et l’inflation', () => {
-  it('change d’horizon d’un appui', async () => {
+  it('change d’horizon d’un appui, sans quitter la page', async () => {
     seed()
     show()
-    const panel = await open(projection.pillDuration)
-    await userEvent.click(
-      within(panel).getByRole('radio', { name: tpl(projection.durationPreset, 25) }),
-    )
-    expect(pill(projection.pillDuration)).toHaveTextContent('25')
+    await userEvent.click(screen.getByRole('radio', { name: tpl(projection.durationPreset, 25) }))
+    expect(
+      screen.getByText(tpl(projection.resultIn, projection.years.replace('%s', '25'))),
+    ).toBeInTheDocument()
   })
 
   it('lit en euros d’aujourd’hui à la demande, et le signale sous la figure', async () => {
     seed()
     show()
-    expect(pill(projection.pillInflation)).toHaveTextContent(projection.inflationOff)
-
-    const panel = await open(projection.pillInflation)
-    await userEvent.click(within(panel).getByRole('radio', { name: projection.inflationConstant }))
+    await openMore()
+    await userEvent.click(screen.getByRole('radio', { name: projection.inflationConstant }))
 
     expect(screen.getByText(new RegExp(projection.constantOn.replace('%s', '')))).toBeInTheDocument()
   })
@@ -359,6 +484,7 @@ describe('ce que l’écran ne fait pas', () => {
     seedTwo()
     const before = JSON.stringify(useStore.getState().data)
     show()
+    await useAccounts()
 
     const accounts = await open(projection.pillAccounts)
     await userEvent.click(within(accounts).getByRole('checkbox', { name: 'PEL' }))
@@ -375,10 +501,7 @@ describe('ce que l’écran ne fait pas', () => {
   it('garde ses réglages hors du document, dans le stockage local', async () => {
     seed()
     show()
-    const panel = await open(projection.pillDuration)
-    await userEvent.click(
-      within(panel).getByRole('radio', { name: tpl(projection.durationPreset, 15) }),
-    )
+    await userEvent.click(screen.getByRole('radio', { name: tpl(projection.durationPreset, 15) }))
     expect(localStorage.getItem(PROJECTION_STORAGE_KEY)).toContain('"years":15')
   })
 

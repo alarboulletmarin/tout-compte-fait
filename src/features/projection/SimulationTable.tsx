@@ -64,8 +64,16 @@ export function SimulationTable({ points, marks, single, initial }: SimulationTa
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {initial > 0 && <p className="t-label">{tpl(projection.tableInitial, money(initial))}</p>}
       {/* `overflow-auto` sur le cadre et non sur le tableau : c'est lui qui borne
-          les deux axes, et c'est à lui que l'en-tête collant se rapporte. */}
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
+          les deux axes, et c'est à lui que l'en-tête collant se rapporte.
+
+          **Et il prend le focus** : sous 400 points, quatre colonnes de montants
+          ne tiennent pas et le cadre défile latéralement. Une zone qui défile
+          sans contenir un seul élément focalisable est inatteignable au clavier
+          — les flèches ne l'atteignent que si elle peut recevoir le focus
+          (WCAG 2.1.1, règle `scrollable-region-focusable`). Le tableau porte
+          déjà son nom dans sa légende : le cadre n'en prend pas un second, qui
+          se lirait deux fois. */}
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto overscroll-contain">
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">{projection.tableCaption}</caption>
           <thead>

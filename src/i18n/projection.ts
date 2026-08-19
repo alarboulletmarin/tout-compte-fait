@@ -47,6 +47,35 @@ const fr = {
   viewChart: 'Graphique',
   viewTable: 'Tableau',
 
+  /* --- Les deux modes ------------------------------------------------------
+     « Simple » d'abord, et c'est l'écran par défaut : trois nombres tapés
+     répondent à la question qu'on se pose avant d'avoir quoi que ce soit, et
+     elle arrive avant toutes les autres. « Mes comptes » est la lecture que
+     personne d'autre ne produit — elle part du document —, et elle reste à un
+     appui. Les deux mots disent d'où viennent les nombres, jamais la difficulté
+     de l'écran : « Avancé » aurait promis des réglages, pas une source. */
+  modeAxis: 'Ce qu’on simule',
+  modeSimple: 'Simple',
+  modeAccounts: 'Mes comptes',
+  modeSimpleHint: 'Rien de ce que tu tapes ici n’est enregistré dans tes comptes.',
+  settings: 'Ta simulation',
+  /* Le repli des deux réglages qu'on ne tourne pas en arrivant. Il dit ce qu'il
+     porte plutôt que « Avancé », qui aurait promis de la difficulté là où il n'y
+     a que deux questions moins fréquentes. */
+  more: 'Cadence et inflation',
+
+  /* --- Le mode simple ------------------------------------------------------
+     Un capital de départ, un versement, un rendement — et le rendement se tape
+     au lieu de se deviner. La valeur proposée est celle qui promet le moins, et
+     c'est délibérément l'inverse des 11 % « constatés sur la dernière décennie »
+     qu'un simulateur de vente présélectionne. */
+  simpleStart: 'Capital de départ',
+  simpleStartHint: 'Vide : on part de zéro.',
+  simpleRate: 'Rendement annuel',
+  simpleRateHint:
+    'Aucun taux n’est deviné ici : celui-ci est le tien, et il se saisit net de frais et d’impôt.',
+  simpleEmpty: 'Indique un versement ou un capital de départ pour voir la trajectoire.',
+
   /* --- Les réglages, en pilules -------------------------------------------
      Quatre pilules, et chacune **dit sa valeur** plutôt que son nom : « 3
      comptes », « 2,40 % – 5 % », « 10 ans », « Inflation 2 % ». Un écran de
@@ -58,10 +87,6 @@ const fr = {
   accountsMany: '%s comptes',
   pillRate: 'Rendement',
   pillAmount: 'Versement',
-  pillDuration: 'Durée et cadence',
-  pillInflation: 'Inflation',
-  inflationOff: 'Sans inflation',
-  inflationOn: 'Inflation %s',
 
   /* --- Le résultat --------------------------------------------------------
      Il est en tête d'écran, avant les réglages, et il ne le quitte pas : on

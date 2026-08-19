@@ -22,15 +22,25 @@ export const en: ProjectionStrings = {
   viewChart: 'Chart',
   viewTable: 'Table',
 
+  modeAxis: 'What is simulated',
+  modeSimple: 'Simple',
+  modeAccounts: 'My accounts',
+  modeSimpleHint: 'Nothing you type here is saved to your accounts.',
+  settings: 'Your simulation',
+  more: 'Frequency and inflation',
+
+  simpleStart: 'Starting capital',
+  simpleStartHint: 'Left empty: it starts from zero.',
+  simpleRate: 'Annual return',
+  simpleRateHint:
+    'No rate is guessed here: this one is yours, and it is entered net of fees and tax.',
+  simpleEmpty: 'Enter a contribution or a starting capital to see the trajectory.',
+
   pillAccounts: 'Accounts simulated',
   accountsOne: '1 account',
   accountsMany: '%s accounts',
   pillRate: 'Return',
   pillAmount: 'Contribution',
-  pillDuration: 'Term and frequency',
-  pillInflation: 'Inflation',
-  inflationOff: 'No inflation',
-  inflationOn: 'Inflation %s',
 
   approx: '≈ %s',
   resultIn: 'In %s',

@@ -81,6 +81,26 @@ export type Period = (typeof PERIODS)[number]
 export type View = 'chart' | 'table'
 
 /**
+ * Ce que l'écran simule — et les deux modes ne répondent pas à la même question.
+ *
+ * - `simple` — trois nombres qu'on tape : ce qu'on a déjà, ce qu'on verse, le
+ *   rendement qu'on suppose. C'est la question qu'on se pose **avant** d'avoir
+ *   quoi que ce soit — « et si je mettais 200 € par mois pendant quinze ans ? » —
+ *   et elle ne suppose ni compte ouvert, ni relevé, ni règle récurrente. C'est
+ *   aussi la seule forme qu'un simulateur peut prendre sur le téléphone de
+ *   quelqu'un qui découvre l'app : deux champs et une durée.
+ * - `accounts` — les comptes du document, chacun à **son** rendement et à
+ *   **son** versement. C'est la lecture que personne d'autre ne produit, parce
+ *   qu'elle part de ce qui existe vraiment.
+ *
+ * **Le moteur est le même dans les deux cas** (`domain/projection.ts`) : le mode
+ * simple n'est pas un second calcul, c'est une seule trajectoire là où l'autre
+ * en somme plusieurs (cahier §4.6 ter). Ce qui change est le nombre de séries à
+ * additionner, jamais la façon de les produire.
+ */
+export type Mode = 'simple' | 'accounts'
+
+/**
  * Ce qu'on a réglé sur un compte — pour cet écran, et pour lui seul.
  *
  * **Rien ne redescend dans le document** : ce qui se tape ici vit dans
@@ -109,6 +129,27 @@ export type SupportSetting = {
 }
 
 export type SimulationDraft = {
+  /** Laquelle des deux lectures est ouverte. */
+  mode: Mode
+  /**
+   * Le capital de départ tapé, en mode simple. Vide : la simulation part de
+   * zéro, ce qui est le cas de qui commence — et un zéro affiché vaut mieux
+   * qu'un champ obligatoire pour dire la même chose.
+   */
+  startText: string
+  /** Ce qui est versé à chaque échéance, en mode simple. */
+  payText: string
+  /**
+   * Le rendement annuel essayé, en mode simple — **un seul chiffre**, et il se
+   * tape.
+   *
+   * Un champ et non une fourchette : le mode comptes garde les deux bornes, qui
+   * disent l'incertitude là où elle se pose — compte par compte. Ici il n'y a
+   * qu'une trajectoire, et deux champs à remplir pour la voir en auraient fait
+   * un formulaire. La valeur par défaut reste celle qui promet le moins
+   * (`DEFAULT_LOW`) : l'app ne présélectionne toujours pas un taux flatteur.
+   */
+  rateText: string
   /**
    * Les comptes retenus, ou `null` tant que personne n'a choisi.
    *
@@ -166,6 +207,16 @@ export const DEFAULT_LOW = '2'
 export const DEFAULT_HIGH = '5'
 
 export const DEFAULT_DRAFT: SimulationDraft = {
+  /* Le mode simple par défaut, y compris pour qui tient déjà dix comptes : c'est
+     celui qui répond sans rien demander, et la bascule est en tête d'écran. */
+  mode: 'simple',
+  startText: '',
+  /* Un versement d'exemple, et non un champ vide : un écran de simulation qui
+     s'ouvre sur « — » ne montre pas ce qu'il sait faire. Cent euros parce que
+     c'est un ordre de grandeur, pas une recommandation — le champ est juste là,
+     et il se retape en deux appuis. */
+  payText: '100',
+  rateText: DEFAULT_LOW,
   /* Aucun choix, donc tous : l'écran s'ouvre sur ce que le document contient, et
      la première case décochée en fait une liste. */
   picked: null,
@@ -257,6 +308,10 @@ export function readDraft(): SimulationDraft {
     const every = Number(stored.every)
 
     return {
+      mode: stored.mode === 'accounts' ? 'accounts' : 'simple',
+      startText: text(stored.startText, DEFAULT_DRAFT.startText),
+      payText: text(stored.payText, DEFAULT_DRAFT.payText),
+      rateText: text(stored.rateText, DEFAULT_DRAFT.rateText),
       picked: pickedFrom(stored.picked),
       years: validYears ? years : DEFAULT_DRAFT.years,
       every: (PERIODS as readonly number[]).includes(every)
@@ -523,6 +578,10 @@ export type SettingErrors = {
 export type DraftErrors = {
   years?: string
   inflation?: string
+  /** Les trois champs du mode simple, quand ils sont illisibles. */
+  start?: string
+  pay?: string
+  rate?: string
   /** Les champs illisibles, par identifiant de compte. */
   supports: Record<string, SettingErrors>
 }
@@ -606,25 +665,177 @@ function wouldExceed(amount: Money, months: number, every: Period, room: Money):
 }
 
 /**
- * Ce que les réglages produisent : les champs à signaler, et la simulation à
- * lire.
+ * L'horizon et l'érosion — les deux réglages que **les deux modes** partagent.
  *
- * Les deux d'un coup, et non deux fonctions : ce qui est signalé est
- * exactement ce dont le calcul a dû se passer, et les séparer ferait exister un
- * état où l'écran trace une courbe sans savoir quel champ il a ignoré.
+ * Ils se lisent au même endroit parce qu'ils veulent dire la même chose des deux
+ * côtés : une durée hors bornes est ramenée dans la plage plutôt que de vider
+ * l'écran, et une inflation illisible éteint la lecture en euros d'aujourd'hui
+ * sans toucher au calcul. Recopier ces deux règles dans chaque mode aurait été
+ * l'occasion de les faire diverger.
  */
-export function analyse(draft: SimulationDraft, parts: readonly ProjectionPart[]): Analysis {
+type Horizon = {
+  years: number
+  months: number
+  validYears: boolean
+  /** `null` quand le champ est illisible — la lecture en euros constants s'éteint. */
+  inflationBp: number | null
+  /** Ce qui s'applique vraiment : zéro tant que la lecture n'est pas demandée. */
+  erosion: number
+}
+
+function horizonOf(draft: SimulationDraft): Horizon {
   const validYears =
     Number.isInteger(draft.years) && draft.years >= MIN_YEARS && draft.years <= MAX_YEARS
   /* Une durée hors bornes ne vide pas l'écran : elle est ramenée dans la plage
      et son champ est signalé. Le champ se tape au clavier, chiffre par chiffre —
      « 1 » sur le chemin de « 12 » ne doit pas faire disparaître la figure. */
   const years = validYears ? draft.years : Math.min(MAX_YEARS, Math.max(MIN_YEARS, draft.years || 1))
-  const months = years * 12
   const inflationBp = parseRateBp(draft.inflationText)
-  /* Une inflation illisible ne vaut pas zéro : elle éteint la lecture en euros
-     constants, qui est une lecture de plus et non le calcul lui-même. */
-  const erosion = draft.constant ? (inflationBp ?? 0) : 0
+  return {
+    years,
+    months: years * 12,
+    validYears,
+    inflationBp,
+    /* Une inflation illisible ne vaut pas zéro : elle éteint la lecture en euros
+       constants, qui est une lecture de plus et non le calcul lui-même. */
+    erosion: draft.constant ? (inflationBp ?? 0) : 0,
+  }
+}
+
+/** Une trajectoire et sa borne haute — un compte, ou la simulation entière. */
+type Trajectory = { low: ProjectionSeries; high: ProjectionSeries }
+
+/**
+ * Les rangs de la lecture, sommés sur les trajectoires qu'on lui donne.
+ *
+ * Une seule en mode simple, une par compte coché dans l'autre : c'est la seule
+ * différence entre les deux modes, et elle tient dans la longueur d'un tableau.
+ * Les trois couches se lisent ici et nulle part ailleurs — `paid` est le versé
+ * cumulé moins le capital du premier jour, `gain` l'écart entre le capital et le
+ * versé —, si bien qu'aucun mode ne peut décomposer un capital à sa façon.
+ */
+function pointsOf(months: number, runs: readonly Trajectory[]): SimulationPoint[] {
+  const points: SimulationPoint[] = []
+  for (let month = 0; month <= months; month += 1) {
+    let initial = 0
+    let contributed = 0
+    let total = 0
+    let high = 0
+    for (const one of runs) {
+      initial += one.low.contributed[0] ?? 0
+      contributed += one.low.contributed[month] ?? 0
+      total += one.low.balance[month] ?? 0
+      high += one.high.balance[month] ?? 0
+    }
+    points.push({
+      month,
+      initial: money(initial),
+      paid: money(contributed - initial),
+      /* Par différence, comme partout ailleurs dans l'app : le rendement n'est
+         pas la somme des intérêts d'un barème, c'est `capital − versé`. */
+      gain: money(total - contributed),
+      total: money(total),
+      high: money(high),
+    })
+  }
+  return points
+}
+
+/**
+ * Ce que les réglages produisent : les champs à signaler, et la simulation à
+ * lire.
+ *
+ * Les deux d'un coup, et non deux fonctions : ce qui est signalé est
+ * exactement ce dont le calcul a dû se passer, et les séparer ferait exister un
+ * état où l'écran trace une courbe sans savoir quel champ il a ignoré.
+ *
+ * Le mode décide de la source des nombres, jamais de la façon de les projeter :
+ * les deux branches finissent dans `pointsOf`, qui finit dans `projectSeries`.
+ */
+export function analyse(draft: SimulationDraft, parts: readonly ProjectionPart[]): Analysis {
+  return draft.mode === 'simple' ? analyseSimple(draft) : analyseAccounts(draft, parts)
+}
+
+/**
+ * Trois nombres tapés, une trajectoire — et rien du document.
+ *
+ * **Ce n'est pas la calculatrice qu'on avait retirée.** Celle-là vivait à côté
+ * des comptes, dans le même écran, et proposait de simuler « autre chose » sans
+ * jamais dire quoi ; celle-ci est un **mode**, annoncé, qu'on quitte d'un appui
+ * pour retrouver ses comptes. La question qu'elle sert est réelle et arrive
+ * avant toutes les autres : combien ça fait, si je m'y mets.
+ *
+ * **Un champ illisible retire l'essai, il ne vide pas l'écran** — la même règle
+ * que les feuilles de l'autre mode : un montant à moitié tapé ne doit pas faire
+ * disparaître la figure qu'on est en train de regarder.
+ */
+function analyseSimple(draft: SimulationDraft): Analysis {
+  const { months, validYears, inflationBp, erosion } = horizonOf(draft)
+  const rateBp = parseRateBp(draft.rateText)
+  const start = parseAmount(draft.startText)
+  const pay = parseAmount(draft.payText)
+
+  const errors: DraftErrors = {
+    ...(validYears ? {} : { years: outOfRangeYears() }),
+    ...(inflationBp === null ? { inflation: outOfRangeRate() } : {}),
+    ...(rateBp === null ? { rate: outOfRangeRate() } : {}),
+    ...(draft.startText.trim() !== '' && start === null ? { start: projection.amountInvalid } : {}),
+    ...(draft.payText.trim() !== '' && pay === null ? { pay: projection.amountInvalid } : {}),
+    supports: {},
+  }
+
+  const initial = start ?? ZERO
+  const amount = pay ?? ZERO
+  /* Ni capital, ni versement : il n'y a pas de trajectoire, et une ligne plate à
+     zéro n'est pas une réponse — c'est un graphique qui fait semblant. */
+  if (initial === ZERO && amount === ZERO) {
+    return { errors, result: null, missing: projection.simpleEmpty }
+  }
+
+  const rate = rateBp ?? 0
+  const series = projectSeries({
+    initial,
+    monthly: amount,
+    months,
+    rateBp: rate,
+    everyMonths: draft.every,
+    inflationBp: erosion,
+  })
+  const points = pointsOf(months, [{ low: series, high: series }])
+  const last = points.at(-1)
+  const arrival = { low: last?.total ?? ZERO, high: last?.high ?? ZERO }
+
+  return {
+    errors,
+    missing: null,
+    result: {
+      months,
+      every: draft.every,
+      /* Aucun compte : ce mode ne lit pas le document, et une liste vide est
+         exactement ce qu'il a à en dire. */
+      runs: [],
+      points,
+      single: true,
+      /* Jamais garanti : un taux qu'on tape est une hypothèse, et le trait plein
+         reste réservé à ce qu'un contrat engage. */
+      guaranteed: false,
+      rateSpan: { low: rate, high: rate },
+      initial: points[0]?.total ?? ZERO,
+      amount,
+      paid: last?.paid ?? ZERO,
+      arrival,
+      inflationBp: erosion,
+      unvalued: 0,
+      ending: 0,
+      variable: false,
+      capped: false,
+    },
+  }
+}
+
+/** Les comptes cochés, chacun à son rendement — et la somme de leurs trajectoires. */
+function analyseAccounts(draft: SimulationDraft, parts: readonly ProjectionPart[]): Analysis {
+  const { months, validYears, inflationBp, erosion } = horizonOf(draft)
 
   const picked = pickedParts(parts, draft.picked)
   const errors = errorsOf(draft, picked, validYears, inflationBp)
@@ -680,29 +891,7 @@ export function analyse(draft: SimulationDraft, parts: readonly ProjectionPart[]
     }
   })
 
-  const points: SimulationPoint[] = []
-  for (let month = 0; month <= months; month += 1) {
-    let initial = 0
-    let contributed = 0
-    let total = 0
-    let high = 0
-    for (const one of runs) {
-      initial += one.low.contributed[0] ?? 0
-      contributed += one.low.contributed[month] ?? 0
-      total += one.low.balance[month] ?? 0
-      high += one.high.balance[month] ?? 0
-    }
-    points.push({
-      month,
-      initial: money(initial),
-      paid: money(contributed - initial),
-      /* Par différence, comme partout ailleurs dans l'app : le rendement n'est
-         pas la somme des intérêts d'un barème, c'est `capital − versé`. */
-      gain: money(total - contributed),
-      total: money(total),
-      high: money(high),
-    })
-  }
+  const points = pointsOf(months, runs)
 
   const last = points.at(-1)
   const arrival = { low: last?.total ?? ZERO, high: last?.high ?? ZERO }

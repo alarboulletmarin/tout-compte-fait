@@ -94,20 +94,25 @@ test.describe('sur un écran de 320 points', () => {
       cut.push(...(await clipped(page, screen.path)))
     }
 
-    /* La simulation a deux vues et cinq feuilles, et la boucle ci-dessus n'ouvre
-       que la première vue : le tableau — six colonnes de « ≈ 202 k€ » sur un
-       écran de 320 points — et la feuille des comptes — une case, un capital,
-       une arrivée et un plafond par compte du jeu d'exemple — ne seraient
-       mesurés nulle part. C'est la moitié la plus dense de l'écran. */
+    /* La simulation a deux modes, deux vues et trois feuilles, et la boucle
+       ci-dessus n'ouvre que le mode simple et sa figure : le tableau — six
+       colonnes de « ≈ 202 k€ » sur un écran de 320 points — et la feuille des
+       comptes — une case, un capital, une arrivée et un plafond par compte du
+       jeu d'exemple — ne seraient mesurés nulle part. C'est la moitié la plus
+       dense de l'écran. */
     await page.goto('/simulation')
     await page.waitForLoadState('networkidle')
     await page.getByRole('radio', { name: 'Tableau' }).click()
     expect(await overflow(page)).toBe(0)
     expect(await clipped(page, '/simulation (tableau)')).toEqual([])
 
-    await page.getByRole('button', { name: /^Comptes simulés :/ }).click()
+    await page.getByRole('radio', { name: 'Mes comptes' }).click()
     expect(await overflow(page)).toBe(0)
     expect(await clipped(page, '/simulation (comptes)')).toEqual([])
+
+    await page.getByRole('button', { name: /^Comptes simulés :/ }).click()
+    expect(await overflow(page)).toBe(0)
+    expect(await clipped(page, '/simulation (feuille des comptes)')).toEqual([])
 
     expect(guilty).toEqual([])
     expect(cut).toEqual([])

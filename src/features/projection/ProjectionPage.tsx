@@ -1,35 +1,32 @@
 /* ============================================================================
- * L'écran de simulation — un instrument, et il tient dans une page.
+ * L'écran de simulation — deux modes, et des champs qu'on voit.
  *
- * **Il simule des comptes, un par un.** L'écran savait faire trois choses :
- * projeter quatre nombres tapés à la main, projeter un support, projeter « toute
- * l'épargne d'une personne » sous un taux moyen qui n'existe pas. La première
- * est une calculatrice qu'on trouve n'importe où ; la troisième additionnait des
- * trajectoires incomparables avant de les projeter. Ce qui reste est la
- * deuxième, généralisée : on **coche les comptes**, chacun court à son
- * rendement et reçoit son versement, et la figure est la somme de leurs
- * trajectoires. Cocher un seul compte fait de tout l'écran la trajectoire de ce
- * compte-là — c'est la lecture unitaire, et elle ne demande aucun autre écran.
+ * **Il répond d'abord, il lit le document ensuite.** L'écran ne savait simuler
+ * que les comptes du document : il fallait donc en avoir, les cocher, et
+ * comprendre qu'un rendement se règle compte par compte avant d'obtenir le
+ * moindre chiffre. C'est la bonne lecture — celle que personne d'autre ne
+ * produit —, mais ce n'est pas la première question qu'on pose. Elle est
+ * devenue le second mode ; le premier tient en trois nombres tapés, et il
+ * répond à quelqu'un qui n'a encore rien ouvert.
  *
- * **Une page, et elle ne défile pas.** C'est la contrainte qui a décidé de la
- * forme : la réponse en tête, la figure au milieu qui prend toute la place
- * restante, les réglages en pilules au bas du pouce, la réserve en pied. Ce qui
- * se règle s'ouvre en feuille montante — cinq feuilles, une par question — parce
- * qu'un réglage ouvert coûte de la hauteur à la figure qu'il sert. L'écran
- * empilait dix-sept blocs dans une colonne de trois mille pixels ; on y réglait
- * un taux en bas et on remontait voir ce que ça changeait.
+ * **Un seul moteur, deux sources de nombres.** Le mode simple n'est pas une
+ * calculatrice posée à côté : c'est la même `analyse`, le même `projectSeries`,
+ * la même figure et le même tableau, avec une trajectoire au lieu de plusieurs
+ * (cahier §4.6 ter). Rien n'a été dupliqué pour le rendre simple.
  *
- * **Deux lectures, à un appui l'une de l'autre.** La figure répond à « où ça
- * va », le tableau à « combien, dans sept ans ». Le tableau n'est donc plus un
- * repli sous la courbe : c'est une vue, et elle porte les mêmes séries — il n'y
- * a pas de second calcul (cahier §4.6 ter).
+ * **La page défile, et les réglages sont dessus.** L'écran tenait dans une
+ * hauteur de fenêtre, ce qui obligeait ses cinq réglages à vivre dans autant de
+ * feuilles montantes : on réglait à l'aveugle un versement dont on ne voyait
+ * plus la courbe. Ce qui se règle en un contrôle est maintenant à plat — le
+ * versement, la durée, le rendement —, ce qui se règle compte par compte reste
+ * en feuille, parce que dix comptes à plat font une page de formulaire.
  *
  * **Ce qu'il refuse tient toujours plus de place que ce qu'il fait.** Les
  * simulateurs qui existent présélectionnent un taux flatteur, comptent en euros
  * courants et affichent le centime sur vingt ans : ce sont des outils de vente.
  * Ici il n'y a rien à vendre. D'où un rendement jamais deviné — celui de la
- * fiche, ou une fourchette large —, des montants arrondis à ce que le modèle sait
- * dire, et une réserve qui ne se replie pas.
+ * fiche, une valeur modeste, ou une fourchette large —, des montants arrondis à
+ * ce que le modèle sait dire, et une réserve qui ne se replie pas.
  * ==========================================================================*/
 
 import { useEffect, useMemo, useState } from 'react'
@@ -37,10 +34,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { type Money, ZERO } from '@/domain/money'
 import { toRateInput } from '@/domain/rate'
 import { SUPPORT_NEW_PATH } from '@/app/routes'
-import { formatMoney, formatPercent, formatRoundedMoney, tpl } from '@/i18n/format'
+import {
+  formatMoney,
+  formatPercent,
+  formatRoundedMoney,
+  tpl,
+} from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import { useMembers, useSupportParts } from '@/store/selectors'
 import { Button, IconButton } from '@/ui/Button'
+import { Disclosure } from '@/ui/Disclosure'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { InfoIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
@@ -48,11 +51,12 @@ import { Segmented } from '@/ui/Segmented'
 import { useCurrency } from '@/ui/currency'
 import { AccountsSheet } from './AccountsSheet'
 import { AmountSheet } from './AmountSheet'
-import { DurationSheet } from './DurationSheet'
+import { DurationField } from './DurationField'
 import { ExplainSheet } from './ExplainSheet'
-import { InflationSheet } from './InflationSheet'
+import { OtherSettings } from './OtherSettings'
 import { RateSheet } from './RateSheet'
 import { SettingPill } from './SettingPill'
+import { SimpleFields } from './SimpleFields'
 import { SimulationChart } from './SimulationChart'
 import { SimulationTable } from './SimulationTable'
 import { formatDuration } from './duration'
@@ -61,6 +65,7 @@ import {
   DEFAULT_LOW,
   MAX_YEARS,
   MIN_YEARS,
+  type Mode,
   type Period,
   type SimulationDraft,
   type SupportSetting,
@@ -74,7 +79,7 @@ import {
 } from './model'
 
 /** Laquelle des feuilles est ouverte. Une seule à la fois, par construction. */
-type OpenSheet = 'accounts' | 'rate' | 'amount' | 'duration' | 'inflation' | 'explain' | null
+type OpenSheet = 'accounts' | 'rate' | 'amount' | 'explain' | null
 
 /**
  * Ce qu'une adresse préfixe dans le simulateur, relu et borné.
@@ -84,7 +89,9 @@ type OpenSheet = 'accounts' | 'rate' | 'amount' | 'duration' | 'inflation' | 'ex
  * est simplement absent, et le brouillon gardé reste tel quel sur ce champ-là.
  *
  * Deux paramètres, et c'est tout ce dont la fiche d'un objectif a besoin pour
- * ouvrir le simulateur sur *sa* question : ses comptes, son échéance.
+ * ouvrir le simulateur sur *sa* question : ses comptes, son échéance. Des
+ * comptes nommés posent le mode avec eux — ouvrir le mode simple sur une
+ * adresse qui désigne trois comptes aurait ignoré ce qu'elle demande.
  */
 function presetFrom(params: URLSearchParams): Partial<SimulationDraft> {
   const years = Number(params.get('duree'))
@@ -94,7 +101,10 @@ function presetFrom(params: URLSearchParams): Partial<SimulationDraft> {
   if (Number.isInteger(years) && years >= MIN_YEARS && years <= MAX_YEARS) seed.years = years
   if (accounts !== null && accounts !== '') {
     const ids = accounts.split(',').filter((id) => id !== '' && id.length <= 64)
-    if (ids.length > 0) seed.picked = ids
+    if (ids.length > 0) {
+      seed.picked = ids
+      seed.mode = 'accounts'
+    }
   }
   return seed
 }
@@ -102,6 +112,11 @@ function presetFrom(params: URLSearchParams): Partial<SimulationDraft> {
 const views = (): { value: View; label: string }[] => [
   { value: 'chart', label: projection.viewChart },
   { value: 'table', label: projection.viewTable },
+]
+
+const modes = (): { value: Mode; label: string }[] => [
+  { value: 'simple', label: projection.modeSimple },
+  { value: 'accounts', label: projection.modeAccounts },
 ]
 
 /** Le pourcentage d'un taux en points de base — deux décimales s'il en faut. */
@@ -123,6 +138,10 @@ export function ProjectionPage() {
     ...presetFrom(params),
   }))
   const [sheet, setSheet] = useState<OpenSheet>(null)
+  /* Le repli des réglages secondaires. En état d'écran et non dans le
+     brouillon : c'est une position de lecture, pas un réglage — ce qu'on a
+     réglé dedans, lui, se garde. */
+  const [more, setMore] = useState(false)
 
   /* L'horizon avant les comptes, et non l'inverse : c'est lui qui décide quelles
      règles récurrentes sont assez durables pour entrer dans un versement
@@ -195,15 +214,17 @@ export function ProjectionPage() {
     })
   }
 
+  const simple = draft.mode === 'simple'
   const { errors, result, missing } = analyse(draft, parts)
   const picked = pickedParts(parts, draft.picked)
   const money = (value: Money): string => formatRoundedMoney(value, currency)
   const approx = (value: Money): string => tpl(projection.approx, money(value))
 
-  /* Le surtitre, le chiffre héros, et la ligne qui dit d'où il sort. Les trois
-     répondent à la même question par le bout qui compte dans chaque cas :
-     quand, combien, et de quoi c'est fait. */
-  const heading = result === null ? projection.title : tpl(projection.resultIn, formatDuration(result.months))
+  /* Le surtitre, le chiffre héros, et ce dont il est fait. Les trois répondent à
+     la même question par le bout qui compte dans chaque cas : quand, combien, et
+     de quoi c'est fait. */
+  const heading =
+    result === null ? projection.title : tpl(projection.resultIn, formatDuration(result.months))
   const hero =
     result === null
       ? '—'
@@ -217,12 +238,20 @@ export function ProjectionPage() {
             tpl(projection.rangeShort, money(result.arrival.low), money(result.arrival.high)),
           )
   const last = result?.points.at(-1)
-  const split =
+
+  /* De quoi le capital est fait, en rangées : au départ, versé, rendement. Trois
+     lignes et non une phrase — « ≈ 42 000 € » impressionne, « 12 000 € versés et
+     6 000 € de rendement » informe, et l'œil ne va chercher un nombre dans une
+     phrase que s'il sait déjà qu'il y est. La couche à zéro ne s'écrit pas : un
+     « 0 € au départ » est une ligne qui n'apprend rien. */
+  const rows =
     last === undefined
-      ? null
-      : last.initial > ZERO
-        ? tpl(projection.splitFull, money(last.initial), money(last.paid), money(last.gain))
-        : tpl(projection.splitPaid, money(last.paid), money(last.gain))
+      ? []
+      : [
+          ...(last.initial > ZERO ? [{ label: projection.layerInitial, value: last.initial }] : []),
+          { label: projection.layerPaid, value: last.paid },
+          { label: projection.layerGain, value: last.gain },
+        ]
 
   /* Ce que chaque pilule annonce : la **valeur** du réglage, jamais son nom. */
   const accountsLabel =
@@ -242,86 +271,129 @@ export function ProjectionPage() {
 
   return (
     <>
-      {/* Le titre existe, il ne s'affiche pas : la tuile de réponse porte déjà
-          l'en-tête de l'écran, et un `<h1>` au-dessus aurait coûté à la figure
-          les soixante pixels qu'il prend. Un écran sans titre ne se repère pas
-          au lecteur d'écran — celui-ci en a un, et il s'annonce en arrivant. */}
-      <PageTitle title={projection.title} hidden />
+      <PageTitle title={projection.title}>
+        <IconButton
+          label={projection.explain}
+          onClick={() => {
+            setSheet('explain')
+          }}
+        >
+          <InfoIcon />
+        </IconButton>
+      </PageTitle>
 
-      {/* La page entière, à la hauteur de la fenêtre : c'est la figure qui prend
-          ce qui reste, et rien ne défile. Ce qu'on retranche est le cadre de la
-          coquille (`AppShell`) — sa gouttière du haut, la barre d'onglets, le
-          dégagement du bouton flottant —, et il change deux fois : la gouttière
-          s'élargit à 768px, la barre et le bouton disparaissent à 1024px au
-          profit de la colonne latérale. D'où un token intermédiaire plutôt que
-          trois hauteurs recopiées : la soustraction s'écrit une fois, et ce sont
-          ses termes qui varient.
-
-          Un plancher, tout de même : sur une fenêtre trop basse pour tout tenir,
-          mieux vaut défiler de cent pixels que rendre la figure illisible. */}
-      <div
-        /* Une pile à gouttière, plafonnée en largeur comme les autres écrans de
-           lecture. `min-h` est le plancher sous lequel la figure cesserait
-           d'être lisible — la somme de ce qui l'entoure, plus cent pixels de
-           tracé. */
-        className={[
-          'flex min-h-[38rem] w-full max-w-4xl flex-col gap-3',
-          '[--sim-chrome:calc(1rem+var(--nav-h)+5.5rem+env(safe-area-inset-bottom,0px))]',
-          'md:[--sim-chrome:calc(2rem+var(--nav-h)+5.5rem+env(safe-area-inset-bottom,0px))]',
-          'lg:[--sim-chrome:4.5rem]',
-          'h-[calc(100dvh-var(--sim-chrome))]',
-        ].join(' ')}
-      >
-        {/* La réponse, et elle ne quitte jamais l'écran : on vient ici pour
-            tourner des boutons, et régler sans voir ce qu'on change revient à
-            jouer à un jeu dont le score est derrière soi. */}
-        {/* `div.tile` et non `Tile` : le composant pose un cadre de 20 à 24
-            pixels, calibré pour une tuile de tableau de bord qu'on lit. Ici la
-            page est bornée en hauteur et chaque pixel de cadre est un pixel de
-            figure en moins — la classe donne le même aspect, à un cadre près
-            qu'on choisit. */}
-        <div className="tile flex shrink-0 flex-col gap-1 p-4 md:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Eyebrow>{heading}</Eyebrow>
-            <div className="flex items-center gap-1">
-              <Segmented
-                options={views()}
-                value={draft.view}
-                onChange={(view) => {
-                  patch({ view })
-                }}
-                label={projection.viewAxis}
-              />
-              <IconButton
-                label={projection.explain}
-                onClick={() => {
-                  setSheet('explain')
-                }}
-              >
-                <InfoIcon />
-              </IconButton>
-            </div>
+      {/* Une colonne, plafonnée en largeur comme les autres écrans de lecture, et
+          qui défile : les réglages d'abord, la réponse ensuite, la réserve en
+          pied. C'est l'ordre dans lequel la question se pose. */}
+      <div className="flex w-full max-w-4xl flex-col gap-4">
+        {/* --- Ce qu'on règle ------------------------------------------------
+            Une seule tuile : la bascule de mode, les champs du mode courant, la
+            durée qui vaut pour les deux, et le repli des deux réglages qu'on ne
+            tourne pas en arrivant. */}
+        <section className="tile flex flex-col gap-4 p-5 md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="t-section">{projection.settings}</h2>
+            <Segmented
+              options={modes()}
+              value={draft.mode}
+              onChange={(mode) => {
+                patch({ mode })
+              }}
+              label={projection.modeAxis}
+            />
           </div>
-          {/* `t-tile-fit` et non `t-hero-fit` : à 54px, « ≈ 163 k€ – 181 k€ »
-              passe à la ligne sur tous les téléphones, et deux lignes de chiffre
-              héros coûtent quarante pixels à la figure qu'on est venu voir. Le
-              chiffre reste le plus gros de l'écran, il cesse d'en prendre le
-              tiers. */}
-          <p className="t-tile-fit tnum">{hero}</p>
-          {split !== null && <p className="t-label">{split}</p>}
-        </div>
 
-        {/* La figure, ou les nombres — et c'est ce bloc qui prend toute la
-            hauteur restante. */}
-        <div className="tile flex min-h-0 flex-1 flex-col gap-2 p-3 md:p-5">
+          {simple ? (
+            <>
+              <SimpleFields
+                startText={draft.startText}
+                payText={draft.payText}
+                rateText={draft.rateText}
+                every={draft.every}
+                errors={errors}
+                onStart={(startText) => {
+                  patch({ startText })
+                }}
+                onPay={(payText) => {
+                  patch({ payText })
+                }}
+                onRate={(rateText) => {
+                  patch({ rateText })
+                }}
+              />
+              <p className="t-label">{projection.modeSimpleHint}</p>
+            </>
+          ) : (
+            /* Trois réglages qui se posent **compte par compte** : ils gardent
+               leur feuille, parce que dix comptes à plat font une page de
+               formulaire. Chaque pilule dit ce que vaut le réglage qu'elle
+               ouvre — le nom est dans son étiquette accessible. */
+            <div className="flex flex-wrap gap-2">
+              <SettingPill
+                label={projection.pillAccounts}
+                value={accountsLabel}
+                onClick={() => {
+                  setSheet('accounts')
+                }}
+              />
+              <SettingPill
+                label={projection.pillRate}
+                value={rateLabel}
+                invalid={faulty.some(
+                  (id) =>
+                    errors.supports[id]?.rate !== undefined ||
+                    errors.supports[id]?.low !== undefined ||
+                    errors.supports[id]?.high !== undefined,
+                )}
+                onClick={() => {
+                  setSheet('rate')
+                }}
+              />
+              <SettingPill
+                label={projection.pillAmount}
+                value={amountLabel}
+                invalid={faulty.some((id) => errors.supports[id]?.amount !== undefined)}
+                onClick={() => {
+                  setSheet('amount')
+                }}
+              />
+            </div>
+          )}
+
+          <DurationField
+            years={draft.years}
+            onChange={(years) => {
+              patch({ years })
+            }}
+            {...(errors.years === undefined ? {} : { error: errors.years })}
+          />
+
+          <Disclosure title={projection.more} open={more} onOpenChange={setMore}>
+            <OtherSettings
+              every={draft.every}
+              onEvery={(every: Period) => {
+                patch({ every })
+              }}
+              constant={draft.constant}
+              onConstant={(constant) => {
+                patch({ constant })
+              }}
+              inflationText={draft.inflationText}
+              onInflation={(inflationText) => {
+                patch({ inflationText })
+              }}
+              {...(errors.inflation === undefined ? {} : { error: errors.inflation })}
+            />
+          </Disclosure>
+        </section>
+
+        {/* --- Ce que ça donne ----------------------------------------------- */}
+        <section className="tile flex flex-col gap-3 p-5 md:p-6">
           {result === null ? (
-            /* Une invitation, pas un constat (DS §7) — et centrée dans le cadre
-               qu'elle occupe, sans anneau : la tuile masque ce qui dépasse, et un
-               état vide de deux cents pixels de haut se couperait sur une fenêtre
-               basse. */
-            <div className="flex min-h-0 flex-1 flex-col items-start justify-center gap-3">
+            /* Une invitation, pas un constat (DS §7). */
+            <div className="flex flex-col items-start gap-3">
               <p className="t-body text-muted">{missing}</p>
-              {parts.length === 0 && (
+              {parts.length === 0 && !simple && (
                 <Button
                   variant="secondary"
                   size="sm"
@@ -333,92 +405,78 @@ export function ProjectionPage() {
                 </Button>
               )}
             </div>
-          ) : draft.view === 'chart' ? (
-            <SimulationChart
-              points={result.points}
-              months={result.months}
-              single={result.single}
-              guaranteed={result.guaranteed}
-              srText={[
-                tpl(
-                  result.single ? projection.srChart : projection.srChartRange,
-                  money(result.initial),
-                  money(result.arrival.low),
-                  result.single ? formatDuration(result.months) : money(result.arrival.high),
-                  formatDuration(result.months),
-                ),
-                tpl(projection.srContributed, money(result.paid)),
-              ].join(' ')}
-            />
           ) : (
-            <SimulationTable
-              points={result.points}
-              marks={yearMarks(result.months)}
-              single={result.single}
-              initial={result.initial}
-            />
-          )}
-        </div>
+            <>
+              <Eyebrow>{heading}</Eyebrow>
+              {/* Une fourchette porte deux montants et un tiret : à la taille du
+                  chiffre héros, elle passe à la ligne sur tous les téléphones.
+                  Elle descend donc d'un cran, et reste le plus gros chiffre de
+                  l'écran. */}
+              <p className={result.single ? 't-hero-fit tnum' : 't-tile-fit tnum'}>{hero}</p>
 
-        {/* Les réglages, au bas du pouce. Chaque pilule dit ce que vaut le
-            réglage qu'elle ouvre — le nom est dans son étiquette accessible. */}
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <SettingPill
-            label={projection.pillAccounts}
-            value={accountsLabel}
-            onClick={() => {
-              setSheet('accounts')
-            }}
-          />
-          <SettingPill
-            label={projection.pillRate}
-            value={rateLabel}
-            invalid={faulty.some(
-              (id) =>
-                errors.supports[id]?.rate !== undefined ||
-                errors.supports[id]?.low !== undefined ||
-                errors.supports[id]?.high !== undefined,
-            )}
-            onClick={() => {
-              setSheet('rate')
-            }}
-          />
-          <SettingPill
-            label={projection.pillAmount}
-            value={amountLabel}
-            invalid={faulty.some((id) => errors.supports[id]?.amount !== undefined)}
-            onClick={() => {
-              setSheet('amount')
-            }}
-          />
-          <SettingPill
-            label={projection.pillDuration}
-            value={formatDuration(draft.years * 12)}
-            invalid={errors.years !== undefined}
-            onClick={() => {
-              setSheet('duration')
-            }}
-          />
-          <SettingPill
-            label={projection.pillInflation}
-            value={
-              draft.constant
-                ? tpl(projection.inflationOn, draft.inflationText.trim() || '—')
-                : projection.inflationOff
-            }
-            invalid={errors.inflation !== undefined}
-            onClick={() => {
-              setSheet('inflation')
-            }}
-          />
-        </div>
+              <dl className="flex flex-wrap gap-x-6 gap-y-2">
+                {rows.map((row) => (
+                  <div key={row.label} className="flex flex-col">
+                    <dt className="t-label">{row.label}</dt>
+                    <dd className="t-num-body tnum">{money(row.value)}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="flex justify-end">
+                <Segmented
+                  options={views()}
+                  value={draft.view}
+                  onChange={(view) => {
+                    patch({ view })
+                  }}
+                  label={projection.viewAxis}
+                />
+              </div>
+
+              {draft.view === 'chart' ? (
+                /* La figure a besoin d'une hauteur qu'on lui donne : sur une
+                   page qui défile, un cadre flexible se réduirait à la hauteur
+                   de son contenu, c'est-à-dire à rien. */
+                <div className="flex h-72 flex-col md:h-96">
+                  <SimulationChart
+                    points={result.points}
+                    months={result.months}
+                    single={result.single}
+                    guaranteed={result.guaranteed}
+                    srText={[
+                      tpl(
+                        result.single ? projection.srChart : projection.srChartRange,
+                        money(result.initial),
+                        money(result.arrival.low),
+                        result.single ? formatDuration(result.months) : money(result.arrival.high),
+                        formatDuration(result.months),
+                      ),
+                      tpl(projection.srContributed, money(result.paid)),
+                    ].join(' ')}
+                  />
+                </div>
+              ) : (
+                /* Le tableau, lui, prend la hauteur de ses lignes : c'est la
+                   page qui défile, et une seconde zone de défilement dans la
+                   première se lit mal au doigt. */
+                <SimulationTable
+                  points={result.points}
+                  marks={yearMarks(result.months)}
+                  single={result.single}
+                  initial={result.initial}
+                />
+              )}
+            </>
+          )}
+        </section>
 
         {/* La réserve, en pied et jamais repliée : c'est la seule chose de cet
             écran qui soit vraie quels que soient les chiffres réglés, et une mise
             en garde qu'il faut ouvrir n'en est plus une. La lecture en euros
             d'aujourd'hui se dit juste avant, parce qu'elle change ce que tous les
             montants au-dessus signifient. */}
-        <p className="t-label shrink-0">
+        <p className="t-label">
           {result !== null && result.inflationBp > 0
             ? `${tpl(projection.constantOn, percent(result.inflationBp))} `
             : ''}
@@ -426,73 +484,50 @@ export function ProjectionPage() {
         </p>
       </div>
 
-      <AccountsSheet
-        open={sheet === 'accounts'}
-        onClose={() => {
-          setSheet(null)
-        }}
-        parts={parts}
-        picked={draft.picked}
-        onPick={(ids) => {
-          patch({ picked: ids })
-        }}
-        runs={result?.runs ?? []}
-      />
+      {/* Les trois feuilles qui règlent compte par compte n'existent que dans le
+          mode qui les ouvre : une feuille fermée reste dans le DOM — c'est un
+          `<dialog>` sans `open` —, et « Versement » s'y annoncerait à côté du
+          champ du même nom. */}
+      {!simple && (
+        <>
+          <AccountsSheet
+            open={sheet === 'accounts'}
+            onClose={() => {
+              setSheet(null)
+            }}
+            parts={parts}
+            picked={draft.picked}
+            onPick={(ids) => {
+              patch({ picked: ids })
+            }}
+            runs={result?.runs ?? []}
+          />
 
-      <RateSheet
-        open={sheet === 'rate'}
-        onClose={() => {
-          setSheet(null)
-        }}
-        parts={picked}
-        runs={result?.runs ?? []}
-        settings={draft.settings}
-        errors={errors.supports}
-        onChange={setSetting}
-      />
+          <RateSheet
+            open={sheet === 'rate'}
+            onClose={() => {
+              setSheet(null)
+            }}
+            parts={picked}
+            runs={result?.runs ?? []}
+            settings={draft.settings}
+            errors={errors.supports}
+            onChange={setSetting}
+          />
 
-      <AmountSheet
-        open={sheet === 'amount'}
-        onClose={() => {
-          setSheet(null)
-        }}
-        parts={picked}
-        settings={draft.settings}
-        errors={errors.supports}
-        every={draft.every}
-        onEvery={(every: Period) => {
-          patch({ every })
-        }}
-        onChange={setSetting}
-      />
-
-      <DurationSheet
-        open={sheet === 'duration'}
-        onClose={() => {
-          setSheet(null)
-        }}
-        years={draft.years}
-        onChange={(years) => {
-          patch({ years })
-        }}
-        {...(errors.years === undefined ? {} : { error: errors.years })}
-      />
-
-      <InflationSheet
-        open={sheet === 'inflation'}
-        onClose={() => {
-          setSheet(null)
-        }}
-        constant={draft.constant}
-        onConstant={(constant) => {
-          patch({ constant })
-        }}
-        inflationText={draft.inflationText}
-        onInflation={(inflationText) => {
-          patch({ inflationText })
-        }}
-        {...(errors.inflation === undefined ? {} : { error: errors.inflation })}
-      />
+          <AmountSheet
+            open={sheet === 'amount'}
+            onClose={() => {
+              setSheet(null)
+            }}
+            parts={picked}
+            settings={draft.settings}
+            errors={errors.supports}
+            every={draft.every}
+            onChange={setSetting}
+          />
+        </>
+      )}
 
       <ExplainSheet
         open={sheet === 'explain'}
