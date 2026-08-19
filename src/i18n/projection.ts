@@ -47,6 +47,36 @@ const fr = {
   viewChart: 'Graphique',
   viewTable: 'Tableau',
 
+  /* --- Les deux modes ------------------------------------------------------
+     « Simple » d'abord, et c'est l'écran par défaut : trois nombres tapés
+     répondent à la question qu'on se pose avant d'avoir quoi que ce soit, et
+     elle arrive avant toutes les autres. « Mes comptes » est la lecture que
+     personne d'autre ne produit — elle part du document —, et elle reste à un
+     appui. Les deux mots disent d'où viennent les nombres, jamais la difficulté
+     de l'écran : « Avancé » aurait promis des réglages, pas une source. */
+  modeAxis: 'Ce qu’on simule',
+  modeSimple: 'Simple',
+  modeAccounts: 'Mes comptes',
+  settings: 'Ta simulation',
+  /* Le repli des deux réglages qu'on ne tourne pas en arrivant. Il dit ce qu'il
+     porte plutôt que « Avancé », qui aurait promis de la difficulté là où il n'y
+     a que deux questions moins fréquentes. */
+  more: 'Cadence et inflation',
+
+  /* --- Le mode simple ------------------------------------------------------
+     Un capital de départ, un versement, un rendement — et le rendement se tape
+     au lieu de se deviner. La valeur proposée est celle qui promet le moins, et
+     c'est délibérément l'inverse des 11 % « constatés sur la dernière décennie »
+     qu'un simulateur de vente présélectionne. */
+  simpleStart: 'Capital de départ',
+  simpleRate: 'Rendement annuel',
+  /* Ce que le champ ne dit pas de lui-même, et rien de plus : le taux se saisit
+     **net**, ce qui change ce qu'on y tape. Que l'app n'en devine aucun se lit
+     dans la valeur d'ouverture, la plus modeste qu'elle connaisse, et se
+     raconte dans la feuille d'explication. */
+  simpleRateHint: 'Net de frais et d’impôt.',
+  simpleEmpty: 'Indique un versement ou un capital de départ pour voir la trajectoire.',
+
   /* --- Les réglages, en pilules -------------------------------------------
      Quatre pilules, et chacune **dit sa valeur** plutôt que son nom : « 3
      comptes », « 2,40 % – 5 % », « 10 ans », « Inflation 2 % ». Un écran de
@@ -58,10 +88,6 @@ const fr = {
   accountsMany: '%s comptes',
   pillRate: 'Rendement',
   pillAmount: 'Versement',
-  pillDuration: 'Durée et cadence',
-  pillInflation: 'Inflation',
-  inflationOff: 'Sans inflation',
-  inflationOn: 'Inflation %s',
 
   /* --- Le résultat --------------------------------------------------------
      Il est en tête d'écran, avant les réglages, et il ne le quitte pas : on
@@ -207,25 +233,31 @@ const fr = {
      nombre recopié dans la phrase : un message qui annonce une limite que le
      code n'applique plus est pire qu'un message absent. */
   durationInvalid: 'Entre %s et %s ans.',
-  cadence: 'Cadence des versements',
+  /* « Cadence » et non « Cadence des versements » : le libellé passait à la
+     ligne sous 360 points, et sa liste tombait alors un cran plus bas que sa
+     voisine — deux contrôles appariés qui ne s'alignent plus se lisent comme
+     deux rangées. Ce qu'il cadence se lit dans l'aide juste dessous. */
+  cadence: 'Cadence',
   cadenceMonthly: 'Mensuel',
   cadenceQuarterly: 'Trimestriel',
   cadenceHalf: 'Semestriel',
   cadenceYearly: 'Annuel',
-  cadenceHint:
-    'À effort égal, verser une fois l’an rend un peu moins que verser tous les mois : l’argent passe moins de temps à produire des intérêts.',
+  cadenceHint: 'À effort égal, verser une fois l’an rend un peu moins.',
   perMonth: '%s/mois',
   perQuarter: '%s/trimestre',
   perHalf: '%s/semestre',
   perYear: '%s/an',
 
   /* --- Euros constants ----------------------------------------------------*/
+  /* Les deux lectures se nomment **court** : le libellé du champ dit déjà de
+     quels euros on parle, et « Euros d'aujourd'hui » dans une liste de cent
+     trente points se faisait couper au milieu du mot. Ce qui rétrécit est le
+     libellé de l'option, pas ce qu'elle désigne. */
   inflationAxis: 'En quels euros lire',
-  inflationCurrent: 'Euros courants',
-  inflationConstant: 'Euros d’aujourd’hui',
+  inflationCurrent: 'Courants',
+  inflationConstant: 'D’aujourd’hui',
   inflation: 'Inflation annuelle',
-  inflationHint:
-    'En euros d’aujourd’hui, chaque montant est déflaté à sa propre date : un versement fait dans dix ans n’a pas le pouvoir d’achat de celui d’aujourd’hui.',
+  inflationHint: 'Chaque montant est déflaté à sa propre date.',
   constantOn: 'Montants en euros d’aujourd’hui, inflation à %s.',
 
   /* --- Ce qu'il faut savoir, à la demande ---------------------------------

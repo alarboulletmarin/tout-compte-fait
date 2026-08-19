@@ -29,8 +29,16 @@ import {
   yearMarks,
 } from './model'
 
+/**
+ * Un brouillon en mode comptes — celui que ces tests interrogent.
+ *
+ * L'écran s'ouvre en mode simple, qui ne lit pas le document : le poser ici
+ * ferait passer chaque cas à côté des comptes qu'il donne à `analyse`. Le mode
+ * simple a son propre bloc, plus bas.
+ */
 const draft = (patch: Partial<SimulationDraft> = {}): SimulationDraft => ({
   ...DEFAULT_DRAFT,
+  mode: 'accounts',
   ...patch,
 })
 

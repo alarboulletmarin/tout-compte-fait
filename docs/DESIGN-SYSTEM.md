@@ -323,13 +323,16 @@ Les trois paliers se règlent sur le conteneur le plus proche, et par défaut c'
 
 **Field** : libellé, contrôle, aide ou erreur. Le libellé porte la mention `· obligatoire` ou `· facultatif`, dans la même graisse atténuée. Elle vit dans le `<label>`, donc dans le nom accessible du contrôle : aucun `aria-required` à poser en plus. On la met sur les formulaires qui créent ou modifient une entité, pas sur les rangées d'ajout à un seul champ : un bouton désactivé tant que le champ est vide y dit déjà tout.
 
+**Une liste déroulante porte un chevron, et il pointe en bas.** Le contrôle natif est repeint pour prendre la forme des autres champs — même rayon, même fond, même hauteur —, et ce repeint enlève la flèche du système : trente-six pixels lui restaient réservés à droite, vides. Une liste avait donc l'aspect exact d'un champ de saisie, et rien n'annonçait qu'il y avait quelque chose à ouvrir. Le chevron est posé par-dessus, sans souris, et masqué à l'oreille — un lecteur d'écran annonce déjà « liste ». **Il ne se confond pas avec celui d'une rangée** : celui-ci pointe à droite et promet un écran, celui-là pointe en bas et annonce ce qui s'ouvre sur place (§6).
+
 **Un contrôle a la largeur de ce qu'il reçoit, et « le format suit le contenu » ne s'arrête pas au bord d'un formulaire.** `w-full` sur tout ce qui se saisit donnait la même boîte à un taux annuel de quatre caractères et à une note de cent quarante : mesuré, **316px sur un téléphone de 390**, sur les trois formulaires de l'app. Le coût n'est pas seulement du vide : un montant est aligné à droite, donc dans une boîte pleine largeur le chiffre qu'on tape se pose à 280px de l'étiquette qui le nomme, et la colonne devient une pile de dalles identiques où plus rien ne distingue deux caractères de cent.
 
 | Contenu | Largeur |
 |---|---|
 | Montant, date | plafond commun de **12rem** |
 | Entier d'un ou deux chiffres : un quantième, un « tous les N mois » | **6rem** |
-| Texte libre, note, `Select` | pleine largeur : leur contenu n'a pas de longueur connue |
+| Texte libre, note, `Select` ouvert | pleine largeur : leur contenu n'a pas de longueur connue |
+| `Select` à liste **fermée et courte** — quatre cadences, cinq horizons | le même plafond de **12rem** : la règle suit le contenu, pas le contrôle |
 
 Les deux plafonds sont **mesurés, pas décidés** : « 12 345 678,90 » dans la fonte du champ demande 97px, soit 125 avec le cadre ; le capital restant dû d'un crédit, le plus gros chiffre de l'app, en réclame moins. Un `input[type=date]` veut 156px de largeur intrinsèque sous Chrome, davantage sous Safari iOS, qui écrit « 22 septembre 2026 » en toutes lettres là où Chrome écrit une date en chiffres. 12rem couvre les deux et leur laisse de l'air.
 

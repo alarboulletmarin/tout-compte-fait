@@ -175,9 +175,12 @@
   .h-40 { height: 160px; }
   .h-44 { height: 176px; }
   .h-56 { height: 224px; }
+  /* La figure de la simulation : une hauteur donnée, parce qu'un cadre flexible
+     posé dans une page qui défile se réduirait à la hauteur de son contenu,
+     c'est-à-dire à rien. */
+  .h-72 { height: 288px; }
   .h-full { height: 100%; }
   .h-dvh { height: 100dvh; }
-  .h-\[calc\(100dvh-var\(--sim-chrome\)\)\] { height: calc(100dvh - var(--sim-chrome)); }
 
   .max-h-\[90dvh\] { max-height: 90dvh; }
   .max-h-none { max-height: none; }
@@ -522,13 +525,6 @@
 
   /* --- Variables posées par une classe ------------------------------------ */
 
-  /* Ce que la simulation retire de la hauteur de fenêtre pour que sa figure
-     tienne à l'écran : le cadre, la barre du bas, ses commandes et la marge
-     de sécurité. Trois valeurs, une par palier — voir les paliers plus bas. */
-  .\[--sim-chrome\:calc\(1rem\+var\(--nav-h\)\+5\.5rem\+env\(safe-area-inset-bottom\,0px\)\)\] {
-    --sim-chrome: calc(1rem + var(--nav-h) + 5.5rem + env(safe-area-inset-bottom, 0px));
-  }
-
   /* --- Accessibilité ------------------------------------------------------ */
 
   /* Présent pour un lecteur d'écran, invisible à l'œil (DS §8). */
@@ -672,6 +668,7 @@
 
   @media (min-width: 640px) {
     .sm\:col-span-1 { grid-column: span 1 / span 1; }
+    .sm\:col-span-2 { grid-column: span 2 / span 2; }
     .sm\:m-auto { margin: auto; }
     .sm\:hidden { display: none; }
     .sm\:max-w-lg { max-width: var(--container-lg); }
@@ -696,15 +693,13 @@
     .md\:-mx-8 { margin-inline: -32px; }
     .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .md\:p-5 { padding: 20px; }
+    .md\:h-96 { height: 384px; }
     .md\:p-6 { padding: 24px; }
     .md\:p-2\! { padding: 8px !important; }
     .md\:px-8 { padding-inline: 32px; }
     .md\:py-12 { padding-block: 48px; }
     .md\:py-14 { padding-block: 56px; }
     .md\:pt-8 { padding-top: 32px; }
-    .md\:\[--sim-chrome\:calc\(2rem\+var\(--nav-h\)\+5\.5rem\+env\(safe-area-inset-bottom\,0px\)\)\] {
-      --sim-chrome: calc(2rem + var(--nav-h) + 5.5rem + env(safe-area-inset-bottom, 0px));
-    }
   }
 
   @media (min-width: 1024px) {
@@ -718,6 +713,5 @@
     .lg\:pb-10 { padding-bottom: 40px; }
     /* Au-delà, la barre du bas n'existe plus : la colonne latérale l'a
        remplacée, et la figure récupère sa hauteur. */
-    .lg\:\[--sim-chrome\:4\.5rem\] { --sim-chrome: 4.5rem; }
   }
 }

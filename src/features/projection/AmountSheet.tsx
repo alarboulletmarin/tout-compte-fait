@@ -13,11 +13,10 @@
  * compte qui reçoit 350 €/mois propose 1 050 € par trimestre, parce que c'est le
  * même effort. Ce qu'on tape par-dessus ne descend nulle part.
  *
- * **La cadence n'est pas un détail d'affichage.** C'est le seul endroit de l'app
- * où une échéance n'est pas ramenée au mois (cahier §4.2), et c'est délibéré : le
- * moteur capitalise, donc 1 200 € versés une fois l'an rendent moins que 100 €
- * versés douze fois — l'argent passe moins de temps à produire. Ramener la
- * cadence au mois aurait effacé exactement ce qu'on vient mesurer.
+ * **La cadence, elle, n'est plus ici.** Elle vaut pour toute la simulation — les
+ * deux modes et tous les comptes —, donc elle se règle sur la page, avec la
+ * durée. Cette feuille en porte l'unité (« €/trimestre ») parce que c'est elle
+ * qui donne son sens au montant tapé, mais elle ne la décide plus.
  * ==========================================================================*/
 
 import { type Money, toAmountInput } from '@/domain/money'
@@ -26,26 +25,16 @@ import { currencySymbol, formatMoney, tpl } from '@/i18n/format'
 import { projection } from '@/i18n/projection'
 import { Button } from '@/ui/Button'
 import { AmountInput, Field } from '@/ui/Field'
-import { Segmented } from '@/ui/Segmented'
 import { Sheet } from '@/ui/Sheet'
 import { useCurrency } from '@/ui/currency'
 import { Unit } from './Unit'
 import {
-  PERIODS,
   type Period,
   type SettingErrors,
   type SupportSetting,
   defaultAmount,
   perPeriod,
 } from './model'
-
-/** Le nom d'une cadence, et le gabarit de l'unité qui va avec. */
-const CADENCES = (): { value: string; label: string }[] => [
-  { value: '1', label: projection.cadenceMonthly },
-  { value: '3', label: projection.cadenceQuarterly },
-  { value: '6', label: projection.cadenceHalf },
-  { value: '12', label: projection.cadenceYearly },
-]
 
 export type AmountSheetProps = {
   open: boolean
@@ -54,7 +43,6 @@ export type AmountSheetProps = {
   settings: readonly SupportSetting[]
   errors: Record<string, SettingErrors>
   every: Period
-  onEvery: (next: Period) => void
   onChange: (supportId: string, next: Partial<Omit<SupportSetting, 'supportId'>>) => void
 }
 
@@ -65,7 +53,6 @@ export function AmountSheet({
   settings,
   errors,
   every,
-  onEvery,
   onChange,
 }: AmountSheetProps) {
   const currency = useCurrency()
@@ -75,20 +62,7 @@ export function AmountSheet({
   return (
     <Sheet open={open} onClose={onClose} title={projection.amount} pullToClose>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Segmented
-            options={CADENCES()}
-            value={String(every)}
-            onChange={(next) => {
-              const found = PERIODS.find((one) => String(one) === next)
-              if (found !== undefined) onEvery(found)
-            }}
-            label={projection.cadence}
-          />
-          <p className="t-label">{projection.cadenceHint}</p>
-        </div>
-
-        {parts.map((part) => {
+        {parts.map((part, index) => {
           const setting = settings.find((one) => one.supportId === part.supportId)
           const fault = errors[part.supportId]
           const fromRules = defaultAmount(part, every)
@@ -97,7 +71,11 @@ export function AmountSheet({
           return (
             <section
               key={part.supportId}
-              className="flex flex-col gap-2 border-t border-border pt-4"
+              className={
+                index === 0
+                  ? 'flex flex-col gap-2'
+                  : 'flex flex-col gap-2 border-t border-border pt-4'
+              }
             >
               <Field
                 label={part.label}

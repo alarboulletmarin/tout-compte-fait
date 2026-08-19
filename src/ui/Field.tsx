@@ -1,7 +1,7 @@
 import { type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, useId } from 'react'
 import { cn } from '@/lib/cn'
 import { t } from '@/i18n/strings'
-import { Check } from './Icons'
+import { Check, ChevronDown } from './Icons'
 
 const CONTROL = cn(
   'w-full rounded-input bg-surface-2 px-3.5 text-[15px] text-text',
@@ -249,14 +249,37 @@ export type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'classNa
   invalid?: boolean
 }
 
+/**
+ * Une liste déroulante — et le chevron qui dit qu'elle en est une.
+ *
+ * Le contrôle natif est repeint (`appearance: none`) pour porter la forme des
+ * autres champs : même rayon, même fond, même hauteur. Ce que le repeint enlève
+ * est la flèche du système, et elle n'était remplacée par rien — trente-six
+ * pixels de rembourrage lui étaient réservés à droite, et ils restaient vides.
+ * Une liste déroulante avait donc exactement l'aspect d'un champ de saisie :
+ * rien n'annonçait qu'il y avait quelque chose à ouvrir.
+ *
+ * Le chevron est posé par-dessus, sans souris (`pointer-events-none`) pour que
+ * l'appui traverse jusqu'au `select`, et masqué à l'oreille : un lecteur d'écran
+ * annonce déjà « liste », et un glyphe de plus ne l'apprendrait pas mieux.
+ * L'enveloppe porte la largeur, le `select` la remplit — un plafond posé par
+ * l'appelant borne donc les deux d'un coup.
+ */
 export function Select({ children, className, invalid = false, ...rest }: SelectProps) {
   return (
-    <select
-      className={cn(CONTROL, 'h-11 appearance-none pr-9', invalid && 'border-danger', className)}
-      aria-invalid={invalid || undefined}
-      {...rest}
-    >
-      {children}
-    </select>
+    <span className={cn('relative flex w-full items-center', className)}>
+      <select
+        className={cn(CONTROL, 'h-11 appearance-none pr-9', invalid && 'border-danger')}
+        aria-invalid={invalid || undefined}
+        {...rest}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        size={16}
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 text-muted"
+      />
+    </span>
   )
 }
