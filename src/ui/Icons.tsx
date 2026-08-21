@@ -18,6 +18,7 @@ import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise'
 import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { Archive } from '@phosphor-icons/react/dist/csr/Archive'
 import { ArrowUpRight } from '@phosphor-icons/react/dist/csr/ArrowUpRight'
+import { Backspace } from '@phosphor-icons/react/dist/csr/Backspace'
 import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
@@ -94,6 +95,9 @@ export const Plus = adapt(PhPlus)
    du glyphe d'en face. */
 export const Minus = adapt(PhMinus)
 export const Close = adapt(X)
+/* La touche d'effacement du pavé numérique. Elle porte son nom sur le contrôle
+   et non sur le glyphe (§9.2) : c'est un bouton sans libellé visible. */
+export const BackspaceIcon = adapt(Backspace)
 export const Check = adapt(PhCheck)
 export const Warning = adapt(WarningCircle)
 /* Le repère d'une tuile qui s'explique sur place, par opposition au chevron de
