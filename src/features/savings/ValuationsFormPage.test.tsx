@@ -12,6 +12,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
+import { today } from '@/domain/date'
 import {
   eur,
   makeCategory,
@@ -30,7 +31,11 @@ import { ValuationsFormPage } from './ValuationsFormPage'
 
 const initial = useStore.getState().data
 const MONTH = '2026-07'
-const TODAY = new Date().toISOString().slice(0, 10)
+/* Le jour **local**, comme `today()` du domaine — et non la date UTC que rend
+   `toISOString()`. Les deux divergent chaque nuit entre minuit et le décalage
+   horaire : à Paris en été, ce test tombait de 00h00 à 02h00, en annonçant la
+   veille là où l'écran écrivait le jour même. */
+const TODAY = today()
 
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
