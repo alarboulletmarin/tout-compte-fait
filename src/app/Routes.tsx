@@ -1,18 +1,13 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AdvanceFormPage } from '@/features/advances/AdvanceFormPage'
 import { AdvancesPage } from '@/features/advances/AdvancesPage'
 import { AboutPage } from '@/features/about/AboutPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
-import { CreditFormPage } from '@/features/credits/CreditFormPage'
 import { CreditsPage } from '@/features/credits/CreditsPage'
 import { FlowsPage } from '@/features/flows/FlowsPage'
-import { EntryPage } from '@/features/month/EntryPage'
 import { MonthPage } from '@/features/month/MonthPage'
 import { MorePage } from '@/features/more/MorePage'
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
-import { RecurrenceDetailPage } from '@/features/recurrences/RecurrenceDetailPage'
-import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
@@ -112,6 +107,20 @@ const HistoryPage = lazy(async () => ({
 const ReviewPage = lazy(async () => ({
   default: (await import('@/features/review/ReviewPage')).ReviewPage,
 }))
+
+/**
+ * Les cinq écrans qui écrivent une ligne, en un seul morceau.
+ *
+ * Le raisonnement vit dans `features/operations/pages.ts`, avec la liste. En
+ * deux mots : on n'y arrive que par une action délibérée, jamais au démarrage,
+ * et ils partagent le formulaire qui fait leur poids.
+ */
+const opsPages = () => import('@/features/operations/pages')
+const AdvanceFormPage = lazy(async () => ({ default: (await opsPages()).AdvanceFormPage }))
+const CreditFormPage = lazy(async () => ({ default: (await opsPages()).CreditFormPage }))
+const EntryPage = lazy(async () => ({ default: (await opsPages()).EntryPage }))
+const RecurrenceDetailPage = lazy(async () => ({ default: (await opsPages()).RecurrenceDetailPage }))
+const RecurrenceFormPage = lazy(async () => ({ default: (await opsPages()).RecurrenceFormPage }))
 
 /**
  * Les écrans que « Plus » ouvre, en un seul morceau.
