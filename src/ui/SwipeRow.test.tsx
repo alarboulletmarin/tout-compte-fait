@@ -132,24 +132,46 @@ describe('SwipeRow — le geste', () => {
   })
 
   /* Viser la corbeille d'une rangée ne doit pas produire un micro-glissement au
-     lieu d'un clic : c'est la garde de `SwipeAway` et de `MonthNav`. */
-  it('ne part jamais d’un bouton posé sur la rangée', async () => {
+     lieu d'un clic : c'est la garde de `SwipeAway` et de `MonthNav`. Elle se
+     marque, parce qu'une rangée entière est souvent un bouton elle aussi. */
+  it('ne part jamais d’un contrôle marqué', async () => {
     const onClick = vi.fn()
     render(
       <SwipeRow right={{ label: 'Confirmer', onAction: vi.fn() }}>
-        <button type="button" onClick={onClick}>
-          Supprimer la ligne
-        </button>
+        <span data-no-swipe>
+          <button type="button" onClick={onClick}>
+            Supprimer la ligne
+          </button>
+        </span>
       </SwipeRow>,
     )
     const button = screen.getByRole('button', { name: 'Supprimer la ligne' })
+    const row = button.parentElement?.parentElement as HTMLElement
 
     pointer('pointerDown', button, { x: 0 })
     pointer('pointerMove', button, { x: 120 })
-    expect(button.parentElement?.style.transform).toBe('')
+    expect(row.style.transform).toBe('')
 
     await userEvent.click(button)
     expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  /* Le pendant, et c'est lui qui a fait inverser la règle : la rangée qui ouvre
+     la fiche de sa ligne est un bouton, et le doigt part de là. */
+  it('part d’une rangée qui est elle-même un bouton', () => {
+    const right = vi.fn()
+    render(
+      <SwipeRow right={{ label: 'Confirmer', onAction: right }}>
+        <button type="button">Électricité · 96,40 €</button>
+      </SwipeRow>,
+    )
+    const button = screen.getByRole('button', { name: 'Électricité · 96,40 €' })
+
+    pointer('pointerDown', button, { x: 0 })
+    pointer('pointerMove', button, { x: 120 })
+    pointer('pointerUp', button, { x: 120 })
+
+    expect(right).toHaveBeenCalledTimes(1)
   })
 
   /* Un défilement de page qui dérive un peu ne doit pas emporter la rangée. */

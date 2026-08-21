@@ -60,7 +60,15 @@ const TRIGGER_LEFT_DESTRUCTIVE = -84
  * **Le clavier et les lecteurs d'écran ne passent pas par ici.** Un glissé ne
  * s'annonce pas, et ce composant n'invente aucun rôle pour faire croire le
  * contraire : c'est à la rangée de porter les boutons qui font la même chose,
- * et ce composant n'est qu'un accélérateur au pouce.
+ * et ce composant n'est qu'un accélérateur au pouce. `SwipeableListRow` les
+ * pose, et c'est par lui qu'on passe.
+ *
+ * **Ce qui n'est pas une poignée se marque `data-no-swipe`.** La garde a
+ * d'abord refusé le geste sur tout ce qui était cliquable ; au premier
+ * branchement, elle refusait le glissé partout, parce qu'une rangée de liste
+ * *est* un bouton — c'est elle qui ouvre la fiche de sa ligne. La règle s'est
+ * donc inversée : la rangée est une poignée par défaut, et l'appelant marque
+ * les contrôles qu'un doigt vise pour cliquer.
  */
 export function SwipeRow({
   right,
@@ -109,10 +117,16 @@ export function SwipeRow({
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
     if (disabled) return
-    /* Le geste ne part jamais d'un contrôle : viser la corbeille d'une rangée
-       produirait un micro-glissement au lieu d'un clic. C'est la garde de
-       `SwipeAway` et de `MonthNav`, pour la même raison. */
-    if ((event.target as HTMLElement).closest('button, a, input, select, label')) return
+    /* Le geste ne part pas d'un contrôle **marqué** : viser la coche posée au
+       bout d'une rangée produirait un micro-glissement au lieu d'un clic, comme
+       sur `SwipeAway` et `MonthNav`.
+       La marque est portée par l'appelant, et non déduite de la balise, parce
+       que la rangée elle-même est le plus souvent un bouton — c'est elle qui
+       ouvre la fiche de la ligne. Refuser tout ce qui est cliquable revenait
+       donc à refuser le glissé partout où il sert, ce qu'on a mesuré au premier
+       branchement : `SwipeableListRow` marque ses deux boutons, et laisse la
+       rangée être une poignée. */
+    if ((event.target as HTMLElement).closest('[data-no-swipe]') !== null) return
     start.current = { x: event.clientX, y: event.clientY }
     setDragging(true)
     event.currentTarget.setPointerCapture(event.pointerId)
