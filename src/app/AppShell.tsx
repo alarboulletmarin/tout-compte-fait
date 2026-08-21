@@ -9,7 +9,7 @@ import { useHotkeys } from '@/ui/useHotkeys'
 import { DataNotice } from './DataNotice'
 import { Sidebar, TabBar } from './Nav'
 import { QuickEntry } from './QuickEntry'
-import { entryNewPath, isFocusScreen } from './routes'
+import { entryNewPath, isFocusScreen, isFullFrame } from './routes'
 
 /** Coquille de l'app : navigation et gabarit. Aucune règle métier ici. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -17,6 +17,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const householdName = useHouseholdName()
   const navigate = useNavigate()
   const focus = isFocusScreen(pathname)
+  /* La revue prend le cadre entier au doigt : pas de barre d'onglets, donc pas
+     de cadre bas à lui réserver. Voir `isFullFrame`, qui dit pourquoi elle est
+     seule dans ce cas. */
+  const fullFrame = isFullFrame(pathname)
 
   /* Le geste le plus fréquent de l'app, sur une touche. Pas sur un écran de
      saisie : « n » y partirait créer une dépense par-dessus celle qu'on est en
@@ -92,7 +96,9 @@ export function AppShell({ children }: { children: ReactNode }) {
              dégageait une hauteur que le bouton n'occupe plus. */
           className={cn(
             'view-enter min-w-0 flex-1 px-4 pt-4 md:px-8 md:pt-8',
-            'pb-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:pb-10',
+            fullFrame
+              ? 'pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:pb-10'
+              : 'pb-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:pb-10',
           )}
         >
           {/* Un seul bandeau pour les trois façons de dire « garde une copie » —
@@ -110,7 +116,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <TabBar />
+      {/* La barre d'onglets s'efface sur les écrans plein cadre, et sur eux
+          seuls : la revue est une tâche qui a une fin visible et sa propre
+          sortie, pas une section de l'app dans laquelle on entre. */}
+      {!fullFrame && <TabBar />}
       {/* Après la barre d'onglets, qu'il surplombe : c'est le même geste au
           doigt que le raccourci « n » au clavier, et il porte la même garde. */}
       <QuickEntry />

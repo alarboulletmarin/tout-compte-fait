@@ -1386,24 +1386,151 @@ export type MonthPending = {
   variable: Entry[]
 }
 
+/**
+ * Le partage entre échéances prêtes à confirmer et échéances à chiffrer.
+ *
+ * Écrit à part parce que deux lectures s'en servent et qu'elles n'ont pas la
+ * même portée : la section du mois, qui suit le filtre par membre, et la file
+ * de la revue, qui l'ignore. Une seule règle, deux portées — la dupliquer aurait
+ * fini par ranger la même échéance des deux côtés selon l'écran.
+ */
+function splitPending(entries: readonly Entry[], variableIds: ReadonlySet<string>): MonthPending {
+  const planned = entries
+    .filter((e) => e.status === 'planned')
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  return {
+    fixed: planned.filter((e) => e.recurrenceId === undefined || !variableIds.has(e.recurrenceId)),
+    variable: planned.filter(
+      (e) => e.recurrenceId !== undefined && variableIds.has(e.recurrenceId),
+    ),
+  }
+}
+
+/** Les récurrences dont le montant se saisit à chaque échéance (cahier §4.3). */
+function useVariableRecurrenceIds(): ReadonlySet<string> {
+  const recurrences = useRecurrences()
+  return useMemo(
+    () => new Set(recurrences.filter((r) => r.amount === null).map((r) => r.id)),
+    [recurrences],
+  )
+}
+
 /** Les échéances prévues du mois affiché, les variables listées à part. */
 export function useMonthPending(): MonthPending {
   const entries = useMonthEntries()
-  const recurrences = useRecurrences()
+  const variableIds = useVariableRecurrenceIds()
+  return useMemo(() => splitPending(entries, variableIds), [entries, variableIds])
+}
+
+/**
+ * Les entrées du mois affiché **sans le filtre par membre**.
+ *
+ * La revue s'en sert, et elle seule pour l'instant : on confirme une échéance
+ * entière, jamais la part de quelqu'un. Le filtre est pourtant relu au moment
+ * d'ouvrir la revue (`startReview`), si bien que les deux disent la même chose
+ * — c'est une redondance, et elle est sans effet de bord : elle ne fait que
+ * refuser de dépendre d'un réglage que l'écran ne montre pas.
+ */
+function useHouseholdMonthEntries(): Entry[] {
+  const entries = useEntries()
+  const month = useCurrentYm()
+  return useMemo(() => entriesOfMonth(entries, month), [entries, month])
+}
+
+/**
+ * Les identifiants de la file, dans l'ordre : les montants fixes, puis ceux
+ * qui restent à chiffrer.
+ *
+ * L'ordre n'est pas cosmétique. Une ligne variable naît à `amountOn(...) ?? ZERO`
+ * — le plus souvent zéro —, donc sa carte ouvre le pavé d'emblée : les mettre
+ * en tête ferait commencer la revue par de la saisie, quand tout le reste ne
+ * demande qu'un oui.
+ */
+export function useReviewQueueIds(): string[] {
+  const entries = useHouseholdMonthEntries()
+  const variableIds = useVariableRecurrenceIds()
   return useMemo(() => {
-    const variableIds = new Set(
-      recurrences.filter((r) => r.amount === null).map((r) => r.id),
-    )
-    const planned = entries
-      .filter((e) => e.status === 'planned')
-      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    const { fixed, variable } = splitPending(entries, variableIds)
+    return [...fixed, ...variable].map((e) => e.id)
+  }, [entries, variableIds])
+}
+
+/** Une carte de la file : l'échéance, et ce que la carte doit en savoir. */
+export type ReviewLine = {
+  entry: Entry
+  /** Son montant se saisit — la carte ouvre alors le pavé sans qu'on demande. */
+  variable: boolean
+}
+
+/**
+ * Les lignes de la file, appariées aux entrées **réelles** du document.
+ *
+ * Les identifiants gardés en session ne font pas foi : une ligne supprimée
+ * depuis un autre onglet, ou depuis la liste du mois entre deux passages, n'est
+ * plus là — et c'est le document qui a raison. Elle disparaît donc de la file
+ * plutôt que d'y laisser une carte vide.
+ *
+ * Une ligne confirmée reste, elle : la colonne de gauche doit continuer à
+ * montrer ce qui est fait, sans quoi la file se raccourcirait sous les yeux de
+ * qui la traverse.
+ */
+export function useReviewLines(ids: readonly string[]): ReviewLine[] {
+  const entries = useHouseholdMonthEntries()
+  const variableIds = useVariableRecurrenceIds()
+  return useMemo(() => {
+    const byId = new Map(entries.map((e) => [e.id, e]))
+    return ids.flatMap((id) => {
+      const entry = byId.get(id)
+      if (entry === undefined) return []
+      return [
+        {
+          entry,
+          variable: entry.recurrenceId !== undefined && variableIds.has(entry.recurrenceId),
+        },
+      ]
+    })
+  }, [ids, entries, variableIds])
+}
+
+/** Les quatre chiffres du bilan, plus les deux soldes qu'il compare. */
+export type MonthReport = {
+  /** Ressources confirmées. */
+  income: Money
+  /** Charges et crédits confirmés — l'épargne en est exclue, comme partout. */
+  spending: Money
+  /** Mis de côté, en net : les versements moins les reprises. */
+  saved: Money
+  /** Solde réel : confirmé − confirmé. */
+  balance: Money
+  /** Solde prévisionnel, pour dire l'écart. */
+  forecast: Money
+}
+
+/**
+ * Le bilan du mois, sur le foyer entier.
+ *
+ * Les mêmes fonctions du domaine que `useMonthTotals` et `useKindTotals` —
+ * rien n'est recalculé ici —, mais sur les entrées non filtrées : le bilan
+ * ferme la revue, et la revue est une tâche du foyer. Un bilan filtré sur
+ * quelqu'un annoncerait un solde réel qui n'est celui de personne au moment
+ * précis où l'écran dit « tu as fini ».
+ */
+export function useHouseholdReport(): MonthReport {
+  const entries = useEntries()
+  const month = useCurrentYm()
+  const kindOf = useKindOf()
+  return useMemo(() => {
+    const totals = monthTotals(entries, month)
+    const confirmed = totalsByKind(entries, month, kindOf)
+    const forecast = totalsByKind(entries, month, kindOf, undefined, true)
     return {
-      fixed: planned.filter((e) => e.recurrenceId === undefined || !variableIds.has(e.recurrenceId)),
-      variable: planned.filter(
-        (e) => e.recurrenceId !== undefined && variableIds.has(e.recurrenceId),
-      ),
+      income: incomeFlow(confirmed, forecast).done,
+      spending: spendingFlow(confirmed, forecast).done,
+      saved: confirmed.saving,
+      balance: totals.balance,
+      forecast: totals.forecastBalance,
     }
-  }, [entries, recurrences])
+  }, [entries, month, kindOf])
 }
 
 /** Les entrées confirmées du mois, de la plus récente à la plus ancienne. */

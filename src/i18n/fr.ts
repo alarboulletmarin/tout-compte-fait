@@ -1187,16 +1187,131 @@ export const fr = {
      deux façons selon l'endroit d'où on le lit. */
   review: {
     title: 'La revue',
-    /* Le décompte parle de « lignes » et non d'« échéances » : c'est le mot
-       que la liste du mois emploie déjà pour la même chose, et celui qu'on lit
-       sur la tuile qui mène ici. */
-    waiting: '%s lignes attendent d’être confirmées.',
-    waitingOne: '%s ligne attend d’être confirmée.',
     /* Deux sorties, deux mots, parce qu'elles ne partent pas du même endroit :
        on « quitte la revue » qu'on est en train de faire, on « revient au
        mois » quand il n'y avait rien à faire. */
     quit: 'Quitter la revue',
     back: 'Revenir au mois',
+
+    /* --- La tuile du mois ------------------------------------------------ */
+
+    /* Elle dit deux choses selon l'état : ce qu'il reste à faire, ou où l'on en
+       était. « Reprends » au présent, à la deuxième personne : c'est la seule
+       phrase de l'app qui s'adresse à quelqu'un qu'on a vu partir. */
+    tileTitle: '%s lignes à confirmer',
+    tileTitleOne: 'Une ligne à confirmer',
+    tileBody:
+      'Une par une, trois décisions au plus : c’était bien ça, un autre montant, pas ce mois-ci.',
+    resumeAt: 'Reprends à %s sur %s',
+    resumeBody: 'La file est intacte, dans le même ordre. Rien n’a été perdu en sortant.',
+    start: 'Commencer la revue',
+    resume: 'Reprendre la revue',
+    restart: 'Repartir du début',
+    /* Le nom accessible de la barre de progression : une barre ne dit rien
+       toute seule, et le pourcentage qu'elle dessine est déjà écrit à côté en
+       toutes lettres (DS §8). */
+    progress: 'Avancement de la revue',
+
+    /* --- Le fil de la file ----------------------------------------------- */
+
+    counter: '%s/%s',
+    counterLong: '%s sur %s · %s après celle-ci',
+    counterLongOne: '%s sur %s · une après celle-ci',
+    counterLast: '%s sur %s · la dernière',
+    /* Le nom accessible d'une rangée de la colonne de gauche. Le saut est un
+       geste, pas une lecture : sans verbe, six rangées se listent comme six
+       libellés dont rien ne dit ce qu'ils font. */
+    goTo: 'Aller à %s',
+
+    /* --- La carte -------------------------------------------------------- */
+
+    /* Le sens de la ligne, en toutes lettres. Les deux mots sont ceux de la
+       saisie et des tuiles — un concept garde son nom partout. */
+    kindOut: 'Charge',
+    kindIn: 'Rentrée d’argent',
+    /* La méta de la carte : le jour, puis d'où vient le montant. Deux phrases
+       parce que le montant d'une récurrence à montant variable n'est pas prévu,
+       il est attendu. */
+    metaPlanned: 'prévu le %s',
+    metaEstimate: 'prévu le %s · montant à saisir',
+    yes: 'C’était bien ça',
+    other: 'Un autre montant',
+    skip: 'Pas ce mois-ci',
+    /* La ligne mono du bas, sur écran large seulement : au doigt, ces deux
+       touches n'existent pas. */
+    keys: 'Entrée pour confirmer · Échap pour sortir',
+
+    /* --- Le pavé --------------------------------------------------------- */
+
+    padLabel: 'Montant réel',
+    padMeta: 'prévu %s · tape le montant réel',
+    padMetaEmpty: 'aucun montant prévu · tape le montant réel',
+    padConfirm: 'Confirmer %s',
+    padBack: 'Revenir au prévu',
+
+    /* --- Ce que chaque geste écrit --------------------------------------- */
+
+    /* Trois messages, et ils ne promettent pas la même chose, parce que le
+       document ne fait pas la même chose. Une récurrence à montant fixe garde
+       sa règle : confirmer une échéance à 104,20 € ne réécrit pas les mois
+       suivants. Une récurrence à montant variable, elle, n'a pas de montant :
+       ce sont ses échéances chiffrées qui font foi, et celle qu'on vient
+       d'écrire devient la plus proche. Une ligne sans récurrence ne promet
+       rien du tout — il n'y a pas de suite. */
+    padNoteFixed: 'la règle ne bouge pas · seule cette échéance change',
+    padNoteVariable: 'les prochaines échéances reprendront ce montant',
+    /* « Retirée » et non « supprimée » : le mot dit ce qui s'est passé — la
+       ligne quitte ce mois-là. Et la suite est vraie, elle : modifier la règle
+       replanifie toutes ses échéances prévues, celle-ci comprise. */
+    skipped: 'Ligne retirée de ce mois · elle reviendra si tu modifies la règle',
+
+    /* --- Le bilan -------------------------------------------------------- */
+
+    summaryEyebrow: '%s · tout est passé en revue',
+    summaryIn: 'Revenus confirmés',
+    summaryOut: 'Charges confirmées',
+    summarySaved: 'Mis de côté',
+    summaryLines: 'Lignes passées',
+    summaryLinesValue: '%s lignes',
+    summaryLinesOne: '%s ligne',
+    summaryBalance: 'Solde réel %s',
+    /* L'écart au prévu. « Exactement » plutôt qu'un zéro : un écart nul est le
+       seul des trois qui mérite d'être lu comme une nouvelle. */
+    gapNone: 'exactement le prévu',
+    gapUnder: 'sous le prévu',
+    gapOver: 'au-dessus du prévu',
+    /* Le bouton ne ferme rien dans le document — un mois n'a pas de verrou, et
+       la phrase le dit plutôt que de le taire. Il navigue vers le mois suivant,
+       que l'app ouvre toute seule en y arrivant. */
+    close: 'Fermer %s',
+    closeHint: 'un mois fermé reste modifiable — rien n’est verrouillé',
+
+    /* --- Le mois suivant ------------------------------------------------- */
+
+    nextTitle: 'Le mois %s est déjà rempli',
+    nextBody:
+      '%s lignes reprises de tes récurrences, au montant prévu. Tu confirmeras au fil de l’eau, ou d’un coup à la fin.',
+    nextBodyOne:
+      'Une ligne reprise de tes récurrences, au montant prévu. Tu la confirmeras quand elle sera tombée.',
+    /* Aucune ligne : c'est le mois d'un foyer sans récurrence, et le dire vaut
+       mieux qu'un titre qui annonce un mois « déjà rempli » sur une liste vide. */
+    nextEmpty: 'Le mois %s n’attend aucune ligne',
+    nextEmptyBody:
+      'Aucune récurrence n’y tombe. Écris une fois ce qui revient, et le mois s’ouvrira rempli.',
+    /* Au-delà de douze mois, l'app n'ouvre plus rien : écrire toutes les
+       échéances de toutes les règles est définitif, et la borne existe pour que
+       la navigation ne se repousse pas elle-même. Le bilan reste, la porte non. */
+    nextBeyond: 'Le mois suivant est au-delà de ce que l’app écrit à l’avance.',
+    nextOpen: 'Ouvrir %s',
+    nextDone: 'Tu as fini pour %s. Rien d’autre à faire ici.',
+  },
+
+  /* Le pavé numérique. À part de la revue : l'onboarding et la saisie rapide
+     le montent aussi, et une chaîne rangée sous « revue » les ferait parler
+     d'un écran où elles ne sont pas. */
+  keypad: {
+    erase: 'Effacer le dernier chiffre',
+    hint: 'tape au clavier si tu préfères',
   },
 
   /* Revenus & charges — le détail au bout des deux tuiles du mois.

@@ -127,6 +127,9 @@
 
   .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Le pavé numérique, et lui seul : trois colonnes égales sur les quatre
+     rangées de touches. */
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .grid-cols-subgrid { grid-template-columns: subgrid; }
   .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto 1fr auto; }
@@ -199,6 +202,12 @@
   .min-h-11 { min-height: 44px; }
   .min-h-14 { min-height: 56px; }
   .min-h-dvh { min-height: 100dvh; }
+  /* Le corps d'une carte de la revue, qui centre son contenu dedans. Ce sont
+     des hauteurs de contenu et non des gouttières : elles suivent la base de 4
+     comme `h-72`, et non l'échelle d'espacement. 288 tient le chiffre héros,
+     l'étiquette, le libellé et la méta sans que la carte flotte en haut d'un
+     écran vide — c'est le seul écran de l'app dont la carte *est* la page. */
+  .min-h-72 { min-height: 288px; }
   .min-h-\[38rem\] { min-height: 38rem; }
 
   .w-2 { width: 8px; }
@@ -231,6 +240,9 @@
   .max-w-full { max-width: 100%; }
   .max-w-none { max-width: none; }
   .max-w-\[16ch\] { max-width: 16ch; }
+  /* La mesure d'un paragraphe posé dans une tuile : assez court pour se lire
+     d'un coup d'œil, assez large pour ne pas casser en trois mots par ligne. */
+  .max-w-\[44ch\] { max-width: 44ch; }
   .max-w-\[60\%\] { max-width: 60%; }
   .max-w-prose { max-width: 65ch; }
   .max-w-xs { max-width: var(--container-xs); }
@@ -438,6 +450,11 @@
   .bg-muted { background-color: var(--text-muted); }
   .bg-accent { background-color: var(--accent); }
   .bg-accent-2 { background-color: var(--accent-2); }
+  /* L'encre d'une tuile accentuée, employée comme remplissage : c'est la seule
+     couleur qui se détache sur du lime, et c'est ce que remplit la barre de
+     progression de la revue. Le sens de §2.3 est respecté — lime reste un fond,
+     et c'est son encre qu'on pose ici, pas l'inverse. */
+  .bg-accent-fg { background-color: var(--accent-fg); }
   .bg-danger { background-color: var(--danger); }
   .bg-danger-fill { background-color: var(--danger-fill); }
   .bg-flow-in { background-color: var(--flow-in); }
@@ -713,10 +730,15 @@
     .lg\:flex { display: flex; }
     .lg\:hidden { display: none; }
     .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* La grille de la revue : la file à gauche, la carte à droite. `.cols`
+       partage à parts égales dès 768px, ce qui donnerait la moitié de l'écran
+       à une liste de libellés et couperait le chiffre héros de la carte. */
+    .lg\:grid-cols-\[320px_1fr\] { grid-template-columns: 320px minmax(0, 1fr); }
     .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .lg\:grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
     .lg\:items-start { align-items: flex-start; }
+    .lg\:min-h-90 { min-height: 360px; }
     .lg\:pb-10 { padding-bottom: 40px; }
     .lg\:bottom-5 { bottom: 20px; }
     /* Au-delà, la barre du bas n'existe plus : la colonne latérale l'a

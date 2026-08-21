@@ -648,10 +648,74 @@ export const en: Strings = {
 
   review: {
     title: 'The review',
-    waiting: '%s lines are waiting to be confirmed.',
-    waitingOne: '%s line is waiting to be confirmed.',
     quit: 'Leave the review',
     back: 'Back to the month',
+
+    tileTitle: '%s lines to confirm',
+    tileTitleOne: 'One line to confirm',
+    tileBody: 'One at a time, three decisions at most: that was it, another amount, not this month.',
+    resumeAt: 'Pick up at %s of %s',
+    resumeBody: 'The queue is intact, in the same order. Nothing was lost on the way out.',
+    start: 'Start the review',
+    resume: 'Resume the review',
+    restart: 'Start over',
+    progress: 'Review progress',
+
+    counter: '%s/%s',
+    counterLong: '%s of %s · %s after this one',
+    counterLongOne: '%s of %s · one after this one',
+    counterLast: '%s of %s · the last one',
+    goTo: 'Go to %s',
+
+    kindOut: 'Cost',
+    kindIn: 'Income',
+    metaPlanned: 'due on the %s',
+    metaEstimate: 'due on the %s · amount to enter',
+    yes: 'That was it',
+    other: 'Another amount',
+    skip: 'Not this month',
+    keys: 'Enter to confirm · Esc to leave',
+
+    padLabel: 'Actual amount',
+    padMeta: 'planned %s · type the actual amount',
+    padMetaEmpty: 'no planned amount · type the actual amount',
+    padConfirm: 'Confirm %s',
+    padBack: 'Back to the planned amount',
+
+    padNoteFixed: 'the rule stays as it is · only this instalment changes',
+    padNoteVariable: 'the next instalments will take this amount',
+    skipped: 'Line removed from this month · it will come back if you edit the rule',
+
+    summaryEyebrow: '%s · everything has been reviewed',
+    summaryIn: 'Confirmed income',
+    summaryOut: 'Confirmed costs',
+    summarySaved: 'Set aside',
+    summaryLines: 'Lines reviewed',
+    summaryLinesValue: '%s lines',
+    summaryLinesOne: '%s line',
+    summaryBalance: 'Real balance %s',
+    gapNone: 'exactly as planned',
+    gapUnder: 'below plan',
+    gapOver: 'above plan',
+    close: 'Close %s',
+    closeHint: 'a closed month stays editable — nothing is locked',
+
+    nextTitle: 'The month %s is already filled in',
+    nextBody:
+      '%s lines carried over from your recurring items, at the planned amount. You will confirm them as they land, or all at once at the end.',
+    nextBodyOne:
+      'One line carried over from your recurring items, at the planned amount. You will confirm it once it has landed.',
+    nextEmpty: 'The month %s is not expecting any line',
+    nextEmptyBody:
+      'No recurring item lands there. Write down once what comes back, and the month will open already filled in.',
+    nextBeyond: 'The next month is beyond what the app writes ahead of time.',
+    nextOpen: 'Open %s',
+    nextDone: 'You are done with %s. Nothing else to do here.',
+  },
+
+  keypad: {
+    erase: 'Delete the last digit',
+    hint: 'type on your keyboard if you prefer',
   },
 
   flows: {

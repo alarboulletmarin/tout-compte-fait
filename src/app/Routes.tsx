@@ -14,7 +14,6 @@ import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { RecurrenceDetailPage } from '@/features/recurrences/RecurrenceDetailPage'
 import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
-import { ReviewPage } from '@/features/review/ReviewPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
 import { t } from '@/i18n/strings'
@@ -75,15 +74,43 @@ import {
  *
  * Le reste ne se découpe pas : le mois, la saisie, le calendrier et les fiches
  * s'atteignent en un geste depuis n'importe où, et un aller-retour de réseau à
- * chaque fois coûterait plus que les quelques kilo-octets gagnés. La revue et le
- * détail des flux sont dans ce cas au premier chef : ils s'ouvrent d'une tuile
- * du mois, c'est-à-dire au milieu du geste quotidien, et une attente posée là
- * couperait la tâche qu'ils servent à finir. Le service
+ * chaque fois coûterait plus que les quelques kilo-octets gagnés. Le service
  * worker précache de toute façon tous ces morceaux — un écran chargé à la
  * demande reste joignable hors ligne dès la seconde visite.
+ *
+ * **La revue s'est rangée du côté de l'historique, et c'est une mesure qui l'y a
+ * mise.** Elle a d'abord été écrite en dur, au motif qu'elle s'ouvre d'une tuile
+ * du mois — au milieu du geste quotidien — et qu'une attente posée là couperait
+ * la tâche qu'elle sert à finir. L'argument était juste et il reste juste ; ce
+ * qui manquait, c'est **quand** cette attente peut avoir lieu. Ses six vues et
+ * son pavé pèsent 3,2 Kio compressés dans le morceau d'entrée, soit le
+ * dépassement du budget à lui seul — et une première visite ne peut pas ouvrir
+ * de revue : il n'y a ni règle, ni échéance, ni rien à confirmer. Le temps qu'un
+ * mois se remplisse, le service worker a précaché le morceau. L'attente que
+ * l'argument redoutait ne peut donc pas se produire.
+ *
+ * Elle ne s'y range pas seule pour autant : `features/review/ReviewTile` demande
+ * le morceau **dès qu'elle s'affiche**, c'est-à-dire dès qu'il y a une revue à
+ * faire, et non au moment du tap. C'est ce qui rend l'argument caduc plutôt que
+ * simplement improbable, et ça ne coûte rien à qui n'a rien à confirmer.
+ *
+ * Le détail des flux, lui, reste en dur tant qu'il ne pèse rien. La question se
+ * repose quand il portera ses sections, et elle se repose de la même façon : en
+ * mesurant.
  */
 const HistoryPage = lazy(async () => ({
   default: (await import('@/features/history/HistoryPage')).HistoryPage,
+}))
+
+/**
+ * La revue, chargée à la demande et demandée d'avance.
+ *
+ * Le raisonnement est au-dessus. Le même spécificateur que celui de
+ * `ReviewTile.preloadReview` : c'est ce qui garantit un seul morceau pour les
+ * deux, et donc que le préchargement serve bien cette route-ci.
+ */
+const ReviewPage = lazy(async () => ({
+  default: (await import('@/features/review/ReviewPage')).ReviewPage,
 }))
 
 /**

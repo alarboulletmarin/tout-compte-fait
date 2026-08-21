@@ -63,6 +63,40 @@ export const ALL_FILTER: MonthFilter = { kind: 'all' }
  */
 export type StorageError = { kind: 'read' | 'write'; message: string }
 
+/**
+ * La revue en cours — la file, et où l'on en est dedans.
+ *
+ * **Hors du document, et c'est une décision, pas un oubli.** `ARCHITECTURE.md`
+ * refuse qu'un curseur d'appareil voyage dans un fichier exporté : rouvrir un
+ * export sur un autre téléphone y retrouverait « tu en étais à la troisième
+ * ligne », ce qui ne veut rien dire là-bas. La file est d'ailleurs
+ * reconstructible à tout instant — le `status` de chaque `Entry` porte déjà
+ * l'information —, si bien qu'il n'y a rien à conserver au-delà de la session.
+ *
+ * Corollaire assumé : **un rechargement perd la file**, et la tuile du mois
+ * retombe alors sur « Commencer la revue ». C'est le prix, et il est juste :
+ * recommencer une revue ne coûte que de retraverser des lignes déjà confirmées,
+ * qui n'y sont plus.
+ *
+ * `index` peut valoir `ids.length` : la file est alors épuisée et l'écran
+ * montre le bilan. Ce n'est pas `null` — le bilan a besoin de savoir combien de
+ * lignes il vient de fermer, et une file qui s'efface à la dernière carte ne
+ * saurait plus dire ce qu'elle a passé en revue.
+ */
+export type ReviewSession = {
+  /** Le mois d'où vient la file. En changer la périme — voir `setYm`. */
+  ym: YearMonth
+  /**
+   * Les identifiants dans l'ordre, les montants fixes d'abord.
+   *
+   * Ils ne font pas foi : une ligne supprimée depuis un autre onglet n'est plus
+   * dans le document, et c'est le document qui a raison. L'écran apparie donc
+   * cette liste aux entrées réelles à chaque rendu (`useReviewLines`).
+   */
+  ids: readonly string[]
+  index: number
+}
+
 export type StoreState = {
   status: AppStatus
   data: Data
@@ -72,6 +106,8 @@ export type StoreState = {
   filter: MonthFilter
   /** Dernière erreur de persistance, à afficher telle quelle. */
   error: StorageError | null
+  /** La revue en cours, ou son absence. Jamais écrite sur le disque. */
+  review: ReviewSession | null
   /**
    * Révision de la base connue de cet onglet. Ce n'est pas un compteur de
    * mutations : c'est ce qu'on croit être écrit sur le disque, et c'est à ça
@@ -142,6 +178,38 @@ export type StoreActions = {
    * rien ne s'écrit.
    */
   retryWrite: () => Promise<void>
+  /**
+   * Pose la file de la revue et remet le curseur au début.
+   *
+   * Elle remet aussi la lecture sur le foyer entier. Ce n'est pas un effet de
+   * bord de complaisance : on confirme une échéance **entière**, jamais la part
+   * de quelqu'un — c'est la règle que `useMonthSplit` documente déjà pour la
+   * répartition —, et une file bâtie sur le foyer sous un bilan filtré sur une
+   * personne répondrait à deux questions différentes dans le même écran. Le
+   * filtre se voit revenir sur « tout le foyer » en retournant au mois, ce qui
+   * est une conséquence visible plutôt qu'un écart silencieux.
+   */
+  startReview: (ym: YearMonth, ids: readonly string[]) => void
+  /**
+   * Reprend la file là où elle en était.
+   *
+   * Elle ne recrée rien : sans file, il n'y a rien à reprendre, et inventer une
+   * file ici la ferait naître d'un bouton qui dit « reprendre ». La périmée
+   * s'efface — voir `setYm`, qui la périme au changement de mois.
+   */
+  resumeReview: () => void
+  /** Saut direct depuis la colonne de gauche. L'index est borné à la file. */
+  gotoReviewStep: (index: number) => void
+  /**
+   * Avance d'une carte.
+   *
+   * Au-delà de la dernière, l'index vaut `ids.length` et l'écran bascule sur le
+   * bilan. Il ne s'arrête pas là par accident : c'est la seule valeur qui dise
+   * « la file est finie » sans effacer ce qu'elle contenait.
+   */
+  advanceReview: () => void
+  /** Quitte la revue. Le seul geste qui efface la file. */
+  endReview: () => void
   flush: () => Promise<void>
   /** Ce qu'un autre onglet vient d'annoncer. Public pour être testable seul. */
   onTabMessage: (message: TabMessage) => Promise<void>
@@ -274,6 +342,7 @@ export const useStore = create<Store>()((set, get) => ({
   ym: currentYm(),
   filter: ALL_FILTER,
   error: null,
+  review: null,
   rev: 0,
 
   async hydrate() {
@@ -341,6 +410,12 @@ export const useStore = create<Store>()((set, get) => ({
   },
 
   setYm(ym) {
+    /* La file se périme en changeant de mois. Elle porte les échéances d'août :
+       la garder en arrivant sur septembre ferait sauter la revue d'un mois à
+       l'autre au premier « suivant », sur des lignes qui ne sont plus celles
+       qu'on regarde. Elle est perdue plutôt que suspendue, et c'est cohérent
+       avec le rechargement, qui la perd aussi. */
+    if (get().review?.ym !== ym) set({ review: null })
     set({ ym })
     // Consulter un mois à venir suffit à le peupler. Sans quoi il s'affiche
     // vide — pas d'échéance au calendrier, rien dans le prévisionnel — alors
@@ -432,7 +507,10 @@ export const useStore = create<Store>()((set, get) => ({
     // restaure un export sur un appareil neuf ne passe jamais par l'onboarding.
     void askDurability()
     mirrorAppearance(data.settings)
-    set({ data, status: 'ready', error: null, ym: currentYm(), filter: ALL_FILTER })
+    /* La file part avec le document qu'elle désignait : ses identifiants ne
+       renvoient à rien dans celui qui arrive. Même raison pour l'effacement et
+       pour le document qu'un onglet voisin vient de vider. */
+    set({ data, status: 'ready', error: null, ym: currentYm(), filter: ALL_FILTER, review: null })
     // Le fichier importé peut dater : le mois courant n'y est pas forcément.
     get().ensureMonthOpen()
     // Hors du writer, donc hors de ses hooks : cette écriture-là a besoin de son
@@ -465,6 +543,7 @@ export const useStore = create<Store>()((set, get) => ({
       rev: 0,
       ym: currentYm(),
       filter: ALL_FILTER,
+      review: null,
     })
     channel?.post({ type: 'cleared' })
   },
@@ -477,12 +556,46 @@ export const useStore = create<Store>()((set, get) => ({
     writer.cancel()
     useToasts.getState().clearActions()
     await clearDocument()
-    set({ data: initialData(), status: 'onboarding', error: null, rev: 0 })
+    set({ data: initialData(), status: 'onboarding', error: null, rev: 0, review: null })
     channel?.post({ type: 'cleared' })
   },
 
   setError(error) {
     set({ error })
+  },
+
+  startReview(ym, ids) {
+    set({ review: { ym, ids, index: 0 }, filter: ALL_FILTER })
+  },
+
+  resumeReview() {
+    const { review, ym } = get()
+    if (review === null) return
+    if (review.ym !== ym) {
+      set({ review: null })
+      return
+    }
+    set({ filter: ALL_FILTER })
+  },
+
+  gotoReviewStep(index) {
+    const { review } = get()
+    if (review === null) return
+    /* Borné à la file : le saut vient d'une rangée qu'on a affichée, mais rien
+       ne garantit qu'elle existe encore quand le clic arrive — un autre onglet
+       a pu retirer la ligne entre les deux. */
+    const bounded = Math.max(0, Math.min(index, review.ids.length))
+    set({ review: { ...review, index: bounded } })
+  },
+
+  advanceReview() {
+    const { review } = get()
+    if (review === null) return
+    set({ review: { ...review, index: Math.min(review.index + 1, review.ids.length) } })
+  },
+
+  endReview() {
+    set({ review: null })
   },
 
   async retryWrite() {
@@ -506,6 +619,7 @@ export const useStore = create<Store>()((set, get) => ({
         rev: 0,
         ym: currentYm(),
         filter: ALL_FILTER,
+        review: null,
       })
       toast(t.storage.otherTabCleared)
       return

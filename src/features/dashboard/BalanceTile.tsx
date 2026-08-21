@@ -25,8 +25,13 @@ function progressLabel(ym: string, progress: number, days: number): string {
 }
 
 /**
- * Solde du mois : entrées confirmées − sorties confirmées. C'est l'unique tuile
- * accentuée de l'écran, comme le veut le DS §6.
+ * Solde du mois : entrées confirmées − sorties confirmées.
+ *
+ * **Elle n'est plus la tuile accentuée de l'écran, et elle l'a cédée à la
+ * revue.** Le DS §6 n'en veut qu'une par écran ; entre un chiffre qu'on lit et
+ * une tâche qui attend, l'accent va à ce qui demande un geste. Le solde garde
+ * tout le reste : la place de la 2×2, le chiffre héros et l'anneau, qui sont ce
+ * qui le fait voir d'abord.
  *
  * Et c'est elle qui porte l'anneau du mois — la signature que le DS §1 annonce
  * (« un arc qui revient partout : progression dans le mois… ») et que la page
@@ -49,7 +54,6 @@ export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void
        existe et qu'il reste sur la page. */
     <Tile
       span="2x2"
-      variant="accent"
       className="justify-between"
       onClick={() => {
         onExplain({ key: 'balance', value: totals.balance, hint })

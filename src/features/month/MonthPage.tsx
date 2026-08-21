@@ -7,6 +7,7 @@ import { type Metric, MetricInfo } from '@/features/dashboard/MetricInfo'
 import { SituationGrid } from '@/features/dashboard/SituationGrid'
 import { SituationSection } from '@/features/dashboard/SituationSection'
 import { UpcomingSection } from '@/features/dashboard/UpcomingSection'
+import { ReviewTile } from '@/features/review/ReviewTile'
 import { t } from '@/i18n/strings'
 import { useScopedMonthEntries } from '@/store/selectors'
 import { useStore } from '@/store/store'
@@ -215,6 +216,11 @@ export function MonthPage() {
           />
           <div className="flex flex-col gap-4">
             <SituationSection onExplain={setMetric} />
+            {/* La porte de la revue ouvre l'étage de la tâche, juste avant la
+                liste qui l'énumère. Elle n'est pas dans la grille : c'est un
+                geste, pas une lecture, et la grille répond à « où j'en suis ».
+                Elle se tait dès qu'un filtre est actif — voir `ReviewTile`. */}
+            <ReviewTile />
             <PendingSection focus={pendingFocus} />
           </div>
           <AnalysisGrid onShowFamily={showFamily} onExplain={setMetric} />

@@ -584,8 +584,35 @@ export function isFocusScreen(pathname: string): boolean {
        d'export s'intercalerait au-dessus d'un titre qui, sur la vue des
        données, mène justement à l'export. « Plus » reste, lui, une destination
        de la barre d'onglets : il garde les deux. */
-    under(pathname, MORE_VIEWS)
+    under(pathname, MORE_VIEWS) ||
+    /* La revue en fait partie : elle n'a qu'une chose à montrer, une carte, et
+       le bouton flottant y poserait une seconde action principale à trois
+       centimètres de la première. Elle va plus loin que les autres — voir
+       `isFullFrame` juste dessous —, mais elle en est d'abord une. */
+    pathname === REVIEW_PATH
   )
+}
+
+/**
+ * Écrans qui prennent le cadre entier au doigt : **la barre d'onglets s'efface
+ * aussi**.
+ *
+ * Un prédicat à part de `isFocusScreen`, et non une extension de celui-ci. Les
+ * six autres écrans de focus sont des **fiches** : on y arrive depuis un onglet,
+ * on y écrit une ligne, on revient. Leur retirer la barre leur retirerait le
+ * seul moyen de changer de section sans passer par la flèche de retour — et sur
+ * les cinq vues que « Plus » ouvre, elle est précisément ce qui dit qu'on est
+ * encore dans l'app. `e2e/mise-en-page.spec.ts` vérifie d'ailleurs que les
+ * onglets restent atteignables partout où il les attend.
+ *
+ * La revue, elle, est une **tâche** : elle a un début, une fin, et une croix qui
+ * la quitte en toutes lettres. Une barre d'onglets sous une file de cartes
+ * n'offrirait pas une sortie de plus, elle offrirait quatre façons d'abandonner
+ * sans le dire, sur le seul écran de l'app dont la valeur tient à ce qu'on aille
+ * jusqu'au bout.
+ */
+export function isFullFrame(pathname: string): boolean {
+  return pathname === REVIEW_PATH
 }
 
 export const CREDIT_NEW_PATH = `${CREDITS_PATH}/nouveau`
