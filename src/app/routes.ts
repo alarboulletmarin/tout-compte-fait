@@ -146,6 +146,37 @@ export function entryNewPath(
   return query === '' ? ENTRY_NEW_PATH : `${ENTRY_NEW_PATH}?${query}`
 }
 
+/* --- Ce qu'on n'ouvre que depuis l'écran du mois -------------------------*/
+
+/**
+ * La revue — les échéances du mois, une par carte, jusqu'à ce qu'il n'en reste
+ * plus.
+ *
+ * **Elle n'est pas une destination de navigation**, et c'est pourquoi elle ne
+ * figure ni dans `navRoutes()` ni dans `MORE_PREFIXES` : on n'y arrive que par
+ * la tuile du mois, qui n'existe elle-même que lorsqu'il y a quelque chose à
+ * confirmer. C'est l'inverse exact du défaut que `navRoutes()` décrit pour
+ * l'épargne ou la répartition — ces écrans-là répondent toujours à une question
+ * qu'on peut se poser à froid, celui-ci n'a de contenu que le temps d'une tâche,
+ * et une porte permanente vers une tâche finie mènerait à un écran vide.
+ *
+ * Elle a néanmoins une URL, comme tout ce qui prend l'écran entier : quitter la
+ * revue est un retour, pas la fermeture d'un état de composant que le bouton du
+ * navigateur ne connaîtrait pas.
+ */
+export const REVIEW_PATH = '/revue'
+
+/**
+ * Le détail de ce qui rentre et de ce qui sort, par point de vue.
+ *
+ * Même statut que la revue : on y arrive par les tuiles Revenus et Charges du
+ * mois, qui portent déjà les deux totaux et n'avaient nulle part où mener.
+ * L'écran s'appelle « Revenus & charges » ; l'URL dit `flux`, qui est le mot
+ * sous lequel le store range déjà les deux sens (`useMonthFlows`) et qui tient
+ * en un segment.
+ */
+export const FLOWS_PATH = '/flux'
+
 export const CREDITS_PATH = '/credits'
 
 /* La tuile Répartition de l'écran du mois y mène — mais elle s'efface tant

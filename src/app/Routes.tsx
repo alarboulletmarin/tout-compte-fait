@@ -6,6 +6,7 @@ import { AboutPage } from '@/features/about/AboutPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
 import { CreditFormPage } from '@/features/credits/CreditFormPage'
 import { CreditsPage } from '@/features/credits/CreditsPage'
+import { FlowsPage } from '@/features/flows/FlowsPage'
 import { EntryPage } from '@/features/month/EntryPage'
 import { MonthPage } from '@/features/month/MonthPage'
 import { MorePage } from '@/features/more/MorePage'
@@ -13,6 +14,7 @@ import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { RecurrenceDetailPage } from '@/features/recurrences/RecurrenceDetailPage'
 import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
+import { ReviewPage } from '@/features/review/ReviewPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
 import { t } from '@/i18n/strings'
@@ -27,6 +29,7 @@ import {
   CATEGORIES_PATH,
   DATA_PATH,
   FAMILY_NEW_PATH,
+  FLOWS_PATH,
   LANDING_PATH,
   LEGACY_PROJECTION_PATH,
   LEGACY_SETTINGS_PATH,
@@ -39,6 +42,7 @@ import {
   PROJECTION_PATH,
   RECURRENCES_PATH,
   RECURRENCE_NEW_PATH,
+  REVIEW_PATH,
   SAVINGS_ANALYSIS_PATH,
   SAVINGS_PATH,
   GOALS_PATH,
@@ -71,7 +75,10 @@ import {
  *
  * Le reste ne se découpe pas : le mois, la saisie, le calendrier et les fiches
  * s'atteignent en un geste depuis n'importe où, et un aller-retour de réseau à
- * chaque fois coûterait plus que les quelques kilo-octets gagnés. Le service
+ * chaque fois coûterait plus que les quelques kilo-octets gagnés. La revue et le
+ * détail des flux sont dans ce cas au premier chef : ils s'ouvrent d'une tuile
+ * du mois, c'est-à-dire au milieu du geste quotidien, et une attente posée là
+ * couperait la tâche qu'ils servent à finir. Le service
  * worker précache de toute façon tous ces morceaux — un écran chargé à la
  * demande reste joignable hors ligne dès la seconde visite.
  */
@@ -197,6 +204,12 @@ export function AppRoutes() {
           <Route path="/" element={<MonthPage />} />
           <Route path="/depense" element={<EntryPage />} />
           <Route path="/depense/:id" element={<EntryPage />} />
+          {/* Les deux écrans qu'on n'ouvre que depuis une tuile du mois. Ils
+              ne sont dans aucune navigation — voir `REVIEW_PATH` — mais ils ont
+              leur URL, parce qu'ils prennent l'écran entier et qu'en sortir doit
+              être un retour. */}
+          <Route path={REVIEW_PATH} element={<ReviewPage />} />
+          <Route path={FLOWS_PATH} element={<FlowsPage />} />
           <Route path="/calendrier" element={<CalendarPage />} />
           <Route path={RECURRENCES_PATH} element={<RecurrencesPage />} />
           <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceFormPage />} />

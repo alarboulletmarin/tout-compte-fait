@@ -77,7 +77,6 @@
   .right-4 { right: 16px; }
   .right-5 { right: 20px; }
   .bottom-0 { bottom: 0; }
-  .bottom-16 { bottom: 64px; }
   .bottom-20 { bottom: 80px; }
   .left-1\/2 { left: 50%; }
 
@@ -88,6 +87,14 @@
   }
   .bottom-\[calc\(var\(--nav-h\)\+env\(safe-area-inset-bottom\)-1\.25rem\)\] {
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) - 1.25rem);
+  }
+
+  /* Le dégagement du toast : la barre d'onglets, plus les 36px dont le disque
+     de saisie la surplombe, plus 16 de gouttière. C'est la mesure de
+     `AppShell`, aux mêmes tokens et pour la même raison — un cadre écrit en dur
+     se décalerait le jour où le bouton bouge. */
+  .bottom-\[calc\(var\(--nav-h\)\+3\.25rem\+env\(safe-area-inset-bottom\)\)\] {
+    bottom: calc(var(--nav-h) + 3.25rem + env(safe-area-inset-bottom));
   }
 
   .z-10 { z-index: 10; }
@@ -711,6 +718,7 @@
     .lg\:grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
     .lg\:items-start { align-items: flex-start; }
     .lg\:pb-10 { padding-bottom: 40px; }
+    .lg\:bottom-5 { bottom: 20px; }
     /* Au-delà, la barre du bas n'existe plus : la colonne latérale l'a
        remplacée, et la figure récupère sa hauteur. */
   }

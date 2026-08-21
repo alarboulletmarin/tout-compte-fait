@@ -305,16 +305,24 @@ export const fr = {
       'Charges communes non réparties, faute de connaître les revenus de %s : seules les lignes à son nom sont comptées.',
     prorataOnlyOwn:
       'Charges communes non réparties : seules les lignes à son nom sont comptées.',
-    /* « Ce mois-ci » et non « Aujourd'hui » : on revient à un mois, pas à un
-       jour, et le DS §7 veut que les libellés nomment ce qu'on manipule. Sur
-       l'écran du calendrier, « Aujourd'hui » aurait de surcroît promis de
-       ramener au jour, ce que ce bouton ne fait pas. */
-    thisMonth: 'Ce mois-ci',
-    /* En infobulle et non dans le libellé : le nom accessible d'un bouton doit
-       contenir son texte visible, et « Revenir à août 2026 » ne contient pas
-       « Ce mois-ci ». Le mois de destination reste utile à savoir avant de
-       cliquer, il se dit donc en description. */
+    /* Le nom accessible du bloc titre quand il ramène au mois courant.
+
+       Il nomme le mois **et** son année, contrairement à ce qu'on lit dessus :
+       un geste posé sur un titre n'est annoncé par rien d'autre que son nom, et
+       « Revenir » seul laisserait deviner où. Le texte visible de l'action —
+       « revenir à août » — y est contenu, ce que le §8 demande.
+
+       « Revenir à un mois » et non « à aujourd'hui » : on revient à un mois, pas
+       à un jour, et le DS §7 veut que les libellés nomment ce qu'on manipule.
+       Sur l'écran du calendrier, « Aujourd'hui » aurait de surcroît promis de
+       ramener au jour, ce que ce geste ne fait pas. */
     thisMonthTitle: 'Revenir à %s',
+    /* Le retour tel qu'il s'écrit **dans** le bloc titre, sous le nom du mois
+       affiché. En bas de casse, parce que la ligne est un axe et non un
+       eyebrow : `t-eyebrow` passe tout en capitales, et le DS §7 ne veut pas de
+       majuscule décorative sur ce qui est un bouton. Le mois seul suffit — le
+       nom accessible du bloc, lui, porte l'année (`thisMonthTitle`). */
+    returnToShort: 'revenir à %s',
   },
 
   /* La frontière avec le navigateur. Tout ce qui s'y passe mal doit se dire :
@@ -325,10 +333,23 @@ export const fr = {
     readFailed:
       'Les données n’ont pas pu être lues. Tu peux repartir de zéro ou importer un export.',
     writeFailed: 'Les modifications ne s’enregistrent plus',
+    /* Ce que l'échec change, puis ce qui a pu le causer — dans cet ordre, parce
+       que la première phrase est vraie à coup sûr et la seconde seulement
+       probable. Les trois hypothèses couvrent les trois façons dont l'app perd
+       le droit d'écrire, y compris l'onglet concurrent que le titre nomme déjà
+       quand c'est lui : aucune ne contredit un titre plus précis qu'elle.
+       L'export n'est plus une consigne dans la phrase — un bouton le dit. */
     writeFailedBody:
-      'Ce que tu vois à l’écran est intact, mais plus rien ne s’écrit sur cet appareil. Exporte maintenant : c’est la seule copie qui survivra à la fermeture de l’onglet.',
+      'Ce que tu tapes reste à l’écran, mais rien n’est gardé. Navigation privée, espace saturé, ou un autre onglet qui tient la base.',
     writeFailedLabel: 'Échec d’enregistrement',
-    exportNow: 'Exporter maintenant',
+    /* Gratuit, et il répare parfois : un quota libéré, un onglet fermé. Il vient
+       donc avant l'export, qui ne répare rien mais met à l'abri. */
+    retry: 'Réessayer',
+    retryFailed: 'L’enregistrement a encore échoué',
+    /* « D'abord », parce que c'est ce que l'ordre des deux boutons dit déjà :
+       exporte avant de fermer, avant de recharger, avant de continuer à taper
+       dans une app qui ne garde rien. */
+    exportFirst: 'Exporter d’abord',
 
     /* L'avis de conservation : le niveau du dessous, et il se lit à sa langue.
        Rien n'a échoué, donc rien n'est au passé ni en rouge — on constate un
@@ -1153,6 +1174,41 @@ export const fr = {
     remaining: 'Reste à vivre',
     progress: 'Progression',
     dayOf: 'jour %s sur %s',
+  },
+
+  /* La revue — la file du mois, une échéance par carte.
+
+     « La revue » et non « Revue du mois » : le mois est déjà dit par
+     l'en-tête d'où l'on vient, et le titre d'un écran n'a pas à répéter le
+     contexte qui l'a ouvert.
+
+     Ses deux états vides empruntent leurs phrases à l'écran du mois
+     (`month.done`, `month.emptyStart`) : le même fait ne se raconte pas de
+     deux façons selon l'endroit d'où on le lit. */
+  review: {
+    title: 'La revue',
+    /* Le décompte parle de « lignes » et non d'« échéances » : c'est le mot
+       que la liste du mois emploie déjà pour la même chose, et celui qu'on lit
+       sur la tuile qui mène ici. */
+    waiting: '%s lignes attendent d’être confirmées.',
+    waitingOne: '%s ligne attend d’être confirmée.',
+    /* Deux sorties, deux mots, parce qu'elles ne partent pas du même endroit :
+       on « quitte la revue » qu'on est en train de faire, on « revient au
+       mois » quand il n'y avait rien à faire. */
+    quit: 'Quitter la revue',
+    back: 'Revenir au mois',
+  },
+
+  /* Revenus & charges — le détail au bout des deux tuiles du mois.
+
+     L'esperluette est celle du titre affiché : deux choses de même rang,
+     lues d'un seul tenant. */
+  flows: {
+    title: 'Revenus & charges',
+    empty:
+      'Le mois ne contient aucune ligne. Écris une récurrence, et le détail se remplira tout seul.',
+    in: 'Ce qui rentre',
+    out: 'Ce qui sort',
   },
 
   entry: {

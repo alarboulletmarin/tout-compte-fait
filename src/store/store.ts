@@ -126,6 +126,22 @@ export type StoreActions = {
   /** Efface un document que l'app n'a pas su lire, et rouvre l'onboarding. */
   discardUnreadable: () => Promise<void>
   setError: (error: StorageError | null) => void
+  /**
+   * Rejoue l'écriture du document tel qu'il est en mémoire.
+   *
+   * Le bandeau d'échec propose « Réessayer », et il n'avait rien à appeler :
+   * `flush()` n'attend que ce qui est **en attente**, or l'écriture qui a
+   * échoué a déjà quitté la file — le writer a consommé son `pending` avant de
+   * la tenter. Un `flush()` seul répondait donc « rien à faire » et laissait le
+   * bandeau allumé, quelle que soit la santé de la base.
+   *
+   * Reprogrammer le document entier est exact et non approximatif : une
+   * écriture porte tout le document, pas un delta, et ce qui est en mémoire est
+   * par construction ce qu'on veut sur le disque. La garde d'onboarding est
+   * celle de `mutate`, et pour la même raison — tant que le foyer n'existe pas,
+   * rien ne s'écrit.
+   */
+  retryWrite: () => Promise<void>
   flush: () => Promise<void>
   /** Ce qu'un autre onglet vient d'annoncer. Public pour être testable seul. */
   onTabMessage: (message: TabMessage) => Promise<void>
@@ -467,6 +483,12 @@ export const useStore = create<Store>()((set, get) => ({
 
   setError(error) {
     set({ error })
+  },
+
+  async retryWrite() {
+    if (get().status === 'onboarding') return
+    writer.schedule(get().data)
+    await writer.flush()
   },
 
   async flush() {

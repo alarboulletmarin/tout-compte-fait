@@ -187,17 +187,19 @@ export const en: Strings = {
     prorataMissingMany:
       'Shared costs not split, because the incomes of %s aren’t known: only the lines in their name are counted.',
     prorataOnlyOwn: 'Shared costs not split: only the lines in their name are counted.',
-    thisMonth: 'This month',
     thisMonthTitle: 'Back to %s',
+    returnToShort: 'back to %s',
   },
 
   storage: {
     readFailed: 'Your data could not be read. You can start over or import an export.',
     writeFailed: 'Changes are no longer being saved',
     writeFailedBody:
-      'What you see on screen is intact, but nothing is being written to this device any more. Export now: it’s the only copy that will survive closing the tab.',
+      'What you type stays on screen, but nothing is kept. Private browsing, storage full, or another tab holding the database.',
     writeFailedLabel: 'Save failed',
-    exportNow: 'Export now',
+    retry: 'Try again',
+    retryFailed: 'Saving failed again',
+    exportFirst: 'Export first',
 
     durabilityTitle: 'Your data is saved on this device',
     durabilityBody:
@@ -642,6 +644,22 @@ export const en: Strings = {
     remaining: 'Left to live on',
     progress: 'Progress',
     dayOf: 'day %s of %s',
+  },
+
+  review: {
+    title: 'The review',
+    waiting: '%s lines are waiting to be confirmed.',
+    waitingOne: '%s line is waiting to be confirmed.',
+    quit: 'Leave the review',
+    back: 'Back to the month',
+  },
+
+  flows: {
+    title: 'Income & costs',
+    empty:
+      'This month has no lines yet. Write a recurring item, and the detail will fill itself in.',
+    in: 'What comes in',
+    out: 'What goes out',
   },
 
   entry: {

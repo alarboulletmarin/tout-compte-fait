@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import type { IconComponent } from './Icons'
 
 export type BannerTone = 'default' | 'danger'
 
@@ -12,6 +13,15 @@ export type BannerProps = {
   children?: ReactNode
   /** `danger` teinte la bordure. Le DS §2.3 la réserve à ce qui a échoué. */
   tone?: BannerTone
+  /**
+   * Le glyphe posé devant le titre.
+   *
+   * Un repère, pas un ornement (DS §9.1) : il permet de reconnaître la nature
+   * du message avant de l'avoir lu, ce qui est tout ce qu'on demande à un
+   * bandeau qui s'intercale au-dessus d'un écran. Le titre porte déjà le sens,
+   * il est donc `aria-hidden` comme partout ailleurs.
+   */
+  icon?: IconComponent
   /** Renseigné, le bandeau devient une région annoncée — un échec, pas un avis. */
   role?: 'alert'
   label?: string
@@ -41,6 +51,7 @@ export function Banner({
   body,
   children,
   tone = 'default',
+  icon: Icon,
   role,
   label,
   className,
@@ -59,7 +70,13 @@ export function Banner({
         {/* Le titre porte l'encre de danger, pas la bordure seule : une bordure
             rouge est une information portée par la couleur, et le DS §8 demande
             qu'elle soit doublée. Ici c'est le texte qui la double. */}
-        <p className={cn('t-body', tone === 'danger' && 'font-semibold text-danger-text')}>
+        <p
+          className={cn(
+            'flex items-center gap-2 t-body',
+            tone === 'danger' && 'font-semibold text-danger-text',
+          )}
+        >
+          {Icon !== undefined && <Icon size={16} className="shrink-0" aria-hidden="true" />}
           {title}
         </p>
         {body !== undefined && <p className="t-label">{body}</p>}

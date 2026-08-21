@@ -145,7 +145,7 @@ export function Sidebar({ householdName }: { householdName: string }) {
  * de largeur chacun au lieu de 20, ce qui détend les libellés à 320px, où
  * « Récurrences » se tronquait.
  *
- * **Et la barre s'ouvre en son milieu**, sur 72px, parce que le bouton de saisie
+ * **Et la barre s'ouvre en son milieu**, sur 64px, parce que le bouton de saisie
  * y descend (`QuickEntry`). C'est une fente et non un simple recouvrement, et la
  * différence est tout le sujet : un disque de 56px posé au centre d'une barre à
  * quatre onglets tombe sur la frontière entre le deuxième et le troisième, donc

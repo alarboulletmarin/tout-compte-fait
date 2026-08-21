@@ -66,6 +66,26 @@ describe('pile de messages', () => {
     expect(messages()).toEqual([])
   })
 
+  /* Le seul des trois délais qui vienne du design : un échec se lit vraiment,
+     là où une réussite se reconnaît à sa forme. */
+  it('laisse une seconde de plus à un échec', () => {
+    toast('L’enregistrement a échoué', 'danger')
+    vi.advanceTimersByTime(4001)
+    expect(messages()).toEqual(['L’enregistrement a échoué'])
+    vi.advanceTimersByTime(1200)
+    expect(messages()).toEqual([])
+  })
+
+  /* Le plus long des deux gagne : ce qui décide du délai d'un message qui
+     propose un geste, c'est le geste — pas sa couleur. */
+  it('rend ses huit secondes à un échec qui propose un retour arrière', () => {
+    toast('Suppression impossible', 'danger', { label: 'Rétablir', onAction: () => undefined })
+    vi.advanceTimersByTime(5201)
+    expect(messages()).toEqual(['Suppression impossible'])
+    vi.advanceTimersByTime(2800)
+    expect(messages()).toEqual([])
+  })
+
   it('retire les retours arrière sans toucher aux messages', () => {
     toast('Dépense supprimée', 'default', { label: 'Rétablir', onAction: () => undefined })
     toast('Échéance confirmée')

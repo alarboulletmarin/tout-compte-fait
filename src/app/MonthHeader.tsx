@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { addMonthsToYm, today, ymOf } from '@/domain/date'
 import { t } from '@/i18n/strings'
-import { formatYearMonth, tpl } from '@/i18n/format'
+import { tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
 import {
   useMemberFilter,
@@ -13,7 +13,6 @@ import {
   useMonthSplit,
 } from '@/store/selectors'
 import { useStore } from '@/store/store'
-import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
 import { InfoIcon } from '@/ui/Icons'
 import { MonthNav } from '@/ui/MonthNav'
@@ -318,48 +317,33 @@ export function MonthHeader({
           'md:-mx-8 md:px-8',
         )}
       >
-        {/* Le retour au mois courant, à côté de la navigation et non dedans :
-            `MonthNav` capture le pointeur pour son balayage, et un bouton posé
-            sous cette capture attraperait le geste au lieu du clic.
+        {/* Le retour au mois courant vit **dans** le bloc titre, et non plus
+            dans un bouton posé à côté.
 
-            Il n'existe que lorsqu'il fait quelque chose — c'est la règle du DS
-            §6 sur les repères d'action, celle qui rend les autres lisibles : un
-            « ce mois-ci » affiché sur le mois courant serait un bouton qui ne
-            bouge rien. Il apparaît donc au premier pas de côté, et la
-            navigation se resserre d'autant ; mesuré à 320px, elle a la place.
+            Il a été les deux, et deux affordances pour un même geste valent
+            moins qu'une : le bouton « ce mois-ci » occupait une place à droite
+            de la navigation, décalait le nom du mois de sa propre largeur, et
+            n'existait qu'une fois qu'on s'était déjà éloigné — c'est-à-dire au
+            moment précis où l'on cherche le titre pour savoir où l'on est. Le
+            bloc titre, lui, est déjà là, il est déjà au milieu du pouce, et il
+            dit le mois de retour à l'endroit où il disait l'année.
+
+            La règle du DS §6 ne bouge pas d'un pouce : le bloc n'est actionnable
+            que lorsqu'il ramène quelque part, et redevient un titre muet sur le
+            mois courant. Ce qui change est l'objet qui la porte. Le nom
+            accessible, lui, reste complet — « Revenir à août 2026 » — parce
+            qu'un geste posé sur un titre n'est annoncé par rien d'autre.
 
             Aucune borne à vérifier : `useMonthBounds` fait toujours entrer le
-            mois courant entre son minimum et son maximum. */}
-        {/* La navigation prend toute la ligne, et le nom du mois se centre donc
+            mois courant entre son minimum et son maximum.
+
+            La navigation prend toute la ligne, et le nom du mois se centre donc
             sur la page. Elle était bornée à `max-w-sm` — 384px — dans une ligne
             alignée à gauche : mesuré à 1920 points, « août » se centrait sur 768
             pendant que les cartes en dessous se centraient sur 1072, soit trois
             cents pixels d'écart entre un titre et ce qu'il coiffe. Un écran n'a
-            qu'un axe. Le bouton « ce mois-ci », lui, reste `shrink-0` à droite :
-            il ne déplace le centre que de sa propre largeur, et seulement quand
-            il existe. */}
-        <div className="flex items-center gap-2">
-          <MonthNav
-            value={ym}
-            onChange={setYm}
-            min={bounds.min}
-            max={bounds.max}
-            className="min-w-0 flex-1"
-          />
-          {ym !== currentYm && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="shrink-0"
-              title={tpl(t.shell.thisMonthTitle, formatYearMonth(currentYm))}
-              onClick={() => {
-                setYm(currentYm)
-              }}
-            >
-              {t.shell.thisMonth}
-            </Button>
-          )}
-        </div>
+            qu'un axe — et il n'a plus rien à droite qui le déplace. */}
+        <MonthNav value={ym} onChange={setYm} min={bounds.min} max={bounds.max} returnTo={currentYm} />
         {withMemberFilter && <MonthFilterChips personsOnly={personsOnly} />}
       </header>
 
