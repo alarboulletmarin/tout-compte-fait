@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { FLOWS_PATH } from '@/app/routes'
 import type { Flow } from '@/domain/stats'
 import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
@@ -7,11 +9,6 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { ChargesIcon, type IconComponent, IncomeIcon } from '@/ui/Icons'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
-/** Ce qu'une tuile de flux fait au clic, quand il y a des lignes à montrer.
- *  Elle passe une nature, pas un sens : la liste filtre comme la tuile compte
- *  — charges et crédits d'un côté, ressources de l'autre, épargne à part. */
-export type ShowNature = (nature: 'expense' | 'income') => void
-
 /**
  * Les deux chiffres que les quatre soldes combinent sans jamais les dire :
  * ce qu'on gagne, et ce qu'on paie. Un solde répond « ce qu'il te reste », ce
@@ -45,51 +42,46 @@ export type ShowNature = (nature: 'expense' | 'income') => void
  * d'un crédit, qui a la pleine largeur d'une `2x2` et renonce à ses centimes
  * pour cette raison précise.
  *
- * Le clic filtre la liste du mois sur cette nature-là et l'amène sous les
- * yeux. Sur la nature, pas le sens : la tuile Charges exclut l'épargne, et un
- * clic qui ouvrirait une liste où les versements d'épargne se mêlent aux
- * courses montrerait plus que le chiffre qu'on vient de lire. Il ouvrait une
- * feuille qui définissait le chiffre : devant « Charges : 1 166 € », la
- * question suivante n'est pas « qu'est-ce qu'une charge » mais « lesquelles ».
- * Le rangement de la liste n'y touche pas — filtrer n'est pas ranger, et l'axe
- * choisi est celui de l'utilisateur.
+ * **Le clic mène à l'écran des revenus et des charges**, et ne fait plus
+ * défiler vers la liste du mois. Filtrer la liste répondait « quelles lignes »
+ * ; devant « Charges : 1 166 € », la question est autant « lesquelles » que
+ * « à qui » et « communes ou perso », et c'est l'écran de détail qui répond aux
+ * trois. Il porte le même mois et le même filtre — les deux vivent dans le
+ * store, pas dans l'URL —, donc le chiffre qu'on vient de lire s'y retrouve au
+ * centime.
  *
- * Sans ligne confirmée de cette nature, la tuile n'est pas cliquable : mieux
- * vaut qu'elle ne réponde pas que de mener à une liste où son chiffre n'est
- * pas.
+ * Elle est cliquable même sans ligne confirmée : l'écran de détail compte le
+ * mois entier, échéances prévues comprises, comme le chiffre de la tuile. C'est
+ * la condition qui manquait quand le clic menait à une liste de confirmées, où
+ * ce chiffre-là n'était pas.
  */
 function FlowTile({
   label,
   icon,
   flow,
   direction,
-  nature,
   hint,
-  onShow,
 }: {
   label: string
   icon: IconComponent
   flow: Flow
   direction: 'in' | 'out'
-  nature: 'expense' | 'income'
   hint: string
-  onShow?: ShowNature
 }) {
+  const navigate = useNavigate()
+
   return (
     <Tile
       span="2x1"
       className="justify-between"
-      {...(onShow === undefined
-        ? {}
-        : {
-            onClick: () => {
-              onShow(nature)
-            },
-            label: tpl(t.dashboard.showLines, label),
-            // Une flèche vers le bas, pas un chevron : la liste est plus bas
-            // sur cette page, elle n'est pas sur un autre écran.
-            affordance: { kind: 'scroll' as const, destination: t.month.entries },
-          })}
+      onClick={() => {
+        void navigate(FLOWS_PATH)
+      }}
+      label={tpl(t.dashboard.showLines, label)}
+      /* Un chevron, et sans nommer la destination : sur une 2×1 le repère
+         descend au coin bas, par-dessus un chiffre taillé pour remplir la
+         tuile, et un nom d'écran y mordrait sur les centimes. */
+      affordance={{ kind: 'navigate' }}
     >
       <Eyebrow icon={icon}>{label}</Eyebrow>
       <div className="flex flex-wrap items-baseline gap-x-2">
@@ -105,7 +97,7 @@ function FlowTile({
   )
 }
 
-export function IncomeTile({ onShow }: { onShow?: ShowNature }) {
+export function IncomeTile() {
   const { income } = useMonthFlows()
   const currency = useCurrency()
 
@@ -122,14 +114,12 @@ export function IncomeTile({ onShow }: { onShow?: ShowNature }) {
       icon={IncomeIcon}
       flow={income}
       direction="in"
-      nature="income"
       hint={hint}
-      {...(onShow === undefined ? {} : { onShow })}
     />
   )
 }
 
-export function ChargesTile({ onShow }: { onShow?: ShowNature }) {
+export function ChargesTile() {
   const { spending } = useMonthFlows()
   const currency = useCurrency()
 
@@ -146,9 +136,7 @@ export function ChargesTile({ onShow }: { onShow?: ShowNature }) {
       icon={ChargesIcon}
       flow={spending}
       direction="out"
-      nature="expense"
       hint={hint}
-      {...(onShow === undefined ? {} : { onShow })}
     />
   )
 }

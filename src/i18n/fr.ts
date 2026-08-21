@@ -29,16 +29,11 @@ export const fr = {
     confirm: 'Confirmer',
     back: 'Retour',
     next: 'Continuer',
-    skip: 'Passer',
     all: 'Tous',
-    none: 'Aucun',
-    today: "Aujourd'hui",
     optional: 'facultatif',
     required: 'obligatoire',
-    loading: 'Chargement',
     yes: 'Oui',
     no: 'Non',
-    more: 'Voir plus',
     less: 'Voir moins',
     other: 'Autres',
     /* Le retour arrière d'un message. Pas « Annuler » : c'est déjà le bouton
@@ -98,8 +93,6 @@ export const fr = {
   direction: {
     in: 'Entrée',
     out: 'Sortie',
-    inPlural: 'Entrées',
-    outPlural: 'Sorties',
   },
 
   theme: {
@@ -107,7 +100,6 @@ export const fr = {
     light: 'Clair',
     dark: 'Sombre',
     system: 'Système',
-    toggle: 'Changer de thème',
   },
 
   /**
@@ -195,7 +187,6 @@ export const fr = {
        navigation, il la continue — ce qu'on y trouve est le reste de l'app, pas
        une autre façon d'atteindre ce qui est déjà dans la barre. */
     more: 'Plus',
-    moreHint: 'Le reste de tes écrans, et les réglages.',
     /* Les quatre titres de groupe de l'écran « Plus ». Ils ne nomment pas des
        écrans mais des **intentions** — ce pour quoi on vient —, et c'est ce qui
        a permis de retirer « Réglages », qui n'en nommait aucune : il rangeait
@@ -242,7 +233,6 @@ export const fr = {
     savingsHint: 'Ce que tu peux mettre de côté, et où le placer.',
     splitHint: 'Qui verse quoi sur les charges communes.',
     creditsHint: 'Tes crédits en cours et ce qu’il reste à rendre.',
-    aboutHint: 'Ce que fait l’app, et ce qu’elle ne fait pas.',
   },
 
   shell: {
@@ -384,7 +374,6 @@ export const fr = {
        sont dans l'ordre de ce qu'ils sauvent : importer récupère, recharger ne
        coûte rien à essayer, effacer ne se défait pas. */
     recoverTitle: 'Tes données ne se lisent pas',
-    recoverImport: 'Importer un export',
     recoverImportHint:
       'C’est le seul recours qui ne perd rien. Si tu as un fichier d’export, c’est le moment.',
     recoverRaw: 'Télécharger la copie brute',
@@ -494,7 +483,6 @@ export const fr = {
        suivent ; en dire plus reviendrait à décrire ce que le sélecteur montre
        déjà. */
     currencyHint: 'Rien n’est converti : seul le symbole change.',
-    aboutLink: 'Le projet, le code et la licence',
     /* Ce que « à propos » contient, sur une ligne — la version en tête, parce
        que c'est la seule chose qu'on y cherche sans l'avoir déjà lue. */
     aboutSummary: 'Version %s · le projet, le code, la licence',
@@ -527,7 +515,6 @@ export const fr = {
     /* Le prénom se corrige sur place, comme le libellé d'une catégorie. Le nom
        accessible porte celui qu'on modifie : la liste compte un champ par
        membre, et « Prénom » seul les annoncerait tous pareil. */
-    memberRename: 'Prénom de %s',
     memberRemove: 'Retirer %s',
     memberRemoved: '%s a été retiré·e',
     memberRemoveHint: 'Ses entrées sont conservées, simplement sans étiquette.',
@@ -806,10 +793,7 @@ export const fr = {
        le même chiffre sous deux libellés se lit comme une erreur de calcul ;
        il faut donc que l'écran dise que c'en est une conséquence. */
     remainingSame: 'même horizon que le prévisionnel, donc le même montant',
-    breakdown: 'Répartition',
     upcoming: 'Prochaines échéances',
-    inflow: 'Entrées',
-    outflow: 'Sorties',
     /* « Charge ni crédit », pas « sortie » : la tuile compte par nature, hors
        épargne, et un mois où l'on n'a fait que verser sur un livret a bien vu
        des sorties — simplement rien qui soit sorti pour de bon. */
@@ -897,7 +881,6 @@ export const fr = {
        le geste, et il nomme le poste pour que sept boutons ne s'annoncent pas
        sept fois de la même façon. */
     showFamily: 'Voir les lignes de %s',
-    noCredits: 'Aucun crédit en cours.',
     split: 'Répartition',
     splitHint: 'charges communes du mois',
     /* Le nom du lien posé au coin de ces deux tuiles-là, et non celui de leur
@@ -1036,7 +1019,6 @@ export const fr = {
     },
     // Le nom accessible compte comme l'anneau : charges et crédits, hors épargne.
     srBreakdown: 'Répartition des charges et des crédits : %s',
-    empty: 'Ce mois est encore vide. Ouvre-le, ou ajoute une dépense.',
   },
 
   calendar: {
@@ -1094,44 +1076,75 @@ export const fr = {
   month: {
     title: 'Le mois',
     toConfirm: 'À confirmer',
-    confirmAll: 'Confirmer le mois',
-    confirmedAll: 'Mois confirmé',
     confirmOne: 'Confirmer',
     /* Le nom accessible d'un bouton de confirmation, qui nomme son échéance :
        treize boutons « Confirmer » se listent treize fois à l'identique dans
        les contrôles d'un lecteur d'écran, et rien ne dit lequel on vise. Le
-       libellé visible reste la coche seule — c'est la colonne qui l'aligne. */
+       libellé visible reste la coche seule — la rangée d'à côté porte le nom. */
     confirmEntry: 'Confirmer %s',
-    confirmedOne: 'Échéance confirmée',
-    /* La liste ne s'affiche pas en entier : un mois ordinaire en compte une
-       douzaine, et treize lignes de 56px repoussaient le détail du mois d'un
-       écran entier. Les mots sont ceux de la recherche de l'historique, qui
-       coupe déjà de la même façon — une coupe annoncée, et qui se lève. */
-    pendingMore: '… et %s autres à confirmer.',
-    pendingShowAll: 'Tout afficher',
-    /* Sur la ligne elle-même, à côté du champ : une explication en tête de
-       section est oubliée le temps d'arriver au champ qu'elle décrit. */
-    toFill: 'à saisir',
-    confirmAllHint: 'Les montants à saisir restent à confirmer un par un.',
-    openEntry: 'Modifier %s',
+    /* Le second geste de la rangée : il déplie le panneau qui corrige le
+       montant, là où le premier confirme le montant prévu tel quel. */
+    adjust: 'Ajuster',
+    adjustEntry: 'Ajuster %s',
+    /* Les deux boutons du pas. Ils ne disent pas « cinq euros » : la devise du
+       document se règle, et un libellé qui la nommerait mentirait dès qu'on en
+       change. Ce qu'ils font est le sens, pas la somme. */
+    adjustLess: 'Diminuer le montant',
+    adjustMore: 'Augmenter le montant',
+    confirmAmount: 'Confirmer ce montant',
+    /* Ce que l'écart devient, dit là où on le crée : un réel plus lourd que le
+       prévu ne se perd pas, il se retire du reste à vivre. */
+    adjustHint: 'prévu %s · l’écart part dans le reste à vivre',
+    /* Le geste s'apprend en le lisant : rien sur une rangée ne dit qu'elle se
+       glisse, et le doigt ne découvre pas un fond qu'il faut déplacer de
+       quatre-vingt-douze pixels pour voir. La phrase nomme donc aussi les deux
+       boutons, qui font exactement la même chose. */
+    swipeHint:
+      'Glisse une ligne à droite pour la confirmer, à gauche pour ajuster son montant — ou sers-toi des deux boutons de la rangée.',
     done: 'Tout est confirmé pour ce mois.',
     /* Confirmer n'est pas un aller simple. Le geste s'appelle « remettre à
        confirmer » et non « annuler » : « Annuler » est déjà le bouton qui ferme
        une boîte de dialogue, et les deux se seraient répondu dans la même. */
     unconfirm: 'Remettre à confirmer',
     unconfirmed: 'Échéance remise à confirmer',
+    unconfirmEntry: 'Remettre %s à confirmer',
     unconfirmAll: 'Remettre le mois à confirmer',
     unconfirmAllConfirm:
       'Les %s échéances confirmées de ce mois repassent dans « À confirmer », avec leurs montants.',
     unconfirmedAll: 'Mois remis à confirmer',
+    /* Le nom court, celui que les repères de tuile posent au coin : un repère
+       plafonne à 60 % de la largeur de sa tuile (DS §6), et « Le mois, ligne à
+       ligne » y serait tranché au milieu d'un mot. */
     entries: 'Ce mois',
+    /* Le nom long, en tête de la liste elle-même : elle porte désormais tout le
+       mois, prévu compris, et son titre doit le dire. */
+    lineByLine: 'Le mois, ligne à ligne',
     empty: 'Rien pour ce mois. Ajoute ta première dépense.',
     /* Le mois vide d'un document qui n'a encore posé aucune récurrence n'est pas
        le mois vide de tout le monde : c'est un amorçage, et le geste qui
        l'amorce n'est pas une dépense. Une dépense ponctuelle ne prévoit rien —
        ce qui fait qu'un mois s'écrit tout seul est ce qui revient. */
     emptyStart:
-      'Rien pour ce mois. Écris une fois ce qui revient chaque mois, et il se remplira tout seul.',
+      'Commence par ce qui revient chaque mois : loyer, salaire, abonnement. Les suivants se rempliront tout seuls.',
+    /* L'état d'avant le premier geste : ni ligne, ni règle. */
+    nothingYet: 'Rien encore',
+    monthIsEmpty: 'Le mois %s est vide',
+    justAnExpense: 'Juste une dépense',
+    /* La fin visible de la tâche : plus rien n'attend, et la phrase dit quand
+       la prochaine échéance tombe — sans quoi « tout est confirmé » ne dit pas
+       s'il faut revenir demain ou dans trois semaines. */
+    nothingToConfirm: 'Rien à confirmer',
+    upToDate: 'Tout est à jour pour %s',
+    upToDateNext: 'Prochaine échéance le %s, avec %s — inutile de revenir avant.',
+    upToDateNoNext: 'Toutes les lignes sont réelles, et rien d’autre n’est attendu.',
+    /* « Défaire la dernière » n'existe pas : une échéance ne garde ni date ni
+       ordre de confirmation, donc « la dernière » ne désigne rien de sûr. Le
+       bouton renvoie aux lignes, où chacune porte son propre retour. */
+    reopenLines: 'Revoir les lignes %s',
+    /* Un autre mois que celui qu'on vit : la phrase dit pourquoi rien ne s'y
+       confirme, avant qu'on cherche le geste qui n'y est pas. */
+    pastNote: 'mois clôturé · tout y est réel, rien n’attend d’être confirmé',
+    aheadNote: 'mois à venir · les montants sont ceux que tes règles prévoient',
     groupBy: 'Regrouper par',
     byDay: 'Jour',
     byCategory: 'Catégorie',
@@ -1157,9 +1170,9 @@ export const fr = {
     showOut: 'Charges',
     showIn: 'Revenus',
     showSaving: 'Épargne',
-    showEmptyOut: 'Aucune charge confirmée ce mois-ci.',
-    showEmptyIn: 'Aucun revenu confirmé ce mois-ci.',
-    showEmptySaving: 'Aucun mouvement d’épargne confirmé ce mois-ci.',
+    showEmptyOut: 'Aucune charge ce mois-ci.',
+    showEmptyIn: 'Aucun revenu ce mois-ci.',
+    showEmptySaving: 'Aucun mouvement d’épargne ce mois-ci.',
     groupCountOne: '%s ligne',
     groupCount: '%s lignes',
     /* Sur l'en-tête du groupe du jour, quand le mois affiché est le mois
@@ -1210,7 +1223,6 @@ export const fr = {
     /* Le nom accessible de la barre de progression : une barre ne dit rien
        toute seule, et le pourcentage qu'elle dessine est déjà écrit à côté en
        toutes lettres (DS §8). */
-    progress: 'Avancement de la revue',
 
     /* --- Le fil de la file ----------------------------------------------- */
 
@@ -1327,14 +1339,12 @@ export const fr = {
   },
 
   entry: {
-    add: 'Ajouter une dépense',
     addOut: 'Ajouter une dépense',
     addIn: 'Ajouter un revenu',
     /* Formes courtes des barres d'action, où les deux sens tiennent côte à
        côte. Le sens ne se devine plus derrière un libellé unique. */
     newOut: 'Dépense',
     newIn: 'Revenu',
-    edit: 'Modifier l’entrée',
     editOut: 'Modifier la dépense',
     editIn: 'Modifier le revenu',
     addedOut: 'Dépense ajoutée',
@@ -1412,8 +1422,6 @@ export const fr = {
        chaque fois, et c'est ce que la phrase ajoute. */
     memberRequiredRecurring:
       'Dis à qui est cette récurrence : elle n’entre pas dans les charges communes, donc sans propriétaire ses échéances n’apparaîtraient dans le mois de personne.',
-    planned: 'Prévue',
-    confirmed: 'Confirmée',
 
     /* Ponctuel ou récurrent — la bascule du cahier §4.4. */
     rhythm: 'Rythme',
@@ -1641,7 +1649,6 @@ export const fr = {
     subtitleSolo: 'Tu es seul·e ici : tu portes tout le commun, ta part vaut 100 %.',
     total: 'Charges communes',
     totalHint: 'échéances prévues comprises',
-    share: 'Part',
     due: 'À verser',
     income: 'Revenu',
     checkTotal: 'Total des parts',
@@ -1779,8 +1786,6 @@ export const fr = {
     savingSupportHint: 'Le livret ou le plan qui a payé, et qu’on reconstitue.',
     savingSupportRequired: 'Dis sur quel support tu as pris l’argent.',
     savingSupportNone: 'Ajoute un support d’épargne pour enregistrer une avance.',
-    member: 'Avancé par',
-    memberRequired: 'Dis qui a avancé : une épargne est toujours à quelqu’un.',
     memberNone: 'Ajoute une personne pour enregistrer une avance.',
     from: 'Du mois de',
     to: 'Au mois de',
@@ -1809,7 +1814,6 @@ export const fr = {
     methodShared:
       'Cochée « à partager », la mensualité entre dans les charges communes : chacun en porte sa part au prorata, et celui qui a avancé se retrouve remboursé.',
 
-    srStatus: '%s : %s remis sur %s, il reste %s.',
   },
 
   savings: {
@@ -1852,7 +1856,6 @@ export const fr = {
        notions que cet écran existe pour séparer. */
     supports: 'Mes supports',
     analysis: 'Analyse',
-    analysisHint: 'Voir l’analyse',
     /* L'aperçu de `/epargne`, et il ne porte **aucun chiffre** — c'est un
        arbitrage d'octets assumé. La décomposition se calcule mois par mois sur
        cinq ans (`domain/savingSeries.ts`) ; en écrire ne serait-ce qu'un
@@ -2379,7 +2382,6 @@ export const fr = {
     linkedHint:
       'C’est la récurrence qui pose les mensualités et fait décroître le capital. Sans elle, seul le montant emprunté est connu.',
     total: 'Reste à devoir',
-    totalMonthly: 'Mensualités',
     progress: '%s remboursé',
     labelPlaceholder: 'Prêt voiture',
     principalRequired: 'Indique le capital emprunté.',
@@ -2640,12 +2642,10 @@ export const fr = {
     iconMarker: 'Repère — onglet, tuile, section',
     kindsNote:
       'Le sens dit si l’argent entre ou sort ; la nature dit ce qu’il devient. Une famille porte la nature, ses catégories en héritent.',
-    themePreview: 'Aperçu forcé',
     sampleAmount: 'Montant',
     sampleRing: 'Anneau',
     sampleEmpty: 'Aucune récurrence pour l’instant. Ajoute la première.',
     sampleEmptyAction: 'Ajouter une récurrence',
-    variants: 'Variantes',
     states: 'États',
   },
 

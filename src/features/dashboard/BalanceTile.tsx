@@ -38,6 +38,21 @@ function progressLabel(ym: string, progress: number, days: number): string {
  * de présentation montre aux visiteurs sous le mot « comme sur le mois ». Le
  * vrai tableau de bord n'en avait pas : la progression s'y lisait en une phrase,
  * et la promesse faite à l'accueil désignait un écran qui n'existait pas.
+ *
+ * **L'anneau dit le temps, pas le compte des lignes confirmées.** Le design en
+ * fait la part du mois confirmée ; ce serait alors le troisième endroit où le
+ * même rapport s'affiche, après la tuile de suivi qui l'écrit en chiffres —
+ * « 8 / 14 » — et la tuile de revue qui le dit en toutes lettres. La
+ * progression du mois, elle, ne se lit nulle part ailleurs, et c'est elle qui
+ * rend le solde lisible : le même montant ne dit pas la même chose au jour 3 et
+ * au jour 28.
+ *
+ * **`4x2`, et le format vient d'une mesure autant que du design.** Il ne change
+ * rien sous 1024px — une `2x2` et une `4x2` prennent toutes deux la pleine
+ * largeur sur deux colonnes et la moitié sur quatre — et c'est au bureau qu'il
+ * porte le chiffre héros sur quatre colonnes au lieu de deux. C'est aussi le
+ * seul format de solde avec lequel la grille se referme à six tuiles : voir le
+ * calcul dans `SituationGrid`.
  */
 export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void }) {
   const totals = useMonthTotals()
@@ -53,7 +68,7 @@ export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void
        coin n'est donc pas une cible — c'est un repère, qui dit que le geste
        existe et qu'il reste sur la page. */
     <Tile
-      span="2x2"
+      span="4x2"
       className="justify-between"
       onClick={() => {
         onExplain({ key: 'balance', value: totals.balance, hint })

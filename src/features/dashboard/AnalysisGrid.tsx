@@ -1,22 +1,28 @@
-import { useIsCommonFilter } from '@/store/selectors'
 import { BentoGrid } from '@/ui/Tile'
 import { BreakdownTile, type ShowFamily } from './BreakdownTile'
 import { CreditsTile } from './CreditsTile'
 import { MemberChargesTile } from './MemberChargesTile'
 import type { Metric } from './MetricInfo'
 import { MemberShareTile } from './MemberShareTile'
-import { SavingTile } from './SavingTile'
-import { SplitTile } from './SplitTile'
 
 /**
- * Le troisième étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
+ * Le dernier étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
  *
- * Ces six tuiles étaient dans la même grille que le solde, ce qui donnait le
- * même poids à « combien il me reste » et à « qui verse quoi sur le pot commun ».
+ * Ces tuiles étaient dans la même grille que le solde, ce qui donnait le même
+ * poids à « combien il me reste » et à « qui verse quoi sur le pot commun ».
  * Elles répondent pourtant à une question qu'on se pose *après* : le mois est
  * d'abord une situation et une tâche, et seulement ensuite une analyse. Elles
- * passent donc sous « À confirmer », sans qu'aucune ne change de format, de
- * contenu ni de calcul — c'est leur place dans la page qui change, pas elles.
+ * passent donc **sous la liste du mois**, sans qu'aucune ne change de format,
+ * de contenu ni de calcul — c'est leur place dans la page qui change, pas elles.
+ *
+ * **Deux d'entre elles sont montées d'un étage** : la Répartition et la
+ * capacité d'épargne sont deux des cinq tuiles de tête du design, et elles
+ * vivent maintenant dans la grille de la situation. Ce qui reste ici est ce qui
+ * décompose — par famille, par personne, par dette —, et non plus ce qui
+ * compte. La grille y perd son pavage dans la lecture la plus courante : sans
+ * filtre et sans crédit suivi, il ne reste qu'« Où part l'argent », seule sur
+ * ses deux colonnes. C'est le prix du déplacement, et il est plus petit que
+ * celui d'une tuile perdue.
  *
  * L'ordre suit la question, du plus général au plus circonstanciel : où part
  * l'argent, ce qui de ce montant est à soi, ce qu'on peut mettre de côté,
@@ -27,11 +33,9 @@ import { SplitTile } from './SplitTile'
  * seul·e ou à deux. Posées côte à côte, on lit la seconde comme une autre
  * question sur le même chiffre ; séparées, comme deux chiffres sans rapport.
  *
- * Cinq d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
+ * Trois d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
  * suivi, pas de second membre, pas de filtre, rien à porter. C'est la règle
  * du cahier §4.6 : une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va.
- * `SavingTile` est la seule que la grille masque elle-même, sur le commun, où
- * l'épargne ne rentre pas dans un partage.
  *
  * La régularisation avait la sienne, et elle n'en a plus : elle était déjà
  * comprise — silencieusement — dans le chiffre de tête d'« À verser sur le
@@ -50,15 +54,11 @@ export function AnalysisGrid({
   onShowFamily?: ShowFamily
   onExplain: (metric: Metric) => void
 }) {
-  const common = useIsCommonFilter()
-
   return (
     <BentoGrid>
       <BreakdownTile {...(onShowFamily === undefined ? {} : { onShowFamily })} />
       <MemberChargesTile onExplain={onExplain} />
-      {!common && <SavingTile />}
       <MemberShareTile />
-      <SplitTile />
       <CreditsTile />
     </BentoGrid>
   )

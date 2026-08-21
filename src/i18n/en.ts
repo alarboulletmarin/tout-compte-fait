@@ -39,16 +39,11 @@ export const en: Strings = {
     confirm: 'Confirm',
     back: 'Back',
     next: 'Continue',
-    skip: 'Skip',
     all: 'All',
-    none: 'None',
-    today: 'Today',
     optional: 'optional',
     required: 'required',
-    loading: 'Loading',
     yes: 'Yes',
     no: 'No',
-    more: 'Show more',
     less: 'Show less',
     other: 'Other',
     /* « Undo » et non « Cancel », pour la raison que `fr.ts` donne : le mot
@@ -82,8 +77,6 @@ export const en: Strings = {
   direction: {
     in: 'Money in',
     out: 'Money out',
-    inPlural: 'Money in',
-    outPlural: 'Money out',
   },
 
   theme: {
@@ -91,7 +84,6 @@ export const en: Strings = {
     light: 'Light',
     dark: 'Dark',
     system: 'System',
-    toggle: 'Switch theme',
   },
 
   appearance: {
@@ -146,7 +138,6 @@ export const en: Strings = {
     about: 'About',
     landing: 'The tour',
     more: 'More',
-    moreHint: 'The rest of your screens, and the settings.',
     manage: 'Manage',
     organise: 'Organise',
     simulate: 'Simulate',
@@ -160,7 +151,6 @@ export const en: Strings = {
     savingsHint: 'What you can set aside, and where to put it.',
     splitHint: 'Who pays what towards shared costs.',
     creditsHint: 'Your loans in progress and what’s left to repay.',
-    aboutHint: 'What the app does, and what it doesn’t.',
   },
 
   shell: {
@@ -219,7 +209,6 @@ export const en: Strings = {
     otherTabCleared: 'The data was erased from another tab.',
 
     recoverTitle: 'Your data won’t open',
-    recoverImport: 'Import an export',
     recoverImportHint:
       'It’s the only way out that loses nothing. If you have an export file, now is the time.',
     recoverRaw: 'Download the raw copy',
@@ -296,7 +285,6 @@ export const en: Strings = {
 
     currency: 'Currency',
     currencyHint: 'Nothing is converted: only the symbol changes.',
-    aboutLink: 'The project, the code and the licence',
     aboutSummary: 'Version %s · the project, the code, the licence',
 
     household: 'People',
@@ -311,7 +299,6 @@ export const en: Strings = {
     memberName: 'First name',
     memberPlaceholder: 'Alix',
     memberIncome: 'Monthly income',
-    memberRename: '%s’s first name',
     memberRemove: 'Remove %s',
     memberRemoved: '%s has been removed',
     memberRemoveHint: 'Their entries are kept, simply without a label.',
@@ -486,10 +473,7 @@ export const en: Strings = {
     remainingHint: 'available until the next money in',
     remainingNoIncome: 'available until the end of the month',
     remainingSame: 'same horizon as the forecast, so the same amount',
-    breakdown: 'Breakdown',
     upcoming: 'Next payments',
-    inflow: 'Money in',
-    outflow: 'Money out',
     noBreakdown: 'No cost or loan this month.',
     noUpcoming: 'No payment coming up.',
     noUpcomingStart:
@@ -517,7 +501,6 @@ export const en: Strings = {
     creditsRunningMany: '%s loans running',
     showCredits: 'See the detail of the %s',
     showFamily: 'See the lines for %s',
-    noCredits: 'No loan running.',
     split: 'Split',
     splitHint: 'shared costs of the month',
     showSplit: 'See the detail of the split',
@@ -564,7 +547,6 @@ export const en: Strings = {
       },
     },
     srBreakdown: 'Breakdown of costs and loans: %s',
-    empty: 'This month is still empty. Open it, or add an expense.',
   },
 
   calendar: {
@@ -599,27 +581,39 @@ export const en: Strings = {
   month: {
     title: 'This month',
     toConfirm: 'To confirm',
-    confirmAll: 'Confirm the month',
-    confirmedAll: 'Month confirmed',
     confirmOne: 'Confirm',
     confirmEntry: 'Confirm %s',
-    confirmedOne: 'Payment confirmed',
-    pendingMore: '… and %s more to confirm.',
-    pendingShowAll: 'Show all',
-    toFill: 'to fill in',
-    confirmAllHint: 'Amounts you still have to fill in stay unconfirmed, one by one.',
-    openEntry: 'Edit %s',
+    adjust: 'Adjust',
+    adjustEntry: 'Adjust %s',
+    adjustLess: 'Lower the amount',
+    adjustMore: 'Raise the amount',
+    confirmAmount: 'Confirm this amount',
+    adjustHint: 'planned %s · the gap comes out of what is left to live on',
+    swipeHint:
+      'Swipe a line right to confirm it, left to adjust its amount — or use the two buttons on the row.',
     done: 'Everything is confirmed for this month.',
     unconfirm: 'Put back to confirm',
     unconfirmed: 'Payment put back to confirm',
+    unconfirmEntry: 'Put %s back to confirm',
     unconfirmAll: 'Put the month back to confirm',
     unconfirmAllConfirm:
       'The %s confirmed payments of this month go back to “To confirm”, with their amounts.',
     unconfirmedAll: 'Month put back to confirm',
     entries: 'This month',
+    lineByLine: 'The month, line by line',
     empty: 'Nothing for this month. Add your first expense.',
     emptyStart:
-      'Nothing for this month. Write down once what comes back every month, and it will fill itself in.',
+      'Start with what comes back every month: rent, pay, subscriptions. The following ones will fill themselves in.',
+    nothingYet: 'Nothing yet',
+    monthIsEmpty: 'The month %s is empty',
+    justAnExpense: 'Just an expense',
+    nothingToConfirm: 'Nothing to confirm',
+    upToDate: 'Everything is up to date for %s',
+    upToDateNext: 'Next payment on %s, with %s — no need to come back before.',
+    upToDateNoNext: 'Every line is real, and nothing else is due.',
+    reopenLines: 'Review the lines %s',
+    pastNote: 'closed month · everything here is real, nothing waits to be confirmed',
+    aheadNote: 'month ahead · these amounts are the ones your rules plan for',
     groupBy: 'Group by',
     byDay: 'Day',
     byCategory: 'Category',
@@ -631,9 +625,9 @@ export const en: Strings = {
     showOut: 'Costs',
     showIn: 'Income',
     showSaving: 'Savings',
-    showEmptyOut: 'No cost confirmed this month.',
-    showEmptyIn: 'No income confirmed this month.',
-    showEmptySaving: 'No savings movement confirmed this month.',
+    showEmptyOut: 'No cost this month.',
+    showEmptyIn: 'No income this month.',
+    showEmptySaving: 'No savings movement this month.',
     groupCountOne: '%s line',
     groupCount: '%s lines',
     today: 'today',
@@ -659,7 +653,6 @@ export const en: Strings = {
     start: 'Start the review',
     resume: 'Resume the review',
     restart: 'Start over',
-    progress: 'Review progress',
 
     counter: '%s/%s',
     counterLong: '%s of %s · %s after this one',
@@ -727,12 +720,10 @@ export const en: Strings = {
   },
 
   entry: {
-    add: 'Add an expense',
     addOut: 'Add an expense',
     addIn: 'Add an income',
     newOut: 'Expense',
     newIn: 'Income',
-    edit: 'Edit the entry',
     editOut: 'Edit the expense',
     editIn: 'Edit the income',
     addedOut: 'Expense added',
@@ -782,8 +773,6 @@ export const en: Strings = {
       'Say who this line belongs to: it isn’t part of the shared costs, so with no owner it wouldn’t appear in anyone’s month.',
     memberRequiredRecurring:
       'Say who this recurring rule belongs to: it isn’t part of the shared costs, so with no owner its payments wouldn’t appear in anyone’s month.',
-    planned: 'Planned',
-    confirmed: 'Confirmed',
 
     rhythm: 'Rhythm',
     once: 'One-off',
@@ -915,7 +904,6 @@ export const en: Strings = {
     subtitleSolo: 'You’re on your own here: you carry the whole pot, your share is 100 %.',
     total: 'Shared costs',
     totalHint: 'planned payments included',
-    share: 'Share',
     due: 'To pay',
     income: 'Income',
     checkTotal: 'Total of the shares',
@@ -997,8 +985,6 @@ export const en: Strings = {
     savingSupportHint: 'The account or plan that paid, and that gets rebuilt.',
     savingSupportRequired: 'Say which pot you took the money from.',
     savingSupportNone: 'Add a savings pot to record an advance.',
-    member: 'Paid up front by',
-    memberRequired: 'Say who paid up front: savings always belong to someone.',
     memberNone: 'Add a person to record an advance.',
     from: 'From the month of',
     to: 'To the month of',
@@ -1024,7 +1010,6 @@ export const en: Strings = {
     methodShared:
       'Ticked “to share”, the instalment goes into the shared costs: everyone carries their share in proportion, and whoever paid up front gets paid back.',
 
-    srStatus: '%s: %s put back out of %s, %s left.',
   },
 
   savings: {
@@ -1043,7 +1028,6 @@ export const en: Strings = {
 
     supports: 'My pots',
     analysis: 'Analysis',
-    analysisHint: 'See the analysis',
     analysisPreview:
       'Where your capital comes from: your starting point, your contributions, and what the accounts earned.',
     supportsEmpty:
@@ -1318,7 +1302,6 @@ export const en: Strings = {
     linkedHint:
       'It’s the recurring rule that sets the instalments and makes the capital go down. Without it, only the amount borrowed is known.',
     total: 'Left to owe',
-    totalMonthly: 'Instalments',
     progress: '%s repaid',
     labelPlaceholder: 'Car loan',
     principalRequired: 'Enter the capital borrowed.',
@@ -1473,12 +1456,10 @@ export const en: Strings = {
     iconMarker: 'Marker — tab, tile, section',
     kindsNote:
       'The direction says whether money comes in or goes out; the kind says what becomes of it. A family carries the kind, its categories inherit it.',
-    themePreview: 'Forced preview',
     sampleAmount: 'Amount',
     sampleRing: 'Ring',
     sampleEmpty: 'No recurring rule yet. Add the first one.',
     sampleEmptyAction: 'Add a recurring rule',
-    variants: 'Variants',
     states: 'States',
   },
 

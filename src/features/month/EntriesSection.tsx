@@ -15,12 +15,15 @@ import {
   useMemberFilter,
   useMemberMap,
   useMembers,
-  useMonthConfirmed,
+  useMonthEntries,
+  useMonthUnconfirmable,
 } from '@/store/selectors'
+import { unconfirmEntries, undoable } from '@/store/actions'
 import { type EntryNature, kindsOfNature } from '@/ui/categoryKinds'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
+import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { Disclosure } from '@/ui/Disclosure'
 import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -29,6 +32,7 @@ import { familyColor } from '@/persistence/defaults'
 import { ListRow } from '@/ui/ListRow'
 import { Segmented } from '@/ui/Segmented'
 import { Tile } from '@/ui/Tile'
+import { MonthEntryRow } from './MonthEntryRow'
 
 /** La nature que la liste montre, ou `null` pour tout. */
 export type NatureFilter = EntryNature | null
@@ -110,7 +114,25 @@ function defaultOpenKeys(by: GroupBy, keys: readonly string[]): readonly string[
 }
 
 /**
- * Les entrées confirmées du mois, rangées sur un axe et filtrées par nature.
+ * **Le mois, ligne à ligne** — la liste unique de l'écran, rangée sur un axe et
+ * filtrée par nature.
+ *
+ * **Elle porte maintenant les échéances prévues avec les lignes réelles**, et
+ * c'est la fusion qui fait disparaître « À confirmer ». Les deux listaient le
+ * même mois à deux endroits : l'une ce qui attendait, l'autre ce qui était
+ * fait, si bien qu'une ligne confirmée sautait de la première à la seconde et
+ * qu'on descendait deux fois le même mois pour le lire en entier. Une ligne
+ * change ici d'état sans changer de place — c'est ce que le glissé promet, et
+ * une liste qui se vide sous le doigt ne le tiendrait pas.
+ *
+ * Le glissé et ses deux boutons vivent sur la rangée (`MonthEntryRow`) ; ce qui
+ * reste ici est ce qui vaut pour la liste entière : son rangement, ses filtres,
+ * et le geste inverse en masse.
+ *
+ * **« Remettre le mois à confirmer » a été relogé ici**, avec ses trois marches
+ * de confirmation. C'est le seul geste que la revue et le glissé n'offrent pas
+ * — les deux avancent, aucun ne recule en bloc —, et il n'avait plus d'écran
+ * sans la section « À confirmer ». Sa place est sous les lignes qu'il ramène.
  *
  * Le filtre est tenu par la page, pas ici : les tuiles du tableau de bord le
  * posent aussi. `focus` compte les demandes de défilement venues d'elles — un
@@ -124,6 +146,7 @@ export function EntriesSection({
   onFamily,
   focus,
   onOpen,
+  readOnly = false,
 }: {
   nature: NatureFilter
   onNature: (nature: NatureFilter) => void
@@ -132,8 +155,24 @@ export function EntriesSection({
   onFamily: (family: string | null) => void
   focus: number
   onOpen: (entry: Entry) => void
+  /**
+   * Un autre mois que celui qu'on vit : la liste se lit, elle ne s'écrit pas.
+   *
+   * Ni glissé, ni boutons de confirmation, ni retour en arrière en masse. Un
+   * mois passé est réel de bout en bout et n'attend rien ; un mois à venir n'a
+   * que du prévu, et confirmer aujourd'hui une échéance de novembre écrirait
+   * comme un fait ce qui n'a pas eu lieu. La correction d'une ligne reste
+   * offerte par sa fiche, qui sait dater, requalifier et supprimer.
+   */
+  readOnly?: boolean
 }) {
-  const confirmed = useMonthConfirmed()
+  const lines = useMonthEntries()
+  const unconfirmable = useMonthUnconfirmable()
+  const [undoing, setUndoing] = useState(false)
+  /* Ce qui reste à confirmer dans ce que la liste montre — c'est ce qui décide
+     si la phrase du glissé a lieu d'être. Sur un mois entièrement réel, il n'y
+     a plus un geste à apprendre. */
+  const pending = lines.filter((entry) => entry.status === 'planned').length
   const categories = useCategoryMap()
   const kindOf = useKindOf()
   const familyOf = useFamilyOf()
@@ -156,13 +195,13 @@ export function EntriesSection({
   const [by, setBy] = useState<GroupBy>('day')
   const entries = useMemo(() => {
     const kinds = nature === null ? null : kindsOfNature(nature)
-    if (kinds === null && family === null) return confirmed
-    return confirmed.filter(
+    if (kinds === null && family === null) return lines
+    return lines.filter(
       (entry) =>
         (kinds === null || kinds.includes(kindOf(entry.categoryId))) &&
         (family === null || familyOf(entry.categoryId) === family),
     )
-  }, [confirmed, nature, kindOf, family, familyOf])
+  }, [lines, nature, kindOf, family, familyOf])
   const groups = useMemo(() => groupEntries(entries, by), [entries, by])
   const keys = useMemo(() => groups.map((g) => g.key), [groups])
   const open = useMemo(() => defaultOpenKeys(by, keys), [by, keys])
@@ -183,7 +222,7 @@ export function EntriesSection({
     disclosure.reset()
   }
 
-  if (confirmed.length === 0) return null
+  if (lines.length === 0) return null
 
   /* Lu au rendu et non mémorisé : un onglet laissé ouvert la nuit du 31 doit
      marquer le jour qu'on est le lendemain. C'est déjà la règle du bandeau du
@@ -200,7 +239,11 @@ export function EntriesSection({
      « Charges » en sortie pleine, comme la tuile du même nom ; « Revenus » en
      entrée ; « Épargne » en net — les versements moins les reprises, comme
      partout, et non l'inverse que donnerait le solde. Le solde reste la
-     lecture de « Tout », où les natures se mêlent (cahier §4.4 bis). */
+     lecture de « Tout », où les natures se mêlent (cahier §4.4 bis).
+
+     Ils comptent le mois entier depuis que la liste porte le prévu : c'est
+     l'horizon des tuiles de flux, et deux chiffres du même écran qui ne
+     compteraient pas les mêmes lignes se liraient comme une erreur. */
   const natureAmount = (total: number, size: 'label' | 'body') => {
     if (nature === null) return <Amount value={money(total)} size={size} signed />
     if (nature === 'income') return <Amount value={money(total)} size={size} direction="in" />
@@ -212,7 +255,11 @@ export function EntriesSection({
     <div ref={root} className="reveal-target">
       <Tile className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Eyebrow icon={EntriesIcon}>{t.month.entries}</Eyebrow>
+          {/* Le titre du design, et non plus « Ce mois » : la liste porte
+              désormais tout le mois, prévu compris, et son nom doit le dire. Le
+              repère des tuiles qui mènent ici garde le nom court — un coin de
+              tuile plafonne à 60 % de sa largeur (DS §6). */}
+          <Eyebrow icon={EntriesIcon}>{t.month.lineByLine}</Eyebrow>
           <Button size="sm" variant="ghost" onClick={disclosure.toggleAll}>
             {disclosure.anyOpen ? t.month.collapseAll : t.month.expandAll}
           </Button>
@@ -286,10 +333,11 @@ export function EntriesSection({
           </div>
         )}
 
-        {/* Hors filtre, ce total est celui de la tuile « Solde du mois », au
-            même calcul près : le redire ici en ferait une seconde vérité. Sous
-            filtre, en revanche, aucune tuile ne le porte — celle des charges
-            compte les échéances encore prévues, que cette liste n'a pas. */}
+        {/* Hors filtre, ce total est le solde prévisionnel du mois, que la
+            situation porte déjà deux blocs plus haut : le redire ici en ferait
+            une seconde vérité. Sous filtre, en revanche, il descend en dessous
+            d'un total de tuile — celui des charges ne connaît pas le poste ni
+            la personne sur lesquels la liste vient d'être réduite. */}
         {nature !== null && entries.length > 0 && (
           <div className="flex items-baseline gap-2">
             <span className="t-axis">
@@ -365,22 +413,78 @@ export function EntriesSection({
               <ul className="flex flex-col">
                 {group.entries.map((entry) => (
                   <li key={entry.id}>
-                    <ListRow
-                      color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
-                      label={entry.label}
-                      {...rowMeta(members, entry, by !== 'member')}
-                      trailing={<Amount value={entry.amount} direction={entry.direction} />}
-                      onClick={() => {
-                        onOpen(entry)
-                      }}
-                    />
+                    {readOnly ? (
+                      <ListRow
+                        color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
+                        label={entry.label}
+                        {...rowMeta(members, entry, by !== 'member')}
+                        planned={entry.status === 'planned'}
+                        trailing={<Amount value={entry.amount} direction={entry.direction} />}
+                        onClick={() => {
+                          onOpen(entry)
+                        }}
+                      />
+                    ) : (
+                      <MonthEntryRow
+                        entry={entry}
+                        color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
+                        {...rowMeta(members, entry, by !== 'member')}
+                        onOpen={() => {
+                          onOpen(entry)
+                        }}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
             </Disclosure>
           ))}
         </div>
+
+        {/* Le geste s'apprend en le lisant, une fois : rien sur une rangée ne
+            dit qu'elle se glisse, et le doigt ne découvre pas tout seul un
+            fond qu'il faut déplacer de quatre-vingt-douze pixels pour voir.
+            La phrase nomme aussi les deux boutons qui font la même chose. */}
+        {!readOnly && pending > 0 && <p className="t-axis">{t.month.swipeHint}</p>}
+
+        {/* Le retour en arrière en masse — le seul geste que ni la revue ni le
+            glissé n'offrent, et le seul qui recule. Il reste atteignable tant
+            qu'il y a quelque chose à ramener, y compris sur un mois confirmé à
+            moitié. Sa boîte de confirmation reste : un mois entier remis à
+            confirmer ne se rattrape pas d'un toast de huit secondes. */}
+        {!readOnly && unconfirmable.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="self-start"
+            onClick={() => {
+              setUndoing(true)
+            }}
+          >
+            {t.month.unconfirmAll}
+          </Button>
+        )}
       </Tile>
+
+      <ConfirmDialog
+        open={undoing}
+        title={t.month.unconfirmAll}
+        steps={[
+          {
+            question: tpl(t.month.unconfirmAllConfirm, unconfirmable.length),
+            action: t.month.unconfirm,
+          },
+        ]}
+        onCancel={() => {
+          setUndoing(false)
+        }}
+        onConfirm={() => {
+          setUndoing(false)
+          undoable(t.month.unconfirmedAll, () => {
+            unconfirmEntries(unconfirmable.map((entry) => entry.id))
+          })
+        }}
+      />
     </div>
   )
 }
