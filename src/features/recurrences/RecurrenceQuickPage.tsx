@@ -5,7 +5,6 @@ import { ZERO } from '@/domain/money'
 import type { CategoryKind } from '@/domain/types'
 import { t } from '@/i18n/strings'
 import { formatMonthDay, tpl } from '@/i18n/format'
-import { cn } from '@/lib/cn'
 import { addRecurrence } from '@/store/actions'
 import { useCategoryMap, useCurrentYm, useKindOf, useMembers } from '@/store/selectors'
 import { memberPatch } from '@/features/split/memberDraft'
@@ -20,6 +19,7 @@ import { Close, Warning } from '@/ui/Icons'
 import { Keypad } from '@/ui/Keypad'
 import { amountFromKeys } from '@/ui/keypad'
 import { PageTitle } from '@/ui/PageTitle'
+import { StepBar } from '@/ui/StepBar'
 import { toast } from '@/ui/toast'
 import { useHotkeys } from '@/ui/useHotkeys'
 import { LAST_DAY, describePeriod } from './period'
@@ -59,19 +59,8 @@ function Progress({ index, onQuit }: { index: number; onQuit: () => void }) {
         <Close />
       </IconButton>
       {/* Décoratifs, et ils le disent : ils dessinent ce que le compteur écrit
-          à côté d'eux en chiffres. Les annoncer ferait lire quatre éléments
-          vides pour apprendre « deux sur quatre », qui est déjà là. */}
-      <span aria-hidden="true" className="flex flex-1 gap-1">
-        {STEPS.map((step, rank) => (
-          <span
-            key={step}
-            className={cn(
-              'h-1 flex-1 rounded-chip transition-colors duration-[var(--dur)] ease-ds',
-              rank < index ? 'bg-accent' : rank === index ? 'bg-accent-2' : 'bg-surface-2',
-            )}
-          />
-        ))}
-      </span>
+          à côté d'eux en chiffres (`ui/StepBar`). */}
+      <StepBar index={index} total={STEPS.length} />
       <span className="t-axis tnum shrink-0">
         {tpl(t.quickRule.counter, index + 1, STEPS.length)}
       </span>

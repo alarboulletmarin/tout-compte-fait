@@ -1,44 +1,18 @@
-import { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
 import type { YearMonth } from '@/domain/date'
 import { type Money, abs, isZero, sub } from '@/domain/money'
 import { de, formatMonthName, formatYearMonth, tpl } from '@/i18n/format'
 import { t } from '@/i18n/strings'
-import { prefersReducedMotion } from '@/lib/reveal'
 import { useHouseholdReport } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { BalanceIcon } from '@/ui/Icons'
+import { cascadeStyle, useCascade } from '@/ui/cascade'
 
-/* Le pas de la cascade, tel que le handoff le pose : assez pour que les lignes
-   se lisent l'une après l'autre, assez peu pour que les quatre soient là avant
-   qu'on ait fini de lire la première. */
-const STEP_MS = 110
-
-/**
- * Combien de blocs sont déjà composés.
- *
- * Un compteur et non une classe d'animation par ligne : la cascade est une
- * suite, et une suite se compte. Sous `prefers-reduced-motion`, elle part
- * complète — tout est là au premier rendu, ce que le DS §4 demande et ce qui
- * évite le mode d'échec de toute cascade : un écran qui reste vide parce que
- * son minuteur n'a jamais couru.
- */
-function useCascade(count: number): number {
-  const [shown, setShown] = useState(() => (prefersReducedMotion() ? count : 0))
-
-  useEffect(() => {
-    if (shown >= count) return
-    const timer = setTimeout(() => {
-      setShown((step) => step + 1)
-    }, STEP_MS)
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [shown, count])
-
-  return shown
-}
+/* La cascade vit dans `ui/cascade.ts` : le récapitulatif du premier lancement
+   compose ses lignes de la même façon, et deux cadences différentes pour le
+   même geste se verraient d'un écran à l'autre. */
 
 /** Une ligne du bilan : ce qu'on lit, et ce que ça vaut. */
 function SummaryLine({
@@ -52,17 +26,10 @@ function SummaryLine({
   rank: number
   shown: number
 }) {
-  const style: CSSProperties = {
-    opacity: rank < shown ? 1 : 0,
-    /* Six pixels, la plus courte des translations du DS §4 : la ligne se pose,
-       elle n'arrive pas de loin. */
-    transform: rank < shown ? undefined : 'translateY(6px)',
-    transitionDuration: 'var(--dur-view)',
-  }
   return (
     <div
       className="flex items-baseline justify-between gap-3 transition-[transform,opacity] ease-ds"
-      style={style}
+      style={cascadeStyle(rank, shown)}
     >
       <span className="t-body text-muted">{label}</span>
       {value}
@@ -162,11 +129,7 @@ export function ReviewSummary({
 
       <section
         className="tile flex flex-col gap-3 p-5 transition-[transform,opacity] ease-ds md:p-6"
-        style={{
-          opacity: shown >= 5 ? 1 : 0,
-          transform: shown >= 5 ? undefined : 'translateY(6px)',
-          transitionDuration: 'var(--dur-view)',
-        }}
+        style={cascadeStyle(4, shown)}
       >
         <Eyebrow icon={BalanceIcon}>{tpl(t.review.summaryBalance, de(month))}</Eyebrow>
         <span className="fit-box block">
