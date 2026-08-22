@@ -28,6 +28,11 @@ export type MonthNavProps = {
 
 const SWIPE_THRESHOLD = 48
 
+/* Ce qu'il faut parcourir pour que la pression devienne un glissé. En deçà, le
+   doigt s'est posé sans rien faire d'autre, et le bloc titre reste ce qu'il est
+   d'abord : le bouton qui ramène au mois courant. */
+const ENGAGE = 4
+
 /**
  * Chevrons de part et d'autre du mois, année en mono dessous. DS §6.
  *
@@ -47,6 +52,23 @@ export function MonthNav({ value, onChange, min, max, returnTo, className }: Mon
   const canGoBack = min === undefined || previous >= min
   const canGoForward = max === undefined || next <= max
   const returnable = returnTo !== undefined && returnTo !== value
+
+  /**
+   * La destination telle qu'elle s'écrit dans le bloc titre.
+   *
+   * Elle porte son année dès qu'elle n'est plus dans celle qu'on lit à sa
+   * gauche. « 2025 · revenir à août » demandait de deviner de quel août il
+   * s'agissait, alors que la seule chose que la ligne affirme est que le mois
+   * *affiché* est de 2025 ; le retour, lui, pouvait être n'importe où. Dans la
+   * même année, l'année de gauche répond déjà, et la répéter ferait lire
+   * « 2026 · revenir à août 2026 » onze mois sur douze.
+   */
+  const returnLabel =
+    returnTo === undefined
+      ? ''
+      : parseYm(returnTo).y === y
+        ? monthName(parseYm(returnTo).m)
+        : formatYearMonth(returnTo)
 
   const start = useRef<{ x: number; y: number; id: number } | null>(null)
   /**
@@ -73,7 +95,25 @@ export function MonthNav({ value, onChange, min, max, returnTo, className }: Mon
     const control = (event.target as HTMLElement).closest('a, input, select, button')
     if (control !== null && control.getAttribute('data-swipe') !== 'true') return
     start.current = { x: event.clientX, y: event.clientY, id: event.pointerId }
-    // La capture garantit que le relâchement revient ici, même hors du cadre.
+  }
+
+  /**
+   * La capture s'arme au premier vrai déplacement, et surtout pas à la pression.
+   *
+   * Elle garantit que le relâchement revient ici même hors du cadre — c'est
+   * pour cela qu'elle existe. Mais un pointeur capturé retarge aussi les
+   * événements de compatibilité de la souris : `mousedown`, `mouseup`, et donc
+   * le `click` qui en découle, qui part alors sur ce conteneur-ci au lieu du
+   * bouton. Armée dès la pression, elle rendait le bloc titre inerte — on
+   * tapait « revenir à août », et il ne se passait rien. Quatre pixels
+   * suffisent à séparer les deux gestes : un appui n'en parcourt aucun, un
+   * balayage les franchit avant d'avoir commencé.
+   */
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    const from = start.current
+    if (from === null || from.id !== event.pointerId) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) return
+    if (Math.abs(event.clientX - from.x) < ENGAGE) return
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
@@ -95,6 +135,7 @@ export function MonthNav({ value, onChange, min, max, returnTo, className }: Mon
       className={cn('flex items-center justify-between gap-2 select-none', className)}
       style={{ touchAction: 'pan-y' }}
       onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={() => {
         start.current = null
@@ -124,9 +165,10 @@ export function MonthNav({ value, onChange, min, max, returnTo, className }: Mon
           de côté qui rend le millésime utile — sans lui, douze mois en arrière
           affichent « juillet » sans qu'on sache lequel. L'année reste donc, et
           le retour la suit, en encre pleine plutôt qu'en gris : c'est ce qui
-          distingue une destination d'une mention. Mesuré à 320 points, la ligne
-          entière — « 2025 · revenir à août » — tient dans les 232px que les deux
-          chevrons laissent. */}
+          distingue une destination d'une mention. Le retour porte son propre
+          millésime dès qu'il sort de celui de gauche : mesuré à 320 points, la
+          ligne la plus longue — « 2025 · revenir à août 2026 » — tient dans les
+          232px que les deux chevrons laissent. */}
       {returnable ? (
         <button
           type="button"
@@ -148,9 +190,7 @@ export function MonthNav({ value, onChange, min, max, returnTo, className }: Mon
           </span>
           <span className="t-axis">
             <span className="tnum">{y}</span>
-            <span className="text-text">
-              {` · ${tpl(t.shell.returnToShort, monthName(parseYm(returnTo).m))}`}
-            </span>
+            <span className="text-text">{` · ${tpl(t.shell.returnToShort, returnLabel)}`}</span>
           </span>
         </button>
       ) : (

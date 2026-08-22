@@ -1,7 +1,7 @@
 import { createEvent, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { formatYearMonth, tpl } from '@/i18n/format'
+import { formatYearMonth, monthName, tpl } from '@/i18n/format'
 import { t } from '@/i18n/strings'
 import { MonthNav } from './MonthNav'
 
@@ -42,6 +42,29 @@ describe('MonthNav — le bloc titre', () => {
     await userEvent.click(title('2026-08'))
 
     expect(onChange).toHaveBeenCalledWith('2026-08')
+  })
+
+  /* « 2025 · revenir à août » laissait deviner de quel août il s'agissait : le
+     millésime de gauche est celui du mois *affiché*, et il ne dit rien de la
+     destination. */
+  it('nomme l’année du retour dès qu’elle n’est plus celle qu’on lit', () => {
+    render(<MonthNav value="2025-02" onChange={vi.fn()} returnTo="2026-08" />)
+
+    expect(title('2026-08')).toHaveTextContent(
+      tpl(t.shell.returnToShort, formatYearMonth('2026-08')),
+    )
+  })
+
+  /* Dans la même année, le millésime de gauche répond déjà : le répéter ferait
+     lire « 2026 · revenir à août 2026 » onze mois sur douze. */
+  it('ne la répète pas quand elle est déjà là', () => {
+    render(<MonthNav value="2026-02" onChange={vi.fn()} returnTo="2026-08" />)
+    const block = title('2026-08')
+
+    expect(block).toHaveTextContent(tpl(t.shell.returnToShort, monthName(8)))
+    expect(block).not.toHaveTextContent(
+      tpl(t.shell.returnToShort, formatYearMonth('2026-08')),
+    )
   })
 
   /* Le bloc titre est la moitié de la piste de balayage : l'en retirer aurait

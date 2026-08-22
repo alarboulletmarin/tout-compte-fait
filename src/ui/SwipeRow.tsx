@@ -37,6 +37,11 @@ const TRIGGER_LEFT = -70
    trois qu'on ne défait pas d'un second glissé — seul un toast la rattrape. */
 const TRIGGER_LEFT_DESTRUCTIVE = -84
 
+/* Ce qu'il faut parcourir pour que la pression devienne un glissé.
+   En deçà, le doigt n'a rien fait d'autre que se poser, et la rangée reste ce
+   qu'elle est d'abord : un bouton qui ouvre sa fiche. */
+const ENGAGE = 4
+
 /**
  * Une rangée qu'on glisse : à droite l'action positive, à gauche la secondaire.
  *
@@ -129,18 +134,29 @@ export function SwipeRow({
     if ((event.target as HTMLElement).closest('[data-no-swipe]') !== null) return
     start.current = { x: event.clientX, y: event.clientY }
     setDragging(true)
-    event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
     const from = start.current
     if (from === null) return
     const dx = event.clientX - from.x
-    /* Plus horizontal que vertical, sinon un défilement de page qui dérive
-       emporterait la rangée avec lui. Une fois le geste engagé, on ne repose
-       plus la question : `touch-action: pan-y` a déjà donné la verticale au
-       navigateur, qui ne nous enverrait plus rien. */
-    if (offset === 0 && Math.abs(dx) < Math.abs(event.clientY - from.y)) return
+    if (offset === 0) {
+      /* Quatre pixels d'abord, puis plus horizontal que vertical — sinon un
+         défilement de page qui dérive emporterait la rangée avec lui. Une fois
+         le geste engagé, on ne repose plus la question : `touch-action: pan-y`
+         a déjà donné la verticale au navigateur, qui ne nous enverrait plus
+         rien. */
+      if (Math.abs(dx) < ENGAGE || Math.abs(dx) < Math.abs(event.clientY - from.y)) return
+      /* **La capture s'arme ici, et surtout pas à la pression.**
+         Un pointeur capturé retarge aussi les événements de compatibilité de la
+         souris : `mousedown`, `mouseup`, et donc le `click` qui en découle, qui
+         part alors sur ce conteneur-ci au lieu de la rangée. Capturée dès la
+         pression, la capture rendait muet tout ce qu'elle enveloppe — la rangée
+         à confirmer n'ouvrait plus sa fiche, et rien ne le disait. Armée quand
+         le glissé commence vraiment, elle tient toujours sa promesse — le
+         relâchement revient ici même hors du cadre — sans coûter le clic. */
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
     setOffset(Math.max(CLAMP_LEFT, Math.min(CLAMP_RIGHT, canRight ? dx : Math.min(0, dx))))
   }
 

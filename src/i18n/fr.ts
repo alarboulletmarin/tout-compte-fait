@@ -310,8 +310,9 @@ export const fr = {
     /* Le retour tel qu'il s'écrit **dans** le bloc titre, sous le nom du mois
        affiché. En bas de casse, parce que la ligne est un axe et non un
        eyebrow : `t-eyebrow` passe tout en capitales, et le DS §7 ne veut pas de
-       majuscule décorative sur ce qui est un bouton. Le mois seul suffit — le
-       nom accessible du bloc, lui, porte l'année (`thisMonthTitle`). */
+       majuscule décorative sur ce qui est un bouton. Ce qu'on lui passe est le
+       mois seul quand l'année de gauche est déjà la bonne, et le mois avec son
+       année sinon — `MonthNav` tranche, et dit pourquoi. */
     returnToShort: 'revenir à %s',
   },
 
