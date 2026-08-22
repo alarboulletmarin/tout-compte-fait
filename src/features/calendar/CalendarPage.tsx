@@ -132,30 +132,19 @@ export function CalendarPage() {
           mais un tableau. C'est un écart assumé au bord unique de la page, et le
           seul de l'app qui soit décidé par le contenu plutôt que subi. */}
       <div className="flex max-w-2xl flex-col gap-4">
-        {/* La tuile reste une tuile à toutes les largeurs — coins, cadre, ombre,
-            et la marge de la page de chaque côté. Elle resserre seulement son
-            propre cadre sous 480px, à la valeur qu'une tuile plate utilise déjà :
-            c'est ce qui rend seize pixels à chaque colonne sans que la carte
-            cesse d'en être une. Le calcul complet est dans `CalendarGrid`. */}
-        <Tile className="max-[479px]:p-4">
-          <CalendarGrid
-            month={ym}
-            window={grid}
-            opened={day}
-            anchor={active}
-            onAnchor={move}
-            onOpen={open}
-            reachable={reachable}
-            focusOn={focusOn}
-            today={now}
-          />
-        </Tile>
-
-        {/* L'invitation portait une action — « ouvre le mois » — que cet écran
-            n'offre pas. Elle porte maintenant celle qu'il sait faire. */}
+        {/* **Au-dessus de la grille, et non sous elle.** L'invitation portait
+            une action — « ouvre le mois » — que cet écran n'offre pas ; elle
+            porte maintenant celle qu'il sait faire. Encore fallait-il pouvoir
+            l'atteindre : une grille de calendrier fait la hauteur d'un mois, si
+            bien que l'invitation tombait sous la ligne de flottaison aux deux
+            formats — mesuré, il fallait défiler de 215px au téléphone et de 231
+            au bureau pour voir le seul geste que l'écran proposait, et au
+            téléphone les deux derniers boutons passaient en plus sous la barre
+            d'onglets. Une grille vide est un contexte ; l'invitation est ce
+            qu'on vient y faire, et elle passe donc devant. */}
         {!hasAny && (
           <EmptyState message={hasRecurrence ? t.calendar.empty : t.calendar.emptyStart}>
-            <div className="flex flex-wrap justify-center gap-2">
+            <>
               {/* La récurrence en tête, et seulement quand il n'y en a aucune :
                   c'est elle qui pose les échéances du calendrier, et les trois
                   portes de saisie ne remplissent que le jour qu'on vise. */}
@@ -192,9 +181,28 @@ export function CalendarPage() {
               >
                 {t.entry.addSaving}
               </Button>
-            </div>
+            </>
           </EmptyState>
         )}
+
+        {/* La tuile reste une tuile à toutes les largeurs — coins, cadre, ombre,
+            et la marge de la page de chaque côté. Elle resserre seulement son
+            propre cadre sous 480px, à la valeur qu'une tuile plate utilise déjà :
+            c'est ce qui rend seize pixels à chaque colonne sans que la carte
+            cesse d'en être une. Le calcul complet est dans `CalendarGrid`. */}
+        <Tile className="max-[479px]:p-4">
+          <CalendarGrid
+            month={ym}
+            window={grid}
+            opened={day}
+            anchor={active}
+            onAnchor={move}
+            onOpen={open}
+            reachable={reachable}
+            focusOn={focusOn}
+            today={now}
+          />
+        </Tile>
       </div>
 
       <DaySheet

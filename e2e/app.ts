@@ -61,6 +61,30 @@ export async function openApp(page: Page): Promise<void> {
   await dismissNotice(page)
 }
 
+/**
+ * Entre dans l'app **sans document** : un foyer neuf, et rien dedans.
+ *
+ * C'est l'état que tous les scénarios manquaient. Ils chargent le jeu d'exemple,
+ * qui est le contraire de ce qu'on veut mesurer ici — un écran vide n'a ni
+ * tuile à couper, ni liste à faire déborder, et c'est précisément pour ça qu'on
+ * ne le regardait jamais. Il a pourtant sa mise en page à lui : une invitation,
+ * un geste, et beaucoup de place autour.
+ */
+export async function enterEmpty(page: Page): Promise<void> {
+  await page
+    .getByRole('button', { name: /sans rien charger/i })
+    .first()
+    .click()
+  await expect(page.getByRole('navigation').first()).toBeVisible({ timeout: 30_000 })
+  /* Puis le document **enregistré**, pour la raison qui fait attendre
+     `loadExample` : un `goto` qui part avant l'écriture l'interrompt, et l'app
+     repart sur la page de présentation. Le piège est plus sournois ici — un
+     document vide n'a rien à montrer, alors une mesure prise sur la présentation
+     ne ressemble pas à une erreur, elle ressemble à un écran vide. C'est ce qui
+     a rendu ce scénario vert sur le défaut qu'il devait voir. */
+  await expect.poll(() => storedDocument(page), { timeout: 30_000 }).toBe(true)
+}
+
 /* La base, le magasin et la clé où l'app pose son document. Recopiés de
    `src/persistence/db.ts` plutôt qu'importés : ces tests lisent l'app
    **construite**, et n'ont aucun accès à ses modules. S'ils changeaient là-bas,
@@ -79,6 +103,47 @@ const DOCUMENT_KEY = 'current'
  * l'affiche à cet instant — mais un rechargement, lui, ne relit que ce qui a
  * atteint IndexedDB.
  */
+/**
+ * Le document est-il **écrit** en base, quel qu'il soit ?
+ *
+ * `storedMembers` ne peut pas répondre pour un document vide : il n'a aucun
+ * membre, et zéro y voudrait dire « rien d'enregistré » autant que « enregistré
+ * et vide ». Ce qu'on veut savoir ici est l'existence de l'enregistrement, pas
+ * son contenu.
+ */
+async function storedDocument(page: Page): Promise<boolean> {
+  return page.evaluate(
+    ({ name, store, key }) =>
+      new Promise<boolean>((resolve) => {
+        const opening = indexedDB.open(name)
+        opening.onupgradeneeded = () => {
+          opening.transaction?.abort()
+        }
+        opening.onerror = () => {
+          resolve(false)
+        }
+        opening.onsuccess = () => {
+          const db = opening.result
+          if (!db.objectStoreNames.contains(store)) {
+            db.close()
+            resolve(false)
+            return
+          }
+          const read = db.transaction(store, 'readonly').objectStore(store).get(key)
+          read.onerror = () => {
+            db.close()
+            resolve(false)
+          }
+          read.onsuccess = () => {
+            db.close()
+            resolve(read.result !== undefined)
+          }
+        }
+      }),
+    { name: DB_NAME, store: DOCUMENT_STORE, key: DOCUMENT_KEY },
+  )
+}
+
 async function storedMembers(page: Page): Promise<number> {
   return page.evaluate(
     ({ name, store, key }) =>
@@ -141,7 +206,10 @@ async function storedMembers(page: Page): Promise<number> {
  * lente et deux navigateurs se partagent deux cœurs.
  */
 export async function loadExample(page: Page): Promise<void> {
-  await page.getByRole('button', { name: /charger l’exemple/i }).first().click()
+  await page
+    .getByRole('button', { name: /charger l’exemple/i })
+    .first()
+    .click()
   await expect(page.getByRole('navigation').first()).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText(/solde du mois/i).first()).toBeVisible({ timeout: 30_000 })
   await expect.poll(() => storedMembers(page), { timeout: 30_000 }).toBeGreaterThan(0)

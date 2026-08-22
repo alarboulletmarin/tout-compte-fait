@@ -17,7 +17,7 @@
  * ==========================================================================*/
 
 import { type Page, expect, test } from '@playwright/test'
-import { SCREENS, loadExample, openApp } from './app'
+import { SCREENS, enterEmpty, loadExample, openApp } from './app'
 
 /** La plus petite largeur que le design system s'engage à tenir. */
 const NARROW = { width: 320, height: 640 }
@@ -415,6 +415,86 @@ for (const size of [{ name: 'téléphone', ...NARROW }, ...WIDE]) {
       expect(guilty).toEqual([])
       expect(cut).toEqual([])
       expect(lonely).toEqual([])
+    })
+  })
+}
+
+/* ----------------------------------------------------------------------------
+ * Le document vide.
+ *
+ * Aucun scénario ne l'ouvrait : tous chargent le jeu d'exemple, qui est le
+ * contraire de ce qu'on mesure ici. Un écran vide n'a ni tuile à couper ni liste
+ * à faire déborder — et c'est précisément pour ça qu'il n'était jamais regardé.
+ *
+ * Ce qu'on lui demande est d'une autre nature : **le geste qu'il propose doit
+ * être sous les yeux**. Un état vide est une invitation (cahier §4.6), et une
+ * invitation qu'il faut aller chercher en défilant n'en est pas une. Le
+ * calendrier l'a montré — sa grille fait la hauteur d'un mois, et l'invitation
+ * tombait dessous aux deux formats.
+ * --------------------------------------------------------------------------*/
+const BARE: string[] = [
+  '/',
+  '/calendrier',
+  '/historique',
+  '/recurrences',
+  '/epargne',
+  '/epargne/supports',
+  '/credits',
+  '/avances',
+  '/repartition',
+  '/flux',
+]
+
+for (const size of [{ name: 'téléphone', ...NARROW }, ...WIDE]) {
+  test.describe(`sur un document vide, écran de ${String(size.width)} points`, () => {
+    test.use({ viewport: { width: size.width, height: size.height } })
+
+    test('offre son geste sans qu’il faille défiler, et ne coupe rien', async ({ page }) => {
+      await openApp(page)
+      await enterEmpty(page)
+
+      const guilty: string[] = []
+      const cut: string[] = []
+      const buried: string[] = []
+      /* Combien d'écrans ont vraiment montré une invitation. Sans ce compte, un
+         scénario qui mesurerait la page de présentation à la place de l'app
+         resterait vert : il ne trouverait aucune invitation, donc aucun
+         reproche. C'est arrivé. */
+      let seen = 0
+      for (const path of BARE) {
+        await page.goto(path)
+        await page.waitForLoadState('networkidle')
+        expect(new URL(page.url()).pathname, 'l’app doit être entrée').not.toBe('/bienvenue')
+        const excess = await overflow(page)
+        if (excess > 0) guilty.push(`${path} dépasse de ${String(excess)} px`)
+        cut.push(...(await clipped(page, path)))
+
+        /* Ce que l'écran vide **offre** doit tenir dans la fenêtre, en entier,
+           sans qu'on l'ait fait défiler : c'est `[data-empty]`, la rangée que
+           `EmptyState` et `MonthEmptyTile` marquent eux-mêmes. On ne cherche pas
+           « le premier bouton de la page » — une grille de calendrier porte une
+           case cliquable par jour, et la première est en haut quoi qu'il
+           arrive : la mesure resterait verte avec l'invitation enterrée
+           dessous, ce qu'elle a fait avant qu'on la corrige. */
+        const offered = await page.evaluate(() => {
+          const row = document.querySelector('main [data-empty]')
+          return row === null ? null : Math.round(row.getBoundingClientRect().bottom)
+        })
+        if (offered !== null) seen += 1
+        if (offered !== null && offered > size.height) {
+          buried.push(
+            `${path} — ce qu’il offre finit à ${String(offered)} px, hors des ${String(size.height)}`,
+          )
+        }
+      }
+
+      expect(guilty).toEqual([])
+      expect(cut).toEqual([])
+      expect(buried).toEqual([])
+      /* Le mois, le calendrier, les récurrences, les crédits, les avances et le
+         détail en offrent un ; l'historique, l'épargne et la répartition disent
+         seulement pourquoi ils sont vides. */
+      expect(seen).toBeGreaterThanOrEqual(5)
     })
   })
 }

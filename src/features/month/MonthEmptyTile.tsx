@@ -34,7 +34,9 @@ export function MonthEmptyTile() {
       <Eyebrow icon={RecurrencesIcon}>{t.month.nothingYet}</Eyebrow>
       <span className="t-tile-num">{tpl(t.month.monthIsEmpty, de(formatMonthName(ym)))}</span>
       <p className="t-body max-w-[44ch]">{t.month.emptyStart}</p>
-      <div className="flex flex-wrap gap-2">
+      {/* `data-empty` : la même promesse que sur `EmptyState`, et vérifiée au
+          même endroit — ce que l'écran vide offre est sous les yeux. */}
+      <div data-empty className="flex flex-wrap gap-2">
         <Button
           onClick={() => {
             void navigate(RECURRENCE_NEW_PATH)

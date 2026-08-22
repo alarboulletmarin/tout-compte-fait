@@ -163,7 +163,7 @@ export function MonthPage() {
             partir de 1024px la rangée en flux est masquée sur un mois vide, et
             cet état-ci est alors la seule porte de saisie de l'écran. */
         <EmptyState message={hasRecurrence ? t.month.empty : t.month.emptyStart}>
-          <div className="flex flex-wrap justify-center gap-2">
+          <>
             {!hasRecurrence && (
               <Button
                 onClick={() => {
@@ -189,7 +189,7 @@ export function MonthPage() {
             >
               {t.entry.addIn}
             </Button>
-          </div>
+          </>
         </EmptyState>
       ) : (
         /* **Trois questions, dans l'ordre où on se les pose**, et cet ordre est
