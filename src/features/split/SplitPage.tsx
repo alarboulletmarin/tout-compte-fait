@@ -331,9 +331,17 @@ export function SplitPage() {
           blocs restent empilés — ils se lisent dans l'ordre, du total aux parts
           puis au calcul — mais ils s'alignent sur ce qui les surmonte. */}
       <div className="flex flex-col gap-4">
+        {/* Le chiffre de l'écran, à la taille d'un chiffre d'écran. Il était en
+            `t-tile-num`, c'est-à-dire au gabarit d'une tuile de bento posée
+            dans une grille à six colonnes — alors que celle-ci prend toute la
+            largeur de la page et porte la seule question qu'on vient poser.
+            `fit-box` borne la casse : le héros se taille sur la tuile, et un
+            pot à cinq chiffres ne sort pas par la droite. */}
         <Tile variant="accent">
           <Eyebrow icon={SplitIcon}>{t.split.total}</Eyebrow>
-          <Amount value={total} size="tile" className="mt-3" />
+          <span className="fit-box mt-3 block">
+            <Amount value={total} size="hero-fit" />
+          </span>
           <span className="t-label mt-1">{t.split.totalHint}</span>
         </Tile>
 

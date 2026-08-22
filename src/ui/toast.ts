@@ -50,6 +50,23 @@ const LIFETIME_MS = 4000
 const ACTION_LIFETIME_MS = 8000
 
 /**
+ * Un échec vit plus longtemps qu'une confirmation, et moins qu'un retour
+ * arrière.
+ *
+ * Il n'y a rien à attraper — un message rouge ne propose aucun geste, il
+ * annonce que ce qu'on vient de faire n'a pas eu lieu. Mais il se lit plus
+ * lentement qu'une réussite : « Échéance confirmée » se reconnaît à la forme,
+ * « L'enregistrement a encore échoué » se lit vraiment, et il faut ensuite un
+ * temps pour comprendre que la phrase parle de la saisie qu'on vient de finir.
+ * Une seconde de plus, qui est la valeur du design.
+ *
+ * **Elle ne s'applique pas à un message rouge qui propose un retour arrière** :
+ * là, c'est le geste qui décide du délai, et il en demande huit — voir
+ * ci-dessus. Le plus long des deux gagne, toujours.
+ */
+const DANGER_LIFETIME_MS = 5200
+
+/**
  * Trois au plus. Au-delà, les plus anciens s'effacent : une pile de messages
  * qui recouvre l'écran ne dit plus rien de ce qui vient de se passer, et cache
  * ce sur quoi on est en train d'agir.
@@ -92,7 +109,12 @@ export const useToasts = create<ToastStore>()((set, get) => {
 
     push(message, tone = 'default', action) {
       const last = get().toasts.at(-1)
-      const lifetime = action === undefined ? LIFETIME_MS : ACTION_LIFETIME_MS
+      const lifetime =
+        action !== undefined
+          ? ACTION_LIFETIME_MS
+          : tone === 'danger'
+            ? DANGER_LIFETIME_MS
+            : LIFETIME_MS
 
       /* Le même message répété se compte au lieu de s'empiler : confirmer dix
          échéances une par une donne « Échéance confirmée · 10 », pas dix

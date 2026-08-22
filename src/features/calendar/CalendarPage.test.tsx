@@ -290,4 +290,43 @@ describe('CalendarPage — la légende', () => {
       screen.queryByRole('button', { name: t.calendar.legendToday }),
     ).not.toBeInTheDocument()
   })
+
+  /* Ce qui remplit un calendrier est une règle, pas une dépense : une dépense
+     ponctuelle ne pose rien sur le mois suivant. L'invitation le dit tant
+     qu'aucune règle n'existe, et retombe sur les trois portes de saisie une
+     fois qu'il y en a une — celles-là ne remplissent qu'un jour. */
+  it('renvoie à la récurrence sur un mois vide de tout document', () => {
+    setup(currentYm())
+
+    expect(screen.getByText(t.calendar.emptyStart)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t.recurrences.add })).toBeInTheDocument()
+  })
+
+  it('ne la propose plus dès qu’une règle existe', () => {
+    useStore.setState({
+      data: makeData({
+        categories: [makeCategory({ id: 'cat-1' })],
+        recurrences: [
+          {
+            id: 'r-1',
+            label: 'Loyer',
+            categoryId: 'cat-1',
+            direction: 'out',
+            amount: eur(50_000),
+            startedOn: '2020-01-01',
+            period: { unit: 'month', every: 1, anchorDay: 5 },
+          },
+        ],
+      }),
+      ym: currentYm(),
+    })
+    render(
+      <MemoryRouter>
+        <CalendarPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText(t.calendar.empty)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.recurrences.add })).not.toBeInTheDocument()
+  })
 })

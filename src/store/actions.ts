@@ -330,6 +330,33 @@ export function replaceRecurrence(id: string, next: Omit<Recurrence, 'id'>): voi
   )
 }
 
+/**
+ * Change le montant d'une règle, et rien d'autre.
+ *
+ * Le geste vient de la liste des récurrences, où l'on glisse une ligne pour
+ * corriger un prix qui a bougé. Il passe par `replaceRecurrence` comme la
+ * reprise complète, mais il relit la règle au moment de la mutation plutôt que
+ * de recevoir un payload : l'appelant n'a qu'un chiffre en main, et lui faire
+ * reconstruire les quinze autres champs lui donnerait l'occasion d'en perdre
+ * un — la date de fin, le support, la note.
+ *
+ * Ce que ça touche, et ce que ça ne touche pas : `syncRecurrenceEntries` refait
+ * les prévues datées **après aujourd'hui** et ne regarde jamais une confirmée.
+ * La coupure n'est donc pas le mois prochain, c'est le jour même — et c'est ce
+ * que le panneau écrit sous le champ.
+ */
+export function setRecurrenceAmount(id: string, amount: Money): void {
+  mutate((data) => {
+    const current = data.recurrences.find((r) => r.id === id)
+    if (current === undefined) return data
+    return updates.syncRecurrenceEntries(
+      updates.replaceRecurrence(data, id, { ...current, amount }),
+      id,
+      makeId,
+    )
+  })
+}
+
 export function stopRecurrence(id: string, on: ISODate = today()): void {
   // `stopRecurrence` retire déjà les prévues postérieures : rien à replanifier.
   mutate((data) => updates.stopRecurrence(data, id, on))

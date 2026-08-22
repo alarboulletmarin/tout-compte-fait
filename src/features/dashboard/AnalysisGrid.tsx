@@ -1,37 +1,70 @@
-import { useIsCommonFilter } from '@/store/selectors'
 import { BentoGrid } from '@/ui/Tile'
 import { BreakdownTile, type ShowFamily } from './BreakdownTile'
 import { CreditsTile } from './CreditsTile'
 import { MemberChargesTile } from './MemberChargesTile'
 import type { Metric } from './MetricInfo'
 import { MemberShareTile } from './MemberShareTile'
-import { SavingTile } from './SavingTile'
-import { SplitTile } from './SplitTile'
+import {
+  analysisPaving,
+  useHasCredits,
+  useHasMemberCharges,
+  useMemberShareSpan,
+} from './composition'
 
 /**
- * Le troisième étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
+ * Le dernier étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
  *
- * Ces six tuiles étaient dans la même grille que le solde, ce qui donnait le
- * même poids à « combien il me reste » et à « qui verse quoi sur le pot commun ».
+ * Ces tuiles étaient dans la même grille que le solde, ce qui donnait le même
+ * poids à « combien il me reste » et à « qui verse quoi sur le pot commun ».
  * Elles répondent pourtant à une question qu'on se pose *après* : le mois est
  * d'abord une situation et une tâche, et seulement ensuite une analyse. Elles
- * passent donc sous « À confirmer », sans qu'aucune ne change de format, de
- * contenu ni de calcul — c'est leur place dans la page qui change, pas elles.
+ * passent donc **sous la liste du mois**, sans qu'aucune ne change de format,
+ * de contenu ni de calcul — c'est leur place dans la page qui change, pas elles.
+ *
+ * **Deux d'entre elles sont montées d'un étage** : la Répartition et la
+ * capacité d'épargne sont deux des cinq tuiles de tête du design, et elles
+ * vivent maintenant dans la grille de la situation. Ce qui reste ici est ce qui
+ * décompose — par famille, par personne, par dette —, et non plus ce qui
+ * compte. La grille y perd son pavage dans la lecture la plus courante : sans
+ * filtre et sans crédit suivi, il ne reste qu'« Où part l'argent », seule sur
+ * ses deux colonnes. C'est le prix du déplacement, et il est plus petit que
+ * celui d'une tuile perdue.
  *
  * L'ordre suit la question, du plus général au plus circonstanciel : où part
  * l'argent, ce qui de ce montant est à soi, ce qu'on peut mettre de côté,
  * comment le foyer se répartit, puis ce qu'on doit encore.
+ *
+ * **Le pavage suit la composition** — voir `SituationGrid`, qui explique
+ * pourquoi une grille doit connaître ses tuiles avant de les rendre. Celle-ci
+ * en a plus qu'elle : quatre tuiles dont trois conditionnelles, et l'une des
+ * trois change de format toute seule selon qu'il y a un report à rattraper. Sept
+ * compositions, donc, et six formats à décider — bien trop pour se lire dans une
+ * expression.
+ *
+ * D'où la table de `composition.ts`. Elle n'est pas réglée au jugé : chaque
+ * ligne est la solution qu'une recherche exhaustive a trouvée, parmi tous les
+ * formats que le contenu de chaque tuile accepte, et c'est `pavage.test.ts` qui
+ * la rejoue en simulant le placement de la grille aux trois paliers.
+ *
+ * `6x1` est le format qui rend l'affaire soluble : sur six colonnes une rangée
+ * se ferme par six, et c'est le seul format plat qui les apporte d'un coup.
+ * Sans lui, cinq des sept compositions laissaient un trou.
+ *
+ * Une composition reste sans solution : filtre par personne, ni report, ni
+ * crédit. Deux anneaux et une lecture plate ne font une rangée pleine à aucun
+ * des trois paliers, et donner deux rangées à la lecture plate rouvrirait à
+ * l'intérieur de la tuile le vide qu'on referme dans la grille (DS §5). Elle
+ * garde donc son moindre mal, mesuré : deux cases sur la tablette et deux au
+ * bureau.
  *
  * **« Charges du mois » vient juste après « Où part l'argent »** : les deux
  * découpent le même total, l'une par famille, l'autre par ce qui se décide
  * seul·e ou à deux. Posées côte à côte, on lit la seconde comme une autre
  * question sur le même chiffre ; séparées, comme deux chiffres sans rapport.
  *
- * Cinq d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
+ * Trois d'entre elles s'effacent d'elles-mêmes selon la lecture — pas de crédit
  * suivi, pas de second membre, pas de filtre, rien à porter. C'est la règle
  * du cahier §4.6 : une tuile qui n'a rien à dire ne dit pas zéro, elle s'en va.
- * `SavingTile` est la seule que la grille masque elle-même, sur le commun, où
- * l'épargne ne rentre pas dans un partage.
  *
  * La régularisation avait la sienne, et elle n'en a plus : elle était déjà
  * comprise — silencieusement — dans le chiffre de tête d'« À verser sur le
@@ -50,16 +83,20 @@ export function AnalysisGrid({
   onShowFamily?: ShowFamily
   onExplain: (metric: Metric) => void
 }) {
-  const common = useIsCommonFilter()
+  const memberCharges = useHasMemberCharges()
+  const share = useMemberShareSpan()
+  const credits = useHasCredits()
+  const spans = analysisPaving(memberCharges, share, credits)
 
   return (
     <BentoGrid>
-      <BreakdownTile {...(onShowFamily === undefined ? {} : { onShowFamily })} />
-      <MemberChargesTile onExplain={onExplain} />
-      {!common && <SavingTile />}
+      <BreakdownTile
+        span={spans.breakdown}
+        {...(onShowFamily === undefined ? {} : { onShowFamily })}
+      />
+      <MemberChargesTile span={spans.memberCharges} onExplain={onExplain} />
       <MemberShareTile />
-      <SplitTile />
-      <CreditsTile />
+      <CreditsTile span={spans.credits} />
     </BentoGrid>
   )
 }

@@ -1,17 +1,12 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AdvanceFormPage } from '@/features/advances/AdvanceFormPage'
 import { AdvancesPage } from '@/features/advances/AdvancesPage'
 import { AboutPage } from '@/features/about/AboutPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
-import { CreditFormPage } from '@/features/credits/CreditFormPage'
 import { CreditsPage } from '@/features/credits/CreditsPage'
-import { EntryPage } from '@/features/month/EntryPage'
+import { FlowsPage } from '@/features/flows/FlowsPage'
 import { MonthPage } from '@/features/month/MonthPage'
 import { MorePage } from '@/features/more/MorePage'
-import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
-import { RecurrenceDetailPage } from '@/features/recurrences/RecurrenceDetailPage'
-import { RecurrenceFormPage } from '@/features/recurrences/RecurrenceFormPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
@@ -27,6 +22,7 @@ import {
   CATEGORIES_PATH,
   DATA_PATH,
   FAMILY_NEW_PATH,
+  FLOWS_PATH,
   LANDING_PATH,
   LEGACY_PROJECTION_PATH,
   LEGACY_SETTINGS_PATH,
@@ -38,7 +34,10 @@ import {
   PRIVACY_PATH,
   PROJECTION_PATH,
   RECURRENCES_PATH,
+  ENTRY_QUICK_PATH,
+  RECURRENCE_FULL_NEW_PATH,
   RECURRENCE_NEW_PATH,
+  REVIEW_PATH,
   SAVINGS_ANALYSIS_PATH,
   SAVINGS_PATH,
   GOALS_PATH,
@@ -74,10 +73,73 @@ import {
  * chaque fois coûterait plus que les quelques kilo-octets gagnés. Le service
  * worker précache de toute façon tous ces morceaux — un écran chargé à la
  * demande reste joignable hors ligne dès la seconde visite.
+ *
+ * **La revue s'est rangée du côté de l'historique, et c'est une mesure qui l'y a
+ * mise.** Elle a d'abord été écrite en dur, au motif qu'elle s'ouvre d'une tuile
+ * du mois — au milieu du geste quotidien — et qu'une attente posée là couperait
+ * la tâche qu'elle sert à finir. L'argument était juste et il reste juste ; ce
+ * qui manquait, c'est **quand** cette attente peut avoir lieu. Ses six vues et
+ * son pavé pèsent 3,2 Kio compressés dans le morceau d'entrée, soit le
+ * dépassement du budget à lui seul — et une première visite ne peut pas ouvrir
+ * de revue : il n'y a ni règle, ni échéance, ni rien à confirmer. Le temps qu'un
+ * mois se remplisse, le service worker a précaché le morceau. L'attente que
+ * l'argument redoutait ne peut donc pas se produire.
+ *
+ * Elle ne s'y range pas seule pour autant : `features/review/ReviewTile` demande
+ * le morceau **dès qu'elle s'affiche**, c'est-à-dire dès qu'il y a une revue à
+ * faire, et non au moment du tap. C'est ce qui rend l'argument caduc plutôt que
+ * simplement improbable, et ça ne coûte rien à qui n'a rien à confirmer.
+ *
+ * Le détail des flux, lui, reste en dur tant qu'il ne pèse rien. La question se
+ * repose quand il portera ses sections, et elle se repose de la même façon : en
+ * mesurant.
  */
 const HistoryPage = lazy(async () => ({
   default: (await import('@/features/history/HistoryPage')).HistoryPage,
 }))
+
+/**
+ * La revue, chargée à la demande et demandée d'avance.
+ *
+ * Le raisonnement est au-dessus. Le même spécificateur que celui de
+ * `ReviewTile.preloadReview` : c'est ce qui garantit un seul morceau pour les
+ * deux, et donc que le préchargement serve bien cette route-ci.
+ */
+const ReviewPage = lazy(async () => ({
+  default: (await import('@/features/review/ReviewPage')).ReviewPage,
+}))
+
+/**
+ * Les questions du premier jour, qu'on ne repose jamais.
+ *
+ * C'est le seul écran de l'app dont on sait qu'il ne sera **pas** rouvert : il
+ * pose le foyer, et `finishOnboarding` referme la porte derrière lui. Le
+ * charger en dur le faisait voyager dans le morceau d'entrée de tous ceux qui
+ * l'ont déjà passé, c'est-à-dire de tout le monde après le premier jour.
+ *
+ * Et il ne coûte pas d'attente à celui qui l'ouvre : on n'y arrive pas au
+ * démarrage — la porte est un bouton de la présentation, elle-même chargée à la
+ * demande —, si bien que le morceau part pendant qu'on lit la page d'avant.
+ */
+const OnboardingPage = lazy(async () => ({
+  default: (await import('@/features/onboarding/OnboardingPage')).OnboardingPage,
+}))
+
+/**
+ * Les cinq écrans qui écrivent une ligne, en un seul morceau.
+ *
+ * Le raisonnement vit dans `features/operations/pages.ts`, avec la liste. En
+ * deux mots : on n'y arrive que par une action délibérée, jamais au démarrage,
+ * et ils partagent le formulaire qui fait leur poids.
+ */
+const opsPages = () => import('@/features/operations/pages')
+const AdvanceFormPage = lazy(async () => ({ default: (await opsPages()).AdvanceFormPage }))
+const CreditFormPage = lazy(async () => ({ default: (await opsPages()).CreditFormPage }))
+const EntryPage = lazy(async () => ({ default: (await opsPages()).EntryPage }))
+const RecurrenceDetailPage = lazy(async () => ({ default: (await opsPages()).RecurrenceDetailPage }))
+const RecurrenceFormPage = lazy(async () => ({ default: (await opsPages()).RecurrenceFormPage }))
+const RecurrenceQuickPage = lazy(async () => ({ default: (await opsPages()).RecurrenceQuickPage }))
+const QuickEntryPage = lazy(async () => ({ default: (await opsPages()).QuickEntryPage }))
 
 /**
  * Les écrans que « Plus » ouvre, en un seul morceau.
@@ -196,10 +258,20 @@ export function AppRoutes() {
         <Routes>
           <Route path="/" element={<MonthPage />} />
           <Route path="/depense" element={<EntryPage />} />
+          {/* Segment fixe avant `:id` : les trois portes de saisie ouvrent la
+              version courte, et le formulaire reste à un doigt en dessous. */}
+          <Route path={ENTRY_QUICK_PATH} element={<QuickEntryPage />} />
           <Route path="/depense/:id" element={<EntryPage />} />
+          {/* Les deux écrans qu'on n'ouvre que depuis une tuile du mois. Ils
+              ne sont dans aucune navigation — voir `REVIEW_PATH` — mais ils ont
+              leur URL, parce qu'ils prennent l'écran entier et qu'en sortir doit
+              être un retour. */}
+          <Route path={REVIEW_PATH} element={<ReviewPage />} />
+          <Route path={FLOWS_PATH} element={<FlowsPage />} />
           <Route path="/calendrier" element={<CalendarPage />} />
           <Route path={RECURRENCES_PATH} element={<RecurrencesPage />} />
-          <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceFormPage />} />
+          <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceQuickPage />} />
+          <Route path={RECURRENCE_FULL_NEW_PATH} element={<RecurrenceFormPage />} />
           <Route path={`${RECURRENCES_PATH}/:id`} element={<RecurrenceDetailPage />} />
           <Route path={`${RECURRENCES_PATH}/:id/modifier`} element={<RecurrenceFormPage />} />
           {/* L'écran s'appelait « Abonnements », et son URL le disait. Un lien

@@ -1,13 +1,28 @@
+import { useState } from 'react'
 import { diffDays, today } from '@/domain/date'
+import { type Money, ZERO, add, money, parseAmount, sub, toAmountInput } from '@/domain/money'
 import { isCostly } from '@/domain/priceHistory'
 import { t } from '@/i18n/strings'
-import { formatDayMonthShort, formatMoney, formatRelativeDays, tpl } from '@/i18n/format'
+import { de, formatDayMonthShort, formatMoney, formatRelativeDays, tpl } from '@/i18n/format'
 import { cn } from '@/lib/cn'
+import { setRecurrenceAmount, undoable } from '@/store/actions'
 import { type RecurrenceRow as Row, useKindOf } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
+import { Button, IconButton } from '@/ui/Button'
 import { Dot } from '@/ui/Dot'
-import { Warning } from '@/ui/Icons'
+import { AmountInput } from '@/ui/Field'
+import { ChevronDown, TrashIcon, Warning } from '@/ui/Icons'
+import { SwipeableListRow } from '@/ui/SwipeableListRow'
 import { useCurrency } from '@/ui/currency'
+
+/**
+ * Le pas du stepper : cinq euros, le même que sur la liste du mois.
+ *
+ * Un geste appris sur un écran vaut sur l'autre, et ce pas-là ne prétend pas
+ * atteindre un montant : il **corrige** un prix qui a bougé de deux euros, là
+ * où le champ en **pose** un. Les deux cohabitent dans le panneau.
+ */
+const STEP = money(500)
 
 /**
  * La seconde ligne : quand ça tombe, et — quand la liste ne le dit pas déjà par
@@ -46,28 +61,166 @@ function showsAnnual(row: Row): boolean {
 }
 
 /**
+ * Le panneau qui change le montant, déplié sous la rangée.
+ *
+ * **Il a exactement la forme de celui de la liste du mois** — stepper à deux
+ * boutons de 44px, champ au milieu, deux verbes dessous, une ligne d'axe qui
+ * dit la conséquence. C'est la règle 4 du handoff : un glissé se comporte
+ * pareil dans la liste du mois et dans les récurrences. Ce qui change est la
+ * conséquence, et elle seule : là-bas on chiffre **une** échéance, ici on
+ * change **la règle**.
+ *
+ * **La note de la maquette était fausse et elle est corrigée.** Elle annonçait
+ * « à partir de septembre ». `syncRecurrenceEntries` ne touche jamais une
+ * confirmée et refait les prévues datées **après aujourd'hui** : la coupure est
+ * le jour même, pas le mois prochain. Un foyer qui corrige son loyer le 3 août
+ * verrait donc l'échéance du 5 août changer, contre ce que la phrase promet.
+ */
+function AmountPanel({
+  recurrence,
+  onClose,
+}: {
+  recurrence: Row['recurrence']
+  onClose: () => void
+}) {
+  /* Le brouillon part du montant en cours : ici, contrairement à une échéance
+     à confirmer, il y en a toujours un — une règle à montant variable n'ouvre
+     pas ce panneau du tout. */
+  const [text, setText] = useState(() =>
+    recurrence.amount === null ? '' : toAmountInput(recurrence.amount),
+  )
+
+  const parsed: Money | null = parseAmount(text)
+  const ready = parsed !== null && parsed > 0
+
+  /* Le pas s'applique à ce qui est affiché, et non au montant enregistré : deux
+     appuis sur « plus » font dix euros de plus, pas cinq deux fois. Et il ne
+     descend pas sous zéro — un montant négatif n'est pas une correction, c'est
+     un sens inversé, et le sens se change sur la fiche. */
+  const step = (up: boolean): void => {
+    const from = parsed ?? recurrence.amount ?? ZERO
+    const next = up ? add(from, STEP) : sub(from, STEP)
+    setText(toAmountInput(next < 0 ? ZERO : next))
+  }
+
+  const save = (): void => {
+    if (parsed === null) return
+    onClose()
+    /* Annulable, comme le demande le design : le retour arrière repose le
+       document d'avant, échéances replanifiées comprises. Le verbe du message
+       est « Rétablir » — « Annuler » est déjà le bouton qui ferme une boîte. */
+    undoable(t.recurrences.updated, () => {
+      setRecurrenceAmount(recurrence.id, parsed)
+    })
+  }
+
+  return (
+    /* `--surface-2` sous la rangée : le panneau appartient à la ligne, il n'est
+       pas une seconde ligne. C'est aussi le fond révélé par le glissé qui
+       l'ouvre — le geste et le panneau sont la même chose, l'un menant à
+       l'autre. */
+    <div className="flex flex-col gap-3 border-t border-border bg-surface-2 px-4 py-4">
+      <div className="flex max-w-sm items-center gap-2">
+        {/* Le signe en texte et non en glyphe : le moins est le vrai — U+2212,
+            comme partout où l'app écrit un montant négatif. C'est déjà le choix
+            du panneau de la liste du mois. */}
+        <IconButton
+          label={t.month.adjustLess}
+          variant="secondary"
+          onClick={() => {
+            step(false)
+          }}
+        >
+          <span aria-hidden="true" className="t-section">
+            −
+          </span>
+        </IconButton>
+        <AmountInput
+          value={text}
+          aria-label={`${t.entry.amount} — ${recurrence.label}`}
+          placeholder="0,00"
+          className="min-w-0 flex-1 px-2"
+          onChange={(event) => {
+            setText(event.target.value)
+          }}
+        />
+        <IconButton
+          label={t.month.adjustMore}
+          variant="secondary"
+          onClick={() => {
+            step(true)
+          }}
+        >
+          <span aria-hidden="true" className="t-section">
+            +
+          </span>
+        </IconButton>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={!ready} onClick={save}>
+          {t.common.save}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onClose}>
+          {t.common.cancel}
+        </Button>
+      </div>
+      {/* Ce que l'enregistrement change, et **jusqu'où** : la maquette écrivait
+          « à partir de septembre », le code dit aujourd'hui. Le champ porte
+          déjà le montant en cours, il n'a pas à être répété ici. */}
+      <span className="t-axis">{t.recurrences.amountAhead}</span>
+    </div>
+  )
+}
+
+/**
  * Une ligne de récurrence : prochaine échéance à gauche, coût mensuel amorti à
  * droite. Un changement de prix se signale ici.
+ *
+ * **Elle se glisse, et les deux gestes sont doublés d'un bouton** (DS §8) :
+ * seuils, bornes, durées et `data-no-swipe` viennent de `SwipeableListRow`, qui
+ * les tient déjà pour la liste du mois — rien n'est redécidé ici.
+ *
+ * — **à droite**, le panneau qui change le montant ;
+ * — **à gauche**, `destructive`, qui **ouvre la question** au lieu de
+ *   supprimer. Le principe 2 du handoff voudrait que l'annulation remplace la
+ *   confirmation ; `ARCHITECTURE.md` écrit l'inverse en toutes lettres — « les
+ *   retirer se déciderait dans le cahier, pas dans le code » — et un retour
+ *   arrière de huit secondes ne dit pas la même chose qu'une question posée
+ *   avant : il rattrape le oui donné trop vite, il ne le remplace pas.
+ *
+ * **La boîte n'est pas montée ici** : le DS §6 refuse une boîte par ligne de
+ * liste, qui en poserait autant dans le DOM. La page n'en tient qu'une, et la
+ * rangée lui dit seulement sur qui elle porte.
+ *
+ * Deux règles n'offrent pas le premier geste. Une règle **à montant variable**
+ * n'a pas de montant à corriger — le chiffre se saisit à chaque échéance — et
+ * une règle **arrêtée** n'a plus d'échéance à venir à réaligner : dans les deux
+ * cas un panneau qui ne changerait rien vaut moins que son absence.
  */
 export function RecurrenceRow({
   row,
   color,
   who,
   onOpen,
+  onRemove,
 }: {
   row: Row
   color: string
   /** À qui elle est, quand la liste ne le dit pas déjà par son axe. */
   who?: string
   onOpen: () => void
+  /** Demande à la page d'ouvrir sa boîte de suppression sur cette règle. */
+  onRemove: () => void
 }) {
   const currency = useCurrency()
   const kindOf = useKindOf()
+  const [editing, setEditing] = useState(false)
   const { recurrence, monthly, annual, priceChange, stopped } = row
   const kind = kindOf(recurrence.categoryId)
   const costly = priceChange !== null && isCostly(priceChange, recurrence.direction, kind)
+  const editable = recurrence.amount !== null && !stopped
 
-  return (
+  const line = (
     <button
       type="button"
       onClick={onOpen}
@@ -116,7 +269,10 @@ export function RecurrenceRow({
           <>
             <Amount value={monthly} direction={recurrence.direction} />
             {annual !== null && showsAnnual(row) && (
-              <span className="t-axis tnum">
+              /* `row-aside` : la lecture cède la place aux deux boutons de
+                 geste sur une tuile étroite — voir `components.css`, où le
+                 calcul est écrit. */
+              <span className="row-aside t-axis tnum">
                 {tpl(t.recurrences.perYear, formatMoney(annual, currency, false))}
               </span>
             )}
@@ -124,5 +280,45 @@ export function RecurrenceRow({
         )}
       </span>
     </button>
+  )
+
+  return (
+    <SwipeableListRow
+      {...(editable
+        ? {
+            right: {
+              label: t.recurrences.changeAmount,
+              buttonLabel: tpl(t.recurrences.changeAmountOf, de(recurrence.label)),
+              /* Un chevron et non un crayon : le bouton ne mène pas à la fiche,
+                 il déplie un panneau sous la rangée — et c'est le glyphe que
+                 l'app pose partout où quelque chose s'ouvre en dessous. */
+              icon: ChevronDown,
+              expanded: editing,
+              onAction: () => {
+                setEditing((open) => !open)
+              },
+            },
+          }
+        : {})}
+      left={{
+        label: t.common.delete,
+        buttonLabel: tpl(t.recurrences.removeOf, de(recurrence.label)),
+        icon: TrashIcon,
+        onAction: onRemove,
+      }}
+      destructive
+      panel={
+        editing ? (
+          <AmountPanel
+            recurrence={recurrence}
+            onClose={() => {
+              setEditing(false)
+            }}
+          />
+        ) : undefined
+      }
+    >
+      {line}
+    </SwipeableListRow>
   )
 }

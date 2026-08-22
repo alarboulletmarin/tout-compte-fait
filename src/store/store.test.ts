@@ -106,6 +106,44 @@ describe('store — échecs de persistance', () => {
     })
   })
 
+  /* Le bandeau décrit un état, le message rouge se rattache au geste : allumé
+     depuis la frappe d'avant, le bandeau ne bouge pas et ne dit donc pas que
+     *celle-ci* vient de se perdre. Le design demande les deux, et il n'y en
+     avait qu'un. */
+  it('annonce en rouge chaque écriture qui échoue', async () => {
+    const { store } = await freshStore({ write: () => Promise.reject(new Error('quota dépassé')) })
+    /* Le module des messages est repris après `vi.resetModules()` : celui
+       qu'importe le store neuf est neuf lui aussi, et l'instance chargée en tête
+       de fichier n'écouterait rien. */
+    const { useToasts } = await import('@/ui/toast')
+
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+
+    expect(useToasts.getState().toasts).toMatchObject([
+      { message: t.storage.writeFailedToast, tone: 'danger', count: 1 },
+    ])
+  })
+
+  /* Une base morte fait rater *toutes* les écritures : sans dédoublonnage, dix
+     frappes empileraient dix messages sur l'écran qu'on est en train de remplir.
+     `useToasts` les compte, et le compte est ce qui rend l'insistance lisible. */
+  it('compte les échecs répétés au lieu de les empiler', async () => {
+    const { store } = await freshStore({ write: () => Promise.reject(new Error('quota dépassé')) })
+    const { useToasts } = await import('@/ui/toast')
+
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+    store.getState().mutate((data) => ({ ...data, household: { ...data.household, name: 'A' } }))
+    await store.getState().flush()
+    store.getState().mutate((data) => ({ ...data, household: { ...data.household, name: 'B' } }))
+    await store.getState().flush()
+
+    expect(useToasts.getState().toasts).toMatchObject([
+      { message: t.storage.writeFailedToast, tone: 'danger', count: 3 },
+    ])
+  })
+
   it('efface le bandeau dès que l’écriture repasse', async () => {
     const write = vi
       .fn<(data: Data, rev: number) => Promise<void>>()
@@ -524,5 +562,70 @@ describe('store — la santé du stockage', () => {
     stop()
 
     expect(write).not.toHaveBeenCalled()
+  })
+})
+
+/* ============================================================================
+ * La revue en session.
+ *
+ * Elle ne touche ni au document ni au disque : ce sont cinq gestes sur un
+ * champ de l'état, et deux garde-fous qui décident quand la file se périme.
+ * D'où un store neuf mais pas d'hydratation — il n'y a rien à hydrater.
+ * ==========================================================================*/
+describe('store — la file de la revue', () => {
+  it('pose la file et remet la lecture sur le foyer', async () => {
+    const { store } = await freshStore()
+    store.setState({ filter: { kind: 'member', memberId: 'm1' } })
+    store.getState().startReview('2026-08', ['e-1', 'e-2'])
+
+    expect(store.getState().review).toEqual({ ym: '2026-08', ids: ['e-1', 'e-2'], index: 0 })
+    /* On confirme une échéance entière, jamais la part de quelqu'un : une file
+       bâtie sur le foyer sous un bilan filtré répondrait à deux questions. */
+    expect(store.getState().filter).toEqual({ kind: 'all' })
+  })
+
+  it('avance jusqu’au bout, puis s’arrête sur la fin', async () => {
+    const { store } = await freshStore()
+    store.getState().startReview('2026-08', ['e-1', 'e-2'])
+    store.getState().advanceReview()
+    store.getState().advanceReview()
+    /* `ids.length` et non `null` : c'est ce qui fait basculer l'écran sur le
+       bilan, qui a besoin de savoir combien de lignes il vient de fermer. */
+    expect(store.getState().review?.index).toBe(2)
+    store.getState().advanceReview()
+    expect(store.getState().review?.index).toBe(2)
+  })
+
+  it('borne le saut direct à la file', async () => {
+    const { store } = await freshStore()
+    store.getState().startReview('2026-08', ['e-1', 'e-2'])
+    store.getState().gotoReviewStep(-3)
+    expect(store.getState().review?.index).toBe(0)
+    store.getState().gotoReviewStep(9)
+    expect(store.getState().review?.index).toBe(2)
+  })
+
+  /* La file porte les échéances d'un mois : la garder en changeant de mois
+     ferait sauter la revue d'un mois à l'autre au premier « suivant ». */
+  it('périme la file au changement de mois', async () => {
+    const { store } = await freshStore()
+    store.getState().startReview(currentYm(), ['e-1'])
+    store.getState().setYm(addMonthsToYm(currentYm(), 1))
+    expect(store.getState().review).toBeNull()
+  })
+
+  it('ne reprend rien quand il n’y a rien à reprendre', async () => {
+    const { store } = await freshStore()
+    store.getState().resumeReview()
+    expect(store.getState().review).toBeNull()
+  })
+
+  /* Le document change entièrement sous la file : ses identifiants ne
+     désignent plus rien. */
+  it('jette la file avec le document qu’elle désignait', async () => {
+    const { store } = await freshStore()
+    store.getState().startReview(currentYm(), ['e-1'])
+    await store.getState().replaceData(makeData())
+    expect(store.getState().review).toBeNull()
   })
 })

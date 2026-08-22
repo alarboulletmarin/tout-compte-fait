@@ -11,7 +11,7 @@ import { cn } from '@/lib/cn'
 import { Button } from '@/ui/Button'
 import { Plus } from '@/ui/Icons'
 import { useHotkeys } from '@/ui/useHotkeys'
-import { entryNewPath, isFocusScreen } from './routes'
+import { entryNewPath, entryQuickPath, isFocusScreen } from './routes'
 
 /**
  * Le geste le plus fréquent de l'app, à portée de pouce et à tout moment.
@@ -92,9 +92,15 @@ export function QuickEntry() {
     void navigate(path)
   }
 
+  /* Les deux premières portes ouvrent la **saisie rapide** — un montant, une
+     pilule, et c'est écrit —, la troisième le formulaire. Ce n'est pas une
+     inconséquence : la question d'un mouvement d'épargne n'est pas « quelle
+     catégorie » mais « où va l'argent », et le support y répond seul en portant
+     à la fois le poste et la personne. Une pilule de catégorie posée à sa place
+     produirait un versement rattaché à rien (voir `QuickEntryPage`). */
   const doors = [
-    { label: t.entry.newOut, path: entryNewPath({ direction: 'out' }), variant: 'secondary' as const },
-    { label: t.entry.newIn, path: entryNewPath({ direction: 'in' }), variant: 'secondary' as const },
+    { label: t.entry.newOut, path: entryQuickPath({ direction: 'out' }), variant: 'secondary' as const },
+    { label: t.entry.newIn, path: entryQuickPath({ direction: 'in' }), variant: 'secondary' as const },
     {
       label: t.entry.newSaving,
       path: entryNewPath({ direction: 'out', saving: true }),

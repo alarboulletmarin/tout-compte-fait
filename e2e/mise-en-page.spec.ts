@@ -17,7 +17,7 @@
  * ==========================================================================*/
 
 import { type Page, expect, test } from '@playwright/test'
-import { SCREENS, loadExample, openApp } from './app'
+import { SCREENS, enterEmpty, loadExample, openApp } from './app'
 
 /** La plus petite largeur que le design system s'engage à tenir. */
 const NARROW = { width: 320, height: 640 }
@@ -74,6 +74,95 @@ async function clipped(page: Page, path: string): Promise<string[]> {
   }, path)
 }
 
+/**
+ * Les cases d'une grille bento que rien ne couvre.
+ *
+ * C'est le mode d'échec propre au bento, et le seul que rien ne signalait :
+ * une tuile qui s'efface — le cahier §4.6 veut qu'une tuile sans rien à dire
+ * s'en aille — laisse un trou dans le pavage, et un trou ne déborde pas, ne
+ * coupe rien, ne lève aucune erreur. Il se voit, c'est tout, sur l'écran qu'on
+ * n'a pas ouvert à la largeur qu'on n'a pas essayée.
+ *
+ * On lit les pistes résolues plutôt que les propriétés déclarées : avec
+ * `grid-auto-flow: row dense`, la place d'une tuile n'est nulle part dans son
+ * style — c'est le navigateur qui la trouve, et la géométrie est le seul endroit
+ * où la réponse existe. `src/features/dashboard/pavage.test.ts` tient l'autre
+ * bout, sur les compositions que le jeu d'exemple ne produit pas.
+ */
+async function hollow(page: Page, path: string): Promise<string[]> {
+  return page.evaluate((where) => {
+    const found: string[] = []
+    for (const grid of document.querySelectorAll('.bento')) {
+      const box = grid.getBoundingClientRect()
+      const style = getComputedStyle(grid)
+      const gap = Number.parseFloat(style.gap) || 0
+      /* Les bornes de chaque piste, en coordonnées de la grille. */
+      const bands = (tracks: number[]): [number, number][] => {
+        const at: [number, number][] = []
+        let edge = 0
+        for (const size of tracks) {
+          at.push([edge, edge + size])
+          edge += size + gap
+        }
+        return at
+      }
+      const columns = bands(style.gridTemplateColumns.split(' ').map(Number.parseFloat))
+      const rows = bands(style.gridTemplateRows.split(' ').map(Number.parseFloat))
+
+      const covered = new Set<string>()
+      for (const tile of grid.children) {
+        const r = tile.getBoundingClientRect()
+        const left = r.left - box.left
+        const top = r.top - box.top
+        columns.forEach(([a, b], column) => {
+          if (b <= left + 1 || a >= left + r.width - 1) return
+          rows.forEach(([u, v], row) => {
+            if (v <= top + 1 || u >= top + r.height - 1) return
+            covered.add(`${String(column)}:${String(row)}`)
+          })
+        })
+      }
+      let empty = 0
+      for (let row = 0; row < rows.length; row += 1)
+        for (let column = 0; column < columns.length; column += 1)
+          if (!covered.has(`${String(column)}:${String(row)}`)) empty += 1
+      if (empty > 0) {
+        const formats = [...grid.children]
+          .map((tile) => [...tile.classList].find((c) => c.startsWith('span-')) ?? '?')
+          .join(' ')
+        found.push(
+          `${where} — une grille de ${String(columns.length)} colonnes laisse ${String(empty)} case(s) vide(s) : ${formats}`,
+        )
+      }
+    }
+    return found
+  }, path)
+}
+
+/**
+ * Les lectures du mois, l'une après l'autre.
+ *
+ * La composition d'une grille dépend du filtre : le pot commun retire le solde,
+ * les revenus et l'épargne ; une personne retire la Répartition et fait
+ * apparaître deux tuiles de membre. Trois compositions par grille, qu'une seule
+ * ouverture de l'écran ne montre jamais.
+ */
+async function eachReading(page: Page, look: (where: string) => Promise<void>): Promise<void> {
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+  const chips = page.locator('header button[role="radio"], header button')
+  const labels = (await chips.allInnerTexts())
+    .map((text) => text.trim())
+    .filter((text) => text !== '' && !/\d/.test(text))
+  for (const label of [...new Set(labels)]) {
+    const chip = page.locator('header button', { hasText: new RegExp(`^${label}$`) }).first()
+    if ((await chip.count()) === 0) continue
+    await chip.click()
+    await page.waitForTimeout(300)
+    await look(`/ (${label})`)
+  }
+}
+
 test.describe('sur un écran de 320 points', () => {
   test.use({ viewport: NARROW })
 
@@ -86,13 +175,22 @@ test.describe('sur un écran de 320 points', () => {
 
     const guilty: string[] = []
     const cut: string[] = []
+    const gaps: string[] = []
     for (const screen of [{ path: '/', heading: /./ }, ...SCREENS]) {
       await page.goto(screen.path)
       await page.waitForLoadState('networkidle')
       const excess = await overflow(page)
       if (excess > 0) guilty.push(`${screen.path} dépasse de ${String(excess)} px`)
       cut.push(...(await clipped(page, screen.path)))
+      gaps.push(...(await hollow(page, screen.path)))
     }
+
+    /* Le pavage du bento dépend du filtre, et une seule ouverture du mois n'en
+       montre qu'une composition sur trois. */
+    await eachReading(page, async (where) => {
+      gaps.push(...(await hollow(page, where)))
+      cut.push(...(await clipped(page, where)))
+    })
 
     /* La simulation a deux modes, deux vues et trois feuilles, et la boucle
        ci-dessus n'ouvre que le mode simple et sa figure : le tableau — six
@@ -116,6 +214,7 @@ test.describe('sur un écran de 320 points', () => {
 
     expect(guilty).toEqual([])
     expect(cut).toEqual([])
+    expect(gaps).toEqual([])
   })
 
   /* La barre d'onglets porte une fente de 64px en son milieu, pour le disque de
@@ -232,6 +331,7 @@ for (const size of WIDE) {
       const guilty: string[] = []
       const cut: string[] = []
       const lonely: string[] = []
+      const gaps: string[] = []
       for (const screen of [{ path: '/', heading: /./ }, ...SCREENS]) {
         await page.goto(screen.path)
         await page.waitForLoadState('networkidle')
@@ -239,11 +339,162 @@ for (const size of WIDE) {
         if (excess > 0) guilty.push(`${screen.path} dépasse de ${String(excess)} px`)
         cut.push(...(await clipped(page, screen.path)))
         lonely.push(...(await lonelyGrid(page, screen.path)))
+        gaps.push(...(await hollow(page, screen.path)))
+      }
+
+      /* Les trois lectures du mois, où le pavage se joue vraiment : c'est en
+         retirant des tuiles qu'une grille perd son pavage, et c'est le filtre
+         qui en retire. */
+      await eachReading(page, async (where) => {
+        gaps.push(...(await hollow(page, where)))
+        cut.push(...(await clipped(page, where)))
+      })
+
+      expect(guilty).toEqual([])
+      expect(cut).toEqual([])
+      expect(lonely).toEqual([])
+      expect(gaps).toEqual([])
+    })
+  })
+}
+
+/* ----------------------------------------------------------------------------
+ * Les deux écrans d'avant le document.
+ *
+ * Ils échappaient à tout ce qui précède, et pour une raison mécanique : la
+ * boucle ci-dessus charge le jeu d'exemple avant d'ouvrir quoi que ce soit, or
+ * ces deux-là ne s'affichent qu'avant qu'un document existe — la présentation
+ * change de boutons, et les questions ne sont plus routées du tout. Ils sont
+ * pourtant les seuls que voit quelqu'un qui arrive pour la première fois, et ils
+ * portent ce qu'aucun autre ne porte à cette largeur : deux colonnes dont la
+ * droite est plafonnée à 440px, trois tuiles de démonstration, un pavé numérique
+ * et un chiffre héros.
+ *
+ * La file des questions se parcourt vraiment, carte par carte : la première ne
+ * dit rien de la hauteur d'un pavé sur un écran de 320 points, ni de celle du
+ * récapitulatif.
+ * --------------------------------------------------------------------------*/
+for (const size of [{ name: 'téléphone', ...NARROW }, ...WIDE]) {
+  test.describe(`avant le document, sur un écran de ${String(size.width)} points`, () => {
+    test.use({ viewport: { width: size.width, height: size.height } })
+
+    test('ne déborde, ne coupe rien et ne laisse pas de colonne vide', async ({ page }) => {
+      await openApp(page)
+
+      const guilty: string[] = []
+      const cut: string[] = []
+      const lonely: string[] = []
+
+      const measure = async (where: string): Promise<void> => {
+        const excess = await overflow(page)
+        if (excess > 0) guilty.push(`${where} dépasse de ${String(excess)} px`)
+        cut.push(...(await clipped(page, where)))
+        lonely.push(...(await lonelyGrid(page, where)))
+      }
+
+      await page.goto('/bienvenue')
+      await page.waitForLoadState('networkidle')
+      /* La page arrive par `import()` : sans cette attente, on mesurerait la
+         coquille vide, qui ne déborde jamais. */
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await measure('/bienvenue')
+
+      await page.goto('/demarrer')
+      await page.waitForLoadState('networkidle')
+      await expect(page.getByRole('radiogroup')).toBeVisible()
+      /* Six cartes en solo : le foyer, un revenu, le logement, les autres
+         charges, le point de départ, le récapitulatif. « Plus tard » les
+         traverse sans rien saisir, ce qui est exactement le parcours qu'on veut
+         mesurer — les cartes vides sont les plus hautes, puisque leurs états
+         vides prennent la place que les données prendraient. */
+      for (let card = 1; card <= 6; card += 1) {
+        await measure(`/demarrer (carte ${String(card)})`)
+        if (card < 6) await page.getByRole('button', { name: 'Plus tard' }).click()
       }
 
       expect(guilty).toEqual([])
       expect(cut).toEqual([])
       expect(lonely).toEqual([])
+    })
+  })
+}
+
+/* ----------------------------------------------------------------------------
+ * Le document vide.
+ *
+ * Aucun scénario ne l'ouvrait : tous chargent le jeu d'exemple, qui est le
+ * contraire de ce qu'on mesure ici. Un écran vide n'a ni tuile à couper ni liste
+ * à faire déborder — et c'est précisément pour ça qu'il n'était jamais regardé.
+ *
+ * Ce qu'on lui demande est d'une autre nature : **le geste qu'il propose doit
+ * être sous les yeux**. Un état vide est une invitation (cahier §4.6), et une
+ * invitation qu'il faut aller chercher en défilant n'en est pas une. Le
+ * calendrier l'a montré — sa grille fait la hauteur d'un mois, et l'invitation
+ * tombait dessous aux deux formats.
+ * --------------------------------------------------------------------------*/
+const BARE: string[] = [
+  '/',
+  '/calendrier',
+  '/historique',
+  '/recurrences',
+  '/epargne',
+  '/epargne/supports',
+  '/credits',
+  '/avances',
+  '/repartition',
+  '/flux',
+]
+
+for (const size of [{ name: 'téléphone', ...NARROW }, ...WIDE]) {
+  test.describe(`sur un document vide, écran de ${String(size.width)} points`, () => {
+    test.use({ viewport: { width: size.width, height: size.height } })
+
+    test('offre son geste sans qu’il faille défiler, et ne coupe rien', async ({ page }) => {
+      await openApp(page)
+      await enterEmpty(page)
+
+      const guilty: string[] = []
+      const cut: string[] = []
+      const buried: string[] = []
+      /* Combien d'écrans ont vraiment montré une invitation. Sans ce compte, un
+         scénario qui mesurerait la page de présentation à la place de l'app
+         resterait vert : il ne trouverait aucune invitation, donc aucun
+         reproche. C'est arrivé. */
+      let seen = 0
+      for (const path of BARE) {
+        await page.goto(path)
+        await page.waitForLoadState('networkidle')
+        expect(new URL(page.url()).pathname, 'l’app doit être entrée').not.toBe('/bienvenue')
+        const excess = await overflow(page)
+        if (excess > 0) guilty.push(`${path} dépasse de ${String(excess)} px`)
+        cut.push(...(await clipped(page, path)))
+
+        /* Ce que l'écran vide **offre** doit tenir dans la fenêtre, en entier,
+           sans qu'on l'ait fait défiler : c'est `[data-empty]`, la rangée que
+           `EmptyState` et `MonthEmptyTile` marquent eux-mêmes. On ne cherche pas
+           « le premier bouton de la page » — une grille de calendrier porte une
+           case cliquable par jour, et la première est en haut quoi qu'il
+           arrive : la mesure resterait verte avec l'invitation enterrée
+           dessous, ce qu'elle a fait avant qu'on la corrige. */
+        const offered = await page.evaluate(() => {
+          const row = document.querySelector('main [data-empty]')
+          return row === null ? null : Math.round(row.getBoundingClientRect().bottom)
+        })
+        if (offered !== null) seen += 1
+        if (offered !== null && offered > size.height) {
+          buried.push(
+            `${path} — ce qu’il offre finit à ${String(offered)} px, hors des ${String(size.height)}`,
+          )
+        }
+      }
+
+      expect(guilty).toEqual([])
+      expect(cut).toEqual([])
+      expect(buried).toEqual([])
+      /* Le mois, le calendrier, les récurrences, les crédits, les avances et le
+         détail en offrent un ; l'historique, l'épargne et la répartition disent
+         seulement pourquoi ils sont vides. */
+      expect(seen).toBeGreaterThanOrEqual(5)
     })
   })
 }

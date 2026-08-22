@@ -7,6 +7,7 @@ import { useApplyAppearance } from '@/theme/useTheme'
 import { Toaster } from '@/ui/Toaster'
 import { CurrencyContext } from '@/ui/currency'
 import { BootScreen } from './BootScreen'
+import { ScrollMemory } from './ScrollMemory'
 import { PrivacyNotice } from './PrivacyNotice'
 import { AppRoutes, OnboardingRoutes } from './Routes'
 import { LANDING_PATH } from './routes'
@@ -62,6 +63,10 @@ export function App() {
   return (
     <CurrencyContext value={currency}>
       <BrowserRouter>
+        {/* Au-dessus de la `key` de langue, et pour la même raison que le
+            routeur : sa mémoire des positions ne doit pas se perdre quand
+            l'arbre se remonte. */}
+        <ScrollMemory />
         {/* Changer de langue remonte tout ce qui est en dessous.
 
             Les chaînes sont lues sur une liaison de module (`i18n/strings.ts`),

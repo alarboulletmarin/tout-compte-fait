@@ -2,8 +2,15 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
-import { ADVANCE_NEW_PATH, RECURRENCES_PATH } from '@/app/routes'
-import { makeAdvance, makeCategory, makeData, makeFamily, makeMember } from '@/domain/fixtures'
+import { ADVANCE_NEW_PATH, RECURRENCES_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
+import {
+  makeAdvance,
+  makeCategory,
+  makeData,
+  makeFamily,
+  makeMember,
+  makeSavingSupport,
+} from '@/domain/fixtures'
 import { t } from '@/i18n/strings'
 import { useStore } from '@/store/store'
 import { AdvancesPage } from './AdvancesPage'
@@ -15,7 +22,12 @@ function CurrentUrl() {
   return <span data-testid="url">{pathname}</span>
 }
 
-function renderPage(advances: ReturnType<typeof makeAdvance>[]): void {
+/* Un support d'épargne par défaut : c'est ce que le formulaire d'une avance
+   exige, et l'écran change d'invitation quand il n'y en a aucun. */
+function renderPage(
+  advances: ReturnType<typeof makeAdvance>[],
+  { withSupport = true }: { withSupport?: boolean } = {},
+): void {
   useStore.setState({
     data: makeData({
       household: { name: 'Maison', members: [makeMember({ id: 'm1', name: 'Alix' })] },
@@ -23,6 +35,7 @@ function renderPage(advances: ReturnType<typeof makeAdvance>[]): void {
       categories: [
         makeCategory({ id: 'car-insurance', label: 'Assurance véhicule', familyId: 'f-charge' }),
       ],
+      savingSupports: withSupport ? [makeSavingSupport({ id: 's1' })] : [],
       advances,
     }),
   })
@@ -82,5 +95,18 @@ describe('AdvancesPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: t.advances.add }))
     expect(screen.getByTestId('url')).toHaveTextContent(ADVANCE_NEW_PATH)
+  })
+
+  /* Principe 4 : la phrase d'un vide dépend de sa cause. Sans support
+     d'épargne, le formulaire d'une avance ne peut pas être fini — il en exige
+     un —, et « Ajoute la première » menait donc à une impasse. */
+  it('renvoie au support d’épargne quand il n’y en a aucun', async () => {
+    renderPage([], { withSupport: false })
+
+    expect(screen.getByText(t.advances.emptyNoSupport)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t.advances.add })).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: t.savings.supportAdd }))
+    expect(screen.getByTestId('url')).toHaveTextContent(SUPPORT_NEW_PATH)
   })
 })

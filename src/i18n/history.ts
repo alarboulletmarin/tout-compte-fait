@@ -26,11 +26,35 @@ const fr = {
      montre. La fenêtre, elle, se dit à côté : deux étiquettes empilées
      n'étaient qu'une seule information écrite deux fois. */
   evolution: 'Évolution',
-  trailing: 'Douze derniers mois',
-  /* Les deux bornes de la fenêtre, pour le nom accessible du graphique : elle
-     s'arrête au mois courant, quoi qu'on regarde ailleurs dans l'app. */
+  /* Les deux bornes de la fenêtre, pour le nom accessible du graphique et pour
+     la lire à l'œil : elle s'arrête au mois courant, quoi qu'on regarde
+     ailleurs dans l'app. Elle a remplacé « Douze derniers mois », qui devenait
+     faux dès qu'on demandait six. */
   trailingRange: 'de %s à %s',
   trailingEmpty: 'Pas encore assez de données pour tracer une courbe.',
+  /* La fenêtre, et les deux seules qui répondent à quelque chose : six mois est
+     la saison — de quoi savoir si le mois qu'on ferme sort de l'ordinaire —,
+     douze est l'année, où chaque dépense annuelle a eu lieu une fois. */
+  spanLabel: 'Fenêtre',
+  span6: '6 mois',
+  span12: '12 mois',
+  spanCurrent: 'en cours',
+  /* Ce que la barre d'une rangée dit en toutes lettres : une couleur ne porte
+     jamais seule ce qu'elle signifie (DS §2.3). La comparaison est à la moyenne
+     de la fenêtre, c'est-à-dire au chiffre héros de la tuile juste au-dessus —
+     et non « au prévu », qui vaut le réalisé au centime sur un mois derrière
+     soi et n'aurait donc rien distingué. */
+  spanAbove: '%s au-dessus de la moyenne',
+  spanBelow: '%s en dessous de la moyenne',
+  /* Le chiffre qui résume la fenêtre. Les mois vides n'y comptent pas : un mois
+     sans ligne n'est pas un mois à zéro, et le compter ferait baisser la
+     moyenne d'un foyer qui vient d'installer l'app. */
+  average: 'Solde moyen',
+  averageOn: 'sur %s mois avec des lignes',
+  cumulated: 'Cumulé',
+  widest: 'Le plus large',
+  tightest: 'Le plus serré',
+  monthByMonth: 'Mois par mois',
   legendIn: 'Entrées',
   legendOut: 'Sorties',
   legendBalance: 'Solde',

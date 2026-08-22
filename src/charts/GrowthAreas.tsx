@@ -251,7 +251,11 @@ export function GrowthAreas({
                 className={cn(
                   'flex min-h-11 min-w-0 cursor-pointer flex-col justify-center gap-0.5 rounded-input px-2 -mx-2 text-left',
                   'transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2',
-                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                  /* Aucune classe de focus : `base.css` donne déjà son anneau à
+                     tout `:focus-visible`, et celle qui traînait ici —
+                     `focus-visible:outline-focus` — n'avait aucune règle en
+                     face. Elle ne peignait rien, et laissait croire que cette
+                     légende avait un focus à elle. */
                   'disabled:cursor-default disabled:hover:bg-transparent',
                   !on && 'opacity-45',
                 )}

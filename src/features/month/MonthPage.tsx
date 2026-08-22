@@ -1,21 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCE_NEW_PATH, entryNewPath, entryPath } from '@/app/routes'
+import { RECURRENCE_NEW_PATH, entryNewPath, entryPath, entryQuickPath } from '@/app/routes'
+import { currentYm } from '@/domain/date'
 import { AnalysisGrid } from '@/features/dashboard/AnalysisGrid'
 import { type Metric, MetricInfo } from '@/features/dashboard/MetricInfo'
 import { SituationGrid } from '@/features/dashboard/SituationGrid'
 import { SituationSection } from '@/features/dashboard/SituationSection'
 import { UpcomingSection } from '@/features/dashboard/UpcomingSection'
+import { ReviewTile } from '@/features/review/ReviewTile'
 import { t } from '@/i18n/strings'
-import { useScopedMonthEntries } from '@/store/selectors'
+import {
+  useCurrentYm,
+  useHasAnyData,
+  useIsCurrentMonth,
+  useMonthFilter,
+  useReviewQueueIds,
+  useScopedMonthEntries,
+} from '@/store/selectors'
 import { useStore } from '@/store/store'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
 import { Plus } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { EntriesSection, type NatureFilter } from './EntriesSection'
-import { PendingSection } from './PendingSection'
+import { MonthDoneTile } from './MonthDoneTile'
+import { MonthEmptyTile } from './MonthEmptyTile'
 
 export function MonthPage() {
   /* Le mois d'un membre n'est pas vide parce qu'il n'a rien saisi à son nom :
@@ -25,32 +35,31 @@ export function MonthPage() {
      aucune récurrence, c'est un foyer qui n'a pas encore démarré, et le geste
      qui le démarre n'est pas une dépense. Voir l'état vide plus bas. */
   const hasRecurrence = useStore((s) => s.data.recurrences.length > 0)
+  /* « Ni ligne ni récurrence », sur le document entier : c'est l'état d'avant
+     le premier geste, et il ne se confond pas avec un mois sans ligne. */
+  const hasAnyData = useHasAnyData()
+  const isCurrent = useIsCurrentMonth()
+  const ym = useCurrentYm()
+  const filter = useMonthFilter()
+  /* Ce qui attend d'être confirmé sur le foyer entier, filtre ignoré : c'est le
+     compte de la revue, et c'est lui qui décide entre la porte de la tâche et
+     la tuile qui dit qu'il n'y en a plus. */
+  const waiting = useReviewQueueIds().length
   const navigate = useNavigate()
 
-  /* La nature montrée se pilote de deux endroits — les pilules de la liste, et
-     les deux tuiles de flux. Elle vit donc ici, entre les deux. L'axe, lui, ne
-     se pilote que de la liste et y reste : une tuile filtre ce qu'on voit, elle
-     ne range pas la liste autrement que l'utilisateur l'a rangée. */
+  /* La nature montrée se pilote depuis les pilules de la liste, et l'axe aussi.
+     Elle vit ici parce que « Où part l'argent » la pose en même temps que sa
+     famille : une famille relève d'une seule nature, et deux commandes qui se
+     contrediraient ne se comprennent pas. */
   const [nature, setNature] = useState<NatureFilter>(null)
-  /* Le filtre venu de « Où part l'argent ». Il vit ici pour la même raison que
-     la nature : il se pose depuis une tuile et se retire depuis la liste. */
+  /* Le filtre venu de « Où part l'argent ». Il se pose depuis une tuile et se
+     retire depuis la liste. */
   const [family, setFamily] = useState<string | null>(null)
   const [focus, setFocus] = useState(0)
-  /* La même mécanique pour « À confirmer », et pour la même raison : la tuile de
-     suivi désigne une section qui vit plus bas sur cette page. Un compteur
-     plutôt qu'un drapeau — sinon redemander la section après avoir fait défiler
-     ne changerait aucun état, donc ne défilerait pas. */
-  const [pendingFocus, setPendingFocus] = useState(0)
   /* La feuille d'explication vit ici : la tuile du solde l'ouvre depuis la
      grille, les deux rangées de la situation depuis la section d'en dessous.
      Une par appelant en monterait deux dans le DOM pour une seule à l'écran. */
   const [metric, setMetric] = useState<Metric | null>(null)
-
-  const showNature = (value: 'expense' | 'income'): void => {
-    setNature(value)
-    setFamily(null)
-    setFocus((previous) => previous + 1)
-  }
 
   /* Une famille de « Où part l'argent » relève d'une seule nature, et l'anneau
      ne compte que charges et crédits : la pilule suit, sinon le sous-total de
@@ -69,12 +78,17 @@ export function MonthPage() {
     setFamily(null)
   }
 
-  const showPending = (): void => {
-    setPendingFocus((previous) => previous + 1)
+  /* Un compteur et non un drapeau : redemander la liste après avoir fait
+     défiler ne changerait aucun état, donc ne défilerait pas. */
+  const showEntries = (): void => {
+    setFocus((previous) => previous + 1)
   }
 
+  /* La même porte qu'au doigt : le bouton flottant n'existe que sous 1024px,
+     cette rangée le remplace au-dessus, et « une porte par largeur et pas
+     deux » (DS §6) vaut aussi pour ce qu'elle ouvre. */
   const create = (direction: 'in' | 'out'): void => {
-    void navigate(entryNewPath({ direction }))
+    void navigate(entryQuickPath({ direction }))
   }
 
   /* Une troisième porte, parce que l'épargne se saisissait par « Dépense » :
@@ -103,8 +117,12 @@ export function MonthPage() {
           partout — y compris une fois la page défilée, et sur un mois vide, où
           cette rangée-ci n'existe pas. Les garder toutes les deux ferait deux
           fois les mêmes trois boutons sur le même écran, ce qui ne fait pas
-          deux occasions. */}
-      {!isEmpty && (
+          deux occasions.
+
+          Sur un autre mois que celui qu'on vit, elles s'en vont avec le reste
+          de ce qui écrit : on y saisit par la fiche d'une ligne, jamais en
+          passant. */}
+      {!isEmpty && isCurrent && (
         <div className="mb-4 hidden flex-wrap items-center gap-2 lg:flex">
           <Button
             variant="secondary"
@@ -132,19 +150,20 @@ export function MonthPage() {
         </div>
       )}
 
-      {/* Le mois vide d'un foyer sans aucune récurrence conduisait au mauvais
-          geste : « Ajoute ta première dépense » n'amorce aucune prévision,
-          alors que toute la thèse de l'app est qu'on écrit une fois ce qui
-          revient. La porte des récurrences passe donc devant tant qu'il n'y en
-          a aucune — après, le mois vide n'est plus un problème d'amorçage et
-          les deux portes de saisie reprennent leur rang.
-
-          Les trois restent offertes dans les deux cas : au-delà de 1024px, la
-          rangée en flux est masquée sur un mois vide, et cet état-ci est alors
-          la seule porte de saisie de l'écran. */}
-      {isEmpty ? (
+      {/* Trois états, et le premier n'est pas celui du mois mais celui du
+          document : sans une ligne ni une règle, il n'y a pas de situation à
+          montrer, et le bento comme la liste s'effacent derrière le seul geste
+          qui amorce quoi que ce soit. */}
+      {!hasAnyData ? (
+        <MonthEmptyTile />
+      ) : isEmpty ? (
+        /* Le mois d'un document qui, lui, n'est pas vide : une règle existe
+            mais rien ne tombe ici — un mois d'avant la première échéance, ou un
+            filtre qui ne laisse rien. Les trois portes restent offertes : à
+            partir de 1024px la rangée en flux est masquée sur un mois vide, et
+            cet état-ci est alors la seule porte de saisie de l'écran. */
         <EmptyState message={hasRecurrence ? t.month.empty : t.month.emptyStart}>
-          <div className="flex flex-wrap justify-center gap-2">
+          <>
             {!hasRecurrence && (
               <Button
                 onClick={() => {
@@ -170,7 +189,7 @@ export function MonthPage() {
             >
               {t.entry.addIn}
             </Button>
-          </div>
+          </>
         </EmptyState>
       ) : (
         /* **Trois questions, dans l'ordre où on se les pose**, et cet ordre est
@@ -178,21 +197,21 @@ export function MonthPage() {
 
              1. où j'en suis — la grille du solde, puis les deux soldes qui
                 projettent le mois ;
-             2. ce que j'ai à faire — les échéances à confirmer ;
-             3. pourquoi — la grille analytique, ce qui tombe bientôt, et le
-                détail où l'on entre.
+             2. ce que j'ai à faire — la revue, puis les lignes du mois, où
+                chacune se confirme d'un glissé ;
+             3. pourquoi — la grille analytique et ce qui tombe bientôt.
 
            Tout était déjà là, dans le désordre. La page montrait d'abord neuf
            tuiles — c'est-à-dire toutes les questions du mois avec le même poids
            —, puis deux sections, et seulement ensuite la seule chose qui demande
            un geste. Mesuré sur un téléphone, « À confirmer » commençait à
            ~1 290px du haut, ~1 600px avec deux membres et un crédit : deux
-           écrans de défilement pour trouver sa tâche du jour. Elle en est
-           maintenant à moins d'un.
+           écrans de défilement pour trouver sa tâche du jour.
 
-           Aucune section n'a disparu, aucun calcul n'a bougé : ce sont les mêmes
-           composants, dans un autre ordre, et une grille coupée en deux là où la
-           narration se coupe.
+           **La liste est remontée devant l'analyse**, et c'est le seul
+           changement d'ordre de cette étape : elle porte maintenant le geste —
+           une échéance s'y confirme sans quitter l'écran —, donc elle appartient
+           à l'étage de la tâche, pas à celui du détail où l'on entre.
 
            **Tout est à la largeur de la page, sections comprises.** Elles
            étaient bornées à 768px pendant que les deux bentos prenaient les 992
@@ -208,29 +227,43 @@ export function MonthPage() {
            prête. Ce qui ne se négocie pas, c'est le bord : un écran n'en a
            qu'un. */
         <div className="flex flex-col gap-4">
-          <SituationGrid
-            onShowNature={showNature}
-            onShowPending={showPending}
-            onExplain={setMetric}
-          />
+          {/* Un autre mois se lit, il ne s'écrit pas — et il le dit avant tout
+              le reste, sinon on cherche la revue qui n'y est pas. Le retour au
+              mois courant n'est pas répété ici : le bloc titre de l'en-tête le
+              porte déjà, et deux affordances pour un même geste valent moins
+              qu'une. */}
+          {!isCurrent && (
+            <p className="t-axis">{ym < currentYm() ? t.month.pastNote : t.month.aheadNote}</p>
+          )}
+
+          <SituationGrid onShowEntries={showEntries} onExplain={setMetric} />
           <div className="flex flex-col gap-4">
             <SituationSection onExplain={setMetric} />
-            <PendingSection focus={pendingFocus} />
-          </div>
-          <AnalysisGrid onShowFamily={showFamily} onExplain={setMetric} />
-          <div className="flex flex-col gap-4">
-            <UpcomingSection />
+            {/* La porte de la revue ouvre l'étage de la tâche, juste avant la
+                liste qui l'énumère. Elle n'est pas dans la grille : c'est un
+                geste, pas une lecture, et la grille répond à « où j'en suis ».
+                Quand il ne reste rien à confirmer, elle cède la place à la
+                tuile qui le dit — jamais les deux, et c'est ce qui garde une
+                seule tuile accentuée par écran. Sous un filtre, aucune des
+                deux : la revue est une tâche du foyer (voir `ReviewTile`). */}
+            <ReviewTile />
+            {isCurrent && waiting === 0 && filter.kind === 'all' && (
+              <MonthDoneTile onShowEntries={showEntries} />
+            )}
             <EntriesSection
               nature={nature}
               onNature={chooseNature}
               family={family}
               onFamily={setFamily}
               focus={focus}
+              readOnly={!isCurrent}
               onOpen={(entry) => {
                 void navigate(entryPath(entry.id))
               }}
             />
           </div>
+          <AnalysisGrid onShowFamily={showFamily} onExplain={setMetric} />
+          <UpcomingSection />
         </div>
       )}
 

@@ -92,11 +92,20 @@ export function ImportControl({
           void replaceData(pending.data)
             .then(() => {
               setPending(null)
-              toast(pending.migrated ? t.settings.importMigrated : t.settings.imported)
+              /* Et seulement si l'écriture a abouti. `replaceData` ne rejette
+                 pas quand elle rate — elle allume le bandeau et pousse son
+                 message rouge, puis rend normalement —, si bien que le `.catch`
+                 d'en dessous ne voyait jamais ce cas-là : « Importé » s'affichait
+                 en vert sur un document qui n'avait pas atteint le disque. On
+                 relit donc l'état plutôt que d'attendre une exception qui ne
+                 vient pas. */
+              if (useStore.getState().error === null) {
+                toast(pending.migrated ? t.settings.importMigrated : t.settings.imported)
+              }
             })
-            // Sans ce filet, un échec d'écriture laissait le toast de réussite
-            // s'afficher quand même : on annonçait comme rangé ce qui n'était
-            // nulle part.
+            /* Le filet du reste : tout ce qui casse **avant** l'écriture — la
+               base qu'on n'arrive pas à ouvrir, un miroir de préférences qui
+               lève. Ces cas-là rejettent vraiment. */
             .catch(() => {
               setPending(null)
               toast(t.settings.importFailed, 'danger')

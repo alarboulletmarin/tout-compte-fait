@@ -69,6 +69,11 @@
   .inset-0 { inset: 0; }
   .inset-x-0 { inset-inline: 0; }
   .inset-x-4 { inset-inline: 16px; }
+  /* Toute la hauteur du parent, et lui seul la donne : c'est ce qui fait qu'un
+     fond révélé sous une rangée mesure la rangée, et non son propre texte. Sans
+     règle, `top` restait à `auto` et le fond du glissé se réduisait à la ligne
+     de son libellé — treize pixels de haut sous une rangée de cinquante-six. */
+  .inset-y-0 { inset-block: 0; }
   .top-0 { top: 0; }
   .top-4 { top: 16px; }
   .top-5 { top: 20px; }
@@ -77,8 +82,8 @@
   .right-4 { right: 16px; }
   .right-5 { right: 20px; }
   .bottom-0 { bottom: 0; }
-  .bottom-16 { bottom: 64px; }
   .bottom-20 { bottom: 80px; }
+  .left-0 { left: 0; }
   .left-1\/2 { left: 50%; }
 
   /* La barre du bas, plus la marge de sécurité du système : ce qui flotte
@@ -88,6 +93,14 @@
   }
   .bottom-\[calc\(var\(--nav-h\)\+env\(safe-area-inset-bottom\)-1\.25rem\)\] {
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) - 1.25rem);
+  }
+
+  /* Le dégagement du toast : la barre d'onglets, plus les 36px dont le disque
+     de saisie la surplombe, plus 16 de gouttière. C'est la mesure de
+     `AppShell`, aux mêmes tokens et pour la même raison — un cadre écrit en dur
+     se décalerait le jour où le bouton bouge. */
+  .bottom-\[calc\(var\(--nav-h\)\+3\.25rem\+env\(safe-area-inset-bottom\)\)\] {
+    bottom: calc(var(--nav-h) + 3.25rem + env(safe-area-inset-bottom));
   }
 
   .z-10 { z-index: 10; }
@@ -120,6 +133,9 @@
 
   .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
   .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Le pavé numérique, et lui seul : trois colonnes égales sur les quatre
+     rangées de touches. */
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .grid-cols-subgrid { grid-template-columns: subgrid; }
   .grid-cols-\[auto_1fr_auto\] { grid-template-columns: auto 1fr auto; }
@@ -152,6 +168,7 @@
   .gap-y-1 { row-gap: 4px; }
   .gap-y-1\.5 { row-gap: 6px; }
   .gap-y-2 { row-gap: 8px; }
+  .gap-y-3 { row-gap: 12px; }
 
   /* --- Dimensions -------------------------------------------------------- */
 
@@ -192,7 +209,12 @@
   .min-h-11 { min-height: 44px; }
   .min-h-14 { min-height: 56px; }
   .min-h-dvh { min-height: 100dvh; }
-  .min-h-\[38rem\] { min-height: 38rem; }
+  /* Le corps d'une carte de la revue, qui centre son contenu dedans. Ce sont
+     des hauteurs de contenu et non des gouttières : elles suivent la base de 4
+     comme `h-72`, et non l'échelle d'espacement. 288 tient le chiffre héros,
+     l'étiquette, le libellé et la méta sans que la carte flotte en haut d'un
+     écran vide — c'est le seul écran de l'app dont la carte *est* la page. */
+  .min-h-72 { min-height: 288px; }
 
   .w-2 { width: 8px; }
   .w-2\.5 { width: 10px; }
@@ -223,7 +245,14 @@
   .max-w-48 { max-width: 192px; }
   .max-w-full { max-width: 100%; }
   .max-w-none { max-width: none; }
-  .max-w-\[16ch\] { max-width: 16ch; }
+  /* La mesure d'un paragraphe posé dans une tuile : assez court pour se lire
+     d'un coup d'œil, assez large pour ne pas casser en trois mots par ligne. */
+  .max-w-\[44ch\] { max-width: 44ch; }
+  .max-w-\[18ch\] { max-width: 18ch; }
+  /* La mesure d'un paragraphe d'accroche : plus large qu'un texte de tuile,
+     plus étroit que la prose du bas, parce qu'il est lu debout à côté d'une
+     colonne de tuiles. */
+  .max-w-\[48ch\] { max-width: 48ch; }
   .max-w-\[60\%\] { max-width: 60%; }
   .max-w-prose { max-width: 65ch; }
   .max-w-xs { max-width: var(--container-xs); }
@@ -240,10 +269,6 @@
   /* --- Marges ------------------------------------------------------------ */
 
   .m-0 { margin: 0; }
-  .m-1 { margin: 4px; }
-  .m-2 { margin: 8px; }
-  .m-3 { margin: 12px; }
-  .m-9 { margin: 36px; }
   .mx-auto { margin-inline: auto; }
   .my-auto { margin-block: auto; }
   .-mx-2 { margin-inline: -8px; }
@@ -289,7 +314,6 @@
   .px-4 { padding-inline: 16px; }
   .px-5 { padding-inline: 20px; }
   .px-6 { padding-inline: 24px; }
-  .px-8 { padding-inline: 32px; }
   .py-px { padding-block: 1px; }
   .py-1 { padding-block: 4px; }
   .py-1\.5 { padding-block: 6px; }
@@ -355,6 +379,7 @@
 
   .border { border-width: 1px; }
   .border-t { border-top-width: 1px; }
+  .border-b { border-bottom-width: 1px; }
   .border-l { border-left-width: 1px; }
   .border-collapse { border-collapse: collapse; }
   .border-transparent { border-color: transparent; }
@@ -403,17 +428,15 @@
   .font-medium { font-weight: 500; }
   .font-semibold { font-weight: 600; }
   .text-pretty { text-wrap: pretty; }
-  .text-wrap { text-wrap: wrap; }
   .whitespace-nowrap { white-space: nowrap; }
   .underline { text-decoration-line: underline; }
+  /* Le montant prévu d'une ligne qu'on vient de confirmer autrement : c'est le
+     seul endroit du produit où un chiffre se raye, et c'est une démonstration —
+     le mécanisme « prévu → réel », montré sur la présentation. */
+  .line-through { text-decoration-line: line-through; }
   .underline-offset-2 { text-underline-offset: 2px; }
   .list-disc { list-style-type: disc; }
   .list-none { list-style-type: none; }
-  .ordinal { font-variant-numeric: ordinal; }
-  /* DS §3 — tabular-nums sur tout montant affiché. La classe maison `tnum`
-     fait la même chose ; celle-ci sert aux tableaux qui ne passent pas par
-     `<Amount />`. */
-  .tabular-nums { font-variant-numeric: tabular-nums; }
 
   /* --- Couleur ----------------------------------------------------------- */
 
@@ -431,6 +454,11 @@
   .bg-muted { background-color: var(--text-muted); }
   .bg-accent { background-color: var(--accent); }
   .bg-accent-2 { background-color: var(--accent-2); }
+  /* L'encre d'une tuile accentuée, employée comme remplissage : c'est la seule
+     couleur qui se détache sur du lime, et c'est ce que remplit la barre de
+     progression de la revue. Le sens de §2.3 est respecté — lime reste un fond,
+     et c'est son encre qu'on pose ici, pas l'inverse. */
+  .bg-accent-fg { background-color: var(--accent-fg); }
   .bg-danger { background-color: var(--danger); }
   .bg-danger-fill { background-color: var(--danger-fill); }
   .bg-flow-in { background-color: var(--flow-in); }
@@ -458,7 +486,6 @@
   .-translate-y-1\/2 { translate: 0 -50%; }
   .-rotate-90 { rotate: -90deg; }
   .rotate-45 { rotate: 45deg; }
-  .blur { filter: blur(8px); }
 
   .cursor-default { cursor: default; }
   .cursor-grab { cursor: grab; }
@@ -473,7 +500,6 @@
 
   .visible { visibility: visible; }
   .invisible { visibility: hidden; }
-  .\!visible { visibility: visible !important; }
 
   /* Un conteneur de requête : ce qui est dedans se dimensionne sur lui, pas
      sur la fenêtre. La grille bento s'en sert pour ses chiffres. */
@@ -483,7 +509,6 @@
 
   /* La durée et la courbe par défaut. `--dur` et `--ease` sont les tokens du
      DS §4, et `--dur` tombe à zéro sous `prefers-reduced-motion`. */
-  .transition,
   .transition-colors,
   .transition-opacity,
   .transition-transform,
@@ -496,12 +521,6 @@
     transition-duration: var(--tr-dur, 150ms);
   }
 
-  .transition {
-    transition-property:
-      color, background-color, border-color, outline-color, text-decoration-color, fill,
-      stroke, opacity, box-shadow, transform, translate, scale, rotate, filter, display,
-      content-visibility, overlay, pointer-events;
-  }
   .transition-colors {
     transition-property:
       color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
@@ -584,9 +603,6 @@
   .focus\:px-4:focus { padding-inline: 16px; }
   .focus\:py-2:focus { padding-block: 8px; }
 
-  .focus-visible\:outline-2:focus-visible { outline-width: 2px; outline-style: solid; }
-  .focus-visible\:outline-offset-2:focus-visible { outline-offset: 2px; }
-
   /* L'anneau porté par le parent d'un champ : c'est la rangée entière qui
      s'allume, pas la case de 16px qu'on ne verrait pas. */
   .has-\[\:focus-visible\]\:outline-2:has(:focus-visible) {
@@ -668,7 +684,6 @@
 
   @media (min-width: 640px) {
     .sm\:col-span-1 { grid-column: span 1 / span 1; }
-    .sm\:col-span-2 { grid-column: span 2 / span 2; }
     .sm\:m-auto { margin: auto; }
     .sm\:hidden { display: none; }
     .sm\:max-w-lg { max-width: var(--container-lg); }
@@ -692,13 +707,11 @@
     .md\:bottom-6 { bottom: 24px; }
     .md\:-mx-8 { margin-inline: -32px; }
     .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .md\:p-5 { padding: 20px; }
     .md\:h-96 { height: 384px; }
     .md\:p-6 { padding: 24px; }
     .md\:p-2\! { padding: 8px !important; }
     .md\:px-8 { padding-inline: 32px; }
     .md\:py-12 { padding-block: 48px; }
-    .md\:py-14 { padding-block: 56px; }
     .md\:pt-8 { padding-top: 32px; }
   }
 
@@ -706,11 +719,25 @@
     .lg\:flex { display: flex; }
     .lg\:hidden { display: none; }
     .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* La grille de la revue : la file à gauche, la carte à droite. `.cols`
+       partage à parts égales dès 768px, ce qui donnerait la moitié de l'écran
+       à une liste de libellés et couperait le chiffre héros de la carte. */
+    .lg\:grid-cols-\[320px_1fr\] { grid-template-columns: 320px minmax(0, 1fr); }
+    /* Le bloc d'accroche de la présentation : le texte prend ce qui reste, les
+       tuiles s'arrêtent à 440px. Au-delà, elles deviendraient plus larges que
+       celles du vrai tableau de bord, et la page cesserait de montrer l'app
+       qu'elle prétend montrer. */
+    .lg\:grid-cols-\[1fr_440px\] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+    }
     .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .lg\:grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .lg\:gap-8 { gap: 32px; }
     .lg\:items-start { align-items: flex-start; }
+    .lg\:min-h-90 { min-height: 360px; }
     .lg\:pb-10 { padding-bottom: 40px; }
+    .lg\:bottom-5 { bottom: 20px; }
     /* Au-delà, la barre du bas n'existe plus : la colonne latérale l'a
        remplacée, et la figure récupère sa hauteur. */
   }

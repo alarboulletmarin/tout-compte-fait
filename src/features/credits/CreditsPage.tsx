@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom'
 import { CREDIT_NEW_PATH, creditEditPath } from '@/app/routes'
 import { totalRemaining } from '@/domain/debt'
 import type { DebtStatus } from '@/domain/debt'
+import { sum } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatDate, formatPercent, tpl } from '@/i18n/format'
 import { useCategoryMap, useDebtStatuses } from '@/store/selectors'
+import { AdvancesRow } from '@/features/advances/AdvancesRow'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { EmptyState } from '@/ui/EmptyState'
@@ -12,6 +14,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { CreditsIcon, Plus } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Ring } from '@/ui/Ring'
+import { RowGroup } from '@/ui/RowGroup'
 import { Tile } from '@/ui/Tile'
 
 function plural(n: number): string {
@@ -77,9 +80,45 @@ function DebtRow({ status }: { status: DebtStatus }) {
   )
 }
 
+/**
+ * Les avances, en section à part sous les crédits.
+ *
+ * Elles y sont parce que c'est de l'argent qu'on doit encore, comme un crédit —
+ * et **pas** parce que c'en serait une charge : c'est la seule chose que la
+ * phrase du dessous existe pour dire. Une avance sort de l'épargne et y
+ * retourne ; elle ne pèse sur aucun mois, et aucun total de cet écran ne la
+ * compte.
+ *
+ * Une rangée, et non la liste que le design dessine : `/avances` reste l'écran
+ * des avances — il porte leur création, leur suppression et ses cinq lectures
+ * par fiche —, et il est aussi la destination de la liste des récurrences. Le
+ * doubler ici ferait deux endroits où l'on croirait agir, et retirerait une
+ * destination de la navigation sans que personne l'ait décidé.
+ */
+function AdvancesSection() {
+  return (
+    <section className="flex flex-col gap-2">
+      <Eyebrow className="text-muted">{t.advances.section}</Eyebrow>
+      <RowGroup>
+        <AdvancesRow />
+      </RowGroup>
+      <p className="t-label">{t.advances.notACharge}</p>
+    </section>
+  )
+}
+
 export function CreditsPage() {
   const statuses = useDebtStatuses()
   const navigate = useNavigate()
+
+  /* La part remboursée de l'ensemble : un moins ce qui reste sur ce qui a été
+     emprunté. Elle se prend sur les capitaux et non sur la moyenne des parts —
+     un prêt de 2 000 € remboursé à 90 % ne rattrape pas un prêt de 200 000 € à
+     10 %, et une moyenne le laisserait croire. `Ring` borne lui-même entre 0
+     et 1 ; un capital total nul rendrait un anneau plein, ce qui est juste :
+     il n'y a plus rien à devoir. */
+  const borrowed = sum(statuses.map((status) => status.debt.principal))
+  const repaid = borrowed <= 0 ? 1 : 1 - totalRemaining(statuses) / borrowed
 
   const openCreate = (): void => {
     void navigate(CREDIT_NEW_PATH)
@@ -102,9 +141,33 @@ export function CreditsPage() {
         <EmptyState message={t.credits.empty} actionLabel={t.credits.add} onAction={openCreate} />
       ) : (
         <div className="flex flex-col gap-4">
+          {/* Le chiffre et son anneau, comme sur chaque crédit en dessous. La
+              tuile portait le capital restant seul, dans un format à deux
+              rangées où il tenait sur une : le DS §5 refuse la tuile qui laisse
+              un vide de quarante pixels sous son chiffre pendant que ses
+              voisines portent un anneau, et c'est exactement ce qu'elle
+              faisait.
+
+              La part est celle de l'ensemble — un moins ce qui reste sur ce qui
+              a été emprunté —, calculée sur les mêmes deux nombres que la part
+              d'un crédit isolé (`debtStatus`). Aucun prêt n'y pèse plus que son
+              capital, ce qu'une moyenne des pourcentages aurait fait. */}
           <Tile variant="accent">
             <Eyebrow icon={CreditsIcon}>{t.credits.total}</Eyebrow>
-            <Amount value={totalRemaining(statuses)} size="tile-fit" className="mt-3" />
+            <div className="mt-3 flex items-center gap-4">
+              <Ring
+                size={72}
+                thickness={10}
+                value={repaid}
+                label={tpl(t.credits.progress, formatPercent(repaid))}
+                color="var(--accent-fg)"
+                trackColor="var(--track-on-accent)"
+                className="shrink-0"
+              />
+              <span className="fit-box min-w-0 flex-1">
+                <Amount value={totalRemaining(statuses)} size="hero-fit" />
+              </span>
+            </div>
           </Tile>
 
           {/* Chaque crédit est une carte entière — sa jauge, son capital, son
@@ -121,6 +184,8 @@ export function CreditsPage() {
               <DebtRow key={status.debt.id} status={status} />
             ))}
           </div>
+
+          <AdvancesSection />
         </div>
       )}
     </>

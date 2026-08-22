@@ -1,6 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { MonthFilterChips } from '@/app/MonthHeader'
-import { SAVINGS_ANALYSIS_PATH, SAVINGS_MONTH_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
+import {
+  PEOPLE_PATH,
+  SAVINGS_ANALYSIS_PATH,
+  SAVINGS_MONTH_PATH,
+  SUPPORT_NEW_PATH,
+} from '@/app/routes'
 import { ZERO, add } from '@/domain/money'
 import { savingLeft } from '@/domain/stats'
 import { t } from '@/i18n/strings'
@@ -144,10 +149,20 @@ export function SavingsPage() {
       )}
 
       {nothing ? (
+        /* Deux vides, deux causes, deux gestes — et le premier avait perdu le
+           sien. « Un support est toujours à quelqu'un » se disait sans bouton,
+           dans le seul écran de l'app à énoncer ce manque sans offrir d'y
+           aller, pendant que la répartition et les deux formulaires d'épargne
+           renvoient tous les trois au foyer avec le même libellé. */
         <EmptyState
           message={members.length === 0 ? t.savings.supportsNoMember : t.savings.supportsEmpty}
           {...(members.length === 0
-            ? {}
+            ? {
+                actionLabel: t.split.goToSettings,
+                onAction: () => {
+                  void navigate(PEOPLE_PATH)
+                },
+              }
             : {
                 actionLabel: t.savings.supportAdd,
                 onAction: () => {

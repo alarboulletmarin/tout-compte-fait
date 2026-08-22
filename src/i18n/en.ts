@@ -39,16 +39,11 @@ export const en: Strings = {
     confirm: 'Confirm',
     back: 'Back',
     next: 'Continue',
-    skip: 'Skip',
     all: 'All',
-    none: 'None',
-    today: 'Today',
     optional: 'optional',
     required: 'required',
-    loading: 'Loading',
     yes: 'Yes',
     no: 'No',
-    more: 'Show more',
     less: 'Show less',
     other: 'Other',
     /* « Undo » et non « Cancel », pour la raison que `fr.ts` donne : le mot
@@ -82,8 +77,6 @@ export const en: Strings = {
   direction: {
     in: 'Money in',
     out: 'Money out',
-    inPlural: 'Money in',
-    outPlural: 'Money out',
   },
 
   theme: {
@@ -91,7 +84,6 @@ export const en: Strings = {
     light: 'Light',
     dark: 'Dark',
     system: 'System',
-    toggle: 'Switch theme',
   },
 
   appearance: {
@@ -146,7 +138,6 @@ export const en: Strings = {
     about: 'About',
     landing: 'The tour',
     more: 'More',
-    moreHint: 'The rest of your screens, and the settings.',
     manage: 'Manage',
     organise: 'Organise',
     simulate: 'Simulate',
@@ -160,7 +151,6 @@ export const en: Strings = {
     savingsHint: 'What you can set aside, and where to put it.',
     splitHint: 'Who pays what towards shared costs.',
     creditsHint: 'Your loans in progress and what’s left to repay.',
-    aboutHint: 'What the app does, and what it doesn’t.',
   },
 
   shell: {
@@ -187,17 +177,19 @@ export const en: Strings = {
     prorataMissingMany:
       'Shared costs not split, because the incomes of %s aren’t known: only the lines in their name are counted.',
     prorataOnlyOwn: 'Shared costs not split: only the lines in their name are counted.',
-    thisMonth: 'This month',
     thisMonthTitle: 'Back to %s',
+    returnToShort: 'back to %s',
   },
 
   storage: {
     readFailed: 'Your data could not be read. You can start over or import an export.',
     writeFailed: 'Changes are no longer being saved',
     writeFailedBody:
-      'What you see on screen is intact, but nothing is being written to this device any more. Export now: it’s the only copy that will survive closing the tab.',
+      'What you type stays on screen, but nothing is kept. Private browsing, storage full, or another tab holding the database.',
     writeFailedLabel: 'Save failed',
-    exportNow: 'Export now',
+    writeFailedToast: 'What you just entered wasn’t saved',
+    retry: 'Try again',
+    exportFirst: 'Export first',
 
     durabilityTitle: 'Your data is saved on this device',
     durabilityBody:
@@ -217,7 +209,6 @@ export const en: Strings = {
     otherTabCleared: 'The data was erased from another tab.',
 
     recoverTitle: 'Your data won’t open',
-    recoverImport: 'Import an export',
     recoverImportHint:
       'It’s the only way out that loses nothing. If you have an export file, now is the time.',
     recoverRaw: 'Download the raw copy',
@@ -294,7 +285,6 @@ export const en: Strings = {
 
     currency: 'Currency',
     currencyHint: 'Nothing is converted: only the symbol changes.',
-    aboutLink: 'The project, the code and the licence',
     aboutSummary: 'Version %s · the project, the code, the licence',
 
     household: 'People',
@@ -309,7 +299,6 @@ export const en: Strings = {
     memberName: 'First name',
     memberPlaceholder: 'Alix',
     memberIncome: 'Monthly income',
-    memberRename: '%s’s first name',
     memberRemove: 'Remove %s',
     memberRemoved: '%s has been removed',
     memberRemoveHint: 'Their entries are kept, simply without a label.',
@@ -484,10 +473,7 @@ export const en: Strings = {
     remainingHint: 'available until the next money in',
     remainingNoIncome: 'available until the end of the month',
     remainingSame: 'same horizon as the forecast, so the same amount',
-    breakdown: 'Breakdown',
     upcoming: 'Next payments',
-    inflow: 'Money in',
-    outflow: 'Money out',
     noBreakdown: 'No cost or loan this month.',
     noUpcoming: 'No payment coming up.',
     noUpcomingStart:
@@ -515,7 +501,6 @@ export const en: Strings = {
     creditsRunningMany: '%s loans running',
     showCredits: 'See the detail of the %s',
     showFamily: 'See the lines for %s',
-    noCredits: 'No loan running.',
     split: 'Split',
     splitHint: 'shared costs of the month',
     showSplit: 'See the detail of the split',
@@ -562,7 +547,6 @@ export const en: Strings = {
       },
     },
     srBreakdown: 'Breakdown of costs and loans: %s',
-    empty: 'This month is still empty. Open it, or add an expense.',
   },
 
   calendar: {
@@ -572,6 +556,8 @@ export const en: Strings = {
     someEntries: '%s payments',
     emptyDay: 'Nothing that day.',
     empty: 'No payment this month.',
+    emptyStart:
+      'The month is empty. Write a recurring item: it is what puts payments on the calendar.',
     more: '+%s',
 
     /** Reçoit `de(formatYearMonth(ym))` — en anglais, « of April 2026 ». */
@@ -597,27 +583,39 @@ export const en: Strings = {
   month: {
     title: 'This month',
     toConfirm: 'To confirm',
-    confirmAll: 'Confirm the month',
-    confirmedAll: 'Month confirmed',
     confirmOne: 'Confirm',
     confirmEntry: 'Confirm %s',
-    confirmedOne: 'Payment confirmed',
-    pendingMore: '… and %s more to confirm.',
-    pendingShowAll: 'Show all',
-    toFill: 'to fill in',
-    confirmAllHint: 'Amounts you still have to fill in stay unconfirmed, one by one.',
-    openEntry: 'Edit %s',
+    adjust: 'Adjust',
+    adjustEntry: 'Adjust %s',
+    adjustLess: 'Lower the amount',
+    adjustMore: 'Raise the amount',
+    confirmAmount: 'Confirm this amount',
+    adjustHint: 'planned %s · the gap comes out of what is left to live on',
+    swipeHint:
+      'Swipe a line right to confirm it, left to adjust its amount — or use the two buttons on the row.',
     done: 'Everything is confirmed for this month.',
     unconfirm: 'Put back to confirm',
     unconfirmed: 'Payment put back to confirm',
+    unconfirmEntry: 'Put %s back to confirm',
     unconfirmAll: 'Put the month back to confirm',
     unconfirmAllConfirm:
       'The %s confirmed payments of this month go back to “To confirm”, with their amounts.',
     unconfirmedAll: 'Month put back to confirm',
     entries: 'This month',
+    lineByLine: 'The month, line by line',
     empty: 'Nothing for this month. Add your first expense.',
     emptyStart:
-      'Nothing for this month. Write down once what comes back every month, and it will fill itself in.',
+      'Start with what comes back every month: rent, pay, subscriptions. The following ones will fill themselves in.',
+    nothingYet: 'Nothing yet',
+    monthIsEmpty: 'The month %s is empty',
+    justAnExpense: 'Just an expense',
+    nothingToConfirm: 'Nothing to confirm',
+    upToDate: 'Everything is up to date for %s',
+    upToDateNext: 'Next payment on %s, with %s — no need to come back before.',
+    upToDateNoNext: 'Every line is real, and nothing else is due.',
+    reopenLines: 'Review the lines %s',
+    pastNote: 'closed month · everything here is real, nothing waits to be confirmed',
+    aheadNote: 'month ahead · these amounts are the ones your rules plan for',
     groupBy: 'Group by',
     byDay: 'Day',
     byCategory: 'Category',
@@ -629,9 +627,9 @@ export const en: Strings = {
     showOut: 'Costs',
     showIn: 'Income',
     showSaving: 'Savings',
-    showEmptyOut: 'No cost confirmed this month.',
-    showEmptyIn: 'No income confirmed this month.',
-    showEmptySaving: 'No savings movement confirmed this month.',
+    showEmptyOut: 'No cost this month.',
+    showEmptyIn: 'No income this month.',
+    showEmptySaving: 'No savings movement this month.',
     groupCountOne: '%s line',
     groupCount: '%s lines',
     today: 'today',
@@ -644,13 +642,97 @@ export const en: Strings = {
     dayOf: 'day %s of %s',
   },
 
+  review: {
+    title: 'The review',
+    quit: 'Leave the review',
+    back: 'Back to the month',
+
+    tileTitle: '%s lines to confirm',
+    tileTitleOne: 'One line to confirm',
+    tileBody: 'One at a time, three decisions at most: that was it, another amount, not this month.',
+    resumeAt: 'Pick up at %s of %s',
+    resumeBody: 'The queue is intact, in the same order. Nothing was lost on the way out.',
+    start: 'Start the review',
+    resume: 'Resume the review',
+    restart: 'Start over',
+
+    counter: '%s/%s',
+    counterLong: '%s of %s · %s after this one',
+    counterLongOne: '%s of %s · one after this one',
+    counterLast: '%s of %s · the last one',
+    goTo: 'Go to %s',
+
+    kindOut: 'Cost',
+    kindIn: 'Income',
+    metaPlanned: 'due on the %s',
+    metaEstimate: 'due on the %s · amount to enter',
+    yes: 'That was it',
+    other: 'Another amount',
+    skip: 'Not this month',
+    keys: 'Enter to confirm · Esc to leave',
+
+    padLabel: 'Actual amount',
+    padMeta: 'planned %s · type the actual amount',
+    padMetaEmpty: 'no planned amount · type the actual amount',
+    padConfirm: 'Confirm %s',
+    padBack: 'Back to the planned amount',
+
+    padNoteFixed: 'the rule stays as it is · only this instalment changes',
+    padNoteVariable: 'the next instalments will take this amount',
+    skipped: 'Line removed from this month · it will come back if you edit the rule',
+
+    summaryEyebrow: '%s · everything has been reviewed',
+    summaryIn: 'Confirmed income',
+    summaryOut: 'Confirmed costs',
+    summarySaved: 'Set aside',
+    summaryLines: 'Lines reviewed',
+    summaryLinesValue: '%s lines',
+    summaryLinesOne: '%s line',
+    summaryBalance: 'Real balance %s',
+    gapNone: 'exactly as planned',
+    gapUnder: 'below plan',
+    gapOver: 'above plan',
+    close: 'Close %s',
+    closeHint: 'a closed month stays editable — nothing is locked',
+
+    nextTitle: 'The month %s is already filled in',
+    nextBody:
+      '%s lines carried over from your recurring items, at the planned amount. You will confirm them as they land, or all at once at the end.',
+    nextBodyOne:
+      'One line carried over from your recurring items, at the planned amount. You will confirm it once it has landed.',
+    nextEmpty: 'The month %s is not expecting any line',
+    nextEmptyBody:
+      'No recurring item lands there. Write down once what comes back, and the month will open already filled in.',
+    nextBeyond: 'The next month is beyond what the app writes ahead of time.',
+    nextOpen: 'Open %s',
+    nextDone: 'You are done with %s. Nothing else to do here.',
+  },
+
+  keypad: {
+    erase: 'Delete the last digit',
+    hint: 'type on your keyboard if you prefer',
+  },
+
+  flows: {
+    title: 'Income & costs',
+    empty:
+      'This month has no lines yet. Write a recurring item, and the detail will fill itself in.',
+    in: 'What comes in',
+    out: 'What goes out',
+    filtered: 'Nothing to detail under this filter. The month itself is not empty.',
+    common: 'Shared costs',
+    own: 'Personal costs',
+    saving: 'Set aside',
+    share: 'share %s of %s',
+    commonRule: 'Pro rata of incomes',
+    scopeHousehold: 'of the household',
+  },
+
   entry: {
-    add: 'Add an expense',
     addOut: 'Add an expense',
     addIn: 'Add an income',
     newOut: 'Expense',
     newIn: 'Income',
-    edit: 'Edit the entry',
     editOut: 'Edit the expense',
     editIn: 'Edit the income',
     addedOut: 'Expense added',
@@ -700,8 +782,6 @@ export const en: Strings = {
       'Say who this line belongs to: it isn’t part of the shared costs, so with no owner it wouldn’t appear in anyone’s month.',
     memberRequiredRecurring:
       'Say who this recurring rule belongs to: it isn’t part of the shared costs, so with no owner its payments wouldn’t appear in anyone’s month.',
-    planned: 'Planned',
-    confirmed: 'Confirmed',
 
     rhythm: 'Rhythm',
     once: 'One-off',
@@ -712,9 +792,53 @@ export const en: Strings = {
     variableAmountHint:
       'The amount will be asked for at each payment. This one serves as an order of magnitude in the meantime — for the recurring total, and for the split in proportion if it’s an income. Each costed payment takes over straight away.',
 
+    quickFull: 'More details',
+    quickPrivacy: 'saved in this browser · nothing goes anywhere else',
+
     addOperation: 'Add an operation',
     saveOperation: 'Add the operation',
     saveRecurrence: 'Add the recurring rule',
+  },
+
+  quickRule: {
+    title: 'Write a rule',
+    quit: 'Give up',
+    counter: '%s / %s',
+    back: 'Go back',
+    write: 'Write the rule',
+    steps: {
+      what: {
+        title: 'What comes back?',
+        body: 'Pick a common case, or simply give it a name. Either one is enough.',
+      },
+      amount: { title: 'How much?', body: 'The amount of each payment.' },
+      when: { title: 'Which day?', body: 'The day of the month it falls on.' },
+      details: {
+        title: 'Here is what you get',
+        body: 'Read it over, and fix anything that looks wrong.',
+      },
+    },
+    kindsLabel: 'What comes back',
+    kindRent: 'Rent',
+    kindSubscription: 'A subscription',
+    kindSalary: 'A salary',
+    kindLoan: 'A loan instalment',
+    kindSaving: 'A savings transfer',
+    nameRent: 'Rent',
+    nameSubscription: 'Subscription',
+    nameSalary: 'Salary',
+    nameLoan: 'Loan',
+    nameSaving: 'Savings',
+    name: 'Its name, if you want to be precise',
+    namePlaceholder: 'Health cover, canteen, mobile plan…',
+    whatRequired: 'Pick a case, or give the rule a name.',
+    dayShortcuts: 'Most common days',
+    dayRequired: 'The day must be between 1 and 31.',
+    details: 'Details',
+    noCategory: 'to be chosen',
+    fullForm: 'Open the full form',
+    foot: 'Three questions, and the rule fills every month on its own.',
+    footDetails: 'Frequency, end date, note: all of it is set later from its record.',
   },
 
   recurrences: {
@@ -780,6 +904,15 @@ export const en: Strings = {
       'The rule disappears along with its upcoming payments. Those already confirmed stay in the history.',
     stopHint: 'Payments already confirmed stay in the history.',
 
+    swipeHint:
+      'Swipe a rule right to change its amount, left to remove it — or use the two buttons on the row.',
+    changeAmount: 'Change the amount',
+    changeAmountOf: 'Change the amount %s',
+    removeOf: 'Delete the recurring rule %s',
+    amountAhead: 'from the upcoming payments on · months already confirmed do not change',
+    stopInstead:
+      'Cancelling a subscription? Stopping it keeps everything already paid, and the rule can be resumed.',
+
     convertToOneTime: 'Change to one-off',
     convertToOneTimeConfirmSingle:
       'It becomes a single one-off entry, at the same date and amount. Nothing else changes.',
@@ -833,7 +966,6 @@ export const en: Strings = {
     subtitleSolo: 'You’re on your own here: you carry the whole pot, your share is 100 %.',
     total: 'Shared costs',
     totalHint: 'planned payments included',
-    share: 'Share',
     due: 'To pay',
     income: 'Income',
     checkTotal: 'Total of the shares',
@@ -898,9 +1030,13 @@ export const en: Strings = {
     deleted: 'Advance removed',
     empty: 'No advance running.',
     emptyInvite: 'No advance running. Add the first one.',
+    emptyNoSupport:
+      'An advance is paid back month by month into a savings pot, and there is none. Add one first.',
     countOne: '%s advance',
     count: '%s advances',
     remainingTotal: '%s left to put back',
+    notACharge:
+      'An advance is not a cost: it is waiting to be paid back, it does not weigh on the month.',
 
     label: 'What you paid',
     labelPlaceholder: 'Car insurance',
@@ -915,8 +1051,6 @@ export const en: Strings = {
     savingSupportHint: 'The account or plan that paid, and that gets rebuilt.',
     savingSupportRequired: 'Say which pot you took the money from.',
     savingSupportNone: 'Add a savings pot to record an advance.',
-    member: 'Paid up front by',
-    memberRequired: 'Say who paid up front: savings always belong to someone.',
     memberNone: 'Add a person to record an advance.',
     from: 'From the month of',
     to: 'To the month of',
@@ -942,7 +1076,6 @@ export const en: Strings = {
     methodShared:
       'Ticked “to share”, the instalment goes into the shared costs: everyone carries their share in proportion, and whoever paid up front gets paid back.',
 
-    srStatus: '%s: %s put back out of %s, %s left.',
   },
 
   savings: {
@@ -961,12 +1094,12 @@ export const en: Strings = {
 
     supports: 'My pots',
     analysis: 'Analysis',
-    analysisHint: 'See the analysis',
     analysisPreview:
       'Where your capital comes from: your starting point, your contributions, and what the accounts earned.',
     supportsEmpty:
       'No savings pot. Add an account, a plan or any other pot to track its value and your contributions.',
     supportsNoMember: 'Add a person to track your savings: a pot always belongs to someone.',
+    supportsNoneMine: 'Nobody has a pot under that name. The household does.',
     supportAdd: 'Add a pot',
     supportNew: 'New savings pot',
     supportEdit: 'Edit the pot',
@@ -1047,6 +1180,8 @@ export const en: Strings = {
     goalsEmpty:
       'No goal yet. Set a target — a deposit, a safety net — and the app will tell you whether you’re on track.',
     goalAdd: 'Add a goal',
+    goalsProjection:
+      'Dates are a projection at the current pace, not a promise: they move with the months you confirm.',
     goalSimulate: 'Simulate differently',
 
     goalOn: 'on time',
@@ -1163,9 +1298,6 @@ export const en: Strings = {
     unlinked: 'Not attached',
     unlinkedHint:
       'These savings movements point to no pot: they count in the month, but they don’t say where the money went. Open them to attach them.',
-    contribution: 'Contribution each month',
-    contributionHint: 'Optional: sets a monthly recurring rule on this pot.',
-    contributionLabel: 'Contribution %s',
 
     srHistory: 'Value over time, from %s on %s to %s on %s.',
 
@@ -1236,7 +1368,6 @@ export const en: Strings = {
     linkedHint:
       'It’s the recurring rule that sets the instalments and makes the capital go down. Without it, only the amount borrowed is known.',
     total: 'Left to owe',
-    totalMonthly: 'Instalments',
     progress: '%s repaid',
     labelPlaceholder: 'Car loan',
     principalRequired: 'Enter the capital borrowed.',
@@ -1245,65 +1376,83 @@ export const en: Strings = {
   },
 
   onboarding: {
-    step: 'Step %s of 4',
-    membersTitle: 'Who do you share expenses with?',
-    membersHint:
-      'First names are used as labels on expenses. Their incomes are set at the next step. You can skip: everything will be attributed to you.',
-    membersLabel: 'First name',
-    membersPlaceholder: 'Alix',
-    membersAdd: 'Add',
-    membersEmpty: 'Nobody yet. Add a first name, or skip.',
-    membersRename: '%s’s first name',
-    membersRemove: 'Remove %s',
-    membersRemoveConfirm: 'Remove %s?',
-    solo: 'I’m on my own',
+    counter: '%s / %s',
+    progress: 'Question %s of %s',
+    back: 'Back',
+    later: 'Later',
     start: 'Start',
+    backToLanding: 'Back to the tour',
+
+    whoTitle: 'Who lives here?',
+    whoBody:
+      'On your own, the app has nobody to name and everything is attributed to you. With others, it splits the shared costs between you — and that works across two addresses too.',
+    whoLabel: 'Household make-up',
+    whoSolo: 'I live alone',
+    whoMulti: 'With others',
+    namesLabel: 'First name',
+    namesHint: 'Yours included: the split is worked out from your incomes.',
+    namesPlaceholder: 'Alix',
+    namesAdd: 'Add',
+    namesRemove: 'Remove %s',
+    namesEmpty: 'Nobody yet. Add a first name, starting with your own.',
+    namesShareOne: '%s: everything is attributed to them, there is nothing to split.',
+    namesShare:
+      '%s: the shared costs will be split between you, in proportion to your incomes — which leaves everyone the same amount to live on.',
+
+    incomeSoloTitle: 'What you earn every month',
+    incomeOfTitle: 'What %s earns',
+    incomeBody:
+      'Salary, pension, benefits: what comes in every month. A rough figure is enough, it can be corrected.',
+    incomeKeypad: 'Monthly income',
+
+    rentTitle: 'What you pay to be housed',
+    rentBody:
+      'Rent, mortgage, a contribution. Skip if you pay nothing for that — it’s a case like any other.',
+    rentKeypad: 'Rent amount',
+
+    extrasTitle: 'What else comes back?',
+    extrasBody:
+      'Subscriptions, insurance, school meals, phone plan. Each line becomes a rule: it will fill the months ahead on its own.',
+    extrasName: 'What it is',
+    extrasNamePlaceholder: 'Netflix, school meals, insurance…',
+    extrasAmount: 'How much',
+    extrasAdd: 'Add',
+    extrasRemove: 'Remove %s',
+    extrasList: 'What comes back every month',
+    extrasTotal: 'Monthly total',
+    extrasFallback: 'Filed under %s · you’ll be able to refine it from Recurring.',
+    extrasEmpty: 'Nothing yet. Add what comes to mind, the rest can wait.',
+    extrasNameRequired: 'Give this cost a name.',
+
+    startMonthTitle: 'Starting point',
+    startMonthBody:
+      'From when these rules run. The current month stays available either way — it will simply be empty if you start next month.',
+    startMonthLabel: 'First month tracked',
+    startCurrent: 'This month',
+    startNext: 'Next month',
+    startCurrentHint: 'The payments for %s arrive right away, to be confirmed.',
+    startNextHint: '%s will open already filled. %s will stay empty.',
+
+    summaryTitle: 'Here’s your month',
+    summaryBody: 'Have a read. Everything can be revisited afterwards, line by line.',
+    summaryHousehold: 'Household',
+    summaryHouseholdSolo: 'You',
+    summaryShare: 'Split',
+    summaryShareValue: 'in proportion to incomes',
+    summaryIncome: 'Forecast income',
+    summaryRent: 'Housing',
+    summaryExtras: '%s other costs',
+    summaryExtrasOne: '1 other cost',
+    summaryForecast: 'Forecast',
+
+    dayNote:
+      'Set on the 1st of each month. The day, the name and the category can be adjusted afterwards from Recurring.',
+
     privacy: 'Your data stays on this device. Nothing is sent anywhere.',
     backup:
       'The habit that covers it takes a minute: export a file from time to time, from the settings.',
     backupFragile:
       'And this browser doesn’t guarantee it will keep it. Before entering a lot, get into the habit of exporting a file: it’s the only copy that doesn’t depend on it.',
-
-    starterTitle: 'What comes back every month',
-    starterHint:
-      'A single line is enough to make the app talk: it sets the payments of the months ahead and draws the forecast from them. Nothing is required here.',
-    starterSalaryOf: '%s’s salary',
-    starterSalarySolo: 'Your salary',
-    starterRent: 'Rent, mortgage, or whatever you pay to be housed',
-    starterRentHint: 'Leave empty if you pay nothing for that.',
-    starterSalaryLabel: 'Salary',
-    starterRentLabel: 'Rent',
-    starterDayNote:
-      'Set on the 1st of each month. The day, the label and the category can be adjusted afterwards from Recurring.',
-    starterSkip: 'I’ll do it later',
-
-    savingsTitle: 'Your current savings',
-    savingsHint:
-      'You can say where your savings are to start tracking them. Nothing is required here, and it can be added at any time from the Savings screen.',
-    savingsSkip: 'I’ll do it later',
-    previewSavingsEmpty:
-      'With no pot here, the app tracks what you set aside each month, but not what you own. One account is enough for both to be readable.',
-
-    backToLanding: 'Back to the tour',
-    backToStep: 'Back to step %s',
-    progress: 'Progress: step %s of 4',
-
-    principleTitle: 'Written once, forecast every month.',
-    principleBody:
-      'Rent, subscriptions, salaries: you write them down once. Each new month opens already filled with what is forecast, you confirm what actually happened as it happens, and everything else follows.',
-    principleCatchTitle: 'The catch',
-    principleCatch:
-      'Nothing leaves this browser: no account, no server, no tracker. If you wipe it, everything is wiped, and nobody can give it back. The export file is the only way out — and you are the one who opens it.',
-    principleNext: 'Continue',
-
-    previewMembersEmpty:
-      'With nobody here, everything is attributed to you. That’s a use in its own right, not a fallback.',
-    previewMembers:
-      'Their incomes are set at the next step. Once there, the shared costs are split between them in proportion.',
-    previewStarterEmpty:
-      'With nothing here, the month opens at zero and everything is left to enter line by line. One salary is enough for it to write itself.',
-    previewStarterMonth: 'What your month will show',
-    previewStarterShare: 'Everyone’s share of the rent, in proportion to income',
   },
 
   about: {
@@ -1391,12 +1540,10 @@ export const en: Strings = {
     iconMarker: 'Marker — tab, tile, section',
     kindsNote:
       'The direction says whether money comes in or goes out; the kind says what becomes of it. A family carries the kind, its categories inherit it.',
-    themePreview: 'Forced preview',
     sampleAmount: 'Amount',
     sampleRing: 'Ring',
     sampleEmpty: 'No recurring rule yet. Add the first one.',
     sampleEmptyAction: 'Add a recurring rule',
-    variants: 'Variants',
     states: 'States',
   },
 

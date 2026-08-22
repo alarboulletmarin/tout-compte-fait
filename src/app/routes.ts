@@ -25,6 +25,19 @@ const moreRoute = (): RouteDef => ({ path: MORE_PATH, label: t.nav.more, icon: N
 /* Segment fixe : React Router le classe avant `/recurrences/:id`, une
    récurrence ne peut donc pas éclipser le formulaire de création. */
 export const RECURRENCE_NEW_PATH = `${RECURRENCES_PATH}/nouveau`
+/**
+ * Le formulaire complet, sous le chemin rapide plutôt qu'à côté de lui.
+ *
+ * `RECURRENCE_NEW_PATH` est la porte commune — trois états vides y mènent, le
+ * bouton « + » de la liste aussi — et c'est le chemin en cartes qui l'occupe :
+ * c'est celui qui répond à quelqu'un qui n'a encore rien posé. Le formulaire ne
+ * disparaît pas pour autant, parce qu'il porte tout ce que trois cartes ne
+ * peuvent pas dire — sept cadences, un montant variable, une date de fin, un
+ * support d'épargne, une note. Il est à un doigt de la première carte, et il
+ * reste le seul écran de `/recurrences/:id/modifier` : reprendre une règle
+ * existante n'est pas la même chose que d'en écrire une.
+ */
+export const RECURRENCE_FULL_NEW_PATH = `${RECURRENCE_NEW_PATH}/complet`
 export const recurrencePath = (id: string): string => `${RECURRENCES_PATH}/${id}`
 export const recurrenceEditPath = (id: string): string => `${RECURRENCES_PATH}/${id}/modifier`
 
@@ -135,6 +148,26 @@ export function natureFromParam(
   return directionFromParam(direction) === 'in' ? 'income' : 'expense'
 }
 
+/**
+ * La saisie rapide — un montant, une catégorie, et c'est écrit.
+ *
+ * Sous `/depense` et non à côté : c'est la même saisie, en plus court, et son
+ * URL doit le dire. Elle prend les mêmes paramètres, qui disent d'où l'on
+ * vient — les trois portes de saisie mènent ici, sauf celle de l'épargne, dont
+ * la question n'est pas « quelle catégorie » mais « quel support » (voir
+ * `QuickEntryPage`).
+ *
+ * Segment fixe, donc classé avant `/depense/:id` : une entrée ne peut pas
+ * l'éclipser.
+ */
+export const ENTRY_QUICK_PATH = `${ENTRY_NEW_PATH}/rapide`
+
+export function entryQuickPath(options: { direction?: 'in' | 'out' } = {}): string {
+  if (options.direction === undefined) return ENTRY_QUICK_PATH
+  const params = new URLSearchParams({ [DIRECTION_PARAM]: DIRECTION_VALUE[options.direction] })
+  return `${ENTRY_QUICK_PATH}?${params.toString()}`
+}
+
 export function entryNewPath(
   options: { direction?: 'in' | 'out'; date?: string; saving?: boolean } = {},
 ): string {
@@ -145,6 +178,37 @@ export function entryNewPath(
   const query = params.toString()
   return query === '' ? ENTRY_NEW_PATH : `${ENTRY_NEW_PATH}?${query}`
 }
+
+/* --- Ce qu'on n'ouvre que depuis l'écran du mois -------------------------*/
+
+/**
+ * La revue — les échéances du mois, une par carte, jusqu'à ce qu'il n'en reste
+ * plus.
+ *
+ * **Elle n'est pas une destination de navigation**, et c'est pourquoi elle ne
+ * figure ni dans `navRoutes()` ni dans `MORE_PREFIXES` : on n'y arrive que par
+ * la tuile du mois, qui n'existe elle-même que lorsqu'il y a quelque chose à
+ * confirmer. C'est l'inverse exact du défaut que `navRoutes()` décrit pour
+ * l'épargne ou la répartition — ces écrans-là répondent toujours à une question
+ * qu'on peut se poser à froid, celui-ci n'a de contenu que le temps d'une tâche,
+ * et une porte permanente vers une tâche finie mènerait à un écran vide.
+ *
+ * Elle a néanmoins une URL, comme tout ce qui prend l'écran entier : quitter la
+ * revue est un retour, pas la fermeture d'un état de composant que le bouton du
+ * navigateur ne connaîtrait pas.
+ */
+export const REVIEW_PATH = '/revue'
+
+/**
+ * Le détail de ce qui rentre et de ce qui sort, par point de vue.
+ *
+ * Même statut que la revue : on y arrive par les tuiles Revenus et Charges du
+ * mois, qui portent déjà les deux totaux et n'avaient nulle part où mener.
+ * L'écran s'appelle « Revenus & charges » ; l'URL dit `flux`, qui est le mot
+ * sous lequel le store range déjà les deux sens (`useMonthFlows`) et qui tient
+ * en un segment.
+ */
+export const FLOWS_PATH = '/flux'
 
 export const CREDITS_PATH = '/credits'
 
@@ -553,8 +617,35 @@ export function isFocusScreen(pathname: string): boolean {
        d'export s'intercalerait au-dessus d'un titre qui, sur la vue des
        données, mène justement à l'export. « Plus » reste, lui, une destination
        de la barre d'onglets : il garde les deux. */
-    under(pathname, MORE_VIEWS)
+    under(pathname, MORE_VIEWS) ||
+    /* La revue en fait partie : elle n'a qu'une chose à montrer, une carte, et
+       le bouton flottant y poserait une seconde action principale à trois
+       centimètres de la première. Elle va plus loin que les autres — voir
+       `isFullFrame` juste dessous —, mais elle en est d'abord une. */
+    pathname === REVIEW_PATH
   )
+}
+
+/**
+ * Écrans qui prennent le cadre entier au doigt : **la barre d'onglets s'efface
+ * aussi**.
+ *
+ * Un prédicat à part de `isFocusScreen`, et non une extension de celui-ci. Les
+ * six autres écrans de focus sont des **fiches** : on y arrive depuis un onglet,
+ * on y écrit une ligne, on revient. Leur retirer la barre leur retirerait le
+ * seul moyen de changer de section sans passer par la flèche de retour — et sur
+ * les cinq vues que « Plus » ouvre, elle est précisément ce qui dit qu'on est
+ * encore dans l'app. `e2e/mise-en-page.spec.ts` vérifie d'ailleurs que les
+ * onglets restent atteignables partout où il les attend.
+ *
+ * La revue, elle, est une **tâche** : elle a un début, une fin, et une croix qui
+ * la quitte en toutes lettres. Une barre d'onglets sous une file de cartes
+ * n'offrirait pas une sortie de plus, elle offrirait quatre façons d'abandonner
+ * sans le dire, sur le seul écran de l'app dont la valeur tient à ce qu'on aille
+ * jusqu'au bout.
+ */
+export function isFullFrame(pathname: string): boolean {
+  return pathname === REVIEW_PATH
 }
 
 export const CREDIT_NEW_PATH = `${CREDITS_PATH}/nouveau`

@@ -43,3 +43,8 @@ audit/doublons/
 audit/*-avant/
 audit/focus/
 audit/lighthouse/
+
+# Références de design (hors dépôt)
+design_handoff_le_passage/
+thoughts/
+shot.tmp.mjs

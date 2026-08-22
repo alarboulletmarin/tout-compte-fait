@@ -28,6 +28,23 @@ describe('Les chiffres du foyer d’exemple', () => {
     expect(capacity).toBe(SAMPLE.savingCapacity)
   })
 
+  /* La tuile du prévisionnel, en tête de la présentation. Elle affiche un
+     solde attendu, pas une capacité d'épargne : les deux valent le même
+     chiffre sur ce foyer-ci — il n'y verse rien — et l'égalité doit rester une
+     conséquence des termes, jamais une valeur recopiée. */
+  it('laisse le prévisionnel valoir le revenu moins tout ce qui est prévu', () => {
+    expect(SAMPLE.income - SAMPLE.monthForecast).toBe(SAMPLE.forecast)
+  })
+
+  /* La ligne du mécanisme est la seule de la page à ne se recomposer avec
+     rien : c'est une ligne parmi les charges, pas un total. Ce qu'elle doit
+     tenir est plus simple, et c'est tout ce que la tuile raconte — le réel
+     dépasse le prévu, et il tient dans l'enveloppe des charges. */
+  it('montre une ligne qui a coûté plus que prévu, sans sortir des charges', () => {
+    expect(SAMPLE.electricityReal).toBeGreaterThan(SAMPLE.electricityPlanned)
+    expect(SAMPLE.electricityReal).toBeLessThan(SAMPLE.charges)
+  })
+
   it('répartit exactement le revenu du foyer entre ses membres', () => {
     expect(sum(shares.map((share) => share.income))).toBe(SAMPLE.income)
   })

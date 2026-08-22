@@ -29,16 +29,11 @@ export const fr = {
     confirm: 'Confirmer',
     back: 'Retour',
     next: 'Continuer',
-    skip: 'Passer',
     all: 'Tous',
-    none: 'Aucun',
-    today: "Aujourd'hui",
     optional: 'facultatif',
     required: 'obligatoire',
-    loading: 'Chargement',
     yes: 'Oui',
     no: 'Non',
-    more: 'Voir plus',
     less: 'Voir moins',
     other: 'Autres',
     /* Le retour arrière d'un message. Pas « Annuler » : c'est déjà le bouton
@@ -98,8 +93,6 @@ export const fr = {
   direction: {
     in: 'Entrée',
     out: 'Sortie',
-    inPlural: 'Entrées',
-    outPlural: 'Sorties',
   },
 
   theme: {
@@ -107,7 +100,6 @@ export const fr = {
     light: 'Clair',
     dark: 'Sombre',
     system: 'Système',
-    toggle: 'Changer de thème',
   },
 
   /**
@@ -195,7 +187,6 @@ export const fr = {
        navigation, il la continue — ce qu'on y trouve est le reste de l'app, pas
        une autre façon d'atteindre ce qui est déjà dans la barre. */
     more: 'Plus',
-    moreHint: 'Le reste de tes écrans, et les réglages.',
     /* Les quatre titres de groupe de l'écran « Plus ». Ils ne nomment pas des
        écrans mais des **intentions** — ce pour quoi on vient —, et c'est ce qui
        a permis de retirer « Réglages », qui n'en nommait aucune : il rangeait
@@ -242,7 +233,6 @@ export const fr = {
     savingsHint: 'Ce que tu peux mettre de côté, et où le placer.',
     splitHint: 'Qui verse quoi sur les charges communes.',
     creditsHint: 'Tes crédits en cours et ce qu’il reste à rendre.',
-    aboutHint: 'Ce que fait l’app, et ce qu’elle ne fait pas.',
   },
 
   shell: {
@@ -305,16 +295,25 @@ export const fr = {
       'Charges communes non réparties, faute de connaître les revenus de %s : seules les lignes à son nom sont comptées.',
     prorataOnlyOwn:
       'Charges communes non réparties : seules les lignes à son nom sont comptées.',
-    /* « Ce mois-ci » et non « Aujourd'hui » : on revient à un mois, pas à un
-       jour, et le DS §7 veut que les libellés nomment ce qu'on manipule. Sur
-       l'écran du calendrier, « Aujourd'hui » aurait de surcroît promis de
-       ramener au jour, ce que ce bouton ne fait pas. */
-    thisMonth: 'Ce mois-ci',
-    /* En infobulle et non dans le libellé : le nom accessible d'un bouton doit
-       contenir son texte visible, et « Revenir à août 2026 » ne contient pas
-       « Ce mois-ci ». Le mois de destination reste utile à savoir avant de
-       cliquer, il se dit donc en description. */
+    /* Le nom accessible du bloc titre quand il ramène au mois courant.
+
+       Il nomme le mois **et** son année, contrairement à ce qu'on lit dessus :
+       un geste posé sur un titre n'est annoncé par rien d'autre que son nom, et
+       « Revenir » seul laisserait deviner où. Le texte visible de l'action —
+       « revenir à août » — y est contenu, ce que le §8 demande.
+
+       « Revenir à un mois » et non « à aujourd'hui » : on revient à un mois, pas
+       à un jour, et le DS §7 veut que les libellés nomment ce qu'on manipule.
+       Sur l'écran du calendrier, « Aujourd'hui » aurait de surcroît promis de
+       ramener au jour, ce que ce geste ne fait pas. */
     thisMonthTitle: 'Revenir à %s',
+    /* Le retour tel qu'il s'écrit **dans** le bloc titre, sous le nom du mois
+       affiché. En bas de casse, parce que la ligne est un axe et non un
+       eyebrow : `t-eyebrow` passe tout en capitales, et le DS §7 ne veut pas de
+       majuscule décorative sur ce qui est un bouton. Ce qu'on lui passe est le
+       mois seul quand l'année de gauche est déjà la bonne, et le mois avec son
+       année sinon — `MonthNav` tranche, et dit pourquoi. */
+    returnToShort: 'revenir à %s',
   },
 
   /* La frontière avec le navigateur. Tout ce qui s'y passe mal doit se dire :
@@ -325,10 +324,29 @@ export const fr = {
     readFailed:
       'Les données n’ont pas pu être lues. Tu peux repartir de zéro ou importer un export.',
     writeFailed: 'Les modifications ne s’enregistrent plus',
+    /* Ce que l'échec change, puis ce qui a pu le causer — dans cet ordre, parce
+       que la première phrase est vraie à coup sûr et la seconde seulement
+       probable. Les trois hypothèses couvrent les trois façons dont l'app perd
+       le droit d'écrire, y compris l'onglet concurrent que le titre nomme déjà
+       quand c'est lui : aucune ne contredit un titre plus précis qu'elle.
+       L'export n'est plus une consigne dans la phrase — un bouton le dit. */
     writeFailedBody:
-      'Ce que tu vois à l’écran est intact, mais plus rien ne s’écrit sur cet appareil. Exporte maintenant : c’est la seule copie qui survivra à la fermeture de l’onglet.',
+      'Ce que tu tapes reste à l’écran, mais rien n’est gardé. Navigation privée, espace saturé, ou un autre onglet qui tient la base.',
     writeFailedLabel: 'Échec d’enregistrement',
-    exportNow: 'Exporter maintenant',
+    /* Le message rouge qui suit **chaque** écriture ratée, y compris le « Réessayer »
+       du bandeau. Il ne redit pas le titre du bandeau : celui-ci décrit l'état,
+       celui-là parle du geste qu'on vient de faire — c'est la seule façon de
+       relier la panne à la ligne qu'on était en train de saisir. Il ne propose
+       aucun retour arrière : il n'y a rien à rattraper, ce qui est à l'écran
+       reste à l'écran, c'est le disque qui est en retard. */
+    writeFailedToast: 'Ce que tu viens de saisir n’est pas enregistré',
+    /* Gratuit, et il répare parfois : un quota libéré, un onglet fermé. Il vient
+       donc avant l'export, qui ne répare rien mais met à l'abri. */
+    retry: 'Réessayer',
+    /* « D'abord », parce que c'est ce que l'ordre des deux boutons dit déjà :
+       exporte avant de fermer, avant de recharger, avant de continuer à taper
+       dans une app qui ne garde rien. */
+    exportFirst: 'Exporter d’abord',
 
     /* L'avis de conservation : le niveau du dessous, et il se lit à sa langue.
        Rien n'a échoué, donc rien n'est au passé ni en rouge — on constate un
@@ -363,7 +381,6 @@ export const fr = {
        sont dans l'ordre de ce qu'ils sauvent : importer récupère, recharger ne
        coûte rien à essayer, effacer ne se défait pas. */
     recoverTitle: 'Tes données ne se lisent pas',
-    recoverImport: 'Importer un export',
     recoverImportHint:
       'C’est le seul recours qui ne perd rien. Si tu as un fichier d’export, c’est le moment.',
     recoverRaw: 'Télécharger la copie brute',
@@ -473,7 +490,6 @@ export const fr = {
        suivent ; en dire plus reviendrait à décrire ce que le sélecteur montre
        déjà. */
     currencyHint: 'Rien n’est converti : seul le symbole change.',
-    aboutLink: 'Le projet, le code et la licence',
     /* Ce que « à propos » contient, sur une ligne — la version en tête, parce
        que c'est la seule chose qu'on y cherche sans l'avoir déjà lue. */
     aboutSummary: 'Version %s · le projet, le code, la licence',
@@ -506,7 +522,6 @@ export const fr = {
     /* Le prénom se corrige sur place, comme le libellé d'une catégorie. Le nom
        accessible porte celui qu'on modifie : la liste compte un champ par
        membre, et « Prénom » seul les annoncerait tous pareil. */
-    memberRename: 'Prénom de %s',
     memberRemove: 'Retirer %s',
     memberRemoved: '%s a été retiré·e',
     memberRemoveHint: 'Ses entrées sont conservées, simplement sans étiquette.',
@@ -785,10 +800,7 @@ export const fr = {
        le même chiffre sous deux libellés se lit comme une erreur de calcul ;
        il faut donc que l'écran dise que c'en est une conséquence. */
     remainingSame: 'même horizon que le prévisionnel, donc le même montant',
-    breakdown: 'Répartition',
     upcoming: 'Prochaines échéances',
-    inflow: 'Entrées',
-    outflow: 'Sorties',
     /* « Charge ni crédit », pas « sortie » : la tuile compte par nature, hors
        épargne, et un mois où l'on n'a fait que verser sur un livret a bien vu
        des sorties — simplement rien qui soit sorti pour de bon. */
@@ -876,7 +888,6 @@ export const fr = {
        le geste, et il nomme le poste pour que sept boutons ne s'annoncent pas
        sept fois de la même façon. */
     showFamily: 'Voir les lignes de %s',
-    noCredits: 'Aucun crédit en cours.',
     split: 'Répartition',
     splitHint: 'charges communes du mois',
     /* Le nom du lien posé au coin de ces deux tuiles-là, et non celui de leur
@@ -1015,7 +1026,6 @@ export const fr = {
     },
     // Le nom accessible compte comme l'anneau : charges et crédits, hors épargne.
     srBreakdown: 'Répartition des charges et des crédits : %s',
-    empty: 'Ce mois est encore vide. Ouvre-le, ou ajoute une dépense.',
   },
 
   calendar: {
@@ -1025,6 +1035,12 @@ export const fr = {
     someEntries: '%s échéances',
     emptyDay: 'Rien ce jour-là.',
     empty: 'Aucune échéance ce mois-ci.',
+    /* Le mois vide d'un document qui n'a encore posé aucune règle. Ce qui
+       remplit un calendrier n'est pas une dépense : une dépense ponctuelle ne
+       pose rien pour le mois suivant, une récurrence pose toute l'année. Même
+       distinction que `month.emptyStart`, dite dans les mots de cet écran. */
+    emptyStart:
+      'Le mois est vide. Écris une récurrence : c’est elle qui pose les échéances sur le calendrier.',
     more: '+%s',
 
     /** Le nom de la fenêtre. Reçoit `de(formatYearMonth(ym))` : « d’avril 2026 ». */
@@ -1073,44 +1089,75 @@ export const fr = {
   month: {
     title: 'Le mois',
     toConfirm: 'À confirmer',
-    confirmAll: 'Confirmer le mois',
-    confirmedAll: 'Mois confirmé',
     confirmOne: 'Confirmer',
     /* Le nom accessible d'un bouton de confirmation, qui nomme son échéance :
        treize boutons « Confirmer » se listent treize fois à l'identique dans
        les contrôles d'un lecteur d'écran, et rien ne dit lequel on vise. Le
-       libellé visible reste la coche seule — c'est la colonne qui l'aligne. */
+       libellé visible reste la coche seule — la rangée d'à côté porte le nom. */
     confirmEntry: 'Confirmer %s',
-    confirmedOne: 'Échéance confirmée',
-    /* La liste ne s'affiche pas en entier : un mois ordinaire en compte une
-       douzaine, et treize lignes de 56px repoussaient le détail du mois d'un
-       écran entier. Les mots sont ceux de la recherche de l'historique, qui
-       coupe déjà de la même façon — une coupe annoncée, et qui se lève. */
-    pendingMore: '… et %s autres à confirmer.',
-    pendingShowAll: 'Tout afficher',
-    /* Sur la ligne elle-même, à côté du champ : une explication en tête de
-       section est oubliée le temps d'arriver au champ qu'elle décrit. */
-    toFill: 'à saisir',
-    confirmAllHint: 'Les montants à saisir restent à confirmer un par un.',
-    openEntry: 'Modifier %s',
+    /* Le second geste de la rangée : il déplie le panneau qui corrige le
+       montant, là où le premier confirme le montant prévu tel quel. */
+    adjust: 'Ajuster',
+    adjustEntry: 'Ajuster %s',
+    /* Les deux boutons du pas. Ils ne disent pas « cinq euros » : la devise du
+       document se règle, et un libellé qui la nommerait mentirait dès qu'on en
+       change. Ce qu'ils font est le sens, pas la somme. */
+    adjustLess: 'Diminuer le montant',
+    adjustMore: 'Augmenter le montant',
+    confirmAmount: 'Confirmer ce montant',
+    /* Ce que l'écart devient, dit là où on le crée : un réel plus lourd que le
+       prévu ne se perd pas, il se retire du reste à vivre. */
+    adjustHint: 'prévu %s · l’écart part dans le reste à vivre',
+    /* Le geste s'apprend en le lisant : rien sur une rangée ne dit qu'elle se
+       glisse, et le doigt ne découvre pas un fond qu'il faut déplacer de
+       quatre-vingt-douze pixels pour voir. La phrase nomme donc aussi les deux
+       boutons, qui font exactement la même chose. */
+    swipeHint:
+      'Glisse une ligne à droite pour la confirmer, à gauche pour ajuster son montant — ou sers-toi des deux boutons de la rangée.',
     done: 'Tout est confirmé pour ce mois.',
     /* Confirmer n'est pas un aller simple. Le geste s'appelle « remettre à
        confirmer » et non « annuler » : « Annuler » est déjà le bouton qui ferme
        une boîte de dialogue, et les deux se seraient répondu dans la même. */
     unconfirm: 'Remettre à confirmer',
     unconfirmed: 'Échéance remise à confirmer',
+    unconfirmEntry: 'Remettre %s à confirmer',
     unconfirmAll: 'Remettre le mois à confirmer',
     unconfirmAllConfirm:
       'Les %s échéances confirmées de ce mois repassent dans « À confirmer », avec leurs montants.',
     unconfirmedAll: 'Mois remis à confirmer',
+    /* Le nom court, celui que les repères de tuile posent au coin : un repère
+       plafonne à 60 % de la largeur de sa tuile (DS §6), et « Le mois, ligne à
+       ligne » y serait tranché au milieu d'un mot. */
     entries: 'Ce mois',
+    /* Le nom long, en tête de la liste elle-même : elle porte désormais tout le
+       mois, prévu compris, et son titre doit le dire. */
+    lineByLine: 'Le mois, ligne à ligne',
     empty: 'Rien pour ce mois. Ajoute ta première dépense.',
     /* Le mois vide d'un document qui n'a encore posé aucune récurrence n'est pas
        le mois vide de tout le monde : c'est un amorçage, et le geste qui
        l'amorce n'est pas une dépense. Une dépense ponctuelle ne prévoit rien —
        ce qui fait qu'un mois s'écrit tout seul est ce qui revient. */
     emptyStart:
-      'Rien pour ce mois. Écris une fois ce qui revient chaque mois, et il se remplira tout seul.',
+      'Commence par ce qui revient chaque mois : loyer, salaire, abonnement. Les suivants se rempliront tout seuls.',
+    /* L'état d'avant le premier geste : ni ligne, ni règle. */
+    nothingYet: 'Rien encore',
+    monthIsEmpty: 'Le mois %s est vide',
+    justAnExpense: 'Juste une dépense',
+    /* La fin visible de la tâche : plus rien n'attend, et la phrase dit quand
+       la prochaine échéance tombe — sans quoi « tout est confirmé » ne dit pas
+       s'il faut revenir demain ou dans trois semaines. */
+    nothingToConfirm: 'Rien à confirmer',
+    upToDate: 'Tout est à jour pour %s',
+    upToDateNext: 'Prochaine échéance le %s, avec %s — inutile de revenir avant.',
+    upToDateNoNext: 'Toutes les lignes sont réelles, et rien d’autre n’est attendu.',
+    /* « Défaire la dernière » n'existe pas : une échéance ne garde ni date ni
+       ordre de confirmation, donc « la dernière » ne désigne rien de sûr. Le
+       bouton renvoie aux lignes, où chacune porte son propre retour. */
+    reopenLines: 'Revoir les lignes %s',
+    /* Un autre mois que celui qu'on vit : la phrase dit pourquoi rien ne s'y
+       confirme, avant qu'on cherche le geste qui n'y est pas. */
+    pastNote: 'mois clôturé · tout y est réel, rien n’attend d’être confirmé',
+    aheadNote: 'mois à venir · les montants sont ceux que tes règles prévoient',
     groupBy: 'Regrouper par',
     byDay: 'Jour',
     byCategory: 'Catégorie',
@@ -1136,9 +1183,9 @@ export const fr = {
     showOut: 'Charges',
     showIn: 'Revenus',
     showSaving: 'Épargne',
-    showEmptyOut: 'Aucune charge confirmée ce mois-ci.',
-    showEmptyIn: 'Aucun revenu confirmé ce mois-ci.',
-    showEmptySaving: 'Aucun mouvement d’épargne confirmé ce mois-ci.',
+    showEmptyOut: 'Aucune charge ce mois-ci.',
+    showEmptyIn: 'Aucun revenu ce mois-ci.',
+    showEmptySaving: 'Aucun mouvement d’épargne ce mois-ci.',
     groupCountOne: '%s ligne',
     groupCount: '%s lignes',
     /* Sur l'en-tête du groupe du jour, quand le mois affiché est le mois
@@ -1155,15 +1202,189 @@ export const fr = {
     dayOf: 'jour %s sur %s',
   },
 
+  /* La revue — la file du mois, une échéance par carte.
+
+     « La revue » et non « Revue du mois » : le mois est déjà dit par
+     l'en-tête d'où l'on vient, et le titre d'un écran n'a pas à répéter le
+     contexte qui l'a ouvert.
+
+     Ses deux états vides empruntent leurs phrases à l'écran du mois
+     (`month.done`, `month.emptyStart`) : le même fait ne se raconte pas de
+     deux façons selon l'endroit d'où on le lit. */
+  review: {
+    title: 'La revue',
+    /* Deux sorties, deux mots, parce qu'elles ne partent pas du même endroit :
+       on « quitte la revue » qu'on est en train de faire, on « revient au
+       mois » quand il n'y avait rien à faire. */
+    quit: 'Quitter la revue',
+    back: 'Revenir au mois',
+
+    /* --- La tuile du mois ------------------------------------------------ */
+
+    /* Elle dit deux choses selon l'état : ce qu'il reste à faire, ou où l'on en
+       était. « Reprends » au présent, à la deuxième personne : c'est la seule
+       phrase de l'app qui s'adresse à quelqu'un qu'on a vu partir. */
+    tileTitle: '%s lignes à confirmer',
+    tileTitleOne: 'Une ligne à confirmer',
+    tileBody:
+      'Une par une, trois décisions au plus : c’était bien ça, un autre montant, pas ce mois-ci.',
+    resumeAt: 'Reprends à %s sur %s',
+    resumeBody: 'La file est intacte, dans le même ordre. Rien n’a été perdu en sortant.',
+    start: 'Commencer la revue',
+    resume: 'Reprendre la revue',
+    restart: 'Repartir du début',
+    /* Le nom accessible de la barre de progression : une barre ne dit rien
+       toute seule, et le pourcentage qu'elle dessine est déjà écrit à côté en
+       toutes lettres (DS §8). */
+
+    /* --- Le fil de la file ----------------------------------------------- */
+
+    counter: '%s/%s',
+    counterLong: '%s sur %s · %s après celle-ci',
+    counterLongOne: '%s sur %s · une après celle-ci',
+    counterLast: '%s sur %s · la dernière',
+    /* Le nom accessible d'une rangée de la colonne de gauche. Le saut est un
+       geste, pas une lecture : sans verbe, six rangées se listent comme six
+       libellés dont rien ne dit ce qu'ils font. */
+    goTo: 'Aller à %s',
+
+    /* --- La carte -------------------------------------------------------- */
+
+    /* Le sens de la ligne, en toutes lettres. Les deux mots sont ceux de la
+       saisie et des tuiles — un concept garde son nom partout. */
+    kindOut: 'Charge',
+    kindIn: 'Rentrée d’argent',
+    /* La méta de la carte : le jour, puis d'où vient le montant. Deux phrases
+       parce que le montant d'une récurrence à montant variable n'est pas prévu,
+       il est attendu. */
+    metaPlanned: 'prévu le %s',
+    metaEstimate: 'prévu le %s · montant à saisir',
+    yes: 'C’était bien ça',
+    other: 'Un autre montant',
+    skip: 'Pas ce mois-ci',
+    /* La ligne mono du bas, sur écran large seulement : au doigt, ces deux
+       touches n'existent pas. */
+    keys: 'Entrée pour confirmer · Échap pour sortir',
+
+    /* --- Le pavé --------------------------------------------------------- */
+
+    padLabel: 'Montant réel',
+    padMeta: 'prévu %s · tape le montant réel',
+    padMetaEmpty: 'aucun montant prévu · tape le montant réel',
+    padConfirm: 'Confirmer %s',
+    padBack: 'Revenir au prévu',
+
+    /* --- Ce que chaque geste écrit --------------------------------------- */
+
+    /* Trois messages, et ils ne promettent pas la même chose, parce que le
+       document ne fait pas la même chose. Une récurrence à montant fixe garde
+       sa règle : confirmer une échéance à 104,20 € ne réécrit pas les mois
+       suivants. Une récurrence à montant variable, elle, n'a pas de montant :
+       ce sont ses échéances chiffrées qui font foi, et celle qu'on vient
+       d'écrire devient la plus proche. Une ligne sans récurrence ne promet
+       rien du tout — il n'y a pas de suite. */
+    padNoteFixed: 'la règle ne bouge pas · seule cette échéance change',
+    padNoteVariable: 'les prochaines échéances reprendront ce montant',
+    /* « Retirée » et non « supprimée » : le mot dit ce qui s'est passé — la
+       ligne quitte ce mois-là. Et la suite est vraie, elle : modifier la règle
+       replanifie toutes ses échéances prévues, celle-ci comprise. */
+    skipped: 'Ligne retirée de ce mois · elle reviendra si tu modifies la règle',
+
+    /* --- Le bilan -------------------------------------------------------- */
+
+    summaryEyebrow: '%s · tout est passé en revue',
+    summaryIn: 'Revenus confirmés',
+    summaryOut: 'Charges confirmées',
+    summarySaved: 'Mis de côté',
+    summaryLines: 'Lignes passées',
+    summaryLinesValue: '%s lignes',
+    summaryLinesOne: '%s ligne',
+    summaryBalance: 'Solde réel %s',
+    /* L'écart au prévu. « Exactement » plutôt qu'un zéro : un écart nul est le
+       seul des trois qui mérite d'être lu comme une nouvelle. */
+    gapNone: 'exactement le prévu',
+    gapUnder: 'sous le prévu',
+    gapOver: 'au-dessus du prévu',
+    /* Le bouton ne ferme rien dans le document — un mois n'a pas de verrou, et
+       la phrase le dit plutôt que de le taire. Il navigue vers le mois suivant,
+       que l'app ouvre toute seule en y arrivant. */
+    close: 'Fermer %s',
+    closeHint: 'un mois fermé reste modifiable — rien n’est verrouillé',
+
+    /* --- Le mois suivant ------------------------------------------------- */
+
+    nextTitle: 'Le mois %s est déjà rempli',
+    nextBody:
+      '%s lignes reprises de tes récurrences, au montant prévu. Tu confirmeras au fil de l’eau, ou d’un coup à la fin.',
+    nextBodyOne:
+      'Une ligne reprise de tes récurrences, au montant prévu. Tu la confirmeras quand elle sera tombée.',
+    /* Aucune ligne : c'est le mois d'un foyer sans récurrence, et le dire vaut
+       mieux qu'un titre qui annonce un mois « déjà rempli » sur une liste vide. */
+    nextEmpty: 'Le mois %s n’attend aucune ligne',
+    nextEmptyBody:
+      'Aucune récurrence n’y tombe. Écris une fois ce qui revient, et le mois s’ouvrira rempli.',
+    /* Au-delà de douze mois, l'app n'ouvre plus rien : écrire toutes les
+       échéances de toutes les règles est définitif, et la borne existe pour que
+       la navigation ne se repousse pas elle-même. Le bilan reste, la porte non. */
+    nextBeyond: 'Le mois suivant est au-delà de ce que l’app écrit à l’avance.',
+    nextOpen: 'Ouvrir %s',
+    nextDone: 'Tu as fini pour %s. Rien d’autre à faire ici.',
+  },
+
+  /* Le pavé numérique. À part de la revue : l'onboarding et la saisie rapide
+     le montent aussi, et une chaîne rangée sous « revue » les ferait parler
+     d'un écran où elles ne sont pas. */
+  keypad: {
+    erase: 'Effacer le dernier chiffre',
+    hint: 'tape au clavier si tu préfères',
+  },
+
+  /* Revenus & charges — le détail au bout des deux tuiles du mois.
+
+     L'esperluette est celle du titre affiché : deux choses de même rang,
+     lues d'un seul tenant. */
+  flows: {
+    title: 'Revenus & charges',
+    empty:
+      'Le mois ne contient aucune ligne. Écris une récurrence, et le détail se remplira tout seul.',
+    in: 'Ce qui rentre',
+    out: 'Ce qui sort',
+    /* L'autre vide : le mois porte des lignes, mais aucune ne passe le filtre
+       en cours — le pot commun d'un mois sans charge partagée, ou quelqu'un
+       qui n'a rien à son nom. Sans action : la rangée de pilules juste
+       au-dessus est ce qui la défait, et « écris une récurrence » serait faux
+       sur un mois qui en a déjà. */
+    filtered: 'Rien à détailler sous ce filtre. Le mois, lui, n’est pas vide.',
+    /* Les trois sections du détail. « Ce qui sort » reste : la tuile Charges du
+       mois le dit, et l'écran le découpe en deux — ce que le foyer paie
+       ensemble, et ce que chacun paie seul. */
+    common: 'Charges communes',
+    own: 'Charges personnelles',
+    /* L'épargne n'est ni un revenu ni une charge, et elle a pourtant sa
+       section : sans elle, un écran qui détaille le mois tairait des lignes que
+       la liste du mois montre. */
+    saving: 'Mis de côté',
+    /* Ce qu'une ligne dit quand la portée l'a découpée : la part qu'on lit, et
+       le montant plein dont elle vient. Reçoit `de(prénom)` puis le montant —
+       « part d’Alice sur 1 100,00 € ». Le découpage est celui de `split.ts`,
+       jamais une multiplication faite à l'écran. */
+    share: 'part %s sur %s',
+    /* La règle qui produit les parts, sous les charges communes. Les
+       pourcentages la suivent, séparés par des points médians. */
+    commonRule: 'Au prorata des revenus',
+    /* La portée de la tuile de tête, accolée au libellé du solde : « Reste à
+       vivre du foyer », « Reste à vivre d’Alice ». Le prénom passe par `de()`,
+       qui élide ; le foyer n'a pas de prénom, d'où cette chaîne-ci. */
+    scopeHousehold: 'du foyer',
+  },
+
   entry: {
-    add: 'Ajouter une dépense',
     addOut: 'Ajouter une dépense',
     addIn: 'Ajouter un revenu',
     /* Formes courtes des barres d'action, où les deux sens tiennent côte à
        côte. Le sens ne se devine plus derrière un libellé unique. */
     newOut: 'Dépense',
     newIn: 'Revenu',
-    edit: 'Modifier l’entrée',
     editOut: 'Modifier la dépense',
     editIn: 'Modifier le revenu',
     addedOut: 'Dépense ajoutée',
@@ -1241,8 +1462,6 @@ export const fr = {
        chaque fois, et c'est ce que la phrase ajoute. */
     memberRequiredRecurring:
       'Dis à qui est cette récurrence : elle n’entre pas dans les charges communes, donc sans propriétaire ses échéances n’apparaîtraient dans le mois de personne.',
-    planned: 'Prévue',
-    confirmed: 'Confirmée',
 
     /* Ponctuel ou récurrent — la bascule du cahier §4.4. */
     rhythm: 'Rythme',
@@ -1270,9 +1489,77 @@ export const fr = {
        enregistre se lit sur les bascules, juste dessous.
        Le bouton, lui, nomme ce qui va être créé : c'est le dernier endroit où
        le dire, et le seul qui ne change plus rien après. */
+    /* --- La saisie rapide -------------------------------------------------
+       Un écran plein, et non la feuille du prototype : le DS §6 réserve la
+       feuille à ce qui se lit et se referme, et celle-ci écrit. */
+    quickFull: 'Plus de détails',
+    /* La phrase du design, mot pour mot : ce que la saisie engage, dit là où on
+       la fait. C'est la contrepartie exacte de « rien ne sort d'ici ». */
+    quickPrivacy: 'enregistré dans ce navigateur · rien ne part ailleurs',
+
     addOperation: 'Ajouter une opération',
     saveOperation: 'Ajouter l’opération',
     saveRecurrence: 'Ajouter la récurrence',
+  },
+
+  /* Écrire une règle en quelques cartes — le chemin rapide du handoff.
+   *
+   * Un bloc à part de `recurrences` parce que c'est un **parcours**, pas une
+   * lecture : il a son avancement, ses questions et ses erreurs, comme la
+   * revue. Ce qu'il partage avec le formulaire — « Montant », « Catégorie »,
+   * « Membre », leurs messages — se lit sous `entry`, et n'est pas recopié :
+   * un même champ ne se nomme pas de deux façons selon la porte. */
+  quickRule: {
+    title: 'Écrire une règle',
+    quit: 'Abandonner',
+    counter: '%s / %s',
+    /* « Revenir » et non « Retour » : le second est le chevron d'en-tête, qui
+       quitte l'écran ; celui-ci recule d'une carte sans rien perdre. */
+    back: 'Revenir',
+    write: 'Écrire la règle',
+    steps: {
+      what: {
+        title: 'Qu’est-ce qui revient ?',
+        body: 'Prends un cas courant, ou donne-lui simplement un nom. L’un ou l’autre suffit.',
+      },
+      amount: { title: 'Combien ?', body: 'Le montant de chaque échéance.' },
+      when: { title: 'Quel jour ?', body: 'Le jour du mois où elle tombe.' },
+      details: {
+        title: 'Voilà ce que ça donne',
+        body: 'Relis, et corrige si quelque chose ne va pas.',
+      },
+    },
+    kindsLabel: 'Ce qui revient',
+    /* Les cinq cas les plus courants. Chacun désigne une **vraie** catégorie du
+       catalogue, et disparaît si elle a été supprimée : une règle posée sur un
+       identifiant mort se rangerait n'importe où. */
+    kindRent: 'Un loyer',
+    kindSubscription: 'Un abonnement',
+    kindSalary: 'Un salaire',
+    kindLoan: 'Une échéance de crédit',
+    kindSaving: 'Un virement d’épargne',
+    /* Le nom que la ligne portera. La puce pose une question — « Un loyer » —,
+       la ligne du mois répond — « Loyer ». */
+    nameRent: 'Loyer',
+    nameSubscription: 'Abonnement',
+    nameSalary: 'Salaire',
+    nameLoan: 'Crédit',
+    nameSaving: 'Épargne',
+    name: 'Son nom, si tu veux le préciser',
+    namePlaceholder: 'Mutuelle, cantine, forfait mobile…',
+    whatRequired: 'Choisis un cas, ou donne un nom à la règle.',
+    dayShortcuts: 'Jours les plus courants',
+    dayRequired: 'Le jour doit être compris entre 1 et 31.',
+    /* Le repli de la dernière carte. Ce qui est déjà juste n'a pas à être
+       redemandé ; ce qui manque ouvre le repli tout seul. */
+    details: 'Précisions',
+    noCategory: 'à choisir',
+    /* La sortie vers le formulaire, offerte tant que rien n'est saisi : sept
+       cadences, le montant variable, la date de fin, le support d'épargne et la
+       note n'ont pas de carte ici. */
+    fullForm: 'Ouvrir le formulaire complet',
+    foot: 'Trois questions, et la règle remplira chaque mois toute seule.',
+    footDetails: 'Cadence, date de fin, note : tout se règle ensuite depuis sa fiche.',
   },
 
   recurrences: {
@@ -1395,6 +1682,32 @@ export const fr = {
       'La récurrence disparaît avec ses échéances à venir. Celles déjà confirmées restent dans l’historique.',
     stopHint: 'Les échéances déjà confirmées restent dans l’historique.',
 
+    /* --- Les gestes de la rangée -----------------------------------------
+       Le glissé se comporte ici comme sur la liste du mois : à droite ce qui
+       corrige, à gauche ce qui retire. La phrase l'apprend, et nomme les deux
+       boutons qui font exactement la même chose — rien sur une rangée ne dit
+       qu'elle se glisse. */
+    swipeHint:
+      'Glisse une règle à droite pour changer son montant, à gauche pour la retirer — ou sers-toi des deux boutons de la rangée.',
+    changeAmount: 'Changer le montant',
+    /* Les noms accessibles nomment la règle : douze boutons « Supprimer » se
+       listent douze fois à l'identique dans les contrôles d'un lecteur
+       d'écran, et rien n'y dirait lequel on vise. L'élision passe par `de()`,
+       qui écrit « d’Électricité » là où le gabarit ne peut pas le savoir. */
+    changeAmountOf: 'Changer le montant %s',
+    removeOf: 'Supprimer la récurrence %s',
+    /* Ce que l'enregistrement change, et jusqu'où. La maquette écrivait « à
+       partir de septembre » ; `syncRecurrenceEntries` ne touche jamais une
+       confirmée et refait les prévues datées **après aujourd'hui**. La coupure
+       est donc le jour même, et une échéance de ce mois-ci encore à confirmer
+       suivra le nouveau montant. */
+    amountAhead: 'à partir des échéances à venir · les mois déjà confirmés ne changent pas',
+    /* La sortie douce, offerte au moment exact où l'on s'apprête à supprimer :
+       c'est presque toujours le bon geste — on résilie un abonnement, on ne
+       l'efface pas — et il n'était offert que deux écrans plus loin. */
+    stopInstead:
+      'Tu résilies plutôt ? L’arrêter garde tout ce qui a déjà été payé, et la règle pourra être reprise.',
+
     /* Le geste inverse de « Ajouter une récurrence » : on découvre qu'une
        règle posée par erreur, ou devenue sans objet, ne se répète pas. Deux
        issues bien distinctes, et la question le dit avant qu'on la pose —
@@ -1470,7 +1783,6 @@ export const fr = {
     subtitleSolo: 'Tu es seul·e ici : tu portes tout le commun, ta part vaut 100 %.',
     total: 'Charges communes',
     totalHint: 'échéances prévues comprises',
-    share: 'Part',
     due: 'À verser',
     income: 'Revenu',
     checkTotal: 'Total des parts',
@@ -1585,12 +1897,27 @@ export const fr = {
        récurrences, elle, garde le constat — elle n'a qu'une ligne, et son
        chevron dit déjà où l'on va pour agir. */
     emptyInvite: 'Aucune avance en cours. Ajoute la première.',
+    /* L'autre cause, et elle change le geste : une avance se rembourse **sur un
+       support d'épargne**, que le formulaire exige (`savingSupportRequired`).
+       Sans aucun support, « Ajoute la première » ouvrait un écran qu'on ne
+       pouvait pas remplir — l'état vide renvoyait à une impasse. C'est la
+       distinction que l'écran d'épargne fait déjà entre « personne » et « aucun
+       support ». */
+    emptyNoSupport:
+      'Une avance se reprend mois par mois sur un support d’épargne, et il n’y en a aucun. Pose-en un d’abord.',
     /* Ce que la rangée des récurrences résume : combien, et combien il reste.
        Deux chiffres, parce que le second seul ne dit pas s'il vient d'une
        avance ou de six. */
     countOne: '%s avance',
     count: '%s avances',
     remainingTotal: '%s restant à remettre',
+    /* Sous la rangée des avances, sur l'écran des crédits, et là seulement :
+       c'est le seul endroit où elles voisinent avec de vraies charges, et où
+       la confusion se paie. Une avance sort de l'épargne et y retourne — elle
+       n'entre dans aucun total du mois, et aucun chiffre de cet écran ne la
+       compte. */
+    notACharge:
+      'Une avance n’est pas une charge : elle attend d’être rendue, elle ne pèse pas sur le mois.',
 
     label: 'Ce que tu as payé',
     labelPlaceholder: 'Assurance auto',
@@ -1608,8 +1935,6 @@ export const fr = {
     savingSupportHint: 'Le livret ou le plan qui a payé, et qu’on reconstitue.',
     savingSupportRequired: 'Dis sur quel support tu as pris l’argent.',
     savingSupportNone: 'Ajoute un support d’épargne pour enregistrer une avance.',
-    member: 'Avancé par',
-    memberRequired: 'Dis qui a avancé : une épargne est toujours à quelqu’un.',
     memberNone: 'Ajoute une personne pour enregistrer une avance.',
     from: 'Du mois de',
     to: 'Au mois de',
@@ -1638,7 +1963,6 @@ export const fr = {
     methodShared:
       'Cochée « à partager », la mensualité entre dans les charges communes : chacun en porte sa part au prorata, et celui qui a avancé se retrouve remboursé.',
 
-    srStatus: '%s : %s remis sur %s, il reste %s.',
   },
 
   savings: {
@@ -1681,7 +2005,6 @@ export const fr = {
        notions que cet écran existe pour séparer. */
     supports: 'Mes supports',
     analysis: 'Analyse',
-    analysisHint: 'Voir l’analyse',
     /* L'aperçu de `/epargne`, et il ne porte **aucun chiffre** — c'est un
        arbitrage d'octets assumé. La décomposition se calcule mois par mois sur
        cinq ans (`domain/savingSeries.ts`) ; en écrire ne serait-ce qu'un
@@ -1694,6 +2017,11 @@ export const fr = {
       'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
       'Ajoute une personne pour suivre ton épargne : un support est toujours à quelqu’un.',
+    /* Le vide de la lecture, et non celui du document : quelqu'un d'autre a des
+       comptes, celui qu'on regarde n'en a pas. Dire « aucun support d'épargne »
+       serait faux, et le geste n'est pas le même — c'est la rangée de pilules,
+       juste au-dessus, qui défait ce vide-là. */
+    supportsNoneMine: 'Personne n’a de support à ce nom. Le foyer, lui, en a.',
     supportAdd: 'Ajouter un support',
     supportNew: 'Nouveau support d’épargne',
     supportEdit: 'Modifier le support',
@@ -1847,6 +2175,12 @@ export const fr = {
     goalsEmpty:
       'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
     goalAdd: 'Ajouter un objectif',
+    /* La réserve qui accompagne les dates d'arrivée de la liste. Une date
+       calculée au rythme d'aujourd'hui n'est pas une promesse : elle recule le
+       mois où l'on verse moins, et elle avance quand on rattrape. La fiche dit
+       pourquoi elle est prudente ; celle-ci dit qu'elle bouge. */
+    goalsProjection:
+      'Les dates sont une projection au rythme actuel, pas une promesse : elles bougent avec les mois que tu confirmes.',
     /* La porte du simulateur, depuis la fiche d'un objectif : ses comptes et son
        échéance, préréglés. Trois mots vivaient ici avec elle — « En faire un
        objectif », « Adopter ce rythme », « Rythme adopté » —, c'est-à-dire une
@@ -2092,12 +2426,6 @@ export const fr = {
     unlinked: 'Non rattaché',
     unlinkedHint:
       'Ces mouvements d’épargne ne désignent aucun support : ils comptent dans le mois, mais ne disent pas où l’argent est allé. Ouvre-les pour les rattacher.',
-    /* Le versement régulier — un flux, à côté du capital et jamais dedans. Il
-       produit une récurrence reliée au support, pas un champ posé dessus. */
-    contribution: 'Versement chaque mois',
-    contributionHint: 'Facultatif : pose une récurrence mensuelle sur ce support.',
-    contributionLabel: 'Versement %s',
-
     srHistory: 'Évolution de la valeur, de %s le %s à %s le %s.',
 
     /* La cascade, terme par terme. Le résultat seul se croit sur parole ; les
@@ -2208,7 +2536,6 @@ export const fr = {
     linkedHint:
       'C’est la récurrence qui pose les mensualités et fait décroître le capital. Sans elle, seul le montant emprunté est connu.',
     total: 'Reste à devoir',
-    totalMonthly: 'Mensualités',
     progress: '%s remboursé',
     labelPlaceholder: 'Prêt voiture',
     principalRequired: 'Indique le capital emprunté.',
@@ -2217,143 +2544,164 @@ export const fr = {
   },
 
   onboarding: {
-    step: 'Étape %s sur 4',
-    /* « Qui vit ici ? » supposait la cohabitation, que le calcul n'utilise
-       jamais : le prorata marche aussi bien pour deux personnes à deux
-       adresses. La question porte donc sur ce dont l'app se sert — le partage
-       d'une dépense —, et elle n'exclut plus qui vit chez quelqu'un d'autre. */
-    membersTitle: 'Avec qui tu partages des dépenses ?',
-    /* Le hint disait le mécanisme — « les membres servent d'étiquette » — et
-       l'aperçu promettait le prorata « une fois leurs revenus posés », sans que
-       rien ne dise *où* on les pose. Quelqu'un qui ajoutait deux prénoms en
-       attendant deux champs de salaire ne trouvait rien, et le prorata restait
-       muet sans qu'il sache pourquoi. La réponse tient en une proposition. */
-    membersHint:
-      'Les prénoms servent d’étiquette sur les dépenses. Leurs revenus se posent à l’étape suivante. Tu peux passer : tout te sera attribué.',
-    membersLabel: 'Prénom',
-    membersPlaceholder: 'Alix',
-    membersAdd: 'Ajouter',
-    membersEmpty: 'Personne pour l’instant. Ajoute un prénom, ou passe.',
-    membersRename: 'Prénom de %s',
-    membersRemove: 'Retirer %s',
-    /* Rien à perdre au premier lancement — aucune entrée n'existe encore —,
-       mais un retrait se demande partout de la même façon : apprendre ici que
-       la croix agit sans prévenir se paierait plus tard, ailleurs. */
-    membersRemoveConfirm: 'Retirer %s ?',
-    solo: 'Je suis seul·e',
+    /* La file du premier lancement, et sa grammaire est celle de la revue :
+       une barre de segments, une question par carte, un pied à trois boutons.
+       Sa longueur dépend des réponses — un prénom de plus est une carte de
+       revenu de plus —, d'où un compteur et non « étape 3 sur 4 » : le total
+       bouge sous le doigt et une phrase figée mentirait d'un cran. */
+    counter: '%s / %s',
+    /* Le compteur en toutes lettres, pour qui n'a que la voix : les segments
+       sont décoratifs et le chiffre seul se lirait « trois barre sept ». */
+    progress: 'Question %s sur %s',
+    /* « Revenir » et non « Retour » : le second nomme la sortie de l'écran,
+       celui-ci recule d'une carte sans rien perdre. Même mot qu'à l'écriture
+       d'une règle, qui est la même file. */
+    back: 'Revenir',
+    /* Passer une carte, et le dire sans s'excuser : aucune réponse de cette
+       file n'est exigée, et le cahier §4.1 met la visibilité de ce bouton comme
+       condition à l'existence de chaque question. */
+    later: 'Plus tard',
     start: 'Commencer',
-    privacy: 'Tes données restent sur cet appareil. Rien n’est envoyé nulle part.',
-    /* La contrepartie, dite au moment où la promesse est faite et non trente
-       jours plus tard par un bandeau : « rien ne sort d'ici » et « rien ne
-       revient si tu vides ce navigateur » sont la même phrase, et n'en garder
-       qu'une moitié se paie un jour. */
-    /* La contrepartie elle-même se dit maintenant à la première étape, en
-       tuile, avant qu'on ait rien saisi. Ce qui reste ici est ce qu'elle ne
-       peut pas dire : le geste, et où le faire. La phrase rouvrait sur
-       « c'est aussi la contrepartie » — la redire au bout de trois écrans en
-       ferait une insistance plutôt qu'un rappel. */
-    backup:
-      'Le geste qui la couvre tient en une minute : exporte un fichier de temps en temps, depuis les réglages.',
-    /* La même contrepartie, quand ce navigateur a déjà répondu qu'il ne
-       s'engageait pas. Elle ne remplace la phrase ordinaire que dans ce cas-là
-       — pas sur un simple « on ne sait pas », pas avant d'avoir posé la
-       question : annoncer une conservation fragile à tout le monde ferait de la
-       phrase honnête un avertissement de plus qu'on n'écoute pas. Et elle ne
-       bloque rien : c'est une ligne de texte sous deux boutons. */
-    backupFragile:
-      'Et ce navigateur ne garantit pas de les conserver. Avant de saisir beaucoup de choses, prends l’habitude d’exporter un fichier : c’est la seule copie qui ne dépend pas de lui.',
+    /* En PWA installée il n'y a pas de bouton retour du navigateur : la
+       première carte porte le sien, sans quoi on n'a plus qu'à répondre ou à
+       fermer. */
+    backToLanding: 'Revenir à la présentation',
 
-    /* Seconde étape, facultative. Le cahier §4.1 refuse le questionnaire de
-       configuration, et il a raison — mais « ne rien exiger » et « ne rien
-       proposer » sont deux choses différentes. L'app ne vaut rien tant que les
-       récurrences ne sont pas posées : c'est sa thèse, et rien n'y conduisait.
-       D'où une étape qui propose les deux lignes qui la démontrent, et qui se
-       saute d'un bouton visible. */
-    starterTitle: 'Ce qui revient chaque mois',
-    starterHint:
-      'Une seule ligne suffit à faire parler l’app : elle pose les échéances des mois à venir et en tire le prévisionnel. Rien n’est obligatoire ici.',
-    starterSalaryOf: 'Salaire de %s',
-    starterSalarySolo: 'Ton salaire',
+    /* --- 1. Le foyer ---------------------------------------------------- */
+
+    /* « Qui vit ici ? » suppose la cohabitation, que le calcul n'utilise
+       jamais : le prorata marche aussi bien pour deux personnes à deux
+       adresses. Le titre garde la question du design, le corps la corrige. */
+    whoTitle: 'Qui vit ici ?',
+    whoBody:
+      'Seul, l’app n’a personne à nommer et tout t’est attribué. À plusieurs, elle partage les charges communes entre vous — et ça marche aussi à deux adresses.',
+    whoLabel: 'Composition du foyer',
+    whoSolo: 'Je vis seul',
+    whoMulti: 'À plusieurs',
+    /* La liste comprend **qui répond**, et l'écran le dit plutôt que de créer un
+       membre « moi » dans son dos. Ce n'est pas une préférence d'écriture : le
+       prorata pèse les revenus des *membres* (`domain/split.ts`), donc un revenu
+       posé sans propriétaire ne compte pas au dénominateur — un foyer de deux
+       dont l'un ne serait pas membre verrait l'autre porter 100 % des charges
+       communes. Solo, la question ne se pose pas : il n'y a personne à
+       comparer, et se désigner soi-même serait la seule réponse de l'app à
+       n'avoir aucune conséquence. */
+    namesLabel: 'Prénom',
+    namesHint: 'Le tien compris : c’est de vos revenus que le partage se déduit.',
+    namesPlaceholder: 'Alix',
+    namesAdd: 'Ajouter',
+    namesRemove: 'Retirer %s',
+    namesEmpty: 'Personne pour l’instant. Ajoute un prénom, en commençant par le tien.',
+    /* Ce que la réponse change, dit avec les prénoms qu'on vient de taper.
+       C'est aussi la seule fois où la règle de partage s'énonce : elle n'a pas
+       de carte à elle, parce qu'elle n'offre aucun choix — le modèle ne sait
+       faire que le prorata (`memberShares`), et une carte qui ne demanderait
+       rien serait la seule de la file à ne pas être une question. */
+    namesShareOne: '%s : tout lui est attribué, il n’y a rien à partager.',
+    namesShare:
+      '%s : les charges communes se partageront entre vous, au prorata de vos revenus — ce qui laisse à chacun le même reste à vivre.',
+
+    /* --- 2. Les revenus ------------------------------------------------- */
+
+    incomeSoloTitle: 'Ce que tu gagnes chaque mois',
+    incomeOfTitle: 'Ce que gagne %s',
+    incomeBody:
+      'Salaire, pension, allocations : ce qui rentre tous les mois. Une approximation suffit, ça se corrige.',
+    /* Le nom accessible du pavé : ce qu'on est en train de saisir, et pas
+       « montant » tout court — la file en demande trois d'affilée. */
+    incomeKeypad: 'Revenu mensuel',
+
+    /* --- 3. Le toit ----------------------------------------------------- */
+
     /* « Loyer » seul disait « cette app n'est pas pour toi » à qui n'en paie
-       pas — chez ses parents, hébergé, logé par l'employeur. La ligne nomme
-       donc les trois façons de payer pour se loger, et dit qu'on peut la
-       laisser vide. Elle l'était déjà : il ne manquait que de le dire. */
-    starterRent: 'Loyer, crédit immobilier, ou ce que tu verses pour te loger',
-    starterRentHint: 'Laisse vide si tu ne paies rien pour ça.',
-    /* Ce que la récurrence portera comme nom, et qui n'est pas celui du champ :
-       « Salaire de Alix » redirait sur la ligne ce que sa pastille de membre
-       dit déjà, et le libellé de la catégorie — « Salaires, retraites ou
-       indemnités » — décrit un tiroir du catalogue, pas une ligne de budget.
-       Ce sont les mots du jeu d'exemple et de la documentation du schéma. */
-    starterSalaryLabel: 'Salaire',
-    starterRentLabel: 'Loyer',
-    /* Le jour ne se demande pas : un champ de plus par ligne aurait fait de
-       cette étape le questionnaire que le cahier refuse. Il se pose donc au
+       pas — chez ses parents, hébergé, logé par l'employeur. Le titre nomme donc
+       les trois façons de payer pour se loger, et le corps dit qu'on peut
+       passer. */
+    rentTitle: 'Ce que tu verses pour te loger',
+    rentBody:
+      'Loyer, crédit immobilier, participation. Passe si tu ne paies rien pour ça — c’est un cas comme un autre.',
+    rentKeypad: 'Montant du loyer',
+
+    /* --- 4. Les autres charges ------------------------------------------ */
+
+    extrasTitle: 'Qu’est-ce qui revient encore ?',
+    extrasBody:
+      'Abonnements, mutuelle, cantine, forfait. Chaque ligne devient une règle : elle remplira les mois suivants toute seule.',
+    extrasName: 'Ce que c’est',
+    extrasNamePlaceholder: 'Netflix, cantine, mutuelle…',
+    extrasAmount: 'Combien',
+    extrasAdd: 'Ajouter',
+    extrasRemove: 'Retirer %s',
+    extrasList: 'Ce qui revient chaque mois',
+    extrasTotal: 'Total mensuel',
+    /* La catégorie de repli, annoncée. `Recurrence.categoryId` est obligatoire
+       et une ligne libre n'en désigne aucune de façon fiable : deviner « Netflix
+       → Streaming » rangerait un jour « cantine » sous « Loisirs » sans le
+       dire. Le repli est donc assumé à voix haute, avec le geste qui le
+       corrige. */
+    extrasFallback: 'Rangé sous %s · tu pourras le préciser depuis Récurrences.',
+    extrasEmpty: 'Rien pour l’instant. Ajoute ce qui te vient, le reste s’ajoute plus tard.',
+    /* Le refus de la ligne, dit plutôt que gris. « Ajouter » était désactivé
+       tant que les deux champs n'étaient pas bons, sans jamais dire lequel
+       manquait — un montant tapé « 12,,5 » laissait un bouton mort et aucune
+       cause. Le nom d'abord : c'est le champ de gauche, et celui qu'on saute. */
+    extrasNameRequired: 'Donne un nom à cette charge.',
+
+    /* --- 5. Le point de départ ------------------------------------------ */
+
+    startMonthTitle: 'Point de départ',
+    /* Le mois **affiché**, et rien d'autre. Le mois courant s'ouvre de toute
+       façon — `hydrate` le rouvre à chaque lancement, et l'app en fait un
+       invariant : jamais une tâche pour l'utilisateur. Ce que ce choix décide,
+       c'est le 1er de quel mois porte les règles, donc le mois où elles se
+       mettent à courir. */
+    startMonthBody:
+      'À partir de quand ces règles courent. Le mois courant reste consultable dans les deux cas — il sera simplement vide si tu commences au suivant.',
+    startMonthLabel: 'Premier mois suivi',
+    startCurrent: 'Ce mois-ci',
+    startNext: 'Le mois prochain',
+    startCurrentHint: 'Les échéances de %s arrivent tout de suite, à confirmer.',
+    startNextHint: '%s s’ouvrira déjà rempli. %s restera vide.',
+
+    /* --- 6. Le récapitulatif -------------------------------------------- */
+
+    summaryTitle: 'Voilà ton mois',
+    summaryBody: 'Relis. Tout se reprend ensuite, ligne par ligne.',
+    summaryHousehold: 'Foyer',
+    summaryHouseholdSolo: 'Toi',
+    summaryShare: 'Partage',
+    summaryShareValue: 'au prorata des revenus',
+    summaryIncome: 'Revenus prévus',
+    summaryRent: 'Logement',
+    summaryExtras: '%s autres charges',
+    summaryExtrasOne: '1 autre charge',
+    /* « Prévisionnel » et non « reste à vivre ». Les deux mots désignent deux
+       chiffres différents dans le domaine : le prévisionnel est revenus moins
+       charges, le reste à vivre (`domain/stats.ts`) est le solde arrêté la
+       veille de la prochaine rentrée d'argent. Sur un foyer payé le 28, l'écart
+       vaut presque un mois de charges — les confondre ici ferait mentir la
+       première lecture de l'app sur elle-même. */
+    summaryForecast: 'Prévisionnel',
+
+    /* Le jour ne se demande nulle part : un champ de plus par carte aurait fait
+       de la file le questionnaire que le cahier §4.1 refuse. Il se pose donc au
        1er — mais il se *dit*, parce qu'une valeur choisie à la place de
        quelqu'un et jamais annoncée se découvre au premier mois faux. */
-    starterDayNote:
-      'Posées au 1er de chaque mois. Le jour, le libellé et la catégorie s’ajustent ensuite depuis Récurrences.',
-    starterSkip: 'Je le ferai plus tard',
+    dayNote: 'Posées au 1er de chaque mois. Le jour, le nom et la catégorie s’ajustent ensuite depuis Récurrences.',
 
-    /* Troisième étape, facultative elle aussi. Elle répond à « combien j'ai et
-       où », et à rien d'autre : ni taux, ni objectif, ni durée, ni allocation.
-       Un questionnaire patrimonial n'aurait pas sa place au premier lancement,
-       et le cahier §4.1 continue de refuser toute réponse exigée. */
-    savingsTitle: 'Ton épargne actuelle',
-    savingsHint:
-      'Tu peux indiquer où se trouve ton épargne pour commencer à la suivre. Rien n’est obligatoire ici, et ça s’ajoute à tout moment depuis l’écran Épargne.',
-    savingsSkip: 'Je le ferai plus tard',
-    previewSavingsEmpty:
-      'Sans support ici, l’app suit ce que tu mets de côté chaque mois, mais pas ce que tu possèdes. Un livret suffit à ce que les deux se lisent.',
-
-    /* En PWA installée il n'y a pas de bouton retour du navigateur : chaque
-       étape porte le sien, sans quoi on n'a plus qu'à répondre ou à fermer. */
-    backToLanding: 'Revenir à la présentation',
-    backToStep: 'Revenir à l’étape %s',
-    progress: 'Progression : étape %s sur 4',
-
-    /* Première étape, et elle ne demande rien. L'onboarding ouvrait sur « avec
-       qui tu partages des dépenses ? » — une question posée avant d'avoir dit
-       ce que l'app fait, à quelqu'un qui vient de cliquer sur un bouton. La
-       thèse du produit tient en une phrase, et elle se dit avant qu'on
-       réponde, pas après.
-       Le titre est au présent et à la deuxième personne, comme la présentation
-       dont il reprend le fil : c'est la même promesse, redite à celui qui vient
-       de l'accepter. */
-    /* Trente-trois caractères, et c'est une mesure et non un goût : au chiffre
-       héros, une phrase de quarante-cinq prend six lignes et 288px sur un écran
-       de 320 — près de la moitié de la hauteur, avant même la contrepartie et
-       le bouton. La présentation tient en quatre lignes parce que sa phrase
-       fait trente caractères. Le titre dit donc le mécanisme, et la phrase
-       en-dessous le déplie. */
-    principleTitle: 'Écrit une fois, prévu chaque mois.',
-    principleBody:
-      'Loyer, abonnements, salaires : tu les écris une fois. Chaque nouveau mois s’ouvre déjà rempli de ce qui est prévu, tu confirmes au fil de l’eau ce qui est réellement tombé, et le reste se déduit tout seul.',
-    /* La contrepartie, en tuile et non en note de bas de page. Elle vivait en
-       13px sous la dernière étape, c'est-à-dire après les trois écrans où l'on
-       a déjà tout saisi : dire « et au fait, tout ça peut disparaître » une
-       fois le travail fait est le pire moment pour le dire. Le readme du DS en
-       fait une règle — le compromis se nomme dans la même phrase que la
-       promesse — et cette étape-ci est cette phrase. */
-    principleCatchTitle: 'La contrepartie',
-    principleCatch:
-      'Rien ne sort de ce navigateur : ni compte, ni serveur, ni mouchard. Si tu l’effaces, tout est effacé, et personne ne peut te le rendre. Le fichier d’export est la seule sortie — c’est toi qui l’ouvres.',
-    principleNext: 'Continuer',
-
-    /* L'aperçu montre ce que la réponse change plutôt que de le promettre.
-       Sans personne, il ne concède pas que « ça marche quand même » : c'est un
-       usage à part entière, et le dire autrement apprend à s'excuser. */
-    previewMembersEmpty:
-      'Sans personne ici, tout t’est attribué. C’est un usage à part entière, pas un mode dégradé.',
-    previewMembers:
-      'Leurs revenus se posent à l’étape suivante. Une fois là, les charges communes se partagent entre eux au prorata.',
-    previewStarterEmpty:
-      'Sans rien ici, le mois s’ouvre à zéro et tout reste à saisir ligne par ligne. Un salaire suffit à ce qu’il s’écrive tout seul.',
-    /* L'aperçu de l'étape 2 ne promet pas le prorata : il le calcule, avec la
-       fonction du domaine qui le calcule partout ailleurs. C'est la thèse de
-       l'app, montrée à l'instant où elle se décide. */
-    previewStarterMonth: 'Ce que ton mois affichera',
-    previewStarterShare: 'La part de chacun sur le loyer, au prorata des revenus',
+    privacy: 'Tes données restent sur cet appareil. Rien n’est envoyé nulle part.',
+    /* La contrepartie, elle, se dit avant d'arriver ici : elle ferme la
+       présentation, sous les trois portes. Ce qui reste ici est ce qu'elle ne
+       peut pas dire — le geste, et où le faire. */
+    backup:
+      'Le geste qui la couvre tient en une minute : exporte un fichier de temps en temps, depuis les réglages.',
+    /* La même phrase, quand ce navigateur a déjà répondu qu'il ne s'engageait
+       pas. Elle ne remplace l'ordinaire que dans ce cas-là — pas sur un simple
+       « on ne sait pas », pas avant d'avoir posé la question : annoncer une
+       conservation fragile à tout le monde ferait de la phrase honnête un
+       avertissement de plus qu'on n'écoute pas. */
+    backupFragile:
+      'Et ce navigateur ne garantit pas de les conserver. Avant de saisir beaucoup de choses, prends l’habitude d’exporter un fichier : c’est la seule copie qui ne dépend pas de lui.',
   },
 
   about: {
@@ -2469,12 +2817,10 @@ export const fr = {
     iconMarker: 'Repère — onglet, tuile, section',
     kindsNote:
       'Le sens dit si l’argent entre ou sort ; la nature dit ce qu’il devient. Une famille porte la nature, ses catégories en héritent.',
-    themePreview: 'Aperçu forcé',
     sampleAmount: 'Montant',
     sampleRing: 'Anneau',
     sampleEmpty: 'Aucune récurrence pour l’instant. Ajoute la première.',
     sampleEmptyAction: 'Ajouter une récurrence',
-    variants: 'Variantes',
     states: 'États',
   },
 

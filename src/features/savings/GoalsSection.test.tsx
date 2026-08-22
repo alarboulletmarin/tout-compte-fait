@@ -158,6 +158,18 @@ describe('le verdict d’un objectif', () => {
 
     expect(screen.getByText(t.savings.goalsEmpty)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: t.savings.goalAdd })).toBeInTheDocument()
+    /* Rien à qualifier : la réserve porte sur des dates, et il n'y en a
+       aucune. Une mise en garde sans objet est du bruit. */
+    expect(screen.queryByText(t.savings.goalsProjection)).not.toBeInTheDocument()
+  })
+
+  /* « Plein en octobre 2027 » est une extrapolation du versement du jour, pas
+     un engagement : le mois où l'on verse moins, la date recule. */
+  it('dit que les dates sont une projection dès qu’il y en a une', () => {
+    seed(makeSavingGoal({ id: 'g-1', memberId: 'm-1', target: eur(2_000_000) }))
+    show()
+
+    expect(screen.getByText(t.savings.goalsProjection)).toBeInTheDocument()
   })
 })
 

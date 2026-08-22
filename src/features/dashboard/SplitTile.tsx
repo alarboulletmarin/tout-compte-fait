@@ -1,7 +1,7 @@
 import { SPLIT_PATH } from '@/app/routes'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, tpl } from '@/i18n/format'
-import { useMemberFilter, useMemberMap, useMonthSplit } from '@/store/selectors'
+import { useMemberMap, useMonthSplit } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -9,6 +9,7 @@ import { SplitIcon } from '@/ui/Icons'
 import { Ring, type RingSegment } from '@/ui/Ring'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
+import { useHasSplit } from './composition'
 import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
 
 /**
@@ -26,10 +27,10 @@ import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
 export function SplitTile() {
   const { total, shares } = useMonthSplit()
   const members = useMemberMap()
-  const filter = useMemberFilter()
   const currency = useCurrency()
+  const visible = useHasSplit()
 
-  if (filter !== undefined || members.size < 2 || shares === null || total <= 0) return null
+  if (!visible || shares === null) return null
 
   const segments: RingSegment[] = shares.map((share) => ({
     id: share.memberId,
@@ -40,8 +41,7 @@ export function SplitTile() {
 
   const spoken = shares
     .map(
-      (share) =>
-        `${members.get(share.memberId)?.name ?? ''} ${formatMoney(share.due, currency)}`,
+      (share) => `${members.get(share.memberId)?.name ?? ''} ${formatMoney(share.due, currency)}`,
     )
     .join(', ')
 
@@ -88,9 +88,7 @@ export function SplitTile() {
               <span className="t-label min-w-0 flex-1 truncate">
                 {members.get(share.memberId)?.name ?? ''}
               </span>
-              <span className="t-axis tnum shrink-0">
-                {formatPercent(share.shareBp / 10_000)}
-              </span>
+              <span className="t-axis tnum shrink-0">{formatPercent(share.shareBp / 10_000)}</span>
             </li>
           ))}
         </ul>

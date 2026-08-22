@@ -24,7 +24,22 @@ export function Toaster() {
   const toasts = useToasts((s) => s.toasts)
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-16 z-50 flex flex-col items-center gap-2 px-4 md:bottom-6">
+    /* La pile s'adosse à la barre d'onglets **et** au disque de saisie qui la
+       surplombe : 64px la posaient à sept pixels du filet, c'est-à-dire en
+       plein sur le disque, qu'elle recouvrait — un message qui masque le bouton
+       de saisie cache justement ce sur quoi on vient d'agir. Le dégagement est
+       celui que la coquille réserve déjà au bas de chaque écran, aux mêmes
+       tokens (`AppShell`).
+
+       Et il tombe à `lg`, pas à `md` : la barre d'onglets vit jusqu'à 1024px, si
+       bien qu'entre 768 et 1024 la pile redescendait à 24px du bord, donc
+       derrière elle. Au-delà, il n'y a plus de barre — 20px suffisent. */
+    <div
+      className={cn(
+        'pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-4',
+        'bottom-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:bottom-5',
+      )}
+    >
       <div role="status" aria-live="polite" className="contents">
         {toasts
           .filter((item) => item.tone !== 'danger')

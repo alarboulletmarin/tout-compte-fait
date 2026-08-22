@@ -46,6 +46,15 @@ export function GoalsSection() {
         </RowGroup>
       )}
 
+      {/* La réserve, sous les dates qu'elle qualifie — et seulement quand il y
+          a une date à qualifier. « Plein en octobre 2027 » se lit comme une
+          promesse alors que c'est une extrapolation du versement d'aujourd'hui
+          à taux constant : le mois où l'on verse moins, la date recule. La
+          fiche d'un objectif dit déjà pourquoi elle est prudente
+          (`goalRateHint`) ; ici on dit qu'elle bouge, ce qui est l'autre
+          moitié, et la seule qui vaille devant une liste. */}
+      {goals.length > 0 && <p className="t-label">{t.savings.goalsProjection}</p>}
+
       <Button
         size="sm"
         variant="ghost"

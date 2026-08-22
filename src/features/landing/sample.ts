@@ -85,6 +85,25 @@ export const SAMPLE = {
   shared: money(84_000),
   advanced: ADVANCED,
 
+  /**
+   * Le solde attendu en fin de mois : le revenu moins tout ce qui est prévu.
+   * 3 200 − 2 560 = 640. Il vaut la capacité d'épargne au centime, et ce n'est
+   * pas une coïncidence : ce foyer n'a aucun versement d'épargne, donc les deux
+   * soustractions retirent exactement les mêmes termes. Écrit à part quand
+   * même, parce que les deux chiffres cesseraient d'être égaux dès qu'une ligne
+   * d'épargne entrerait dans l'exemple, et qu'un alias le cacherait.
+   */
+  forecast: money(64_000),
+
+  /**
+   * La ligne que la tuile du mécanisme montre : prévue à 96,40, tombée à
+   * 104,20. Elle fait partie des 1 820 € de charges — c'est une des lignes du
+   * mois, pas un chiffre posé à côté —, et rien d'autre de la page ne s'y
+   * recompose : une seule ligne sur une trentaine ne se déduit d'aucun total.
+   */
+  electricityPlanned: money(9_640),
+  electricityReal: money(10_420),
+
   income: money(320_000),
   /** Les deux termes que la capacité soustrait du revenu, dans cet ordre. */
   charges: money(182_000),

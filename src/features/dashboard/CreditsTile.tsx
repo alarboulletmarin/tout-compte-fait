@@ -7,7 +7,7 @@ import { useDebtStatuses } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { CreditsIcon } from '@/ui/Icons'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
 
 /**
  * Ce qu'il reste à devoir, tous crédits confondus, et le chemin vers le détail.
@@ -33,7 +33,7 @@ import { Tile } from '@/ui/Tile'
  * 1024px. « Capital restant dû · 3 crédits en cours » demande 215px à côté d'un
  * montant qui en prend 160, quand un téléphone n'offre que 326px de contenu.
  */
-export function CreditsTile() {
+export function CreditsTile({ span = '4x1' }: { span?: TileSpan }) {
   const statuses = useDebtStatuses()
   const navigate = useNavigate()
   if (statuses.length === 0) return null
@@ -43,7 +43,7 @@ export function CreditsTile() {
 
   return (
     <Tile
-      span="4x1"
+      span={span}
       className="justify-between"
       onClick={() => {
         void navigate(CREDITS_PATH)

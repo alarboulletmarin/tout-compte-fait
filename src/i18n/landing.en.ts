@@ -10,10 +10,14 @@ export const en: LandingStrings = {
     'You write down once what comes back every month — rent, subscriptions, salaries. The next month opens already filled with what’s planned, and you confirm as you go what actually landed.',
   start: 'Create my tracker',
   open: 'Open my month',
-  exampleHint: 'Just want to see what it looks like? A complete example, in one click.',
-  privacy: 'No account, no server. Two questions, and the app is usable.',
+  exampleHint: 'Just want to see what it looks like? A full month, already filled in, in one click.',
 
-  free: 'Free, ad-free and never resold: there’s nothing to sell since nothing is collected, and nothing to fund since there is no server.',
+  enterEmpty: 'Go in without loading anything',
+
+  pointLocalTitle: 'One document, on this device, yours alone.',
+  pointRecurringTitle: 'What comes back is written once, and fills the months ahead.',
+  pointExportTitle: 'The export is a readable file, not a promise.',
+
 
   installTitle: 'Install it on your device',
   installBody:
@@ -23,17 +27,17 @@ export const en: LandingStrings = {
   offline: 'Offline — everything keeps working',
 
   monthTitle: 'Planned, then confirmed',
-  monthHint: 'confirmed out of planned',
   monthRing: 'Share of the month already confirmed',
   /* La devise reste l'euro : la démonstration lit les mêmes montants que
      `features/landing/sample.ts`, et une livre écrite ici mentirait sur ce que
      la grille juste à côté affiche. */
   monthRingRead: '75 % of the month is confirmed, that is €1,920 out of €2,560.',
-  monthOf: '%s of %s',
-  incomeHint: 'salaries and benefits for the month',
+  confirmedToDate: 'confirmed so far',
   splitTitle: 'Everyone their share',
   privacyTitle: 'Nothing leaves here',
-  privacyShort: 'No account, no server.',
+
+  mechanismLabel: 'Electricity',
+  mechanismBody: 'planned becomes real: that’s all you do, one line at a time',
 
   principles: 'What sets this app apart',
   monthBody:
@@ -47,7 +51,10 @@ export const en: LandingStrings = {
   kindsBody:
     'Nothing is filed under bank accounts: everything is money in or money out, under one of the four kinds. The direction says whether money comes in or goes out, the kind says what becomes of it — a transfer to a savings account leaves the account just like a tank of fuel, but one is moved and the other consumed.',
 
-  sample: 'The figures above are from an example.',
+  sample: 'figures from the example — load it to walk around in it',
+
+  counterpart:
+    'Everything is erased if you clear this browser, and nobody can give it back to you: that’s the exact trade-off for “nothing leaves here”. The export file is the only way out.',
 
   proof: 'The calculation, in full',
   proofBody:

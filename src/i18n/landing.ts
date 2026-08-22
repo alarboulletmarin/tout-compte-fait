@@ -40,22 +40,29 @@ const fr = {
      dont le libellé — « Charger l'exemple » — dit le geste sans dire pourquoi
      on le ferait. Elle était écrite depuis le début et branchée nulle part ;
      seul `t.settings.exampleHint`, qui dit autre chose, servait. */
-  exampleHint: 'Juste voir à quoi ça ressemble ? Un exemple complet, en un clic.',
-  privacy: 'Pas de compte, pas de serveur. Deux questions, et l’app est utilisable.',
+  exampleHint: 'Juste voir à quoi ça ressemble ? Un mois complet, déjà rempli, en un clic.',
 
-  /* La ligne d'après, et la question que la précédente laissait ouverte. « Pas
-     de compte, pas de serveur » dit d'où ne viennent pas les données ; le
-     silence sur le prix, lui, se lit comme un piège. Le raisonnement était
-     écrit dans le README — « aucun backend, donc aucun coût de fonctionnement »
-     — et n'avait jamais atteint la page qui en a besoin.
-     La seconde moitié de la réponse est plus bas, dans les questions : depuis
-     la bascule sous AGPL, elle se vérifie au lieu de se promettre. */
-  free:
-    'Gratuit, sans publicité et sans revente : il n’y a rien à vendre puisque rien n’est collecté, et rien à financer puisqu’il n’y a pas de serveur.',
+  /* La troisième porte, et la seule qui n'écrit rien d'autre qu'un document
+     vide. Elle existe pour qui ne veut ni répondre ni regarder un exemple :
+     l'app s'ouvre sur son mois courant, vide, et c'est l'état vide du mois qui
+     prend le relais — « Août est vide → Écrire une récurrence ».
+     En bouton fantôme et sous les arguments : c'est un raccourci pour qui sait
+     déjà ce qu'il fait, pas la porte qu'on recommande. */
+  enterEmpty: 'Entrer sans rien charger',
 
-  /* L'installation se propose juste sous ces deux phrases-là, et c'est le seul
-     endroit où elle a un sens : « pas de serveur » vient d'être écrit, donc la
-     question « et si je change de navigateur » vient d'être posée. Le texte dit
+  /* Les trois arguments, en une ligne chacun. Ils ne redisent pas la promesse
+     du titre : ils nomment les trois choses que l'app fait et que les autres
+     ne font pas — le document reste ici, le mois s'écrit tout seul, et la
+     sortie est un fichier qu'on peut relire soi-même. */
+  pointLocalTitle: 'Un document, sur cet appareil, à toi seul.',
+  pointRecurringTitle: 'Ce qui revient s’écrit une fois, et remplit les mois suivants.',
+  pointExportTitle: 'L’export est un fichier lisible, pas une promesse.',
+
+  /* L'installation se propose juste sous les trois arguments, et c'est le seul
+     endroit où elle a un sens : « un document sur cet appareil » vient d'être
+     écrit, donc la question « et si je change de navigateur » vient d'être
+     posée. Le prix, lui, n'a plus de ligne à lui : la réponse tient dans les
+     questions du bas, où elle se vérifie au lieu de se promettre. Le texte dit
      ce que l'installation apporte — pas qu'elle est possible, ce que le bouton
      dit déjà.
      La purge de Safari est nommée en clair. Le cahier §5 la connaît, et une app
@@ -72,18 +79,28 @@ const fr = {
      l'argument, pas un service en panne. */
   offline: 'Hors ligne — tout continue de fonctionner',
 
-  /* Ce que portent les tuiles : une étiquette, un chiffre, une lecture
+  /* Ce que portent les trois tuiles : une étiquette, un chiffre, une lecture
      secondaire. Le raisonnement de chacune est plus bas, en `principles`, où
      rien ne le coupe par le bas (DS §5). */
   monthTitle: 'Prévu, puis confirmé',
-  monthHint: 'confirmé sur prévu',
   monthRing: 'Part du mois déjà confirmée',
   monthRingRead: '75 % du mois est confirmé, soit 1 920 € sur 2 560 €.',
-  monthOf: '%s sur %s',
-  incomeHint: 'salaires et allocations du mois',
+  /* La seconde lecture de la tuile du prévisionnel : ce qui est déjà tombé, à
+     côté de ce qui est attendu. Le montant passe par `Amount`, jamais écrit
+     dans la phrase — la devise et le séparateur ne sont pas les mêmes dans les
+     deux langues (G22). */
+  confirmedToDate: 'confirmé à ce jour',
   splitTitle: 'Chacun sa part',
   privacyTitle: 'Rien ne sort d’ici',
-  privacyShort: 'Pas de compte, pas de serveur.',
+
+  /* La tuile qui montre le mécanisme plutôt que de le raconter : une ligne
+     prévue, barrée, et le montant qu'elle a réellement coûté. C'est le geste
+     de la revue, en une image, et c'est la seule tuile accentuée de la page.
+     Le libellé est celui d'une ligne du mois — pas un nom de catégorie : le
+     catalogue range l'électricité sous « Énergie », et une tuile qui montrerait
+     un tiroir au lieu d'une dépense ne montrerait rien. */
+  mechanismLabel: 'Électricité',
+  mechanismBody: 'le prévu devient réel : c’est tout ce que tu fais, une ligne à la fois',
 
   /* Les quatre idées qui font l'app, en prose et hors de la grille : elles
      demandent trois lignes chacune, et une tuile qui en porte trois n'est plus
@@ -107,7 +124,18 @@ const fr = {
 
   /* La seule chose qui empêche la grille de mentir. En texte lisible et non
      en filigrane : un avertissement qu'on ne peut pas lire n'en est pas un. */
-  sample: 'Les chiffres ci-dessus sont ceux d’un exemple.',
+  /* Sous les tuiles, et non au-dessus : c'est une légende. Elle dit deux
+     choses en une ligne — que rien de ce qu'on lit n'est vrai, et qu'on peut
+     rendre tout ça vrai d'un bouton, celui qui est juste à gauche. */
+  sample: 'chiffres de l’exemple — charge-le pour t’y promener',
+
+  /* La contrepartie, en pied de page et au centre. Elle est plus courte que
+     `lossBody`, qui répond plus bas à la même question : celle-ci se lit par
+     quelqu'un qui n'a rien demandé, donc elle tient en une phrase et ne
+     propose aucun remède. Les deux gestes qui la couvrent — installer,
+     exporter — sont dits par `installBody` et par la réponse du bas. */
+  counterpart:
+    'Tout est effacé si tu effaces ce navigateur, et personne ne peut te le rendre : c’est la contrepartie exacte de « rien ne sort d’ici ». Le fichier d’export est la seule sortie.',
 
   /* ---- Le calcul, montré ------------------------------------------------ */
 

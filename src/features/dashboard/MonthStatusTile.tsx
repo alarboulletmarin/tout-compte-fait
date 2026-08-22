@@ -69,9 +69,13 @@ export function MonthStatusTile({ onShowPending }: { onShowPending?: () => void 
       {...(go
         ? {
             onClick: onShowPending,
-            // Elle descend, elle ne pointe pas de côté : « plus bas », et non
-            // « ailleurs ».
-            affordance: { kind: 'scroll' as const, destination: t.month.toConfirm },
+            /* Elle descend, elle ne pointe pas de côté : « plus bas », et non
+               « ailleurs ». Vers la liste du mois, qui porte désormais les
+               échéances prévues avec les lignes réelles — la section
+               « À confirmer » qu'elle désignait avant y a été fondue. Le nom
+               court, parce qu'un repère de coin plafonne à 60 % de la largeur
+               de sa tuile. */
+            affordance: { kind: 'scroll' as const, destination: t.month.entries },
           }
         : {})}
     >

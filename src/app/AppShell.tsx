@@ -9,7 +9,7 @@ import { useHotkeys } from '@/ui/useHotkeys'
 import { DataNotice } from './DataNotice'
 import { Sidebar, TabBar } from './Nav'
 import { QuickEntry } from './QuickEntry'
-import { entryNewPath, isFocusScreen } from './routes'
+import { entryQuickPath, isFocusScreen, isFullFrame } from './routes'
 
 /** Coquille de l'app : navigation et gabarit. Aucune règle métier ici. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -17,6 +17,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const householdName = useHouseholdName()
   const navigate = useNavigate()
   const focus = isFocusScreen(pathname)
+  /* La revue prend le cadre entier au doigt : pas de barre d'onglets, donc pas
+     de cadre bas à lui réserver. Voir `isFullFrame`, qui dit pourquoi elle est
+     seule dans ce cas. */
+  const fullFrame = isFullFrame(pathname)
 
   /* Le geste le plus fréquent de l'app, sur une touche. Pas sur un écran de
      saisie : « n » y partirait créer une dépense par-dessus celle qu'on est en
@@ -26,7 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     n: focus
       ? undefined
       : () => {
-          void navigate(entryNewPath({ direction: 'out' }))
+          void navigate(entryQuickPath({ direction: 'out' }))
         },
   })
 
@@ -45,7 +49,14 @@ export function AppShell({ children }: { children: ReactNode }) {
      le premier champ d'une saisie est exactement là où l'on veut être, et le
      renvoyer en haut annulerait le geste qu'on vient de faire. Et le focus est
      programmatique : `:focus-visible` ne s'y applique pas, l'anneau du DS ne se
-     dessine donc pas autour de la page entière. */
+     dessine donc pas autour de la page entière.
+
+     `preventScroll` parce que ce focus-ci sert la voix, pas l'œil : donner le
+     focus à un élément le ramène dans la vue, et `<main>` commence six pixels
+     sous le haut du document — un écran ouvert par ce chemin s'affichait donc
+     à six pixels du haut au lieu du haut. La position de défilement appartient
+     à `ScrollMemory`, qui la décide selon qu'on ouvre un écran ou qu'on y
+     revient ; deux mains sur le même volant s'annulent. */
   const main = useRef<HTMLElement>(null)
   const previous = useRef(pathname)
 
@@ -55,7 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const node = main.current
     if (node === null || node.contains(document.activeElement)) return
-    node.focus()
+    node.focus({ preventScroll: true })
   }, [pathname])
 
   return (
@@ -92,7 +103,9 @@ export function AppShell({ children }: { children: ReactNode }) {
              dégageait une hauteur que le bouton n'occupe plus. */
           className={cn(
             'view-enter min-w-0 flex-1 px-4 pt-4 md:px-8 md:pt-8',
-            'pb-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:pb-10',
+            fullFrame
+              ? 'pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:pb-10'
+              : 'pb-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] lg:pb-10',
           )}
         >
           {/* Un seul bandeau pour les trois façons de dire « garde une copie » —
@@ -110,7 +123,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <TabBar />
+      {/* La barre d'onglets s'efface sur les écrans plein cadre, et sur eux
+          seuls : la revue est une tâche qui a une fin visible et sa propre
+          sortie, pas une section de l'app dans laquelle on entre. */}
+      {!fullFrame && <TabBar />}
       {/* Après la barre d'onglets, qu'il surplombe : c'est le même geste au
           doigt que le raccourci « n » au clavier, et il porte la même garde. */}
       <QuickEntry />

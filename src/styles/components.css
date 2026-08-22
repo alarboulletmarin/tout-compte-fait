@@ -328,6 +328,33 @@
     }
   }
 
+  /* --- La lecture d'appoint d'une rangée de liste ------------------------ */
+
+  /* « 12 960,00 € par an », sous le coût mensuel d'une règle : la seule chose
+     qu'une rangée de récurrence puisse rendre quand elle se resserre.
+     Mesuré, pas décidé. Depuis que la rangée porte les deux boutons qui
+     doublent le glissé (DS §8), il lui manque 88px de large, plus leurs
+     gouttières. Sur un téléphone de 320 points, la tuile de la liste fait 248px
+     de contenu ; retranchés le cadre de la rangée, la pastille et ses
+     gouttières, il reste **86px** pour une lecture qui en demande 113 — le
+     chiffre se faisait donc trancher par l'`overflow-hidden` du glissé, ce qui
+     est la pire façon d'échouer : on ne voyait pas qu'il manquait quelque
+     chose. Il faut 275px de tuile pour que les deux tiennent ; le seuil est
+     celui de `.tile-hint` juste au-dessus, parce qu'un second nombre à dix
+     pixels près n'en mérite pas un troisième.
+     Le coût annuel reste **entier sur la fiche**, où il ne partage sa ligne
+     avec rien — et il ne s'affiche de toute façon que sur les cadences non
+     mensuelles, où il apprend quelque chose. */
+  .row-aside {
+    display: none;
+  }
+
+  @container (min-width: 300px) {
+    .row-aside {
+      display: inline;
+    }
+  }
+
   /* Rangée de 108px : une seconde ligne y entre, le seuil redescend à ce qu'il
      faut pour que la ligne ait un sens plutôt que pour qu'elle tienne d'un
      trait. */
@@ -501,8 +528,16 @@
   .span-2x2,
   .span-4x1,
   .span-4x2,
+  .span-6x1,
   .span-6x2 {
     grid-column: span 2;
+  }
+  /* Toute la largeur, une seule rangée — le format qui referme une grille que
+     les autres laissent ouverte. Il occupe six cases sur le palier bureau,
+     quatre sur la tablette, deux sur le téléphone : c'est exactement une rangée
+     pleine à chacun des trois, ce qu'aucun autre format plat ne donne. */
+  .span-6x1 {
+    grid-row: span 1;
   }
   .span-4x1 {
     grid-row: span 1;
@@ -521,6 +556,7 @@
     .span-4x2 {
       grid-column: span 2;
     }
+    .span-6x1,
     .span-6x2 {
       grid-column: span 4;
     }
@@ -535,6 +571,7 @@
     .span-4x2 {
       grid-column: span 4;
     }
+    .span-6x1,
     .span-6x2 {
       grid-column: span 6;
     }
