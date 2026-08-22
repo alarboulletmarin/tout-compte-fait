@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto'
-import { act, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { currentYm, startOfMonth } from '@/domain/date'
+import { addMonthsToYm, currentYm, startOfMonth } from '@/domain/date'
 import { money } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
@@ -12,74 +12,69 @@ import { emptyData } from '@/persistence/defaults'
 import { useStorageHealth } from '@/persistence/health'
 import { useStore } from '@/store/store'
 import { OnboardingPage } from './OnboardingPage'
+import { FALLBACK_CATEGORY } from './queue'
 
 /* Le premier lancement, tel qu'il se présente : rien d'enregistré, statut
-   « onboarding ». C'est cette garde-là qui fait que les récurrences posées à la
-   seconde étape n'ont encore aucune échéance — voir `startWith`. */
+   « onboarding ». C'est cette garde-là qui fait que les récurrences posées par
+   la file n'ont encore aucune échéance — elles naissent à l'ouverture du mois,
+   dans `finishOnboarding`. */
 function firstLaunch(): void {
   useStore.setState({ status: 'onboarding', data: emptyData(), error: null, ym: currentYm() })
 }
 
 const state = () => useStore.getState()
 
-/* Aucun nom ne se demande plus : les personnes sont la première *question*. Le
-   nom affiché vit dans les réglages, facultatif — il n'a jamais rien décidé, et
-   l'exiger pour continuer était la seule question bloquante de l'app.
-
-   L'écran s'ouvre désormais sur un énoncé qui ne demande rien — la thèse et sa
-   contrepartie, avant qu'on saisisse quoi que ce soit. Il se franchit d'un
-   bouton, et c'est ce que fait `openPrinciple` : les scénarios ci-dessous
-   portent sur les réponses, pas sur la lecture qui les précède. */
-async function openPrinciple(): Promise<void> {
+function open(): void {
   render(
     <MemoryRouter>
       <OnboardingPage />
     </MemoryRouter>,
   )
-  await userEvent.click(screen.getByRole('button', { name: t.onboarding.principleNext }))
 }
 
-/** Répond à la première question et s'arrête sur la suivante. */
-async function answerFirst(names: readonly string[]): Promise<void> {
-  await openPrinciple()
+/** Le compteur du haut, tel qu'il s'écrit : « 3 / 7 ». */
+function counter(): string {
+  return screen.getByText(/\d+ \/ \d+/).textContent ?? ''
+}
 
+/** Combien de cartes la file compte, lu sur le compteur et non sur le code. */
+function total(): number {
+  return Number(counter().split('/')[1]?.trim() ?? '0')
+}
+
+const click = async (name: string): Promise<void> => {
+  await userEvent.click(screen.getByRole('button', { name }))
+}
+
+/* Un `Segmented` est un groupe de boutons radio, pas une rangée de boutons :
+   c'est la règle APG qu'il suit, et le test la suit avec lui. */
+const pick = async (name: string): Promise<void> => {
+  await userEvent.click(screen.getByRole('radio', { name }))
+}
+
+/** Frappe un montant au pavé, touche par touche. */
+async function keypad(digits: string): Promise<void> {
+  for (const digit of digits) await click(digit)
+}
+
+/** Passe à la carte suivante. */
+const next = (): Promise<void> => click(t.common.next)
+
+/** Nomme les personnes du foyer, qui répond compris. */
+async function household(names: readonly string[]): Promise<void> {
+  await pick(t.onboarding.whoMulti)
   for (const name of names) {
-    /* Sans `exact`, « Prénom » attraperait aussi les champs de renommage des
-       membres déjà ajoutés, qui s'appellent « Prénom de Alix ». */
-    await userEvent.type(screen.getByLabelText(t.onboarding.membersLabel), name)
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.membersAdd }))
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.namesLabel)), name)
+    await click(t.onboarding.namesAdd)
   }
-
-  await userEvent.click(
-    screen.getByRole('button', {
-      name: names.length === 0 ? t.onboarding.solo : t.common.next,
-    }),
-  )
-}
-
-const fill = async (label: string, amount: string): Promise<void> => {
-  await userEvent.type(screen.getByLabelText(new RegExp(label)), amount)
 }
 
 /* Le montant tel qu'un lecteur d'écran l'entend. Les espaces fines insécables
-   d'`Amount` sont ramenées à l'espace ordinaire, comme le fait la
-   normalisation de `getByText` sur le texte du DOM — sans quoi les deux
-   chaînes se compareraient sur deux caractères d'espace différents. */
+   d'`Amount` sont ramenées à l'espace ordinaire, comme le fait la normalisation
+   de `getByText` sur le texte du DOM. */
 const spoken = (cents: number): string => formatMoney(money(cents), 'EUR').replace(/\s/g, ' ')
 
-/** Quitte la seconde étape, puis la troisième, et ouvre l'app. */
-async function finishFrom(step: 2 | 3, keep: boolean): Promise<void> {
-  if (step === 2) {
-    await userEvent.click(
-      screen.getByRole('button', {
-        name: keep ? t.common.next : t.onboarding.starterSkip,
-      }),
-    )
-  }
-  await userEvent.click(screen.getByRole('button', { name: t.onboarding.savingsSkip }))
-}
-
-describe('les quatre étapes du premier lancement', () => {
+describe('la file du premier lancement', () => {
   beforeEach(firstLaunch)
 
   afterEach(() => {
@@ -87,13 +82,74 @@ describe('les quatre étapes du premier lancement', () => {
     useStorageHealth.setState({ durable: 'unknown', probed: false, asked: false })
   })
 
-  it('pose un salaire par personne et un loyer commun, puis ouvre le mois', async () => {
-    await answerFirst(['Alix', 'Camille'])
+  /* La promesse de l'écran : le nombre de cartes dépend des réponses. Sans ce
+     test, « file adaptative » ne serait qu'une intention écrite en commentaire. */
+  it('s’allonge d’une carte par personne, et se raccourcit quand on en retire une', async () => {
+    open()
+    // Solo : foyer, un revenu, logement, autres charges, départ, récapitulatif.
+    expect(total()).toBe(6)
 
-    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '2400')
-    await fill(tpl(t.onboarding.starterSalaryOf, 'Camille'), '1850')
-    await fill(t.onboarding.starterRent, '980')
-    await finishFrom(2, true)
+    await pick(t.onboarding.whoMulti)
+    // Personne de nommé : la file ne bouge pas, la carte de revenu reste « toi ».
+    expect(total()).toBe(6)
+
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.namesLabel)), 'Alix')
+    await click(t.onboarding.namesAdd)
+    expect(total()).toBe(6)
+
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.namesLabel)), 'Camille')
+    await click(t.onboarding.namesAdd)
+    expect(total()).toBe(7)
+
+    await click(tpl(t.onboarding.namesRemove, 'Camille'))
+    expect(total()).toBe(6)
+
+    // Et repasser en solo ramène la file à sa longueur de départ.
+    await pick(t.onboarding.whoSolo)
+    expect(total()).toBe(6)
+  })
+
+  /* Solo = zéro membre, et c'est la décision qui commande toute la file :
+     `scopeToMember` et `memberCharges` ont un chemin solo explicite, qui
+     n'existe que si personne n'est nommé. Un membre « moi » inventé ici les
+     rendrait morts. */
+  it('ne crée aucun membre en solo, et pose le revenu sans propriétaire', async () => {
+    open()
+    await next() // foyer
+    await keypad('170000') // 1 700,00
+    await next()
+    await next() // logement, vide
+    await next() // autres charges, vide
+    await next() // point de départ
+    await click(t.onboarding.start)
+
+    const { data, status } = state()
+    expect(status).toBe('ready')
+    expect(data.household.members).toStrictEqual([])
+    expect(data.recurrences).toHaveLength(1)
+    expect(data.recurrences[0]?.categoryId).toBe('salary')
+    expect(data.recurrences[0]?.amount).toBe(170_000)
+    expect(data.recurrences[0]?.memberId).toBeUndefined()
+  })
+
+  /* Le cas nominal à deux : un salaire par personne, le loyer commun, et les
+     trois règles au 1er du mois courant. Le loyer ne porte ni membre ni
+     `shared` — `defaultShared` le rend commun parce que c'est une charge que
+     personne ne s'attribue. */
+  it('pose un salaire par personne et un logement commun, puis ouvre le mois', async () => {
+    open()
+    await household(['Alix', 'Camille'])
+    await next()
+
+    await keypad('240000')
+    await next()
+    await keypad('185000')
+    await next()
+    await keypad('98000')
+    await next()
+    await next() // autres charges, vide
+    await next() // point de départ
+    await click(t.onboarding.start)
 
     const { data, status } = state()
     expect(status).toBe('ready')
@@ -101,219 +157,193 @@ describe('les quatre étapes du premier lancement', () => {
     const [alix, camille] = data.household.members
     expect(data.recurrences).toHaveLength(3)
 
-    const salaries = data.recurrences.filter((r) => r.categoryId === 'salary')
-    expect(salaries.map((r) => r.memberId)).toStrictEqual([alix?.id, camille?.id])
-    expect(salaries.map((r) => r.amount)).toStrictEqual([240_000, 185_000])
-    expect(salaries.every((r) => r.direction === 'in')).toBe(true)
-    /* Le nom de la ligne, pas celui du tiroir : « Salaires, retraites ou
-       indemnités » décrit la catégorie, et la pastille du membre dit déjà de
-       qui c'est le salaire. */
-    expect(salaries.every((r) => r.label === t.onboarding.starterSalaryLabel)).toBe(true)
+    const salaries = data.recurrences.filter((rule) => rule.categoryId === 'salary')
+    expect(salaries.map((rule) => rule.memberId)).toStrictEqual([alix?.id, camille?.id])
+    expect(salaries.map((rule) => rule.amount)).toStrictEqual([240_000, 185_000])
+    expect(salaries.every((rule) => rule.direction === 'in')).toBe(true)
+    /* Le nom de la ligne, pas celui du tiroir, et il vient du chemin rapide
+       vers une règle : deux écrans qui écriraient « Salaire » chacun de leur
+       côté finiraient par ne plus écrire la même chose. */
+    expect(salaries.every((rule) => rule.label === t.quickRule.nameSalary)).toBe(true)
 
-    /* Le loyer n'est à personne et ne force rien : `defaultShared` le rend
-       commun parce que c'est une charge que personne ne s'attribue. Poser
-       `shared: true` ici recopierait la règle au lieu de s'y fier — et la
-       ligne cesserait de suivre si la règle changeait. */
-    const rent = data.recurrences.find((r) => r.categoryId === 'rent')
+    const rent = data.recurrences.find((rule) => rule.categoryId === 'rent')
     expect(rent?.memberId).toBeUndefined()
     expect(rent?.shared).toBeUndefined()
     expect(rent?.direction).toBe('out')
-    expect(rent?.label).toBe(t.onboarding.starterRentLabel)
+    expect(rent?.label).toBe(t.quickRule.nameRent)
 
-    // Mensuelles au 1er, sans qu'on ait eu à le demander.
     const ym = currentYm()
-    expect(data.recurrences.map((r) => r.startedOn)).toStrictEqual(Array(3).fill(startOfMonth(ym)))
-    expect(data.recurrences.map((r) => r.period)).toStrictEqual(
+    expect(data.recurrences.map((rule) => rule.startedOn)).toStrictEqual(
+      Array(3).fill(startOfMonth(ym)),
+    )
+    expect(data.recurrences.map((rule) => rule.period)).toStrictEqual(
       Array(3).fill({ unit: 'month', every: 1, anchorDay: 1 }),
     )
 
-    /* Le vrai résultat de l'étape : on n'arrive pas sur un mois à zéro. Les
-       échéances naissent à l'ouverture du mois, donc dans `finishOnboarding`,
-       et elles arrivent à confirmer comme n'importe quel mois qui s'ouvre. */
-    const planned = data.entries.filter((e) => e.date.startsWith(ym))
+    /* Le vrai résultat de la file : on n'arrive pas sur un mois à zéro. Les
+       échéances naissent à l'ouverture du mois, donc dans `finishOnboarding`. */
+    const planned = data.entries.filter((entry) => entry.date.startsWith(ym))
     expect(planned).toHaveLength(3)
-    expect(planned.every((e) => e.status === 'planned')).toBe(true)
-    expect(data.months.map((m) => m.ym)).toStrictEqual([ym])
+    expect(planned.every((entry) => entry.status === 'planned')).toBe(true)
   })
 
-  it('accepte un revenu sans personne à qui l’attribuer — l’usage solo', async () => {
-    await answerFirst([])
+  /* E16 : une charge répétable produit une **récurrence**, jamais une entrée du
+     mois — sinon elle ne remplirait pas septembre, ce qui est la promesse de
+     l'écran. Et `categoryId` est obligatoire : chaque ligne libre atterrit sur
+     le repli, que l'écran nomme. */
+  it('transforme chaque charge libre en règle mensuelle rangée sous le repli', async () => {
+    open()
+    await next() // foyer, solo
+    await next() // revenu, vide
+    await next() // logement, vide
 
-    await fill(t.onboarding.starterSalarySolo, '1700')
-    await finishFrom(2, true)
+    const fallback = state().data.categories.find((one) => one.id === FALLBACK_CATEGORY)
+    expect(fallback).toBeDefined()
+    expect(screen.getByText(tpl(t.onboarding.extrasFallback, fallback?.label ?? ''))).toBeInTheDocument()
 
-    const { data, status } = state()
-    expect(status).toBe('ready')
-    expect(data.recurrences).toHaveLength(1)
-    expect(data.recurrences[0]?.categoryId).toBe('salary')
-    expect(data.recurrences[0]?.memberId).toBeUndefined()
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasName)), 'Netflix')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)), '13,49')
+    await click(t.onboarding.extrasAdd)
+
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasName)), 'Mutuelle')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)), '42')
+    await click(t.onboarding.extrasAdd)
+
+    // Le total en pied de carte, additionné et non recalculé à l'écran.
+    expect(screen.getByText(spoken(5_549))).toBeInTheDocument()
+
+    await next() // point de départ
+    await next() // récapitulatif
+    await click(t.onboarding.start)
+
+    const { data } = state()
+    expect(data.recurrences).toHaveLength(2)
+    expect(data.recurrences.map((rule) => rule.label)).toStrictEqual(['Netflix', 'Mutuelle'])
+    expect(data.recurrences.map((rule) => rule.amount)).toStrictEqual([1_349, 4_200])
+    for (const rule of data.recurrences) {
+      expect(rule.categoryId).toBe(FALLBACK_CATEGORY)
+      // Une catégorie qui existe vraiment dans le document, pas un identifiant
+      // en dur qu'une suppression rendrait mort.
+      expect(data.categories.some((one) => one.id === rule.categoryId)).toBe(true)
+      expect(rule.direction).toBe('out')
+      expect(rule.period).toStrictEqual({ unit: 'month', every: 1, anchorDay: 1 })
+    }
+    // Aucune ligne du mois écrite à la main : ce sont les règles qui les font.
+    expect(data.entries.every((entry) => entry.recurrenceId !== undefined)).toBe(true)
   })
 
-  /* Le cahier §4.1 ne cède pas : l'app reste utilisable sans cette étape, et le
-     bouton qui la saute est visible. Sans ce test, « facultative » ne serait
-     qu'une intention écrite dans un commentaire. */
-  it('s’ouvre quand même quand on saute les deux étapes', async () => {
-    await answerFirst(['Alix'])
+  /* E17 : « point de départ » choisit le mois **affiché**, pas le mois ouvert.
+     On ne peut pas *ne pas* ouvrir le mois courant — `hydrate` le rouvre à
+     chaque lancement, et l'app en fait un invariant. */
+  it('démarre au mois suivant sans empêcher le mois courant de s’ouvrir', async () => {
+    open()
+    await next() // foyer
+    await keypad('200000')
+    await next()
+    await next() // logement, vide
+    await next() // autres charges, vide
+    await pick(t.onboarding.startNext)
+    await next() // récapitulatif
+    await click(t.onboarding.start)
 
-    await finishFrom(2, false)
+    const ym = currentYm()
+    const nextYm = addMonthsToYm(ym, 1)
+    const { data } = state()
+
+    // Le mois affiché est celui qu'on a choisi.
+    expect(state().ym).toBe(nextYm)
+    // Les deux mois sont ouverts : le courant parce qu'il l'est toujours, le
+    // suivant parce qu'on vient d'y aller.
+    expect(data.months.map((month) => month.ym).sort()).toStrictEqual([ym, nextYm])
+    // Et la règle ne court qu'à partir du suivant : le courant reste vide.
+    expect(data.recurrences[0]?.startedOn).toBe(startOfMonth(nextYm))
+    expect(data.entries.filter((entry) => entry.date.startsWith(ym))).toStrictEqual([])
+    expect(data.entries.filter((entry) => entry.date.startsWith(nextYm))).toHaveLength(1)
+  })
+
+  /* Le récapitulatif compose les réponses, et il nomme son dernier chiffre
+     « Prévisionnel » : « reste à vivre » désigne autre chose dans le domaine —
+     un solde arrêté la veille de la prochaine rentrée d'argent. */
+  it('récapitule le foyer, le partage et le prévisionnel', async () => {
+    open()
+    await household(['Alix', 'Camille'])
+    await next()
+    await keypad('300000')
+    await next()
+    await keypad('100000')
+    await next()
+    await keypad('90000')
+    await next()
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasName)), 'Netflix')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)), '10')
+    await click(t.onboarding.extrasAdd)
+    await next()
+    await next() // point de départ
+
+    expect(screen.getByText(t.onboarding.summaryTitle)).toBeInTheDocument()
+    expect(screen.getByText('Alix et Camille')).toBeInTheDocument()
+    expect(screen.getByText(t.onboarding.summaryShareValue)).toBeInTheDocument()
+    expect(screen.getByText(t.onboarding.summaryExtrasOne)).toBeInTheDocument()
+    // 4 000 de revenus, 900 de logement, 10 d'abonnement : 3 090 de prévu.
+    expect(await screen.findByText(spoken(309_000))).toBeInTheDocument()
+  })
+
+  /* Le partage ne se propose pas, il s'énonce : le modèle ne connaît que le
+     prorata des revenus. La phrase apparaît là où la réponse se donne, et
+     disparaît quand il n'y a plus personne avec qui partager. */
+  it('énonce la règle de partage dès deux personnes, et se tait à une', async () => {
+    open()
+    await household(['Alix'])
+    expect(screen.getByText(tpl(t.onboarding.namesShareOne, 'Alix'))).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.namesLabel)), 'Camille')
+    await click(t.onboarding.namesAdd)
+    expect(
+      screen.getByText(tpl(t.onboarding.namesShare, 'Alix et Camille')),
+    ).toBeInTheDocument()
+  })
+
+  /* « Plus tard » est aussi visible que l'action principale — la condition que
+     le cahier §4.1 met à l'existence de chaque question — et il n'écrit rien. */
+  it('s’ouvre quand même quand on saute tout', async () => {
+    open()
+    for (let step = 0; step < 5; step += 1) await click(t.onboarding.later)
+    await click(t.onboarding.start)
 
     expect(state().status).toBe('ready')
     expect(state().data.recurrences).toStrictEqual([])
-    expect(state().data.savingSupports).toStrictEqual([])
+    expect(state().data.household.members).toStrictEqual([])
   })
 
-  it('ignore un champ vide sans retenir les autres', async () => {
-    await answerFirst(['Alix'])
-
-    // Le loyer reste vide, et le salaire passe quand même.
-    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '2400')
-    await finishFrom(2, true)
-
-    expect(state().data.recurrences).toHaveLength(1)
-    expect(state().data.recurrences[0]?.categoryId).toBe('salary')
+  /* Le pavé accepte la frappe, et c'est ce qui rend la file tenable au clavier :
+     six chiffres au doigt sur chacune des cartes de montant serait pénible. */
+  it('accepte la frappe au clavier sur une carte de montant', async () => {
+    open()
+    await next()
+    await userEvent.keyboard('123456')
+    expect(screen.getByText(spoken(123_456))).toBeInTheDocument()
   })
 
-  /* Scénario A du chantier : une personne, un livret à 10 000 €, un versement
-     mensuel de 200 €. Ce qui compte est ce qui *ne* doit pas exister — un
-     second support, une seconde valorisation, un montant recopié. */
-  it('pose le support, sa valeur et le versement qui l’alimente, sans doublon', async () => {
-    await answerFirst(['Andrea'])
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
+  /* Le retour rend la carte précédente sans rien perdre : les réponses vivent
+     dans le brouillon, pas dans les cartes. */
+  it('revient d’une carte à la fois, et garde ce qui a été saisi', async () => {
+    open()
+    await next()
+    await keypad('50000')
+    await next()
+    expect(screen.getByText(t.onboarding.rentTitle)).toBeInTheDocument()
 
-    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.supportLabel)), 'Livret A')
-    await userEvent.selectOptions(
-      screen.getByLabelText(new RegExp(t.savings.supportKind)),
-      'passbook',
-    )
-    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.valueInitial)), '10000')
-    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.contribution)), '200')
-    await userEvent.click(screen.getByRole('button', { name: t.savings.supportAdd }))
-
-    const { data } = state()
-    const [member] = data.household.members
-    const [support] = data.savingSupports
-    expect(data.savingSupports).toHaveLength(1)
-    expect(support?.label).toBe('Livret A')
-    expect(support?.memberId).toBe(member?.id)
-
-    /* Le capital vit dans la valorisation, et **nulle part** sur le support :
-       c'est la règle qui interdit qu'ils divergent. */
-    expect(data.savingValuations).toHaveLength(1)
-    expect(data.savingValuations[0]?.amount).toBe(1_000_000)
-    expect(data.savingValuations[0]?.supportId).toBe(support?.id)
-    expect(JSON.stringify(support)).not.toContain('1000000')
-
-    /* Le versement mensuel est une récurrence reliée au support, pas un champ
-       posé dessus : c'est elle qui produira les `Entry`. */
-    expect(data.recurrences).toHaveLength(1)
-    expect(data.recurrences[0]?.savingSupportId).toBe(support?.id)
-    expect(data.recurrences[0]?.amount).toBe(20_000)
-    expect(data.recurrences[0]?.direction).toBe('out')
-    expect(data.recurrences[0]?.categoryId).toBe('passbook')
-
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.start }))
-    expect(state().status).toBe('ready')
+    await click(t.onboarding.back)
+    expect(screen.getByText(spoken(50_000))).toBeInTheDocument()
   })
 
-  /* L'épargne est toujours à quelqu'un : sans personne, l'étape n'a rien à
-     proposer, et elle le dit plutôt que d'inventer un porteur. */
-  it('n’enregistre aucun support quand personne n’a été ajouté', async () => {
-    await answerFirst([])
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
-
-    await userEvent.type(screen.getByLabelText(new RegExp(t.savings.supportLabel)), 'Livret A')
-    await userEvent.selectOptions(
-      screen.getByLabelText(new RegExp(t.savings.supportKind)),
-      'passbook',
-    )
-    await userEvent.click(screen.getByRole('button', { name: t.savings.supportAdd }))
-
-    expect(state().data.savingSupports).toStrictEqual([])
-    expect(screen.getByText(t.savings.supportOwnerRequired)).toBeInTheDocument()
-  })
-
-  it('montre la part de chacun dès que deux revenus et un loyer sont posés', async () => {
-    await answerFirst(['Alix', 'Camille'])
-
-    // Rien encore : l'aperçu dit ce que l'étape débloque plutôt qu'un zéro.
-    expect(screen.getByText(t.onboarding.previewStarterEmpty)).toBeInTheDocument()
-
-    await fill(tpl(t.onboarding.starterSalaryOf, 'Alix'), '3000')
-    await fill(tpl(t.onboarding.starterSalaryOf, 'Camille'), '1000')
-    await fill(t.onboarding.starterRent, '1000')
-
-    expect(screen.getByText(t.onboarding.previewStarterShare)).toBeInTheDocument()
-    // 3 000 contre 1 000 : trois quarts, un quart. Et la somme fait le loyer.
-    expect(screen.getByText(spoken(75_000))).toBeInTheDocument()
-    expect(screen.getByText(spoken(25_000))).toBeInTheDocument()
-    // Et le solde du mois au-dessus : 4 000 de revenus moins 1 000 de loyer.
-    expect(screen.getByText(spoken(300_000))).toBeInTheDocument()
-  })
-
-  /* L'export ne se découvrait qu'au bout de trente jours, par un bandeau. Il se
-     nomme désormais là où la promesse de confidentialité est faite. */
-  it('nomme l’export à la dernière étape, et pas avant', async () => {
-    await openPrinciple()
+  /* La phrase de sauvegarde ne se durcit que là où le navigateur a répondu
+     qu'il ne s'engageait pas, et elle attend le récapitulatif : la dire sur les
+     sept cartes en ferait un avertissement de plus qu'on n'écoute pas. */
+  it('nomme l’export au récapitulatif, et pas avant', async () => {
+    open()
     expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
-    expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
+    for (let step = 0; step < 5; step += 1) await click(t.onboarding.later)
     expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
-  })
-
-  /* La contrepartie, elle, se dit d'entrée : c'est l'étape d'ouverture qui la
-     porte, avant qu'on ait rien saisi. Elle n'attend plus la fin — apprendre au
-     bout de trois écrans que tout peut disparaître, c'est l'apprendre trop tard
-     pour en tenir compte. */
-  it('dit la contrepartie avant de demander quoi que ce soit', async () => {
-    render(
-      <MemoryRouter>
-        <OnboardingPage />
-      </MemoryRouter>,
-    )
-    expect(screen.getByText(t.onboarding.principleCatch)).toBeInTheDocument()
-    /* Aucun champ sur cet écran : c'est ce qui en fait un énoncé et non une
-       question de plus. */
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.principleNext }))
-    expect(screen.queryByText(t.onboarding.principleCatch)).not.toBeInTheDocument()
-    expect(screen.getByLabelText(t.onboarding.membersLabel)).toBeInTheDocument()
-  })
-
-  /* Le retour rend le rang précédent, et non la première étape : la table qui
-     le calculait était juste pour trois étapes et renvoyait la quatrième à
-     l'énoncé. */
-  it('revient d’une étape à la fois', async () => {
-    await answerFirst([])
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
-    expect(screen.getByText(t.onboarding.savingsTitle)).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: tpl(t.onboarding.backToStep, 3) }))
-    expect(screen.getByText(t.onboarding.starterTitle)).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: tpl(t.onboarding.backToStep, 2) }))
-    expect(screen.getByLabelText(t.onboarding.membersLabel)).toBeInTheDocument()
-  })
-
-  /* La phrase se durcit d'un cran là où le navigateur a répondu qu'il ne
-     s'engageait pas — et là seulement. Un « on ne sait pas » n'est pas un refus,
-     et l'annoncer à tout le monde ferait de la phrase honnête un avertissement
-     de plus qu'on n'écoute pas. */
-  it('ne durcit la phrase que sur un refus dont on est sûr', async () => {
-    useStorageHealth.setState({ probed: true, durable: 'unknown', asked: true })
-    await openPrinciple()
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.solo }))
-    // La phrase vit à la dernière étape, celle de l'épargne.
-    await userEvent.click(screen.getByRole('button', { name: t.onboarding.starterSkip }))
-    expect(screen.getByText(t.onboarding.backup)).toBeInTheDocument()
-
-    act(() => {
-      useStorageHealth.setState({ durable: false })
-    })
-    expect(screen.getByText(t.onboarding.backupFragile)).toBeInTheDocument()
-    expect(screen.queryByText(t.onboarding.backup)).not.toBeInTheDocument()
   })
 })

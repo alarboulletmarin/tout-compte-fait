@@ -1,185 +1,322 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { currentYm } from '@/domain/date'
+import { Link, useNavigate } from 'react-router-dom'
+import { LANDING_PATH } from '@/app/routes'
 import { t } from '@/i18n/strings'
+import { tpl } from '@/i18n/format'
 import { isKnownFragile, useStorageHealth } from '@/persistence/health'
-import { addMember, addRecurrence, removeMember, renameMember } from '@/store/actions'
-import { useCategoryMap, useMembers } from '@/store/selectors'
+import { addMember, addRecurrence, removeMember } from '@/store/actions'
+import { useCategoryMap, useKindOf, useMembers } from '@/store/selectors'
 import { useStore } from '@/store/store'
-import { Tile } from '@/ui/Tile'
-import { MembersStep } from './MembersStep'
-import { PrincipleStep } from './PrincipleStep'
-import { SavingsPreview, SavingsStep } from './SavingsStep'
-import { StarterStep } from './StarterStep'
-import { StepProgress, type OnboardingStep } from './StepProgress'
-import { MembersPreview, StarterPreview } from './StepPreview'
-import { starterLines, starterRecurrences } from './starter'
+import { Button } from '@/ui/Button'
+import { ChevronLeft } from '@/ui/Icons'
+import { PageTitle } from '@/ui/PageTitle'
+import { StepBar } from '@/ui/StepBar'
+import { AmountCard } from './AmountCard'
+import { ExtrasCard } from './ExtrasCard'
+import { StartCard } from './StartCard'
+import { SummaryCard } from './SummaryCard'
+import { WhoCard } from './WhoCard'
+import {
+  type ExtraCharge,
+  type OnboardingCard,
+  type OnboardingDraft,
+  emptyOnboardingDraft,
+  onboardingCards,
+  onboardingCategories,
+  onboardingRecurrences,
+  onboardingTotals,
+  startYm,
+} from './queue'
 
-const LAST_STEP = 4
+/** Le titre de la carte affichée. Il est la question, il n'y a rien au-dessus. */
+function cardTitle(card: OnboardingCard): string {
+  switch (card.kind) {
+    case 'who':
+      return t.onboarding.whoTitle
+    case 'income':
+      return card.name === undefined
+        ? t.onboarding.incomeSoloTitle
+        : tpl(t.onboarding.incomeOfTitle, card.name)
+    case 'rent':
+      return t.onboarding.rentTitle
+    case 'extras':
+      return t.onboarding.extrasTitle
+    case 'start':
+      return t.onboarding.startMonthTitle
+    case 'summary':
+      return t.onboarding.summaryTitle
+  }
+}
+
+/** Ce que la carte explique sous son titre. */
+function cardBody(card: OnboardingCard): string {
+  switch (card.kind) {
+    case 'who':
+      return t.onboarding.whoBody
+    case 'income':
+      return t.onboarding.incomeBody
+    case 'rent':
+      return t.onboarding.rentBody
+    case 'extras':
+      return t.onboarding.extrasBody
+    case 'start':
+      return t.onboarding.startMonthBody
+    case 'summary':
+      return t.onboarding.summaryBody
+  }
+}
 
 /**
- * Une question, une proposition, puis l'app est utilisable. Le jeu de
- * catégories par défaut est déjà posé par le document initial : il n'y a rien
- * à demander de plus.
+ * Le premier lancement : une file de cartes dont le nombre dépend des réponses.
  *
- * Le nom ne se demande plus. Il ouvrait l'onboarding et il était la seule
- * réponse *exigée* de toute l'app — pour un libellé de barre latérale, que
- * `Nav` sait très bien laisser vide puisqu'il affiche déjà le nom de l'app
- * au-dessus. Il vit désormais dans les réglages, facultatif. La question qui
- * ouvrait l'app demandait par la même occasion à quelqu'un qui vit chez ses
- * parents de nommer un foyer qui n'est pas le sien.
+ * **Même grammaire que la revue et que l'écriture d'une règle** : une barre de
+ * segments et un compteur en haut, une question par carte, un pied à trois
+ * boutons — l'action principale, « Revenir », « Plus tard ». Trois écrans qui
+ * font la même chose ne peuvent pas la faire de trois façons, et la barre est
+ * désormais un composant partagé (`ui/StepBar`).
  *
- * La seconde étape n'est pas une question, c'est une offre — voir
- * `StarterStep`. La première pose les personnes ; celle-ci donne à l'app de
- * quoi parler dès le premier écran, et se saute d'un bouton visible.
+ * **La file se recalcule à chaque rendu.** Ajouter un prénom ajoute une carte de
+ * revenu, en retirer un la retire, et repasser en solo ramène la file à six
+ * cartes. C'est `onboardingCards` qui le décide, à partir des membres du
+ * document — pas d'une liste figée au montage, qui aurait fini par compter une
+ * carte de plus que ce qu'on affiche.
  *
- * L'écran ne fait plus que ça. Les trois façons de ne pas commencer par une page
- * blanche — restaurer un export, partir de ses notes, charger un exemple —
- * vivaient sous ce formulaire ; elles sont désormais sur la présentation, donc
- * *avant* qu'on demande quoi que ce soit, ce qui est exactement ce que leur
- * argument réclamait. Le retour de l'en-tête y ramène d'un geste.
+ * **Rien ne s'enregistre avant la fin.** Les membres sont écrits dans le
+ * document dès qu'on les nomme, mais `mutate` ne programme aucune écriture tant
+ * que le statut vaut « onboarding » : c'est `finishOnboarding` qui ouvre la
+ * porte, et c'est aussi lui qui ouvre le mois courant. Les récurrences sont
+ * posées **juste avant**, si bien que leurs échéances naissent à l'ouverture du
+ * mois — à confirmer, comme n'importe quel mois qui s'ouvre.
  *
- * Chaque question porte son aperçu : à gauche ce qu'on répond, à droite ce que
- * la réponse change. Sous 1024px l'aperçu passe dessous — la question reste la
- * tâche, et c'est elle qui doit tomber sous le pouce.
+ * **Le point de départ choisit le mois affiché, pas le mois ouvert.** Voir
+ * `StartCard` : le mois courant s'ouvre de toute façon. Ce qui change est le 1er
+ * de quel mois porte les règles, et `setYm` fait suivre l'affichage — en ouvrant
+ * au passage le mois suivant, ce qui est exactement ce qu'on vient de demander.
+ *
+ * **Il n'y a pas de carte de partage.** Le modèle ne connaît qu'une règle, le
+ * prorata des revenus (`domain/split.ts`), et une carte qui n'offrirait aucun
+ * choix serait la seule de la file à ne rien demander. La règle s'énonce là où
+ * elle se décide — sous la question du foyer — et se relit dans le
+ * récapitulatif.
  */
 export function OnboardingPage() {
-  const [step, setStep] = useState<OnboardingStep>(1)
   const members = useMembers()
-  const categories = useCategoryMap()
+  const categoryMap = useCategoryMap()
+  const kindOf = useKindOf()
   const finishOnboarding = useStore((s) => s.finishOnboarding)
+  const setYm = useStore((s) => s.setYm)
   const navigate = useNavigate()
   const fragile = useStorageHealth(isKnownFragile)
 
-  /* Les montants de la seconde étape vivent ici plutôt que dans l'étape :
-     l'aperçu posé à côté les lit à chaque frappe, et deux états qui décrivent
-     la même saisie auraient fini par diverger d'un chiffre. */
-  const [amounts, setAmounts] = useState<Record<string, string>>({})
-  const lines = useMemo(() => starterLines(members), [members])
+  const [draft, setDraft] = useState<OnboardingDraft>(emptyOnboardingDraft)
+  const [index, setIndex] = useState(0)
 
-  /* `replace`, pour que le retour ramène à la présentation et non à un
-     formulaire dont le document est déjà créé. Naviguer plutôt que laisser le
-     filet `*` d'`AppRoutes` rediriger : le filet marcherait, au prix d'un rendu
-     intermédiaire à l'URL des questions et d'une animation d'entrée jouée deux
-     fois. */
-  const open = (): void => {
+  const cards = onboardingCards(draft.multi, members)
+  /* La file peut raccourcir sous le doigt — retirer un prénom depuis la
+     première carte en enlève une. Le curseur se borne donc à chaque rendu
+     plutôt que d'être corrigé après coup : borné ici, il n'existe jamais
+     d'index qui désigne une carte absente. */
+  const rank = Math.min(index, cards.length - 1)
+  const card = cards[rank] ?? { kind: 'who' as const }
+
+  const categories = useMemo(
+    () => onboardingCategories((id) => categoryMap.has(id)),
+    [categoryMap],
+  )
+  const totals = onboardingTotals(draft, cards)
+
+  const patch = (next: Partial<OnboardingDraft>): void => {
+    setDraft((current) => ({ ...current, ...next }))
+  }
+
+  const finish = (): void => {
+    const ym = startYm(draft)
+    for (const payload of onboardingRecurrences(draft, cards, categories, kindOf, ym)) {
+      addRecurrence(payload)
+    }
     finishOnboarding()
+    /* Après `finishOnboarding` et jamais avant : `setYm` appelle
+       `ensureMonthOpen`, qui refuse d'ouvrir quoi que ce soit tant que le
+       statut n'est pas « prêt ». Et seulement si l'on part du mois suivant —
+       `setYm(courant)` serait un aller-retour pour rien. */
+    if (draft.start === 'next') setYm(ym)
+    /* `replace`, pour que le retour du navigateur ramène à la présentation et
+       non à une file dont le document est déjà créé. */
     void navigate('/', { replace: true })
   }
 
-  /* Poser les règles *avant* d'ouvrir, et c'est ce qui fait que le mois arrive
-     déjà écrit : tant que le statut est « onboarding », rien ne s'enregistre et
-     aucun mois n'est ouvert, si bien que ces récurrences n'ont encore aucune
-     échéance. C'est `finishOnboarding` qui ouvre le mois courant, et c'est là
-     que leurs échéances naissent — à confirmer, comme n'importe quel mois qui
-     s'ouvre. */
-  /* Ce que la deuxième étape a décidé, retenu jusqu'à la fin plutôt que posé
-     tout de suite : revenir en arrière depuis la troisième étape et repartir
-     poserait sinon les mêmes récurrences une seconde fois. La réponse voyage,
-     l'écriture n'a lieu qu'une fois. */
-  const [keepStarter, setKeepStarter] = useState(false)
-
-  const finish = (): void => {
-    if (keepStarter) {
-      for (const payload of starterRecurrences(
-        lines,
-        amounts,
-        (id) => categories.has(id),
-        currentYm(),
-      )) {
-        addRecurrence(payload)
-      }
+  const next = (): void => {
+    if (rank >= cards.length - 1) {
+      finish()
+      return
     }
-    open()
+    setIndex(rank + 1)
+  }
+
+  const back = (): void => {
+    setIndex(Math.max(0, rank - 1))
+  }
+
+  /* Repasser en solo retire les prénoms : solo veut dire zéro membre, et tout
+     l'aval — `scopeToMember`, `memberCharges` — a un chemin solo explicite qui
+     n'existe que là. Un document « solo » avec deux membres oubliés serait un
+     document à plusieurs qui s'ignore. */
+  const setMode = (multi: boolean): void => {
+    if (!multi) for (const member of members) removeMember(member.id)
+    patch({ multi })
   }
 
   return (
-    /* Le cadre d'`AppShell`, comme la présentation et la coquille d'« à propos ».
-       Le `px-5` d'origine datait de la carte `max-w-md` centrée : l'écran est
-       devenu une page à deux colonnes, et trois écrans voisins à trois marges
-       différentes se voient dès qu'on passe de l'un à l'autre. */
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center gap-8 px-4 py-10 md:px-8">
-      {/* Le retour ramène au rang précédent, quel qu'il soit : la table
-          « 3 → 2, sinon 1 » n'était juste que tant qu'il y avait trois étapes,
-          et elle aurait renvoyé la quatrième à la première. */}
-      <StepProgress
-        step={step}
-        {...(step === 1
-          ? {}
-          : {
-              onBack: () => {
-                setStep((step - 1) as OnboardingStep)
-              },
-            })}
-      />
+    <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 py-4 md:px-8">
+      {/* Le titre ne s'affiche pas : chaque carte porte le sien, qui est la
+          question du moment. Il existe quand même — un écran sans `<h1>` ne se
+          repère pas au lecteur d'écran et ne s'annonce pas en changeant. */}
+      <PageTitle title={t.app.name} hidden />
 
-      {/* La première étape n'est ni une question ni une tuile : elle porte le
-          titre de l'écran et la contrepartie, et elle prend la largeur. La
-          grille à deux colonnes n'a de sens qu'à partir de la deuxième — « à
-          gauche ce qu'on répond, à droite ce que la réponse change » suppose
-          qu'il y ait une réponse, et un aperçu de rien à côté d'un énoncé
-          serait une colonne vide. */}
-      {step === 1 ? (
-        <PrincipleStep
-          onNext={() => {
-            setStep(2)
-          }}
-        />
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <Tile>
-            {step === 2 && (
-              <MembersStep
-                members={members}
-                onAdd={(name) => {
-                  addMember(name)
-                }}
-                onRename={renameMember}
-                onRemove={removeMember}
-                onNext={() => {
-                  setStep(3)
-                }}
-              />
-            )}
-            {step === 3 && (
-              <StarterStep
-                lines={lines}
-                amounts={amounts}
-                onAmount={(key, value) => {
-                  setAmounts((current) => ({ ...current, [key]: value }))
-                }}
-                onSubmit={() => {
-                  setKeepStarter(true)
-                  setStep(4)
-                }}
-                onSkip={() => {
-                  setKeepStarter(false)
-                  setStep(4)
-                }}
-              />
-            )}
-            {step === 4 && <SavingsStep onSubmit={finish} onSkip={finish} />}
-          </Tile>
+      <div className="flex items-center gap-3">
+        {/* En app installée il n'y a pas de bouton retour du navigateur : sans
+            celui-ci, quelqu'un qui veut relire la présentation ou charger
+            l'exemple n'a plus qu'à répondre ou à fermer. */}
+        <Link
+          to={LANDING_PATH}
+          aria-label={t.onboarding.backToLanding}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-input text-muted hover:bg-surface-2"
+        >
+          <ChevronLeft size={18} />
+        </Link>
+        <StepBar index={rank} total={cards.length} />
+        {/* Le compteur porte ce que les segments dessinent : eux sont
+            décoratifs, lui est lu. Sa forme longue est le nom accessible. */}
+        <span
+          className="t-axis tnum shrink-0"
+          aria-label={tpl(t.onboarding.progress, rank + 1, cards.length)}
+        >
+          {tpl(t.onboarding.counter, rank + 1, cards.length)}
+        </span>
+      </div>
 
-          {step === 2 && <MembersPreview members={members} />}
-          {step === 3 && <StarterPreview lines={lines} amounts={amounts} members={members} />}
-          {step === 4 && <SavingsPreview />}
+      {/* La question **est** l'écran, elle n'est pas posée dessus.
+          Elle a d'abord été une tuile étirée sur la hauteur du cadre, et une
+          tuile qui s'étire fait ce que fait une tuile : elle dessine un bord.
+          Sur la carte la plus courte — deux positions à choisir — le bord
+          enfermait la question en haut de mille pixels de blanc, et le blanc se
+          lisait comme une réponse qui manque.
+          Elle tient donc maintenant sa hauteur, centrée dans ce qui reste entre
+          la barre de progression et le pied : c'est la mise en page de la
+          maquette, où l'onboarding n'a aucune tuile — la surface est le fond de
+          l'écran, et le contenu s'y centre. La revue a le même parti, à ceci
+          près qu'elle garde son cadre : une carte qu'on traverse est un objet
+          qui passe, une question qu'on se pose ne l'est pas. */}
+      <section className="flex flex-1 flex-col justify-center gap-4 py-2">
+        <div className="flex flex-col gap-2">
+          <h2 className="t-section">{cardTitle(card)}</h2>
+          <p className="t-label">{cardBody(card)}</p>
         </div>
-      )}
 
-      <div className="flex flex-col gap-1">
-        <p className="t-label">{t.onboarding.privacy}</p>
-        {/* La contrepartie du local-first, à la dernière étape : elle ne se
-            découvrait qu'au bout de trente jours, par un bandeau. Ici parce que
-            c'est le moment où la promesse de la ligne au-dessus est faite, et
-            là seulement pour ne pas la répéter trois fois.
-            Elle se durcit d'un cran là où le navigateur a déjà dit qu'il ne
-            s'engageait pas — et là seulement : voir `isKnownFragile`. */}
-        {step === LAST_STEP && (
-          <p className="t-label">
-            {fragile ? t.onboarding.backupFragile : t.onboarding.backup}
-          </p>
+        {card.kind === 'who' && (
+          <WhoCard
+            multi={draft.multi}
+            members={members}
+            onMode={setMode}
+            onAdd={(name) => {
+              addMember(name)
+            }}
+            onRemove={removeMember}
+          />
         )}
+
+        {card.kind === 'income' && (
+          <AmountCard
+            keys={draft.incomes[card.key] ?? ''}
+            label={t.onboarding.incomeKeypad}
+            onSubmit={next}
+            onChange={(keys) => {
+              patch({ incomes: { ...draft.incomes, [card.key]: keys } })
+            }}
+          />
+        )}
+
+        {card.kind === 'rent' && (
+          <AmountCard
+            keys={draft.rent}
+            label={t.onboarding.rentKeypad}
+            onSubmit={next}
+            onChange={(rent) => {
+              patch({ rent })
+            }}
+          />
+        )}
+
+        {card.kind === 'extras' && (
+          <ExtrasCard
+            extras={draft.extras}
+            total={totals.extras}
+            fallbackLabel={
+              categories.fallback === null
+                ? null
+                : (categoryMap.get(categories.fallback)?.label ?? null)
+            }
+            onAdd={(extra: ExtraCharge) => {
+              patch({ extras: [...draft.extras, extra] })
+            }}
+            onRemove={(id) => {
+              patch({ extras: draft.extras.filter((extra) => extra.id !== id) })
+            }}
+          />
+        )}
+
+        {card.kind === 'start' && (
+          <StartCard
+            value={draft.start}
+            onChange={(start) => {
+              patch({ start })
+            }}
+          />
+        )}
+
+        {card.kind === 'summary' && <SummaryCard members={members} totals={totals} />}
+      </section>
+
+      <div className="flex flex-col gap-2">
+        <Button full onClick={next}>
+          {card.kind === 'summary' ? t.onboarding.start : t.common.next}
+        </Button>
+        <div className="flex gap-2">
+          {rank > 0 && (
+            <Button variant="ghost" className="flex-1" onClick={back}>
+              {t.onboarding.back}
+            </Button>
+          )}
+          {/* « Plus tard » saute la carte sans y répondre, et il est aussi
+              visible que l'action principale : c'est la condition que le cahier
+              §4.1 met à l'existence de chaque question. Il n'a pas de sens sur
+              le récapitulatif, qui ne demande rien. */}
+          {card.kind !== 'summary' && (
+            <Button variant="ghost" className="flex-1" onClick={next}>
+              {t.onboarding.later}
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          {/* Le jour, annoncé là où il se décide sans se demander : une valeur
+              posée à la place de quelqu'un et jamais dite se découvre au premier
+              mois faux. */}
+          {(card.kind === 'income' || card.kind === 'rent' || card.kind === 'extras') && (
+            <p className="t-axis text-center">{t.onboarding.dayNote}</p>
+          )}
+          <p className="t-axis text-center">{t.onboarding.privacy}</p>
+          {/* La contrepartie se dit sur la présentation, avant qu'on arrive
+              ici. Ce qui reste est le geste qui la couvre, et il se dit au
+              moment de conclure — pas sur chacune des sept cartes.
+              Il se durcit d'un cran là où le navigateur a déjà répondu qu'il ne
+              s'engageait pas, et là seulement : voir `isKnownFragile`. */}
+          {card.kind === 'summary' && (
+            <p className="t-axis text-center">
+              {fragile ? t.onboarding.backupFragile : t.onboarding.backup}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )

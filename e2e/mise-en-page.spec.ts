@@ -247,3 +247,64 @@ for (const size of WIDE) {
     })
   })
 }
+
+/* ----------------------------------------------------------------------------
+ * Les deux écrans d'avant le document.
+ *
+ * Ils échappaient à tout ce qui précède, et pour une raison mécanique : la
+ * boucle ci-dessus charge le jeu d'exemple avant d'ouvrir quoi que ce soit, or
+ * ces deux-là ne s'affichent qu'avant qu'un document existe — la présentation
+ * change de boutons, et les questions ne sont plus routées du tout. Ils sont
+ * pourtant les seuls que voit quelqu'un qui arrive pour la première fois, et ils
+ * portent ce qu'aucun autre ne porte à cette largeur : deux colonnes dont la
+ * droite est plafonnée à 440px, trois tuiles de démonstration, un pavé numérique
+ * et un chiffre héros.
+ *
+ * La file des questions se parcourt vraiment, carte par carte : la première ne
+ * dit rien de la hauteur d'un pavé sur un écran de 320 points, ni de celle du
+ * récapitulatif.
+ * --------------------------------------------------------------------------*/
+for (const size of [{ name: 'téléphone', ...NARROW }, ...WIDE]) {
+  test.describe(`avant le document, sur un écran de ${String(size.width)} points`, () => {
+    test.use({ viewport: { width: size.width, height: size.height } })
+
+    test('ne déborde, ne coupe rien et ne laisse pas de colonne vide', async ({ page }) => {
+      await openApp(page)
+
+      const guilty: string[] = []
+      const cut: string[] = []
+      const lonely: string[] = []
+
+      const measure = async (where: string): Promise<void> => {
+        const excess = await overflow(page)
+        if (excess > 0) guilty.push(`${where} dépasse de ${String(excess)} px`)
+        cut.push(...(await clipped(page, where)))
+        lonely.push(...(await lonelyGrid(page, where)))
+      }
+
+      await page.goto('/bienvenue')
+      await page.waitForLoadState('networkidle')
+      /* La page arrive par `import()` : sans cette attente, on mesurerait la
+         coquille vide, qui ne déborde jamais. */
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await measure('/bienvenue')
+
+      await page.goto('/demarrer')
+      await page.waitForLoadState('networkidle')
+      await expect(page.getByRole('radiogroup')).toBeVisible()
+      /* Six cartes en solo : le foyer, un revenu, le logement, les autres
+         charges, le point de départ, le récapitulatif. « Plus tard » les
+         traverse sans rien saisir, ce qui est exactement le parcours qu'on veut
+         mesurer — les cartes vides sont les plus hautes, puisque leurs états
+         vides prennent la place que les données prendraient. */
+      for (let card = 1; card <= 6; card += 1) {
+        await measure(`/demarrer (carte ${String(card)})`)
+        if (card < 6) await page.getByRole('button', { name: 'Plus tard' }).click()
+      }
+
+      expect(guilty).toEqual([])
+      expect(cut).toEqual([])
+      expect(lonely).toEqual([])
+    })
+  })
+}

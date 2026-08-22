@@ -2530,143 +2530,159 @@ export const fr = {
   },
 
   onboarding: {
-    step: 'Étape %s sur 4',
-    /* « Qui vit ici ? » supposait la cohabitation, que le calcul n'utilise
-       jamais : le prorata marche aussi bien pour deux personnes à deux
-       adresses. La question porte donc sur ce dont l'app se sert — le partage
-       d'une dépense —, et elle n'exclut plus qui vit chez quelqu'un d'autre. */
-    membersTitle: 'Avec qui tu partages des dépenses ?',
-    /* Le hint disait le mécanisme — « les membres servent d'étiquette » — et
-       l'aperçu promettait le prorata « une fois leurs revenus posés », sans que
-       rien ne dise *où* on les pose. Quelqu'un qui ajoutait deux prénoms en
-       attendant deux champs de salaire ne trouvait rien, et le prorata restait
-       muet sans qu'il sache pourquoi. La réponse tient en une proposition. */
-    membersHint:
-      'Les prénoms servent d’étiquette sur les dépenses. Leurs revenus se posent à l’étape suivante. Tu peux passer : tout te sera attribué.',
-    membersLabel: 'Prénom',
-    membersPlaceholder: 'Alix',
-    membersAdd: 'Ajouter',
-    membersEmpty: 'Personne pour l’instant. Ajoute un prénom, ou passe.',
-    membersRename: 'Prénom de %s',
-    membersRemove: 'Retirer %s',
-    /* Rien à perdre au premier lancement — aucune entrée n'existe encore —,
-       mais un retrait se demande partout de la même façon : apprendre ici que
-       la croix agit sans prévenir se paierait plus tard, ailleurs. */
-    membersRemoveConfirm: 'Retirer %s ?',
-    solo: 'Je suis seul·e',
+    /* La file du premier lancement, et sa grammaire est celle de la revue :
+       une barre de segments, une question par carte, un pied à trois boutons.
+       Sa longueur dépend des réponses — un prénom de plus est une carte de
+       revenu de plus —, d'où un compteur et non « étape 3 sur 4 » : le total
+       bouge sous le doigt et une phrase figée mentirait d'un cran. */
+    counter: '%s / %s',
+    /* Le compteur en toutes lettres, pour qui n'a que la voix : les segments
+       sont décoratifs et le chiffre seul se lirait « trois barre sept ». */
+    progress: 'Question %s sur %s',
+    /* « Revenir » et non « Retour » : le second nomme la sortie de l'écran,
+       celui-ci recule d'une carte sans rien perdre. Même mot qu'à l'écriture
+       d'une règle, qui est la même file. */
+    back: 'Revenir',
+    /* Passer une carte, et le dire sans s'excuser : aucune réponse de cette
+       file n'est exigée, et le cahier §4.1 met la visibilité de ce bouton comme
+       condition à l'existence de chaque question. */
+    later: 'Plus tard',
     start: 'Commencer',
-    privacy: 'Tes données restent sur cet appareil. Rien n’est envoyé nulle part.',
-    /* La contrepartie, dite au moment où la promesse est faite et non trente
-       jours plus tard par un bandeau : « rien ne sort d'ici » et « rien ne
-       revient si tu vides ce navigateur » sont la même phrase, et n'en garder
-       qu'une moitié se paie un jour. */
-    /* La contrepartie elle-même se dit maintenant à la première étape, en
-       tuile, avant qu'on ait rien saisi. Ce qui reste ici est ce qu'elle ne
-       peut pas dire : le geste, et où le faire. La phrase rouvrait sur
-       « c'est aussi la contrepartie » — la redire au bout de trois écrans en
-       ferait une insistance plutôt qu'un rappel. */
-    backup:
-      'Le geste qui la couvre tient en une minute : exporte un fichier de temps en temps, depuis les réglages.',
-    /* La même contrepartie, quand ce navigateur a déjà répondu qu'il ne
-       s'engageait pas. Elle ne remplace la phrase ordinaire que dans ce cas-là
-       — pas sur un simple « on ne sait pas », pas avant d'avoir posé la
-       question : annoncer une conservation fragile à tout le monde ferait de la
-       phrase honnête un avertissement de plus qu'on n'écoute pas. Et elle ne
-       bloque rien : c'est une ligne de texte sous deux boutons. */
-    backupFragile:
-      'Et ce navigateur ne garantit pas de les conserver. Avant de saisir beaucoup de choses, prends l’habitude d’exporter un fichier : c’est la seule copie qui ne dépend pas de lui.',
+    /* En PWA installée il n'y a pas de bouton retour du navigateur : la
+       première carte porte le sien, sans quoi on n'a plus qu'à répondre ou à
+       fermer. */
+    backToLanding: 'Revenir à la présentation',
 
-    /* Seconde étape, facultative. Le cahier §4.1 refuse le questionnaire de
-       configuration, et il a raison — mais « ne rien exiger » et « ne rien
-       proposer » sont deux choses différentes. L'app ne vaut rien tant que les
-       récurrences ne sont pas posées : c'est sa thèse, et rien n'y conduisait.
-       D'où une étape qui propose les deux lignes qui la démontrent, et qui se
-       saute d'un bouton visible. */
-    starterTitle: 'Ce qui revient chaque mois',
-    starterHint:
-      'Une seule ligne suffit à faire parler l’app : elle pose les échéances des mois à venir et en tire le prévisionnel. Rien n’est obligatoire ici.',
-    starterSalaryOf: 'Salaire de %s',
-    starterSalarySolo: 'Ton salaire',
+    /* --- 1. Le foyer ---------------------------------------------------- */
+
+    /* « Qui vit ici ? » suppose la cohabitation, que le calcul n'utilise
+       jamais : le prorata marche aussi bien pour deux personnes à deux
+       adresses. Le titre garde la question du design, le corps la corrige. */
+    whoTitle: 'Qui vit ici ?',
+    whoBody:
+      'Seul, l’app n’a personne à nommer et tout t’est attribué. À plusieurs, elle partage les charges communes entre vous — et ça marche aussi à deux adresses.',
+    whoLabel: 'Composition du foyer',
+    whoSolo: 'Je vis seul',
+    whoMulti: 'À plusieurs',
+    /* La liste comprend **qui répond**, et l'écran le dit plutôt que de créer un
+       membre « moi » dans son dos. Ce n'est pas une préférence d'écriture : le
+       prorata pèse les revenus des *membres* (`domain/split.ts`), donc un revenu
+       posé sans propriétaire ne compte pas au dénominateur — un foyer de deux
+       dont l'un ne serait pas membre verrait l'autre porter 100 % des charges
+       communes. Solo, la question ne se pose pas : il n'y a personne à
+       comparer, et se désigner soi-même serait la seule réponse de l'app à
+       n'avoir aucune conséquence. */
+    namesLabel: 'Prénom',
+    namesHint: 'Le tien compris : c’est de vos revenus que le partage se déduit.',
+    namesPlaceholder: 'Alix',
+    namesAdd: 'Ajouter',
+    namesRemove: 'Retirer %s',
+    namesEmpty: 'Personne pour l’instant. Ajoute un prénom, en commençant par le tien.',
+    /* Ce que la réponse change, dit avec les prénoms qu'on vient de taper.
+       C'est aussi la seule fois où la règle de partage s'énonce : elle n'a pas
+       de carte à elle, parce qu'elle n'offre aucun choix — le modèle ne sait
+       faire que le prorata (`memberShares`), et une carte qui ne demanderait
+       rien serait la seule de la file à ne pas être une question. */
+    namesShareOne: '%s : tout lui est attribué, il n’y a rien à partager.',
+    namesShare:
+      '%s : les charges communes se partageront entre vous, au prorata de vos revenus — ce qui laisse à chacun le même reste à vivre.',
+
+    /* --- 2. Les revenus ------------------------------------------------- */
+
+    incomeSoloTitle: 'Ce que tu gagnes chaque mois',
+    incomeOfTitle: 'Ce que gagne %s',
+    incomeBody:
+      'Salaire, pension, allocations : ce qui rentre tous les mois. Une approximation suffit, ça se corrige.',
+    /* Le nom accessible du pavé : ce qu'on est en train de saisir, et pas
+       « montant » tout court — la file en demande trois d'affilée. */
+    incomeKeypad: 'Revenu mensuel',
+
+    /* --- 3. Le toit ----------------------------------------------------- */
+
     /* « Loyer » seul disait « cette app n'est pas pour toi » à qui n'en paie
-       pas — chez ses parents, hébergé, logé par l'employeur. La ligne nomme
-       donc les trois façons de payer pour se loger, et dit qu'on peut la
-       laisser vide. Elle l'était déjà : il ne manquait que de le dire. */
-    starterRent: 'Loyer, crédit immobilier, ou ce que tu verses pour te loger',
-    starterRentHint: 'Laisse vide si tu ne paies rien pour ça.',
-    /* Ce que la récurrence portera comme nom, et qui n'est pas celui du champ :
-       « Salaire de Alix » redirait sur la ligne ce que sa pastille de membre
-       dit déjà, et le libellé de la catégorie — « Salaires, retraites ou
-       indemnités » — décrit un tiroir du catalogue, pas une ligne de budget.
-       Ce sont les mots du jeu d'exemple et de la documentation du schéma. */
-    starterSalaryLabel: 'Salaire',
-    starterRentLabel: 'Loyer',
-    /* Le jour ne se demande pas : un champ de plus par ligne aurait fait de
-       cette étape le questionnaire que le cahier refuse. Il se pose donc au
+       pas — chez ses parents, hébergé, logé par l'employeur. Le titre nomme donc
+       les trois façons de payer pour se loger, et le corps dit qu'on peut
+       passer. */
+    rentTitle: 'Ce que tu verses pour te loger',
+    rentBody:
+      'Loyer, crédit immobilier, participation. Passe si tu ne paies rien pour ça — c’est un cas comme un autre.',
+    rentKeypad: 'Montant du loyer',
+
+    /* --- 4. Les autres charges ------------------------------------------ */
+
+    extrasTitle: 'Qu’est-ce qui revient encore ?',
+    extrasBody:
+      'Abonnements, mutuelle, cantine, forfait. Chaque ligne devient une règle : elle remplira les mois suivants toute seule.',
+    extrasName: 'Ce que c’est',
+    extrasNamePlaceholder: 'Netflix, cantine, mutuelle…',
+    extrasAmount: 'Combien',
+    extrasAdd: 'Ajouter',
+    extrasRemove: 'Retirer %s',
+    extrasList: 'Ce qui revient chaque mois',
+    extrasTotal: 'Total mensuel',
+    /* La catégorie de repli, annoncée. `Recurrence.categoryId` est obligatoire
+       et une ligne libre n'en désigne aucune de façon fiable : deviner « Netflix
+       → Streaming » rangerait un jour « cantine » sous « Loisirs » sans le
+       dire. Le repli est donc assumé à voix haute, avec le geste qui le
+       corrige. */
+    extrasFallback: 'Rangé sous %s · tu pourras le préciser depuis Récurrences.',
+    extrasEmpty: 'Rien pour l’instant. Ajoute ce qui te vient, le reste s’ajoute plus tard.',
+
+    /* --- 5. Le point de départ ------------------------------------------ */
+
+    startMonthTitle: 'Point de départ',
+    /* Le mois **affiché**, et rien d'autre. Le mois courant s'ouvre de toute
+       façon — `hydrate` le rouvre à chaque lancement, et l'app en fait un
+       invariant : jamais une tâche pour l'utilisateur. Ce que ce choix décide,
+       c'est le 1er de quel mois porte les règles, donc le mois où elles se
+       mettent à courir. */
+    startMonthBody:
+      'À partir de quand ces règles courent. Le mois courant reste consultable dans les deux cas — il sera simplement vide si tu commences au suivant.',
+    startMonthLabel: 'Premier mois suivi',
+    startCurrent: 'Ce mois-ci',
+    startNext: 'Le mois prochain',
+    startCurrentHint: 'Les échéances de %s arrivent tout de suite, à confirmer.',
+    startNextHint: '%s s’ouvrira déjà rempli. %s restera vide.',
+
+    /* --- 6. Le récapitulatif -------------------------------------------- */
+
+    summaryTitle: 'Voilà ton mois',
+    summaryBody: 'Relis. Tout se reprend ensuite, ligne par ligne.',
+    summaryHousehold: 'Foyer',
+    summaryHouseholdSolo: 'Toi',
+    summaryShare: 'Partage',
+    summaryShareValue: 'au prorata des revenus',
+    summaryIncome: 'Revenus prévus',
+    summaryRent: 'Logement',
+    summaryExtras: '%s autres charges',
+    summaryExtrasOne: '1 autre charge',
+    /* « Prévisionnel » et non « reste à vivre ». Les deux mots désignent deux
+       chiffres différents dans le domaine : le prévisionnel est revenus moins
+       charges, le reste à vivre (`domain/stats.ts`) est le solde arrêté la
+       veille de la prochaine rentrée d'argent. Sur un foyer payé le 28, l'écart
+       vaut presque un mois de charges — les confondre ici ferait mentir la
+       première lecture de l'app sur elle-même. */
+    summaryForecast: 'Prévisionnel',
+
+    /* Le jour ne se demande nulle part : un champ de plus par carte aurait fait
+       de la file le questionnaire que le cahier §4.1 refuse. Il se pose donc au
        1er — mais il se *dit*, parce qu'une valeur choisie à la place de
        quelqu'un et jamais annoncée se découvre au premier mois faux. */
-    starterDayNote:
-      'Posées au 1er de chaque mois. Le jour, le libellé et la catégorie s’ajustent ensuite depuis Récurrences.',
-    starterSkip: 'Je le ferai plus tard',
+    dayNote: 'Posées au 1er de chaque mois. Le jour, le nom et la catégorie s’ajustent ensuite depuis Récurrences.',
 
-    /* Troisième étape, facultative elle aussi. Elle répond à « combien j'ai et
-       où », et à rien d'autre : ni taux, ni objectif, ni durée, ni allocation.
-       Un questionnaire patrimonial n'aurait pas sa place au premier lancement,
-       et le cahier §4.1 continue de refuser toute réponse exigée. */
-    savingsTitle: 'Ton épargne actuelle',
-    savingsHint:
-      'Tu peux indiquer où se trouve ton épargne pour commencer à la suivre. Rien n’est obligatoire ici, et ça s’ajoute à tout moment depuis l’écran Épargne.',
-    savingsSkip: 'Je le ferai plus tard',
-    previewSavingsEmpty:
-      'Sans support ici, l’app suit ce que tu mets de côté chaque mois, mais pas ce que tu possèdes. Un livret suffit à ce que les deux se lisent.',
-
-    /* En PWA installée il n'y a pas de bouton retour du navigateur : chaque
-       étape porte le sien, sans quoi on n'a plus qu'à répondre ou à fermer. */
-    backToLanding: 'Revenir à la présentation',
-    backToStep: 'Revenir à l’étape %s',
-    progress: 'Progression : étape %s sur 4',
-
-    /* Première étape, et elle ne demande rien. L'onboarding ouvrait sur « avec
-       qui tu partages des dépenses ? » — une question posée avant d'avoir dit
-       ce que l'app fait, à quelqu'un qui vient de cliquer sur un bouton. La
-       thèse du produit tient en une phrase, et elle se dit avant qu'on
-       réponde, pas après.
-       Le titre est au présent et à la deuxième personne, comme la présentation
-       dont il reprend le fil : c'est la même promesse, redite à celui qui vient
-       de l'accepter. */
-    /* Trente-trois caractères, et c'est une mesure et non un goût : au chiffre
-       héros, une phrase de quarante-cinq prend six lignes et 288px sur un écran
-       de 320 — près de la moitié de la hauteur, avant même la contrepartie et
-       le bouton. La présentation tient en quatre lignes parce que sa phrase
-       fait trente caractères. Le titre dit donc le mécanisme, et la phrase
-       en-dessous le déplie. */
-    principleTitle: 'Écrit une fois, prévu chaque mois.',
-    principleBody:
-      'Loyer, abonnements, salaires : tu les écris une fois. Chaque nouveau mois s’ouvre déjà rempli de ce qui est prévu, tu confirmes au fil de l’eau ce qui est réellement tombé, et le reste se déduit tout seul.',
-    /* La contrepartie, en tuile et non en note de bas de page. Elle vivait en
-       13px sous la dernière étape, c'est-à-dire après les trois écrans où l'on
-       a déjà tout saisi : dire « et au fait, tout ça peut disparaître » une
-       fois le travail fait est le pire moment pour le dire. Le readme du DS en
-       fait une règle — le compromis se nomme dans la même phrase que la
-       promesse — et cette étape-ci est cette phrase. */
-    principleCatchTitle: 'La contrepartie',
-    principleCatch:
-      'Rien ne sort de ce navigateur : ni compte, ni serveur, ni mouchard. Si tu l’effaces, tout est effacé, et personne ne peut te le rendre. Le fichier d’export est la seule sortie — c’est toi qui l’ouvres.',
-    principleNext: 'Continuer',
-
-    /* L'aperçu montre ce que la réponse change plutôt que de le promettre.
-       Sans personne, il ne concède pas que « ça marche quand même » : c'est un
-       usage à part entière, et le dire autrement apprend à s'excuser. */
-    previewMembersEmpty:
-      'Sans personne ici, tout t’est attribué. C’est un usage à part entière, pas un mode dégradé.',
-    previewMembers:
-      'Leurs revenus se posent à l’étape suivante. Une fois là, les charges communes se partagent entre eux au prorata.',
-    previewStarterEmpty:
-      'Sans rien ici, le mois s’ouvre à zéro et tout reste à saisir ligne par ligne. Un salaire suffit à ce qu’il s’écrive tout seul.',
-    /* L'aperçu de l'étape 2 ne promet pas le prorata : il le calcule, avec la
-       fonction du domaine qui le calcule partout ailleurs. C'est la thèse de
-       l'app, montrée à l'instant où elle se décide. */
-    previewStarterMonth: 'Ce que ton mois affichera',
-    previewStarterShare: 'La part de chacun sur le loyer, au prorata des revenus',
+    privacy: 'Tes données restent sur cet appareil. Rien n’est envoyé nulle part.',
+    /* La contrepartie, elle, se dit avant d'arriver ici : elle ferme la
+       présentation, sous les trois portes. Ce qui reste ici est ce qu'elle ne
+       peut pas dire — le geste, et où le faire. */
+    backup:
+      'Le geste qui la couvre tient en une minute : exporte un fichier de temps en temps, depuis les réglages.',
+    /* La même phrase, quand ce navigateur a déjà répondu qu'il ne s'engageait
+       pas. Elle ne remplace l'ordinaire que dans ce cas-là — pas sur un simple
+       « on ne sait pas », pas avant d'avoir posé la question : annoncer une
+       conservation fragile à tout le monde ferait de la phrase honnête un
+       avertissement de plus qu'on n'écoute pas. */
+    backupFragile:
+      'Et ce navigateur ne garantit pas de les conserver. Avant de saisir beaucoup de choses, prends l’habitude d’exporter un fichier : c’est la seule copie qui ne dépend pas de lui.',
   },
 
   about: {

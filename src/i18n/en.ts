@@ -1376,65 +1376,82 @@ export const en: Strings = {
   },
 
   onboarding: {
-    step: 'Step %s of 4',
-    membersTitle: 'Who do you share expenses with?',
-    membersHint:
-      'First names are used as labels on expenses. Their incomes are set at the next step. You can skip: everything will be attributed to you.',
-    membersLabel: 'First name',
-    membersPlaceholder: 'Alix',
-    membersAdd: 'Add',
-    membersEmpty: 'Nobody yet. Add a first name, or skip.',
-    membersRename: '%s’s first name',
-    membersRemove: 'Remove %s',
-    membersRemoveConfirm: 'Remove %s?',
-    solo: 'I’m on my own',
+    counter: '%s / %s',
+    progress: 'Question %s of %s',
+    back: 'Back',
+    later: 'Later',
     start: 'Start',
+    backToLanding: 'Back to the tour',
+
+    whoTitle: 'Who lives here?',
+    whoBody:
+      'On your own, the app has nobody to name and everything is attributed to you. With others, it splits the shared costs between you — and that works across two addresses too.',
+    whoLabel: 'Household make-up',
+    whoSolo: 'I live alone',
+    whoMulti: 'With others',
+    namesLabel: 'First name',
+    namesHint: 'Yours included: the split is worked out from your incomes.',
+    namesPlaceholder: 'Alix',
+    namesAdd: 'Add',
+    namesRemove: 'Remove %s',
+    namesEmpty: 'Nobody yet. Add a first name, starting with your own.',
+    namesShareOne: '%s: everything is attributed to them, there is nothing to split.',
+    namesShare:
+      '%s: the shared costs will be split between you, in proportion to your incomes — which leaves everyone the same amount to live on.',
+
+    incomeSoloTitle: 'What you earn every month',
+    incomeOfTitle: 'What %s earns',
+    incomeBody:
+      'Salary, pension, benefits: what comes in every month. A rough figure is enough, it can be corrected.',
+    incomeKeypad: 'Monthly income',
+
+    rentTitle: 'What you pay to be housed',
+    rentBody:
+      'Rent, mortgage, a contribution. Skip if you pay nothing for that — it’s a case like any other.',
+    rentKeypad: 'Rent amount',
+
+    extrasTitle: 'What else comes back?',
+    extrasBody:
+      'Subscriptions, insurance, school meals, phone plan. Each line becomes a rule: it will fill the months ahead on its own.',
+    extrasName: 'What it is',
+    extrasNamePlaceholder: 'Netflix, school meals, insurance…',
+    extrasAmount: 'How much',
+    extrasAdd: 'Add',
+    extrasRemove: 'Remove %s',
+    extrasList: 'What comes back every month',
+    extrasTotal: 'Monthly total',
+    extrasFallback: 'Filed under %s · you’ll be able to refine it from Recurring.',
+    extrasEmpty: 'Nothing yet. Add what comes to mind, the rest can wait.',
+
+    startMonthTitle: 'Starting point',
+    startMonthBody:
+      'From when these rules run. The current month stays available either way — it will simply be empty if you start next month.',
+    startMonthLabel: 'First month tracked',
+    startCurrent: 'This month',
+    startNext: 'Next month',
+    startCurrentHint: 'The payments for %s arrive right away, to be confirmed.',
+    startNextHint: '%s will open already filled. %s will stay empty.',
+
+    summaryTitle: 'Here’s your month',
+    summaryBody: 'Have a read. Everything can be revisited afterwards, line by line.',
+    summaryHousehold: 'Household',
+    summaryHouseholdSolo: 'You',
+    summaryShare: 'Split',
+    summaryShareValue: 'in proportion to incomes',
+    summaryIncome: 'Forecast income',
+    summaryRent: 'Housing',
+    summaryExtras: '%s other costs',
+    summaryExtrasOne: '1 other cost',
+    summaryForecast: 'Forecast',
+
+    dayNote:
+      'Set on the 1st of each month. The day, the name and the category can be adjusted afterwards from Recurring.',
+
     privacy: 'Your data stays on this device. Nothing is sent anywhere.',
     backup:
       'The habit that covers it takes a minute: export a file from time to time, from the settings.',
     backupFragile:
       'And this browser doesn’t guarantee it will keep it. Before entering a lot, get into the habit of exporting a file: it’s the only copy that doesn’t depend on it.',
-
-    starterTitle: 'What comes back every month',
-    starterHint:
-      'A single line is enough to make the app talk: it sets the payments of the months ahead and draws the forecast from them. Nothing is required here.',
-    starterSalaryOf: '%s’s salary',
-    starterSalarySolo: 'Your salary',
-    starterRent: 'Rent, mortgage, or whatever you pay to be housed',
-    starterRentHint: 'Leave empty if you pay nothing for that.',
-    starterSalaryLabel: 'Salary',
-    starterRentLabel: 'Rent',
-    starterDayNote:
-      'Set on the 1st of each month. The day, the label and the category can be adjusted afterwards from Recurring.',
-    starterSkip: 'I’ll do it later',
-
-    savingsTitle: 'Your current savings',
-    savingsHint:
-      'You can say where your savings are to start tracking them. Nothing is required here, and it can be added at any time from the Savings screen.',
-    savingsSkip: 'I’ll do it later',
-    previewSavingsEmpty:
-      'With no pot here, the app tracks what you set aside each month, but not what you own. One account is enough for both to be readable.',
-
-    backToLanding: 'Back to the tour',
-    backToStep: 'Back to step %s',
-    progress: 'Progress: step %s of 4',
-
-    principleTitle: 'Written once, forecast every month.',
-    principleBody:
-      'Rent, subscriptions, salaries: you write them down once. Each new month opens already filled with what is forecast, you confirm what actually happened as it happens, and everything else follows.',
-    principleCatchTitle: 'The catch',
-    principleCatch:
-      'Nothing leaves this browser: no account, no server, no tracker. If you wipe it, everything is wiped, and nobody can give it back. The export file is the only way out — and you are the one who opens it.',
-    principleNext: 'Continue',
-
-    previewMembersEmpty:
-      'With nobody here, everything is attributed to you. That’s a use in its own right, not a fallback.',
-    previewMembers:
-      'Their incomes are set at the next step. Once there, the shared costs are split between them in proportion.',
-    previewStarterEmpty:
-      'With nothing here, the month opens at zero and everything is left to enter line by line. One salary is enough for it to write itself.',
-    previewStarterMonth: 'What your month will show',
-    previewStarterShare: 'Everyone’s share of the rent, in proportion to income',
   },
 
   about: {
