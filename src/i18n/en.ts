@@ -556,6 +556,8 @@ export const en: Strings = {
     someEntries: '%s payments',
     emptyDay: 'Nothing that day.',
     empty: 'No payment this month.',
+    emptyStart:
+      'The month is empty. Write a recurring item: it is what puts payments on the calendar.',
     more: '+%s',
 
     /** Reçoit `de(formatYearMonth(ym))` — en anglais, « of April 2026 ». */
@@ -717,6 +719,13 @@ export const en: Strings = {
       'This month has no lines yet. Write a recurring item, and the detail will fill itself in.',
     in: 'What comes in',
     out: 'What goes out',
+    filtered: 'Nothing to detail under this filter. The month itself is not empty.',
+    common: 'Shared costs',
+    own: 'Personal costs',
+    saving: 'Set aside',
+    share: 'share %s of %s',
+    commonRule: 'Pro rata of incomes',
+    scopeHousehold: 'of the household',
   },
 
   entry: {
@@ -971,6 +980,8 @@ export const en: Strings = {
     countOne: '%s advance',
     count: '%s advances',
     remainingTotal: '%s left to put back',
+    notACharge:
+      'An advance is not a cost: it is waiting to be paid back, it does not weigh on the month.',
 
     label: 'What you paid',
     labelPlaceholder: 'Car insurance',
@@ -1113,6 +1124,8 @@ export const en: Strings = {
     goalsEmpty:
       'No goal yet. Set a target — a deposit, a safety net — and the app will tell you whether you’re on track.',
     goalAdd: 'Add a goal',
+    goalsProjection:
+      'Dates are a projection at the current pace, not a promise: they move with the months you confirm.',
     goalSimulate: 'Simulate differently',
 
     goalOn: 'on time',

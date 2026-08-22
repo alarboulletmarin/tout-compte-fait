@@ -1028,6 +1028,12 @@ export const fr = {
     someEntries: '%s échéances',
     emptyDay: 'Rien ce jour-là.',
     empty: 'Aucune échéance ce mois-ci.',
+    /* Le mois vide d'un document qui n'a encore posé aucune règle. Ce qui
+       remplit un calendrier n'est pas une dépense : une dépense ponctuelle ne
+       pose rien pour le mois suivant, une récurrence pose toute l'année. Même
+       distinction que `month.emptyStart`, dite dans les mots de cet écran. */
+    emptyStart:
+      'Le mois est vide. Écris une récurrence : c’est elle qui pose les échéances sur le calendrier.',
     more: '+%s',
 
     /** Le nom de la fenêtre. Reçoit `de(formatYearMonth(ym))` : « d’avril 2026 ». */
@@ -1336,6 +1342,33 @@ export const fr = {
       'Le mois ne contient aucune ligne. Écris une récurrence, et le détail se remplira tout seul.',
     in: 'Ce qui rentre',
     out: 'Ce qui sort',
+    /* L'autre vide : le mois porte des lignes, mais aucune ne passe le filtre
+       en cours — le pot commun d'un mois sans charge partagée, ou quelqu'un
+       qui n'a rien à son nom. Sans action : la rangée de pilules juste
+       au-dessus est ce qui la défait, et « écris une récurrence » serait faux
+       sur un mois qui en a déjà. */
+    filtered: 'Rien à détailler sous ce filtre. Le mois, lui, n’est pas vide.',
+    /* Les trois sections du détail. « Ce qui sort » reste : la tuile Charges du
+       mois le dit, et l'écran le découpe en deux — ce que le foyer paie
+       ensemble, et ce que chacun paie seul. */
+    common: 'Charges communes',
+    own: 'Charges personnelles',
+    /* L'épargne n'est ni un revenu ni une charge, et elle a pourtant sa
+       section : sans elle, un écran qui détaille le mois tairait des lignes que
+       la liste du mois montre. */
+    saving: 'Mis de côté',
+    /* Ce qu'une ligne dit quand la portée l'a découpée : la part qu'on lit, et
+       le montant plein dont elle vient. Reçoit `de(prénom)` puis le montant —
+       « part d’Alice sur 1 100,00 € ». Le découpage est celui de `split.ts`,
+       jamais une multiplication faite à l'écran. */
+    share: 'part %s sur %s',
+    /* La règle qui produit les parts, sous les charges communes. Les
+       pourcentages la suivent, séparés par des points médians. */
+    commonRule: 'Au prorata des revenus',
+    /* La portée de la tuile de tête, accolée au libellé du solde : « Reste à
+       vivre du foyer », « Reste à vivre d’Alice ». Le prénom passe par `de()`,
+       qui élide ; le foyer n'a pas de prénom, d'où cette chaîne-ci. */
+    scopeHousehold: 'du foyer',
   },
 
   entry: {
@@ -1769,6 +1802,13 @@ export const fr = {
     countOne: '%s avance',
     count: '%s avances',
     remainingTotal: '%s restant à remettre',
+    /* Sous la rangée des avances, sur l'écran des crédits, et là seulement :
+       c'est le seul endroit où elles voisinent avec de vraies charges, et où
+       la confusion se paie. Une avance sort de l'épargne et y retourne — elle
+       n'entre dans aucun total du mois, et aucun chiffre de cet écran ne la
+       compte. */
+    notACharge:
+      'Une avance n’est pas une charge : elle attend d’être rendue, elle ne pèse pas sur le mois.',
 
     label: 'Ce que tu as payé',
     labelPlaceholder: 'Assurance auto',
@@ -2021,6 +2061,12 @@ export const fr = {
     goalsEmpty:
       'Aucun objectif. Pose un cap — un apport, un matelas de sécurité — et l’app te dira si tu y es.',
     goalAdd: 'Ajouter un objectif',
+    /* La réserve qui accompagne les dates d'arrivée de la liste. Une date
+       calculée au rythme d'aujourd'hui n'est pas une promesse : elle recule le
+       mois où l'on verse moins, et elle avance quand on rattrape. La fiche dit
+       pourquoi elle est prudente ; celle-ci dit qu'elle bouge. */
+    goalsProjection:
+      'Les dates sont une projection au rythme actuel, pas une promesse : elles bougent avec les mois que tu confirmes.',
     /* La porte du simulateur, depuis la fiche d'un objectif : ses comptes et son
        échéance, préréglés. Trois mots vivaient ici avec elle — « En faire un
        objectif », « Adopter ce rythme », « Rythme adopté » —, c'est-à-dire une

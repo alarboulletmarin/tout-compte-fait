@@ -59,17 +59,50 @@ describe('l’écran Historique', () => {
   it('pose trois blocs, dans l’ordre des trois questions', () => {
     const { container } = setup()
     expect(screen.getByRole('searchbox')).toBeInTheDocument()
-    expect(screen.getByText(history.evolution)).toBeInTheDocument()
+    // « Évolution » ne nomme plus que le tracé : la tuile porte le chiffre
+    // qu'elle donne à lire, et c'est le solde moyen.
+    expect(screen.getByText(history.average)).toBeInTheDocument()
     expect(screen.getByText(history.compare)).toBeInTheDocument()
-    // La recherche a quitté sa tuile : il n'en reste que deux au repos.
-    expect(container.querySelectorAll('.tile')).toHaveLength(2)
+    /* Cinq tuiles au repos : l'évolution, ses deux extrêmes, la liste mois par
+       mois, la comparaison. La recherche, elle, n'en pose aucune tant qu'on ne
+       lui a rien demandé. */
+    expect(container.querySelectorAll('.tile')).toHaveLength(5)
   })
 
-  /* La fenêtre se dit à côté de l'étiquette et non en dessous : deux étiquettes
-     empilées n'étaient qu'une information écrite deux fois. */
-  it('nomme la fenêtre à côté du sujet, sur une seule ligne', () => {
+  /* La fenêtre se nomme par ses deux bornes, en mono sous le cumul : « douze
+     derniers mois » devenait faux dès qu'on en demandait six. */
+  it('nomme la fenêtre par ses deux bornes', () => {
     setup()
-    expect(screen.getByText(history.trailing)).toHaveClass('t-axis')
+    expect(
+      screen.getByText(tpl(history.trailingRange, 'septembre 2025', 'août 2026')),
+    ).toHaveClass('t-axis')
+  })
+
+  /* Deux fenêtres, et la série suit. Le contrôle vit sur cet écran : la série
+     s'arrête à aujourd'hui quoi qu'on choisisse dans le bandeau du mois. */
+  it('bascule la fenêtre de douze à six mois', async () => {
+    setup()
+    const window_ = screen.getByRole('radiogroup', { name: history.spanLabel })
+    await userEvent.click(within(window_).getByRole('radio', { name: history.span6 }))
+
+    expect(
+      screen.getByText(tpl(history.trailingRange, 'mars 2026', 'août 2026')),
+    ).toBeInTheDocument()
+  })
+
+  /* Chaque mois est une porte : `ym` vit dans le store, et l'écran du mois n'a
+     pas d'URL par mois. */
+  it('ouvre le mois qu’on touche dans la liste', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: /mai 2026/ }))
+    expect(useStore.getState().ym).toBe('2026-05')
+  })
+
+  /* Les mois vides ne comptent nulle part : deux mois portent des lignes, la
+     moyenne se lit sur eux, et le mot le dit. */
+  it('ne compte que les mois qui portent des lignes', () => {
+    setup()
+    expect(screen.getByText(tpl(history.averageOn, 2))).toBeInTheDocument()
   })
 
   /* Le champ n'a plus de libellé visible, mais il en a un : sans nom
@@ -87,15 +120,15 @@ describe('l’écran Historique', () => {
      acceptable — ils arrivent juste sous le champ, avant l'évolution. */
   it('ne pose la surface des résultats qu’une fois qu’on cherche, et en tête', async () => {
     const { container } = setup()
-    expect(container.querySelectorAll('.tile')).toHaveLength(2)
+    expect(container.querySelectorAll('.tile')).toHaveLength(5)
 
     await userEvent.type(screen.getByRole('searchbox'), 'edf')
 
     const tiles = [...container.querySelectorAll('.tile')]
-    expect(tiles).toHaveLength(3)
+    expect(tiles).toHaveLength(6)
     const results = tiles[0] as HTMLElement
     expect(within(results).getByText('EDF')).toBeInTheDocument()
-    expect(within(tiles[1] as HTMLElement).getByText(history.evolution)).toBeInTheDocument()
+    expect(within(tiles[1] as HTMLElement).getByText(history.average)).toBeInTheDocument()
   })
 
   it('dit où il a cherché quand il ne trouve rien', async () => {

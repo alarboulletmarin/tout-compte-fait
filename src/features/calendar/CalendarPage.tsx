@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { entryNewPath, entryPath } from '@/app/routes'
+import { RECURRENCE_NEW_PATH, entryNewPath, entryPath } from '@/app/routes'
 import { type ISODate, today, ymOf } from '@/domain/date'
 import { t } from '@/i18n/strings'
 import { useCurrentYm, useMonthBounds } from '@/store/selectors'
@@ -18,6 +18,12 @@ import { entriesOn, useCalendarWindow } from './useCalendarWindow'
 export function CalendarPage() {
   const ym = useCurrentYm()
   const setYm = useStore((s) => s.setYm)
+  /* Ce qui remplit un calendrier n'est pas une dépense, c'est une règle : elle
+     seule pose des échéances sur les jours à venir. La distinction est celle du
+     mois vide (`month.emptyStart`), au mot près — un document sans aucune règle
+     n'a pas le même geste devant lui qu'un mois que les règles ne touchent
+     pas. */
+  const hasRecurrence = useStore((s) => s.data.recurrences.length > 0)
   const bounds = useMonthBounds()
   const grid = useCalendarWindow()
   const navigate = useNavigate()
@@ -148,8 +154,20 @@ export function CalendarPage() {
         {/* L'invitation portait une action — « ouvre le mois » — que cet écran
             n'offre pas. Elle porte maintenant celle qu'il sait faire. */}
         {!hasAny && (
-          <EmptyState message={t.calendar.empty}>
+          <EmptyState message={hasRecurrence ? t.calendar.empty : t.calendar.emptyStart}>
             <div className="flex flex-wrap justify-center gap-2">
+              {/* La récurrence en tête, et seulement quand il n'y en a aucune :
+                  c'est elle qui pose les échéances du calendrier, et les trois
+                  portes de saisie ne remplissent que le jour qu'on vise. */}
+              {!hasRecurrence && (
+                <Button
+                  onClick={() => {
+                    void navigate(RECURRENCE_NEW_PATH)
+                  }}
+                >
+                  {t.recurrences.add}
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 onClick={() => {

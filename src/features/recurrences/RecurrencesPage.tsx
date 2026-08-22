@@ -1,12 +1,10 @@
 import { useId, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ADVANCES_PATH,
   CREDITS_PATH,
   RECURRENCE_NEW_PATH,
   recurrencePath,
 } from '@/app/routes'
-import { totalRemaining } from '@/domain/advance'
 import {
   NO_MEMBER,
   type RecurrenceGroup,
@@ -19,7 +17,6 @@ import { money } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import {
-  useAdvanceStatuses,
   useCategoryMap,
   useKindOf,
   useMemberMap,
@@ -39,6 +36,7 @@ import { Select } from '@/ui/Field'
 import { ChevronDown, Plus, RecurrencesIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row as GroupRow, RowGroup } from '@/ui/RowGroup'
+import { AdvancesRow } from '@/features/advances/AdvancesRow'
 import { Segmented } from '@/ui/Segmented'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
@@ -496,26 +494,12 @@ function StoppedList({ rows, onOpen }: { rows: Row[]; onOpen: (id: string) => vo
  * s'enregistrent très bien avant la première récurrence saisie à la main.
  */
 function Trackers() {
-  const statuses = useAdvanceStatuses()
-  const currency = useCurrency()
-
-  const advances =
-    statuses.length === 0
-      ? t.advances.empty
-      : [
-          tpl(
-            statuses.length > 1 ? t.advances.count : t.advances.countOne,
-            statuses.length,
-          ),
-          tpl(
-            t.advances.remainingTotal,
-            formatMoney(totalRemaining(statuses), currency, false),
-          ),
-        ].join(' · ')
-
   return (
     <RowGroup>
-      <GroupRow label={t.advances.section} description={advances} to={ADVANCES_PATH} />
+      {/* La rangée des avances est partagée avec l'écran des crédits, qui y mène
+          aussi : deux lectures justes du même objet, et un seul endroit où son
+          résumé s'écrit. */}
+      <AdvancesRow />
       <GroupRow
         label={t.credits.title}
         description={t.recurrences.creditsHint}
