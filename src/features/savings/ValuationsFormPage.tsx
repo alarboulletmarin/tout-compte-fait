@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SAVINGS_PATH } from '@/app/routes'
+import { SAVINGS_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
 import { type ISODate, today } from '@/domain/date'
 import { ZERO, parseAmount } from '@/domain/money'
 import type { SavingSupport } from '@/domain/types'
@@ -52,10 +52,23 @@ export function ValuationsFormPage() {
   }
 
   if (mine.length === 0) {
+    /* Deux vides, deux phrases : le foyer n'a aucun compte, ou celui qu'on
+       regarde n'en a pas. Le second n'est pas un document vide — c'est la
+       lecture qui l'est, et lui dire « aucun support d'épargne » serait faux
+       pendant que la personne d'à côté en a trois. Le geste diffère aussi : le
+       premier renvoie à la création, le second à la rangée de pilules de
+       l'écran d'épargne, où l'on change de nom. */
+    const none = supports.length === 0
     return (
       <div className="flex max-w-xl flex-col gap-5">
         <PageTitle title={t.savings.valuesUpdate} onBack={back} />
-        <EmptyState message={t.savings.supportsEmpty} />
+        <EmptyState
+          message={none ? t.savings.supportsEmpty : t.savings.supportsNoneMine}
+          actionLabel={none ? t.savings.supportAdd : t.savings.title}
+          onAction={() => {
+            void navigate(none ? SUPPORT_NEW_PATH : SAVINGS_PATH)
+          }}
+        />
       </div>
     )
   }

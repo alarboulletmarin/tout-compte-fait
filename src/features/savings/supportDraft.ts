@@ -12,13 +12,12 @@
  * ==========================================================================*/
 
 import { useMemo, useState } from 'react'
-import { type ISODate, type YearMonth, startOfMonth, today } from '@/domain/date'
+import { type ISODate, today } from '@/domain/date'
 import { type Money, parseAmount, toAmountInput } from '@/domain/money'
 import type { RateKind } from '@/domain/projection'
 import { MAX_RATE_PERCENT, parseRateBp } from '@/domain/rate'
 import { DEFAULT_PACE, paceOf } from '@/domain/saving'
 import type {
-  Recurrence,
   SavingPace,
   SavingRate,
   SavingRole,
@@ -264,44 +263,6 @@ export function useSupportCreateSheet(onCreated: (supportId: string) => void) {
         onCreated(supportId)
       },
     },
-  }
-}
-
-/* --- Le versement régulier qui alimente un support ------------------------*/
-
-/**
- * La récurrence qu'un « je verse tant chaque mois » décrit, reliée au support
- * **par identifiant**.
- *
- * C'est ce qui empêche le doublon que cette V2 existe pour éviter : le montant
- * du versement vit dans la récurrence — donc dans les `Entry` qu'elle produira —
- * et nulle part sur le support. Le support porte le capital, la règle porte le
- * flux, et rien ne recopie l'autre.
- *
- * Mensuelle et ancrée au 1er, comme les lignes de l'étape précédente : le jour
- * ne se demande pas, il se corrige depuis la fiche (cahier §4.1).
- *
- * `null` si le montant est vide, illisible ou nul — l'étape est facultative, et
- * un champ vide ne pose rien.
- */
-export function supportContribution(
-  support: Pick<SavingSupport, 'id' | 'label' | 'memberId' | 'categoryId'>,
-  amountText: string,
-  ym: YearMonth,
-): Omit<Recurrence, 'id'> | null {
-  const amount = parseAmount(amountText)
-  if (amount === null || amount <= 0) return null
-  return {
-    label: tpl(t.savings.contributionLabel, support.label),
-    categoryId: support.categoryId,
-    memberId: support.memberId,
-    savingSupportId: support.id,
-    // Un versement sort du compte, comme toute épargne : c'est la nature, pas
-    // le sens, qui le distingue d'une charge.
-    direction: 'out',
-    amount,
-    period: { unit: 'month', every: 1, anchorDay: 1 },
-    startedOn: startOfMonth(ym),
   }
 }
 

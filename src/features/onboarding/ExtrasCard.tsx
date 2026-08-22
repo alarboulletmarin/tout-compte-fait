@@ -7,6 +7,7 @@ import { Amount } from '@/ui/Amount'
 import { Button, IconButton } from '@/ui/Button'
 import { AmountInput, Field, TextInput } from '@/ui/Field'
 import { Close } from '@/ui/Icons'
+import { InlineError } from '@/ui/InlineError'
 import { ListRow } from '@/ui/ListRow'
 import { type ExtraCharge, typedAmount } from './queue'
 
@@ -44,16 +45,30 @@ export function ExtrasCard({
 }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
+  /* Le refus ne se lit qu'après un essai : afficher « donne un nom » sur une
+     carte qu'on vient d'ouvrir gronderait quelqu'un qui n'a rien fait. Même
+     grammaire que la saisie rapide et que l'écriture d'une règle. */
+  const [tried, setTried] = useState(false)
 
   const trimmed = name.trim()
   const parsed = typedAmount(amount)
-  const ready = trimmed.length > 0 && parsed !== null
+  /* Le nom d'abord : c'est le champ de gauche, et on ne dit qu'une chose à la
+     fois. `typedAmount` refuse aussi bien le vide que l'illisible et le zéro —
+     les trois se répondent par la même phrase, celle de la saisie rapide. */
+  const error =
+    trimmed.length === 0
+      ? t.onboarding.extrasNameRequired
+      : parsed === null
+        ? t.entry.amountRequired
+        : null
 
   const submit = (): void => {
-    if (!ready || parsed === null) return
+    setTried(true)
+    if (error !== null || parsed === null) return
     onAdd({ id: makeId(), name: trimmed, amount: parsed })
     setName('')
     setAmount('')
+    setTried(false)
   }
 
   return (
@@ -90,43 +105,54 @@ export function ExtrasCard({
       )}
 
       {/* Un `<form>` : Entrée valide depuis l'un ou l'autre champ, sans
-          écouteur de touche à écrire. */}
+          écouteur de touche à écrire. Il passe en colonne pour porter le refus :
+          « Ajouter » vit au bout de la rangée des champs, et le message ne peut
+          donc pas se poser au-dessus de lui sans désaligner les deux autres. Il
+          se pose sous la rangée entière, ce qui revient au même pour le doigt
+          qui remonte appuyer une seconde fois. */}
       <form
-        className="flex flex-wrap items-end gap-2"
+        className="flex flex-col gap-2"
         onSubmit={(event) => {
           event.preventDefault()
           submit()
         }}
       >
-        <Field label={t.onboarding.extrasName} className="min-w-40 flex-1">
-          {(id) => (
-            <TextInput
-              id={id}
-              value={name}
-              placeholder={t.onboarding.extrasNamePlaceholder}
-              maxLength={60}
-              onChange={(event) => {
-                setName(event.target.value)
-              }}
-            />
-          )}
-        </Field>
-        <Field label={t.onboarding.extrasAmount}>
-          {(id) => (
-            <AmountInput
-              id={id}
-              value={amount}
-              placeholder="0,00"
-              className="w-28"
-              onChange={(event) => {
-                setAmount(event.target.value)
-              }}
-            />
-          )}
-        </Field>
-        <Button type="submit" variant="secondary" disabled={!ready}>
-          {t.onboarding.extrasAdd}
-        </Button>
+        <div className="flex flex-wrap items-end gap-2">
+          <Field label={t.onboarding.extrasName} className="min-w-40 flex-1">
+            {(id) => (
+              <TextInput
+                id={id}
+                value={name}
+                placeholder={t.onboarding.extrasNamePlaceholder}
+                maxLength={60}
+                onChange={(event) => {
+                  setName(event.target.value)
+                }}
+              />
+            )}
+          </Field>
+          <Field label={t.onboarding.extrasAmount}>
+            {(id) => (
+              <AmountInput
+                id={id}
+                value={amount}
+                placeholder="0,00"
+                className="w-28"
+                onChange={(event) => {
+                  setAmount(event.target.value)
+                }}
+              />
+            )}
+          </Field>
+          {/* Actif, et non grisé : un bouton mort qui ne dit pas pourquoi est un
+              refus sans cause, et le DS §6 le range avec les contrôles qui ne
+              tiennent pas leur promesse. C'est le message qui dit ce qui
+              manque. */}
+          <Button type="submit" variant="secondary">
+            {t.onboarding.extrasAdd}
+          </Button>
+        </div>
+        <InlineError message={tried ? error : null} />
       </form>
 
       {extras.length > 0 && (

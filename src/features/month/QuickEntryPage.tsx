@@ -15,7 +15,7 @@ import { useCategories, useCurrentYm, useEntries, useKindOf, useMembers } from '
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
-import { Warning } from '@/ui/Icons'
+import { InlineError } from '@/ui/InlineError'
 import { Keypad } from '@/ui/Keypad'
 import { amountFromKeys } from '@/ui/keypad'
 import { PageTitle } from '@/ui/PageTitle'
@@ -175,14 +175,9 @@ export function QuickEntryPage() {
       </section>
 
       <div className="flex flex-col gap-2">
-        {/* L'erreur au-dessus du bouton, jamais à la place : on la lit en
-            allant appuyer une seconde fois. */}
-        {tried && error !== null && (
-          <p className="t-label flex items-center gap-2 text-danger-text" role="alert">
-            <Warning size={16} className="shrink-0" />
-            {error}
-          </p>
-        )}
+        {/* L'erreur au-dessus du bouton, jamais à la place. Le motif est écrit
+            une fois dans `ui/InlineError` : trois écrans le posaient. */}
+        <InlineError message={tried ? error : null} />
         <Button full onClick={save}>
           {direction === 'in' ? t.entry.addIn : t.entry.addOut}
         </Button>

@@ -162,6 +162,10 @@ describe('l’épargne se lit au nom d’une personne', () => {
 
     expect(useStore.getState().filter).toEqual(ALL_FILTER)
     expect(screen.getByText(t.savings.supportsNoMember)).toBeInTheDocument()
+    /* Et le geste qui lève la cause : la répartition et les deux formulaires
+       d'épargne renvoient au foyer avec ce même libellé, cet écran-ci n'offrait
+       rien du tout. */
+    expect(screen.getByRole('button', { name: t.split.goToSettings })).toBeInTheDocument()
   })
 })
 

@@ -208,7 +208,6 @@
      l'étiquette, le libellé et la méta sans que la carte flotte en haut d'un
      écran vide — c'est le seul écran de l'app dont la carte *est* la page. */
   .min-h-72 { min-height: 288px; }
-  .min-h-\[38rem\] { min-height: 38rem; }
 
   .w-2 { width: 8px; }
   .w-2\.5 { width: 10px; }
@@ -239,7 +238,6 @@
   .max-w-48 { max-width: 192px; }
   .max-w-full { max-width: 100%; }
   .max-w-none { max-width: none; }
-  .max-w-\[16ch\] { max-width: 16ch; }
   /* La mesure d'un paragraphe posé dans une tuile : assez court pour se lire
      d'un coup d'œil, assez large pour ne pas casser en trois mots par ligne. */
   .max-w-\[44ch\] { max-width: 44ch; }
@@ -264,10 +262,6 @@
   /* --- Marges ------------------------------------------------------------ */
 
   .m-0 { margin: 0; }
-  .m-1 { margin: 4px; }
-  .m-2 { margin: 8px; }
-  .m-3 { margin: 12px; }
-  .m-9 { margin: 36px; }
   .mx-auto { margin-inline: auto; }
   .my-auto { margin-block: auto; }
   .-mx-2 { margin-inline: -8px; }
@@ -313,7 +307,6 @@
   .px-4 { padding-inline: 16px; }
   .px-5 { padding-inline: 20px; }
   .px-6 { padding-inline: 24px; }
-  .px-8 { padding-inline: 32px; }
   .py-px { padding-block: 1px; }
   .py-1 { padding-block: 4px; }
   .py-1\.5 { padding-block: 6px; }
@@ -428,7 +421,6 @@
   .font-medium { font-weight: 500; }
   .font-semibold { font-weight: 600; }
   .text-pretty { text-wrap: pretty; }
-  .text-wrap { text-wrap: wrap; }
   .whitespace-nowrap { white-space: nowrap; }
   .underline { text-decoration-line: underline; }
   /* Le montant prévu d'une ligne qu'on vient de confirmer autrement : c'est le
@@ -438,11 +430,6 @@
   .underline-offset-2 { text-underline-offset: 2px; }
   .list-disc { list-style-type: disc; }
   .list-none { list-style-type: none; }
-  .ordinal { font-variant-numeric: ordinal; }
-  /* DS §3 — tabular-nums sur tout montant affiché. La classe maison `tnum`
-     fait la même chose ; celle-ci sert aux tableaux qui ne passent pas par
-     `<Amount />`. */
-  .tabular-nums { font-variant-numeric: tabular-nums; }
 
   /* --- Couleur ----------------------------------------------------------- */
 
@@ -492,7 +479,6 @@
   .-translate-y-1\/2 { translate: 0 -50%; }
   .-rotate-90 { rotate: -90deg; }
   .rotate-45 { rotate: 45deg; }
-  .blur { filter: blur(8px); }
 
   .cursor-default { cursor: default; }
   .cursor-grab { cursor: grab; }
@@ -507,7 +493,6 @@
 
   .visible { visibility: visible; }
   .invisible { visibility: hidden; }
-  .\!visible { visibility: visible !important; }
 
   /* Un conteneur de requête : ce qui est dedans se dimensionne sur lui, pas
      sur la fenêtre. La grille bento s'en sert pour ses chiffres. */
@@ -517,7 +502,6 @@
 
   /* La durée et la courbe par défaut. `--dur` et `--ease` sont les tokens du
      DS §4, et `--dur` tombe à zéro sous `prefers-reduced-motion`. */
-  .transition,
   .transition-colors,
   .transition-opacity,
   .transition-transform,
@@ -530,12 +514,6 @@
     transition-duration: var(--tr-dur, 150ms);
   }
 
-  .transition {
-    transition-property:
-      color, background-color, border-color, outline-color, text-decoration-color, fill,
-      stroke, opacity, box-shadow, transform, translate, scale, rotate, filter, display,
-      content-visibility, overlay, pointer-events;
-  }
   .transition-colors {
     transition-property:
       color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
@@ -702,7 +680,6 @@
 
   @media (min-width: 640px) {
     .sm\:col-span-1 { grid-column: span 1 / span 1; }
-    .sm\:col-span-2 { grid-column: span 2 / span 2; }
     .sm\:m-auto { margin: auto; }
     .sm\:hidden { display: none; }
     .sm\:max-w-lg { max-width: var(--container-lg); }
@@ -726,13 +703,11 @@
     .md\:bottom-6 { bottom: 24px; }
     .md\:-mx-8 { margin-inline: -32px; }
     .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .md\:p-5 { padding: 20px; }
     .md\:h-96 { height: 384px; }
     .md\:p-6 { padding: 24px; }
     .md\:p-2\! { padding: 8px !important; }
     .md\:px-8 { padding-inline: 32px; }
     .md\:py-12 { padding-block: 48px; }
-    .md\:py-14 { padding-block: 56px; }
     .md\:pt-8 { padding-top: 32px; }
   }
 

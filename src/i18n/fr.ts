@@ -332,10 +332,16 @@ export const fr = {
     writeFailedBody:
       'Ce que tu tapes reste à l’écran, mais rien n’est gardé. Navigation privée, espace saturé, ou un autre onglet qui tient la base.',
     writeFailedLabel: 'Échec d’enregistrement',
+    /* Le message rouge qui suit **chaque** écriture ratée, y compris le « Réessayer »
+       du bandeau. Il ne redit pas le titre du bandeau : celui-ci décrit l'état,
+       celui-là parle du geste qu'on vient de faire — c'est la seule façon de
+       relier la panne à la ligne qu'on était en train de saisir. Il ne propose
+       aucun retour arrière : il n'y a rien à rattraper, ce qui est à l'écran
+       reste à l'écran, c'est le disque qui est en retard. */
+    writeFailedToast: 'Ce que tu viens de saisir n’est pas enregistré',
     /* Gratuit, et il répare parfois : un quota libéré, un onglet fermé. Il vient
        donc avant l'export, qui ne répare rien mais met à l'abri. */
     retry: 'Réessayer',
-    retryFailed: 'L’enregistrement a encore échoué',
     /* « D'abord », parce que c'est ce que l'ordre des deux boutons dit déjà :
        exporte avant de fermer, avant de recharger, avant de continuer à taper
        dans une app qui ne garde rien. */
@@ -1890,6 +1896,14 @@ export const fr = {
        récurrences, elle, garde le constat — elle n'a qu'une ligne, et son
        chevron dit déjà où l'on va pour agir. */
     emptyInvite: 'Aucune avance en cours. Ajoute la première.',
+    /* L'autre cause, et elle change le geste : une avance se rembourse **sur un
+       support d'épargne**, que le formulaire exige (`savingSupportRequired`).
+       Sans aucun support, « Ajoute la première » ouvrait un écran qu'on ne
+       pouvait pas remplir — l'état vide renvoyait à une impasse. C'est la
+       distinction que l'écran d'épargne fait déjà entre « personne » et « aucun
+       support ». */
+    emptyNoSupport:
+      'Une avance se reprend mois par mois sur un support d’épargne, et il n’y en a aucun. Pose-en un d’abord.',
     /* Ce que la rangée des récurrences résume : combien, et combien il reste.
        Deux chiffres, parce que le second seul ne dit pas s'il vient d'une
        avance ou de six. */
@@ -2002,6 +2016,11 @@ export const fr = {
       'Aucun support d’épargne. Ajoute un livret, un PEA ou tout autre support pour suivre sa valeur et tes versements.',
     supportsNoMember:
       'Ajoute une personne pour suivre ton épargne : un support est toujours à quelqu’un.',
+    /* Le vide de la lecture, et non celui du document : quelqu'un d'autre a des
+       comptes, celui qu'on regarde n'en a pas. Dire « aucun support d'épargne »
+       serait faux, et le geste n'est pas le même — c'est la rangée de pilules,
+       juste au-dessus, qui défait ce vide-là. */
+    supportsNoneMine: 'Personne n’a de support à ce nom. Le foyer, lui, en a.',
     supportAdd: 'Ajouter un support',
     supportNew: 'Nouveau support d’épargne',
     supportEdit: 'Modifier le support',
@@ -2406,12 +2425,6 @@ export const fr = {
     unlinked: 'Non rattaché',
     unlinkedHint:
       'Ces mouvements d’épargne ne désignent aucun support : ils comptent dans le mois, mais ne disent pas où l’argent est allé. Ouvre-les pour les rattacher.',
-    /* Le versement régulier — un flux, à côté du capital et jamais dedans. Il
-       produit une récurrence reliée au support, pas un champ posé dessus. */
-    contribution: 'Versement chaque mois',
-    contributionHint: 'Facultatif : pose une récurrence mensuelle sur ce support.',
-    contributionLabel: 'Versement %s',
-
     srHistory: 'Évolution de la valeur, de %s le %s à %s le %s.',
 
     /* La cascade, terme par terme. Le résultat seul se croit sur parole ; les
@@ -2627,6 +2640,11 @@ export const fr = {
        corrige. */
     extrasFallback: 'Rangé sous %s · tu pourras le préciser depuis Récurrences.',
     extrasEmpty: 'Rien pour l’instant. Ajoute ce qui te vient, le reste s’ajoute plus tard.',
+    /* Le refus de la ligne, dit plutôt que gris. « Ajouter » était désactivé
+       tant que les deux champs n'étaient pas bons, sans jamais dire lequel
+       manquait — un montant tapé « 12,,5 » laissait un bouton mort et aucune
+       cause. Le nom d'abord : c'est le champ de gauche, et celui qu'on saute. */
+    extrasNameRequired: 'Donne un nom à cette charge.',
 
     /* --- 5. Le point de départ ------------------------------------------ */
 

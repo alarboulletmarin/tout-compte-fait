@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ADVANCE_NEW_PATH, RECURRENCES_PATH } from '@/app/routes'
+import { ADVANCE_NEW_PATH, RECURRENCES_PATH, SUPPORT_NEW_PATH } from '@/app/routes'
 import type { AdvanceStatus } from '@/domain/advance'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatYearMonth, tpl } from '@/i18n/format'
 import { removeAdvance, undoable } from '@/store/actions'
-import { useAdvanceStatuses, useCategoryMap, useMemberMap } from '@/store/selectors'
+import {
+  useActiveSavingSupports,
+  useAdvanceStatuses,
+  useCategoryMap,
+  useMemberMap,
+} from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
@@ -96,6 +101,11 @@ function AdvanceCard({ status, onRemove }: { status: AdvanceStatus; onRemove: ()
  */
 export function AdvancesPage() {
   const statuses = useAdvanceStatuses()
+  /* Les actifs seulement : un compte archivé ne se propose plus à la saisie,
+     c'est la règle de `SupportSelect`, et l'état vide doit compter ce que le
+     formulaire proposera vraiment. */
+  const supports = useActiveSavingSupports()
+  const hasSupport = supports.length > 0
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState<string | null>(null)
 
@@ -130,10 +140,23 @@ export function AdvancesPage() {
       <p className="t-label">{t.advances.sectionHint}</p>
 
       {statuses.length === 0 ? (
+        /* Deux vides, et deux gestes. Le formulaire d'une avance exige un
+           support d'épargne — c'est lui qui répond à « qui a avancé », et il
+           n'a pas de valeur par défaut : sans aucun support, « Ajoute la
+           première » ouvrait un écran impossible à finir. L'invitation dit donc
+           la vraie première marche. Le support, lui, exige une personne, et
+           l'écran d'épargne le dit là où l'on va le poser : on ne remonte pas
+           toute la chaîne ici, on renvoie à la marche suivante. */
         <EmptyState
-          message={t.advances.emptyInvite}
-          actionLabel={t.advances.add}
-          onAction={openCreate}
+          message={hasSupport ? t.advances.emptyInvite : t.advances.emptyNoSupport}
+          actionLabel={hasSupport ? t.advances.add : t.savings.supportAdd}
+          onAction={
+            hasSupport
+              ? openCreate
+              : () => {
+                  void navigate(SUPPORT_NEW_PATH)
+                }
+          }
         />
       ) : (
         /* Deux colonnes de fiches au-delà de 768px, une seule en deçà — et une

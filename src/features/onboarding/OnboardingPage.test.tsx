@@ -187,6 +187,34 @@ describe('la file du premier lancement', () => {
     expect(planned.every((entry) => entry.status === 'planned')).toBe(true)
   })
 
+  /* « Ajouter » était grisé tant que les deux champs n'étaient pas bons, et ne
+     disait jamais lequel manquait : un montant tapé de travers laissait un
+     bouton mort et aucune cause. Le bouton est actif, et c'est la phrase qui
+     refuse — la grammaire de la saisie rapide et de l'écriture d'une règle. */
+  it('dit ce qui manque au lieu de griser « Ajouter »', async () => {
+    open()
+    await next() // foyer, solo
+    await next() // revenu, vide
+    await next() // logement, vide
+
+    // Rien n'a été tenté : la carte ne gronde pas d'avance.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    await click(t.onboarding.extrasAdd)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.onboarding.extrasNameRequired)
+
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasName)), 'Netflix')
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)), 'douze')
+    await click(t.onboarding.extrasAdd)
+    expect(screen.getByRole('alert')).toHaveTextContent(t.entry.amountRequired)
+
+    // Et la ligne posée efface le refus, sans quoi il gronderait la suivante.
+    await userEvent.clear(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)))
+    await userEvent.type(screen.getByLabelText(new RegExp(t.onboarding.extrasAmount)), '13,49')
+    await click(t.onboarding.extrasAdd)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   /* E16 : une charge répétable produit une **récurrence**, jamais une entrée du
      mois — sinon elle ne remplirait pas septembre, ce qui est la promesse de
      l'écran. Et `categoryId` est obligatoire : chaque ligne libre atterrit sur

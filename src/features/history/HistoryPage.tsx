@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthlyBars } from '@/charts/MonthlyBars'
-import { entryNewPath } from '@/app/routes'
+import { RECURRENCE_NEW_PATH } from '@/app/routes'
 import { type YearMonth, currentYm } from '@/domain/date'
 import type { MonthPoint } from '@/domain/history'
 import { type Money, money, sub, sum } from '@/domain/money'
@@ -288,11 +288,18 @@ export function HistoryPage() {
     return (
       <>
         <PageTitle title={history.title} />
+        {/* L'invitation renvoie à une règle et non à une dépense, et la cause
+            l'impose : cet écran ne se vide que quand le document est vide — ni
+            ligne, ni règle. Une dépense ponctuelle ne remplira pas le mois
+            prochain, donc elle ne fera pas non plus d'historique ; ce qui pose
+            des mois, c'est ce qui revient. C'est le principe que le mois, le
+            calendrier et `/flux` appliquent déjà, et le seul état vide de l'app
+            qui y échappait encore. */}
         <EmptyState
           message={history.empty}
-          actionLabel={t.entry.addOut}
+          actionLabel={t.recurrences.add}
           onAction={() => {
-            void navigate(entryNewPath({ direction: 'out' }))
+            void navigate(RECURRENCE_NEW_PATH)
           }}
         >
           <p className="t-label max-w-sm">{history.emptyHint}</p>

@@ -187,8 +187,8 @@ export const en: Strings = {
     writeFailedBody:
       'What you type stays on screen, but nothing is kept. Private browsing, storage full, or another tab holding the database.',
     writeFailedLabel: 'Save failed',
+    writeFailedToast: 'What you just entered wasn’t saved',
     retry: 'Try again',
-    retryFailed: 'Saving failed again',
     exportFirst: 'Export first',
 
     durabilityTitle: 'Your data is saved on this device',
@@ -1030,6 +1030,8 @@ export const en: Strings = {
     deleted: 'Advance removed',
     empty: 'No advance running.',
     emptyInvite: 'No advance running. Add the first one.',
+    emptyNoSupport:
+      'An advance is paid back month by month into a savings pot, and there is none. Add one first.',
     countOne: '%s advance',
     count: '%s advances',
     remainingTotal: '%s left to put back',
@@ -1097,6 +1099,7 @@ export const en: Strings = {
     supportsEmpty:
       'No savings pot. Add an account, a plan or any other pot to track its value and your contributions.',
     supportsNoMember: 'Add a person to track your savings: a pot always belongs to someone.',
+    supportsNoneMine: 'Nobody has a pot under that name. The household does.',
     supportAdd: 'Add a pot',
     supportNew: 'New savings pot',
     supportEdit: 'Edit the pot',
@@ -1295,9 +1298,6 @@ export const en: Strings = {
     unlinked: 'Not attached',
     unlinkedHint:
       'These savings movements point to no pot: they count in the month, but they don’t say where the money went. Open them to attach them.',
-    contribution: 'Contribution each month',
-    contributionHint: 'Optional: sets a monthly recurring rule on this pot.',
-    contributionLabel: 'Contribution %s',
 
     srHistory: 'Value over time, from %s on %s to %s on %s.',
 
@@ -1422,6 +1422,7 @@ export const en: Strings = {
     extrasTotal: 'Monthly total',
     extrasFallback: 'Filed under %s · you’ll be able to refine it from Recurring.',
     extrasEmpty: 'Nothing yet. Add what comes to mind, the rest can wait.',
+    extrasNameRequired: 'Give this cost a name.',
 
     startMonthTitle: 'Starting point',
     startMonthBody:
