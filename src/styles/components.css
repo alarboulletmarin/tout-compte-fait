@@ -528,8 +528,16 @@
   .span-2x2,
   .span-4x1,
   .span-4x2,
+  .span-6x1,
   .span-6x2 {
     grid-column: span 2;
+  }
+  /* Toute la largeur, une seule rangée — le format qui referme une grille que
+     les autres laissent ouverte. Il occupe six cases sur le palier bureau,
+     quatre sur la tablette, deux sur le téléphone : c'est exactement une rangée
+     pleine à chacun des trois, ce qu'aucun autre format plat ne donne. */
+  .span-6x1 {
+    grid-row: span 1;
   }
   .span-4x1 {
     grid-row: span 1;
@@ -548,6 +556,7 @@
     .span-4x2 {
       grid-column: span 2;
     }
+    .span-6x1,
     .span-6x2 {
       grid-column: span 4;
     }
@@ -562,6 +571,7 @@
     .span-4x2 {
       grid-column: span 4;
     }
+    .span-6x1,
     .span-6x2 {
       grid-column: span 6;
     }

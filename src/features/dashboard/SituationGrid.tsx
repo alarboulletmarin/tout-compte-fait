@@ -6,6 +6,7 @@ import type { Metric } from './MetricInfo'
 import { MonthStatusTile } from './MonthStatusTile'
 import { SavingTile } from './SavingTile'
 import { SplitTile } from './SplitTile'
+import { useHasSplit } from './composition'
 
 /**
  * Le premier étage de l'écran du mois : **où j'en suis**.
@@ -53,11 +54,30 @@ import { SplitTile } from './SplitTile'
  *  └───────────────┘
  * ```
  *
- * Le pavage ne tient que sur la composition complète : un foyer d'une seule
- * personne n'a pas de Répartition, et sa grille laisse alors quatre cases vides
- * au bureau. Le cas est connu et non résolu — une tuile qui n'a rien à dire
- * s'en va (cahier §4.6), et lui faire dire zéro pour boucher un trou coûterait
- * plus que le trou.
+ * **Le pavage ne tenait que sur la composition complète**, et c'est ce qui a
+ * changé. Un foyer d'une seule personne — ou n'importe quelle lecture filtrée
+ * sur une personne — n'a pas de Répartition, et la grille laissait alors quatre
+ * cases vides au bureau ; le pot commun, qui perd trois tuiles, en laissait deux.
+ * Le cas était écrit ici comme « connu et non résolu ».
+ *
+ * Il se résout sans qu'aucune tuile n'ait à dire zéro : **c'est le format qui
+ * s'adapte à la composition**, et non la composition qu'on force à tenir dans
+ * des formats fixes. Deux tuiles bougent, et rien d'autre :
+ *
+ * - **sans Répartition**, le solde passe en `6x2` — la pleine largeur reprend
+ *   exactement les deux colonnes que la Répartition occupait ;
+ * - **sur le commun**, les charges passent en `4x1` — les revenus s'en vont avec
+ *   le solde et l'épargne, et une demi-colonne seule ne se range plus à côté de
+ *   personne.
+ *
+ * Ce ne sont pas des réglages au jugé : les trois compositions ont été passées
+ * au crible de tous les formats que leur contenu accepte, et chacune n'admet
+ * **qu'une seule** solution qui referme les trois paliers. C'est ce que
+ * `pavage.test.ts` rejoue, en simulant le placement de la grille.
+ *
+ * Restent deux compositions sans solution, et elles ne se produisent que sur un
+ * mois qui ne compte aucune échéance dans la lecture courante — le suivi s'en va
+ * alors, et l'écran du mois montre de toute façon son état vide à la place.
  *
  * **La paire ne bouge pas.** Sur deux colonnes, seul un `2x1` se range à côté
  * d'un autre : Revenus et Charges sont la seule chose qui fasse de cet étage une
@@ -100,13 +120,17 @@ export function SituationGrid({
   onExplain: (metric: Metric) => void
 }) {
   const common = useIsCommonFilter()
+  /* La composition, lue avant le rendu : une grille ne peut pas savoir après
+     coup lesquels de ses enfants se sont effacés, et ce sont eux qui décident
+     du format des autres. */
+  const split = useHasSplit()
 
   return (
     <BentoGrid>
-      {!common && <BalanceTile onExplain={onExplain} />}
+      {!common && <BalanceTile span={split ? '4x2' : '6x2'} onExplain={onExplain} />}
       <SplitTile />
       {!common && <IncomeTile />}
-      <ChargesTile />
+      <ChargesTile span={common ? '4x1' : '2x1'} />
       {!common && <SavingTile />}
       <MonthStatusTile {...(onShowEntries === undefined ? {} : { onShowPending: onShowEntries })} />
     </BentoGrid>

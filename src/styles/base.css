@@ -117,9 +117,15 @@
   /* Dans une tuile d'une seule rangée, la contrainte n'est plus la largeur mais
      la hauteur : 88px dont 56 utiles, que l'eyebrow et un chiffre de 32px
      dépassent à eux deux. La borne haute descend donc — c'est une demi-tuile,
-     elle porte un demi-chiffre. */
+     elle porte un demi-chiffre.
+
+     `6x1` en fait partie, et l'oublier se voyait aussitôt : le capital restant
+     dû y reprenait ses 32px et dépassait de cinq pixels par le bas. Ce n'est pas
+     le nombre de colonnes qui décide ici, c'est la rangée unique — les trois
+     formats plats sont donc les trois qui figurent. */
   .span-2x1 .t-tile-fit,
-  .span-4x1 .t-tile-fit {
+  .span-4x1 .t-tile-fit,
+  .span-6x1 .t-tile-fit {
     font-size: clamp(16px, 16cqi, 26px);
   }
 

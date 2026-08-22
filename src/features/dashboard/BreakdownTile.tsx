@@ -10,7 +10,7 @@ import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { BreakdownIcon } from '@/ui/Icons'
 import { Ring, type RingSegment } from '@/ui/Ring'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { DONUT_SIZE, DONUT_SLICES, DONUT_THICKNESS } from './donut'
 
@@ -34,7 +34,13 @@ import { DONUT_SIZE, DONUT_SLICES, DONUT_THICKNESS } from './donut'
 /** Ouvrir une part sur les lignes qui la composent. */
 export type ShowFamily = (familyId: string) => void
 
-export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
+export function BreakdownTile({
+  span = '2x2',
+  onShowFamily,
+}: {
+  span?: TileSpan
+  onShowFamily?: ShowFamily
+}) {
   const slices = useSpendingByFamily(DONUT_SLICES)
   const families = useFamilyMap()
   const currency = useCurrency()
@@ -46,7 +52,7 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
 
   if (slices.length === 0) {
     return (
-      <Tile span="2x2" className="justify-between">
+      <Tile span={span} className="justify-between">
         <Eyebrow icon={BreakdownIcon}>{t.dashboard.spending}</Eyebrow>
         <p className="t-label">{t.dashboard.noBreakdown}</p>
       </Tile>
@@ -65,7 +71,7 @@ export function BreakdownTile({ onShowFamily }: { onShowFamily?: ShowFamily }) {
     .join(', ')
 
   return (
-    <Tile span="2x2" className="gap-3">
+    <Tile span={span} className="gap-3">
       <Eyebrow icon={BreakdownIcon}>{t.dashboard.spending}</Eyebrow>
       <div className="flex min-h-0 flex-1 items-center gap-4">
         <Ring

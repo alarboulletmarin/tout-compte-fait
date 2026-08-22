@@ -4,6 +4,12 @@ import { CreditsTile } from './CreditsTile'
 import { MemberChargesTile } from './MemberChargesTile'
 import type { Metric } from './MetricInfo'
 import { MemberShareTile } from './MemberShareTile'
+import {
+  analysisPaving,
+  useHasCredits,
+  useHasMemberCharges,
+  useMemberShareSpan,
+} from './composition'
 
 /**
  * Le dernier étage de l'écran du mois : **pourquoi mon mois ressemble à ça**.
@@ -27,6 +33,29 @@ import { MemberShareTile } from './MemberShareTile'
  * L'ordre suit la question, du plus général au plus circonstanciel : où part
  * l'argent, ce qui de ce montant est à soi, ce qu'on peut mettre de côté,
  * comment le foyer se répartit, puis ce qu'on doit encore.
+ *
+ * **Le pavage suit la composition** — voir `SituationGrid`, qui explique
+ * pourquoi une grille doit connaître ses tuiles avant de les rendre. Celle-ci
+ * en a plus qu'elle : quatre tuiles dont trois conditionnelles, et l'une des
+ * trois change de format toute seule selon qu'il y a un report à rattraper. Sept
+ * compositions, donc, et six formats à décider — bien trop pour se lire dans une
+ * expression.
+ *
+ * D'où la table de `composition.ts`. Elle n'est pas réglée au jugé : chaque
+ * ligne est la solution qu'une recherche exhaustive a trouvée, parmi tous les
+ * formats que le contenu de chaque tuile accepte, et c'est `pavage.test.ts` qui
+ * la rejoue en simulant le placement de la grille aux trois paliers.
+ *
+ * `6x1` est le format qui rend l'affaire soluble : sur six colonnes une rangée
+ * se ferme par six, et c'est le seul format plat qui les apporte d'un coup.
+ * Sans lui, cinq des sept compositions laissaient un trou.
+ *
+ * Une composition reste sans solution : filtre par personne, ni report, ni
+ * crédit. Deux anneaux et une lecture plate ne font une rangée pleine à aucun
+ * des trois paliers, et donner deux rangées à la lecture plate rouvrirait à
+ * l'intérieur de la tuile le vide qu'on referme dans la grille (DS §5). Elle
+ * garde donc son moindre mal, mesuré : deux cases sur la tablette et deux au
+ * bureau.
  *
  * **« Charges du mois » vient juste après « Où part l'argent »** : les deux
  * découpent le même total, l'une par famille, l'autre par ce qui se décide
@@ -54,12 +83,20 @@ export function AnalysisGrid({
   onShowFamily?: ShowFamily
   onExplain: (metric: Metric) => void
 }) {
+  const memberCharges = useHasMemberCharges()
+  const share = useMemberShareSpan()
+  const credits = useHasCredits()
+  const spans = analysisPaving(memberCharges, share, credits)
+
   return (
     <BentoGrid>
-      <BreakdownTile {...(onShowFamily === undefined ? {} : { onShowFamily })} />
-      <MemberChargesTile onExplain={onExplain} />
+      <BreakdownTile
+        span={spans.breakdown}
+        {...(onShowFamily === undefined ? {} : { onShowFamily })}
+      />
+      <MemberChargesTile span={spans.memberCharges} onExplain={onExplain} />
       <MemberShareTile />
-      <CreditsTile />
+      <CreditsTile span={spans.credits} />
     </BentoGrid>
   )
 }

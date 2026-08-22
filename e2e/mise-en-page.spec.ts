@@ -74,6 +74,95 @@ async function clipped(page: Page, path: string): Promise<string[]> {
   }, path)
 }
 
+/**
+ * Les cases d'une grille bento que rien ne couvre.
+ *
+ * C'est le mode d'échec propre au bento, et le seul que rien ne signalait :
+ * une tuile qui s'efface — le cahier §4.6 veut qu'une tuile sans rien à dire
+ * s'en aille — laisse un trou dans le pavage, et un trou ne déborde pas, ne
+ * coupe rien, ne lève aucune erreur. Il se voit, c'est tout, sur l'écran qu'on
+ * n'a pas ouvert à la largeur qu'on n'a pas essayée.
+ *
+ * On lit les pistes résolues plutôt que les propriétés déclarées : avec
+ * `grid-auto-flow: row dense`, la place d'une tuile n'est nulle part dans son
+ * style — c'est le navigateur qui la trouve, et la géométrie est le seul endroit
+ * où la réponse existe. `src/features/dashboard/pavage.test.ts` tient l'autre
+ * bout, sur les compositions que le jeu d'exemple ne produit pas.
+ */
+async function hollow(page: Page, path: string): Promise<string[]> {
+  return page.evaluate((where) => {
+    const found: string[] = []
+    for (const grid of document.querySelectorAll('.bento')) {
+      const box = grid.getBoundingClientRect()
+      const style = getComputedStyle(grid)
+      const gap = Number.parseFloat(style.gap) || 0
+      /* Les bornes de chaque piste, en coordonnées de la grille. */
+      const bands = (tracks: number[]): [number, number][] => {
+        const at: [number, number][] = []
+        let edge = 0
+        for (const size of tracks) {
+          at.push([edge, edge + size])
+          edge += size + gap
+        }
+        return at
+      }
+      const columns = bands(style.gridTemplateColumns.split(' ').map(Number.parseFloat))
+      const rows = bands(style.gridTemplateRows.split(' ').map(Number.parseFloat))
+
+      const covered = new Set<string>()
+      for (const tile of grid.children) {
+        const r = tile.getBoundingClientRect()
+        const left = r.left - box.left
+        const top = r.top - box.top
+        columns.forEach(([a, b], column) => {
+          if (b <= left + 1 || a >= left + r.width - 1) return
+          rows.forEach(([u, v], row) => {
+            if (v <= top + 1 || u >= top + r.height - 1) return
+            covered.add(`${String(column)}:${String(row)}`)
+          })
+        })
+      }
+      let empty = 0
+      for (let row = 0; row < rows.length; row += 1)
+        for (let column = 0; column < columns.length; column += 1)
+          if (!covered.has(`${String(column)}:${String(row)}`)) empty += 1
+      if (empty > 0) {
+        const formats = [...grid.children]
+          .map((tile) => [...tile.classList].find((c) => c.startsWith('span-')) ?? '?')
+          .join(' ')
+        found.push(
+          `${where} — une grille de ${String(columns.length)} colonnes laisse ${String(empty)} case(s) vide(s) : ${formats}`,
+        )
+      }
+    }
+    return found
+  }, path)
+}
+
+/**
+ * Les lectures du mois, l'une après l'autre.
+ *
+ * La composition d'une grille dépend du filtre : le pot commun retire le solde,
+ * les revenus et l'épargne ; une personne retire la Répartition et fait
+ * apparaître deux tuiles de membre. Trois compositions par grille, qu'une seule
+ * ouverture de l'écran ne montre jamais.
+ */
+async function eachReading(page: Page, look: (where: string) => Promise<void>): Promise<void> {
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+  const chips = page.locator('header button[role="radio"], header button')
+  const labels = (await chips.allInnerTexts())
+    .map((text) => text.trim())
+    .filter((text) => text !== '' && !/\d/.test(text))
+  for (const label of [...new Set(labels)]) {
+    const chip = page.locator('header button', { hasText: new RegExp(`^${label}$`) }).first()
+    if ((await chip.count()) === 0) continue
+    await chip.click()
+    await page.waitForTimeout(300)
+    await look(`/ (${label})`)
+  }
+}
+
 test.describe('sur un écran de 320 points', () => {
   test.use({ viewport: NARROW })
 
@@ -86,13 +175,22 @@ test.describe('sur un écran de 320 points', () => {
 
     const guilty: string[] = []
     const cut: string[] = []
+    const gaps: string[] = []
     for (const screen of [{ path: '/', heading: /./ }, ...SCREENS]) {
       await page.goto(screen.path)
       await page.waitForLoadState('networkidle')
       const excess = await overflow(page)
       if (excess > 0) guilty.push(`${screen.path} dépasse de ${String(excess)} px`)
       cut.push(...(await clipped(page, screen.path)))
+      gaps.push(...(await hollow(page, screen.path)))
     }
+
+    /* Le pavage du bento dépend du filtre, et une seule ouverture du mois n'en
+       montre qu'une composition sur trois. */
+    await eachReading(page, async (where) => {
+      gaps.push(...(await hollow(page, where)))
+      cut.push(...(await clipped(page, where)))
+    })
 
     /* La simulation a deux modes, deux vues et trois feuilles, et la boucle
        ci-dessus n'ouvre que le mode simple et sa figure : le tableau — six
@@ -116,6 +214,7 @@ test.describe('sur un écran de 320 points', () => {
 
     expect(guilty).toEqual([])
     expect(cut).toEqual([])
+    expect(gaps).toEqual([])
   })
 
   /* La barre d'onglets porte une fente de 64px en son milieu, pour le disque de
@@ -232,6 +331,7 @@ for (const size of WIDE) {
       const guilty: string[] = []
       const cut: string[] = []
       const lonely: string[] = []
+      const gaps: string[] = []
       for (const screen of [{ path: '/', heading: /./ }, ...SCREENS]) {
         await page.goto(screen.path)
         await page.waitForLoadState('networkidle')
@@ -239,11 +339,21 @@ for (const size of WIDE) {
         if (excess > 0) guilty.push(`${screen.path} dépasse de ${String(excess)} px`)
         cut.push(...(await clipped(page, screen.path)))
         lonely.push(...(await lonelyGrid(page, screen.path)))
+        gaps.push(...(await hollow(page, screen.path)))
       }
+
+      /* Les trois lectures du mois, où le pavage se joue vraiment : c'est en
+         retirant des tuiles qu'une grille perd son pavage, et c'est le filtre
+         qui en retire. */
+      await eachReading(page, async (where) => {
+        gaps.push(...(await hollow(page, where)))
+        cut.push(...(await clipped(page, where)))
+      })
 
       expect(guilty).toEqual([])
       expect(cut).toEqual([])
       expect(lonely).toEqual([])
+      expect(gaps).toEqual([])
     })
   })
 }

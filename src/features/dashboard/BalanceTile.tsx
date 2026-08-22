@@ -6,7 +6,7 @@ import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { BalanceIcon } from '@/ui/Icons'
 import { Ring } from '@/ui/Ring'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
 import type { Metric } from './MetricInfo'
 
 /**
@@ -54,7 +54,15 @@ function progressLabel(ym: string, progress: number, days: number): string {
  * seul format de solde avec lequel la grille se referme à six tuiles : voir le
  * calcul dans `SituationGrid`.
  */
-export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void }) {
+export function BalanceTile({
+  span = '4x2',
+  onExplain,
+}: {
+  /* La grille décide : sans Répartition à côté, le solde prend la pleine
+     largeur, sans quoi il reste un quart de rangée que rien ne comble. */
+  span?: TileSpan
+  onExplain: (metric: Metric) => void
+}) {
   const totals = useMonthTotals()
   const ym = useCurrentYm()
   const progress = useMonthProgress()
@@ -68,7 +76,7 @@ export function BalanceTile({ onExplain }: { onExplain: (metric: Metric) => void
        coin n'est donc pas une cible — c'est un repère, qui dit que le geste
        existe et qu'il reste sur la page. */
     <Tile
-      span="4x2"
+      span={span}
       className="justify-between"
       onClick={() => {
         onExplain({ key: 'balance', value: totals.balance, hint })

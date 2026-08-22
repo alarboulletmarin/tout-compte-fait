@@ -7,7 +7,7 @@ import { useMonthFlows } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { ChargesIcon, type IconComponent, IncomeIcon } from '@/ui/Icons'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 /**
  * Les deux chiffres que les quatre soldes combinent sans jamais les dire :
@@ -61,18 +61,20 @@ function FlowTile({
   flow,
   direction,
   hint,
+  span,
 }: {
   label: string
   icon: IconComponent
   flow: Flow
   direction: 'in' | 'out'
   hint: string
+  span: TileSpan
 }) {
   const navigate = useNavigate()
 
   return (
     <Tile
-      span="2x1"
+      span={span}
       className="justify-between"
       onClick={() => {
         void navigate(FLOWS_PATH)
@@ -115,11 +117,16 @@ export function IncomeTile() {
       flow={income}
       direction="in"
       hint={hint}
+      span="2x1"
     />
   )
 }
 
-export function ChargesTile() {
+/* Les charges sont la seule des deux à voir son format bouger : sur le pot
+   commun, les revenus s'en vont — le pot n'en a aucun — et il ne reste pas de
+   voisine à qui se ranger à côté. La paire est alors dissoute, et une demi-
+   colonne seule laisse un trou que rien ne comble. */
+export function ChargesTile({ span = '2x1' }: { span?: TileSpan }) {
   const { spending } = useMonthFlows()
   const currency = useCurrency()
 
@@ -137,6 +144,7 @@ export function ChargesTile() {
       flow={spending}
       direction="out"
       hint={hint}
+      span={span}
     />
   )
 }

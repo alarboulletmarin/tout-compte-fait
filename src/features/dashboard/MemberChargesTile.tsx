@@ -1,4 +1,4 @@
-import { type Money, ZERO, add } from '@/domain/money'
+import { type Money, add } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, tpl } from '@/i18n/format'
 import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
@@ -7,7 +7,8 @@ import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { ChargesIcon } from '@/ui/Icons'
 import { Ring, type RingSegment } from '@/ui/Ring'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
+import { useHasMemberCharges } from './composition'
 import { useCurrency } from '@/ui/currency'
 import { DONUT_SIZE, DONUT_THICKNESS } from './donut'
 import type { Metric } from './MetricInfo'
@@ -62,20 +63,26 @@ const COMMON_COLOR = 'var(--cat-rest)'
  * mois nomme alors ce qui manque — et quand le mois n'a coûté à cette personne
  * ni en propre ni en commun : une répartition de rien n'est pas une répartition.
  */
-export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) => void }) {
+export function MemberChargesTile({
+  span = '2x2',
+  onExplain,
+}: {
+  span?: TileSpan
+  onExplain: (metric: Metric) => void
+}) {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   const members = useMemberMap()
   const currency = useCurrency()
+  const visible = useHasMemberCharges()
 
-  if (filter === undefined || charges === null) return null
+  if (!visible || filter === undefined || charges === null) return null
 
   /* La part des seules natures que compte la tuile Charges — voir plus haut :
      `common` y ajouterait la mensualité d'une avance partagée, qui est un
      virement dû et non un coût du mois. */
   const common = add(charges.commonCharge, charges.commonDebt)
   const total = add(charges.own, common)
-  if (total <= ZERO) return null
 
   const member = members.get(filter)
   const color = member?.color ?? 'var(--cat-rest)'
@@ -138,7 +145,7 @@ export function MemberChargesTile({ onExplain }: { onExplain: (metric: Metric) =
        (`srMemberCharges`). Un lecteur d'écran n'y perd donc rien, et un
        `<button>` n'admettrait pas la liste. */
     <Tile
-      span="2x2"
+      span={span}
       className="gap-3"
       onClick={() => {
         onExplain({ key: 'memberCharges', value: total, hint })

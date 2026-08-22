@@ -3,8 +3,18 @@ import { Link } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { ChevronDown, ChevronRight, InfoIcon } from './Icons'
 
-/** Formats autorisés par le DS §5. Rien d'autre, sinon la grille se délite. */
-export type TileSpan = '2x1' | '2x2' | '4x1' | '4x2' | '6x2'
+/**
+ * Formats autorisés par le DS §5. Rien d'autre, sinon la grille se délite.
+ *
+ * `6x1` est le dernier arrivé, et il n'est pas décoratif : c'est **le format
+ * qui referme une grille**. Mesuré sur les seize compositions que les deux
+ * grilles du mois peuvent produire, cinq seulement pavaient sans lui ; quatorze
+ * pavent avec. La raison est arithmétique — sur six colonnes, une rangée se
+ * ferme par 6, et aucun autre format plat n'apporte 6 d'un coup. Il reste plat,
+ * donc il ne tombe pas sous la règle qui veut qu'une tuile de deux rangées
+ * porte une visualisation.
+ */
+export type TileSpan = '2x1' | '2x2' | '4x1' | '4x2' | '6x1' | '6x2'
 
 export type TileVariant = 'default' | 'accent' | 'accent-2'
 
@@ -119,7 +129,7 @@ const PADDING = 'p-5 md:p-6'
  * le libellé, pas au libellé d'être raboté pour le format.
  */
 const PADDING_FLAT = 'p-4'
-const FLAT: readonly TileSpan[] = ['2x1', '4x1']
+const FLAT: readonly TileSpan[] = ['2x1', '4x1', '6x1']
 
 /**
  * Le repère, au coin haut-droit, hors du flux du contenu.
