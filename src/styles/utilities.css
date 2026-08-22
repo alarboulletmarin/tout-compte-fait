@@ -69,6 +69,11 @@
   .inset-0 { inset: 0; }
   .inset-x-0 { inset-inline: 0; }
   .inset-x-4 { inset-inline: 16px; }
+  /* Toute la hauteur du parent, et lui seul la donne : c'est ce qui fait qu'un
+     fond révélé sous une rangée mesure la rangée, et non son propre texte. Sans
+     règle, `top` restait à `auto` et le fond du glissé se réduisait à la ligne
+     de son libellé — treize pixels de haut sous une rangée de cinquante-six. */
+  .inset-y-0 { inset-block: 0; }
   .top-0 { top: 0; }
   .top-4 { top: 16px; }
   .top-5 { top: 20px; }
@@ -78,6 +83,7 @@
   .right-5 { right: 20px; }
   .bottom-0 { bottom: 0; }
   .bottom-20 { bottom: 80px; }
+  .left-0 { left: 0; }
   .left-1\/2 { left: 50%; }
 
   /* La barre du bas, plus la marge de sécurité du système : ce qui flotte
@@ -162,6 +168,7 @@
   .gap-y-1 { row-gap: 4px; }
   .gap-y-1\.5 { row-gap: 6px; }
   .gap-y-2 { row-gap: 8px; }
+  .gap-y-3 { row-gap: 12px; }
 
   /* --- Dimensions -------------------------------------------------------- */
 
@@ -595,9 +602,6 @@
   .focus\:bg-surface:focus { background-color: var(--surface); }
   .focus\:px-4:focus { padding-inline: 16px; }
   .focus\:py-2:focus { padding-block: 8px; }
-
-  .focus-visible\:outline-2:focus-visible { outline-width: 2px; outline-style: solid; }
-  .focus-visible\:outline-offset-2:focus-visible { outline-offset: 2px; }
 
   /* L'anneau porté par le parent d'un champ : c'est la rangée entière qui
      s'allume, pas la case de 16px qu'on ne verrait pas. */
