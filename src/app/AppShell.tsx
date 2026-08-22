@@ -49,7 +49,14 @@ export function AppShell({ children }: { children: ReactNode }) {
      le premier champ d'une saisie est exactement là où l'on veut être, et le
      renvoyer en haut annulerait le geste qu'on vient de faire. Et le focus est
      programmatique : `:focus-visible` ne s'y applique pas, l'anneau du DS ne se
-     dessine donc pas autour de la page entière. */
+     dessine donc pas autour de la page entière.
+
+     `preventScroll` parce que ce focus-ci sert la voix, pas l'œil : donner le
+     focus à un élément le ramène dans la vue, et `<main>` commence six pixels
+     sous le haut du document — un écran ouvert par ce chemin s'affichait donc
+     à six pixels du haut au lieu du haut. La position de défilement appartient
+     à `ScrollMemory`, qui la décide selon qu'on ouvre un écran ou qu'on y
+     revient ; deux mains sur le même volant s'annulent. */
   const main = useRef<HTMLElement>(null)
   const previous = useRef(pathname)
 
@@ -59,7 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const node = main.current
     if (node === null || node.contains(document.activeElement)) return
-    node.focus()
+    node.focus({ preventScroll: true })
   }, [pathname])
 
   return (
