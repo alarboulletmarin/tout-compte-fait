@@ -7,7 +7,6 @@ import { CreditsPage } from '@/features/credits/CreditsPage'
 import { FlowsPage } from '@/features/flows/FlowsPage'
 import { MonthPage } from '@/features/month/MonthPage'
 import { MorePage } from '@/features/more/MorePage'
-import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { RecurrencesPage } from '@/features/recurrences/RecurrencesPage'
 import { SavingsPage } from '@/features/savings/SavingsPage'
 import { SplitPage } from '@/features/split/SplitPage'
@@ -108,6 +107,22 @@ const HistoryPage = lazy(async () => ({
  */
 const ReviewPage = lazy(async () => ({
   default: (await import('@/features/review/ReviewPage')).ReviewPage,
+}))
+
+/**
+ * Les questions du premier jour, qu'on ne repose jamais.
+ *
+ * C'est le seul écran de l'app dont on sait qu'il ne sera **pas** rouvert : il
+ * pose le foyer, et `finishOnboarding` referme la porte derrière lui. Le
+ * charger en dur le faisait voyager dans le morceau d'entrée de tous ceux qui
+ * l'ont déjà passé, c'est-à-dire de tout le monde après le premier jour.
+ *
+ * Et il ne coûte pas d'attente à celui qui l'ouvre : on n'y arrive pas au
+ * démarrage — la porte est un bouton de la présentation, elle-même chargée à la
+ * demande —, si bien que le morceau part pendant qu'on lit la page d'avant.
+ */
+const OnboardingPage = lazy(async () => ({
+  default: (await import('@/features/onboarding/OnboardingPage')).OnboardingPage,
 }))
 
 /**
