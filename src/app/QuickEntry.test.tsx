@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { t } from '@/i18n/strings'
-import { ENTRY_NEW_PATH, entryNewPath } from './routes'
+import { ENTRY_NEW_PATH, entryNewPath, entryQuickPath } from './routes'
 import { QuickEntry } from './QuickEntry'
 
 /* Le composant navigue : sans témoin, on ne saurait pas où. Celui-ci rend
@@ -52,10 +52,15 @@ describe('QuickEntry — le bouton de saisie flottant', () => {
   })
 
   /* Les trois portes mènent à trois saisies différentes, et c'est tout l'objet
-     du bouton : un FAB unique ramènerait la dépense pour tout le monde. */
+     du bouton : un FAB unique ramènerait la dépense pour tout le monde.
+
+     Les deux premières ouvrent la saisie rapide — un montant, une pilule —, la
+     troisième le formulaire : la question d'un mouvement d'épargne n'est pas
+     « quelle catégorie » mais « quel support », et une pilule ne sait pas y
+     répondre (voir `QuickEntryPage`). */
   it.each([
-    [t.entry.newOut, entryNewPath({ direction: 'out' })],
-    [t.entry.newIn, entryNewPath({ direction: 'in' })],
+    [t.entry.newOut, entryQuickPath({ direction: 'out' })],
+    [t.entry.newIn, entryQuickPath({ direction: 'in' })],
     [t.entry.newSaving, entryNewPath({ direction: 'out', saving: true })],
   ])('« %s » ouvre %s', async (label, expected) => {
     renderAt('/')

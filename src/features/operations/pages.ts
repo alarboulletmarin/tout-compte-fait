@@ -31,5 +31,7 @@
 export { AdvanceFormPage } from '../advances/AdvanceFormPage'
 export { CreditFormPage } from '../credits/CreditFormPage'
 export { EntryPage } from '../month/EntryPage'
+export { QuickEntryPage } from '../month/QuickEntryPage'
 export { RecurrenceDetailPage } from '../recurrences/RecurrenceDetailPage'
 export { RecurrenceFormPage } from '../recurrences/RecurrenceFormPage'
+export { RecurrenceQuickPage } from '../recurrences/RecurrenceQuickPage'

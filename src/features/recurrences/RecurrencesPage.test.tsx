@@ -13,8 +13,9 @@ import {
   makeRecurrence,
 } from '@/domain/fixtures'
 import { t } from '@/i18n/strings'
-import { tpl } from '@/i18n/format'
+import { de, tpl } from '@/i18n/format'
 import { useStore } from '@/store/store'
+import { useToasts } from '@/ui/toast'
 import { RecurrencesPage } from './RecurrencesPage'
 
 const initial = useStore.getState().data
@@ -185,7 +186,7 @@ describe('RecurrencesPage', () => {
 
       await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
-      expect(screen.getByRole('button', { name: /Loyer/ })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^Loyer/ })).toBeInTheDocument()
       expect(
         screen.getByRole('button', { name: t.recurrences.collapseAll }),
       ).toBeInTheDocument()
@@ -332,7 +333,7 @@ describe('RecurrencesPage', () => {
 
       await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
-      const row = screen.getByRole('button', { name: /Électricité/ })
+      const row = screen.getByRole('button', { name: /^Électricité/ })
       expect(within(row).getByText(/Alix/)).toBeInTheDocument()
     })
 
@@ -355,11 +356,143 @@ describe('RecurrencesPage', () => {
 
       await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
 
-      const monthly = screen.getByRole('button', { name: /Loyer/ })
+      const monthly = screen.getByRole('button', { name: /^Loyer/ })
       expect(within(monthly).queryByText(/par an/)).not.toBeInTheDocument()
 
-      const yearly = screen.getByRole('button', { name: /Assurance/ })
+      const yearly = screen.getByRole('button', { name: /^Assurance/ })
       expect(within(yearly).getByText(/240\s€ par an/)).toBeInTheDocument()
+    })
+  })
+
+  /* Le glissé n'est pas testable dans jsdom — il n'a ni pointeur ni pixels —
+     mais ce qu'il déclenche l'est : les deux boutons de la rangée appellent
+     **la même fonction** que lui, c'est le contrat de `SwipeableListRow`. Les
+     tester, c'est tester les deux chemins. */
+  describe('les gestes de la rangée', () => {
+    async function openList(over: Parameters<typeof makeData>[0] = {}): Promise<void> {
+      renderPage(over)
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.expandAll }))
+    }
+
+    it('déplie le panneau du montant, et l’enregistrement change la règle', async () => {
+      await openList()
+
+      const open = screen.getByRole('button', {
+        name: tpl(t.recurrences.changeAmountOf, de('Loyer')),
+      })
+      expect(open).toHaveAttribute('aria-expanded', 'false')
+      await userEvent.click(open)
+      expect(open).toHaveAttribute('aria-expanded', 'true')
+
+      /* La coupure est aujourd'hui, pas le mois prochain : c'est ce que la
+         maquette disait de travers, et c'est ce que la phrase dit maintenant. */
+      expect(screen.getByText(t.recurrences.amountAhead)).toBeInTheDocument()
+
+      const field = screen.getByLabelText(`${t.entry.amount} — Loyer`)
+      await userEvent.clear(field)
+      await userEvent.type(field, '1200')
+      await userEvent.click(screen.getByRole('button', { name: t.common.save }))
+
+      expect(
+        useStore.getState().data.recurrences.find((r) => r.id === 'loyer')?.amount,
+      ).toBe(eur(120_000))
+      // Annulable, et le verbe est « Rétablir », jamais « Annuler ».
+      expect(useToasts.getState().toasts.at(-1)?.action?.label).toBe(t.common.undo)
+    })
+
+    it('déplace le montant de cinq euros par appui, sans passer sous zéro', async () => {
+      await openList()
+
+      await userEvent.click(
+        screen.getByRole('button', { name: tpl(t.recurrences.changeAmountOf, de('Loyer')) }),
+      )
+      const field = screen.getByLabelText(`${t.entry.amount} — Loyer`)
+      await userEvent.click(screen.getByRole('button', { name: t.month.adjustMore }))
+      expect(field).toHaveValue('1090,00')
+      await userEvent.click(screen.getByRole('button', { name: t.month.adjustLess }))
+      expect(field).toHaveValue('1085,00')
+    })
+
+    it('n’offre pas le panneau à une règle à montant variable', async () => {
+      await openList({
+        recurrences: [
+          makeRecurrence({
+            id: 'courses',
+            label: 'Courses',
+            categoryId: 'energie',
+            amount: null,
+            period: { unit: 'month', every: 1, anchorDay: 5 },
+          }),
+        ],
+      })
+
+      expect(
+        screen.queryByRole('button', { name: tpl(t.recurrences.changeAmountOf, de('Courses')) }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: tpl(t.recurrences.removeOf, de('Courses')) }),
+      ).toBeInTheDocument()
+    })
+
+    /* La décision la plus contraignante de l'écran : le geste destructif pose la
+       question, il n'écrit pas. `ARCHITECTURE.md` garde toutes les boîtes, et le
+       principe 2 du handoff qui voudrait les retirer est un arbitrage produit. */
+    it('ouvre la question au lieu de supprimer, et supprime quand on répond', async () => {
+      await openList()
+
+      await userEvent.click(
+        screen.getByRole('button', { name: tpl(t.recurrences.removeOf, de('Loyer')) }),
+      )
+      expect(useStore.getState().data.recurrences).toHaveLength(RECURRENCES.length)
+      expect(screen.getByText(t.recurrences.removeConfirm)).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: t.common.delete }))
+      expect(
+        useStore.getState().data.recurrences.some((r) => r.id === 'loyer'),
+      ).toBe(false)
+      expect(useToasts.getState().toasts.at(-1)?.message).toBe(t.recurrences.deleted)
+    })
+
+    /* Le second geste, que le prototype ne montre nulle part : on résilie un
+       abonnement, on ne l'efface pas. Il vit dans la boîte parce que c'est là
+       qu'on hésite, et parce qu'une rangée de 320 points ne porte pas un
+       troisième bouton de 44. */
+    it('offre d’arrêter plutôt que de supprimer, et l’arrêt garde la règle', async () => {
+      await openList()
+
+      await userEvent.click(
+        screen.getByRole('button', { name: tpl(t.recurrences.removeOf, de('Loyer')) }),
+      )
+      await userEvent.click(screen.getByRole('button', { name: t.recurrences.stopAction }))
+
+      const stopped = useStore.getState().data.recurrences.find((r) => r.id === 'loyer')
+      expect(stopped?.endedOn).toBeDefined()
+      expect(useToasts.getState().toasts.at(-1)?.message).toBe(t.recurrences.stopped)
+    })
+
+    it('ne propose pas d’arrêter une règle déjà arrêtée', async () => {
+      renderPage({
+        recurrences: [
+          makeRecurrence({
+            id: 'ancien',
+            label: 'Ancien abonnement',
+            categoryId: 'energie',
+            amount: eur(1_000),
+            period: { unit: 'month', every: 1, anchorDay: 5 },
+            startedOn: '2025-01-05',
+            endedOn: '2025-12-05',
+          }),
+        ],
+      })
+
+      // Les règles arrêtées vivent dans leur propre liste, repliée.
+      await userEvent.click(screen.getByRole('button', { name: /Arrêtée/ }))
+      await userEvent.click(
+        screen.getByRole('button', { name: tpl(t.recurrences.removeOf, de('Ancien abonnement')) }),
+      )
+      expect(
+        screen.queryByRole('button', { name: t.recurrences.stopAction }),
+      ).not.toBeInTheDocument()
     })
   })
 })

@@ -15,6 +15,7 @@ import {
 } from '@/domain/grouping'
 import { money } from '@/domain/money'
 import { t } from '@/i18n/strings'
+import { removeRecurrence, stopRecurrence, undoable } from '@/store/actions'
 import { formatMoney, tpl } from '@/i18n/format'
 import {
   useCategoryMap,
@@ -28,6 +29,7 @@ import { type EntryNature, kindsOfNature } from '@/ui/categoryKinds'
 import { Amount } from '@/ui/Amount'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
+import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { Disclosure } from '@/ui/Disclosure'
 import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
 import { EmptyState } from '@/ui/EmptyState'
@@ -222,11 +224,13 @@ function GroupedList({
   nature,
   onNature,
   onOpen,
+  onRemove,
 }: {
   rows: Row[]
   nature: NatureFilter
   onNature: (nature: NatureFilter) => void
   onOpen: (id: string) => void
+  onRemove: (row: Row) => void
 }) {
   const categories = useCategoryMap()
   const kindOf = useKindOf()
@@ -424,6 +428,9 @@ function GroupedList({
                       onOpen={() => {
                         onOpen(row.recurrence.id)
                       }}
+                      onRemove={() => {
+                        onRemove(row)
+                      }}
                     />
                   </li>
                 ))}
@@ -432,11 +439,27 @@ function GroupedList({
           ))}
         </div>
       )}
+
+      {/* Le geste s'apprend en le lisant : rien sur une rangée ne dit qu'elle
+          se glisse, et le doigt ne découvre pas un fond qu'il faut déplacer de
+          quatre-vingt-douze pixels pour voir. La phrase nomme donc aussi les
+          deux boutons, qui font exactement la même chose. Sous la liste et non
+          au-dessus : on ne lit pas un mode d'emploi avant d'avoir vu ce qu'il
+          commande. */}
+      {shown.length > 0 && <p className="t-axis">{t.recurrences.swipeHint}</p>}
     </Tile>
   )
 }
 
-function StoppedList({ rows, onOpen }: { rows: Row[]; onOpen: (id: string) => void }) {
+function StoppedList({
+  rows,
+  onOpen,
+  onRemove,
+}: {
+  rows: Row[]
+  onOpen: (id: string) => void
+  onRemove: (row: Row) => void
+}) {
   const categories = useCategoryMap()
   const keys = useMemo(() => ['stopped'], [])
   const disclosure = useDisclosureGroup(keys, false)
@@ -469,6 +492,9 @@ function StoppedList({ rows, onOpen }: { rows: Row[]; onOpen: (id: string) => vo
                   color={categories.get(row.recurrence.categoryId)?.color ?? 'var(--cat-rest)'}
                   onOpen={() => {
                     onOpen(row.recurrence.id)
+                  }}
+                  onRemove={() => {
+                    onRemove(row)
                   }}
                 />
               </li>
@@ -517,6 +543,14 @@ export function RecurrencesPage() {
      aussi, et deux états séparés les feraient annoncer deux choses. */
   const [nature, setNature] = useState<NatureFilter>(null)
 
+  /* **Une seule boîte pour toute la liste** (DS §6) : une par rangée en
+     monterait autant dans le DOM, et elles diraient toutes la même chose. La
+     page retient donc la règle visée, et la boîte lit son libellé. */
+  const [removing, setRemoving] = useState<Row | null>(null)
+  const closeRemoval = (): void => {
+    setRemoving(null)
+  }
+
   const active = useMemo(() => rows.filter((row) => !row.stopped), [rows])
   const stopped = useMemo(() => rows.filter((row) => row.stopped), [rows])
 
@@ -534,7 +568,9 @@ export function RecurrencesPage() {
      recopié, l'un des deux dériverait. */
   const aside = (
     <>
-      {stopped.length > 0 && <StoppedList rows={stopped} onOpen={openDetail} />}
+      {stopped.length > 0 && (
+        <StoppedList rows={stopped} onOpen={openDetail} onRemove={setRemoving} />
+      )}
       <Trackers />
     </>
   )
@@ -581,13 +617,70 @@ export function RecurrencesPage() {
             l'aparté reprend alors la largeur, comme avant. */}
         {active.length > 0 ? (
           <div className="cols">
-            <GroupedList rows={active} nature={nature} onNature={setNature} onOpen={openDetail} />
+            <GroupedList
+              rows={active}
+              nature={nature}
+              onNature={setNature}
+              onOpen={openDetail}
+              onRemove={setRemoving}
+            />
             <div className="cols-stack">{aside}</div>
           </div>
         ) : (
           aside
         )}
       </div>
+
+      {/* Le glissé destructif **ouvre cette question**, il ne supprime pas :
+          `ARCHITECTURE.md` garde toutes les `ConfirmDialog`, et « les retirer
+          se déciderait dans le cahier, pas dans le code ». Le principe 2 du
+          handoff dit l'inverse ; c'est un arbitrage produit, pas une décision
+          d'implémentation.
+
+          **Elle porte le second geste**, celui que le prototype ne montre nulle
+          part et qui est pourtant le bon la plupart du temps : on résilie un
+          abonnement, on ne l'efface pas. `stopRecurrence` pose une date de fin,
+          retire les échéances à venir et **garde l'historique** ; supprimer
+          détache les confirmées et jette les prévues. Les deux issues sont donc
+          côte à côte au moment exact où l'on choisit, plutôt qu'à deux écrans
+          l'une de l'autre. Elle ne s'offre pas sur une règle déjà arrêtée : il
+          n'y aurait rien à arrêter. */}
+      <ConfirmDialog
+        open={removing !== null}
+        title={t.recurrences.remove}
+        steps={[{ question: t.recurrences.removeConfirm, action: t.common.delete }]}
+        {...(removing !== null && !removing.stopped
+          ? {
+              details: (
+                <div className="flex flex-col items-start gap-2 border-t border-border pt-3">
+                  <p className="t-label">{t.recurrences.stopInstead}</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const target = removing.recurrence.id
+                      closeRemoval()
+                      undoable(t.recurrences.stopped, () => {
+                        stopRecurrence(target)
+                      })
+                    }}
+                  >
+                    {t.recurrences.stopAction}
+                  </Button>
+                </div>
+              ),
+            }
+          : {})}
+        onCancel={closeRemoval}
+        onConfirm={() => {
+          if (removing === null) return
+          const target = removing.recurrence.id
+          closeRemoval()
+          undoable(t.recurrences.deleted, () => {
+            removeRecurrence(target)
+          })
+        }}
+      />
     </>
   )
 }

@@ -792,9 +792,53 @@ export const en: Strings = {
     variableAmountHint:
       'The amount will be asked for at each payment. This one serves as an order of magnitude in the meantime — for the recurring total, and for the split in proportion if it’s an income. Each costed payment takes over straight away.',
 
+    quickFull: 'More details',
+    quickPrivacy: 'saved in this browser · nothing goes anywhere else',
+
     addOperation: 'Add an operation',
     saveOperation: 'Add the operation',
     saveRecurrence: 'Add the recurring rule',
+  },
+
+  quickRule: {
+    title: 'Write a rule',
+    quit: 'Give up',
+    counter: '%s / %s',
+    back: 'Go back',
+    write: 'Write the rule',
+    steps: {
+      what: {
+        title: 'What comes back?',
+        body: 'Pick a common case, or simply give it a name. Either one is enough.',
+      },
+      amount: { title: 'How much?', body: 'The amount of each payment.' },
+      when: { title: 'Which day?', body: 'The day of the month it falls on.' },
+      details: {
+        title: 'Here is what you get',
+        body: 'Read it over, and fix anything that looks wrong.',
+      },
+    },
+    kindsLabel: 'What comes back',
+    kindRent: 'Rent',
+    kindSubscription: 'A subscription',
+    kindSalary: 'A salary',
+    kindLoan: 'A loan instalment',
+    kindSaving: 'A savings transfer',
+    nameRent: 'Rent',
+    nameSubscription: 'Subscription',
+    nameSalary: 'Salary',
+    nameLoan: 'Loan',
+    nameSaving: 'Savings',
+    name: 'Its name, if you want to be precise',
+    namePlaceholder: 'Health cover, canteen, mobile plan…',
+    whatRequired: 'Pick a case, or give the rule a name.',
+    dayShortcuts: 'Most common days',
+    dayRequired: 'The day must be between 1 and 31.',
+    details: 'Details',
+    noCategory: 'to be chosen',
+    fullForm: 'Open the full form',
+    foot: 'Three questions, and the rule fills every month on its own.',
+    footDetails: 'Frequency, end date, note: all of it is set later from its record.',
   },
 
   recurrences: {
@@ -859,6 +903,15 @@ export const en: Strings = {
     removeConfirm:
       'The rule disappears along with its upcoming payments. Those already confirmed stay in the history.',
     stopHint: 'Payments already confirmed stay in the history.',
+
+    swipeHint:
+      'Swipe a rule right to change its amount, left to remove it — or use the two buttons on the row.',
+    changeAmount: 'Change the amount',
+    changeAmountOf: 'Change the amount %s',
+    removeOf: 'Delete the recurring rule %s',
+    amountAhead: 'from the upcoming payments on · months already confirmed do not change',
+    stopInstead:
+      'Cancelling a subscription? Stopping it keeps everything already paid, and the rule can be resumed.',
 
     convertToOneTime: 'Change to one-off',
     convertToOneTimeConfirmSingle:

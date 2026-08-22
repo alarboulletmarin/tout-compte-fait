@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCE_NEW_PATH, entryNewPath, entryPath } from '@/app/routes'
+import { RECURRENCE_NEW_PATH, entryNewPath, entryPath, entryQuickPath } from '@/app/routes'
 import { currentYm } from '@/domain/date'
 import { AnalysisGrid } from '@/features/dashboard/AnalysisGrid'
 import { type Metric, MetricInfo } from '@/features/dashboard/MetricInfo'
@@ -84,8 +84,11 @@ export function MonthPage() {
     setFocus((previous) => previous + 1)
   }
 
+  /* La même porte qu'au doigt : le bouton flottant n'existe que sous 1024px,
+     cette rangée le remplace au-dessus, et « une porte par largeur et pas
+     deux » (DS §6) vaut aussi pour ce qu'elle ouvre. */
   const create = (direction: 'in' | 'out'): void => {
-    void navigate(entryNewPath({ direction }))
+    void navigate(entryQuickPath({ direction }))
   }
 
   /* Une troisième porte, parce que l'épargne se saisissait par « Dépense » :

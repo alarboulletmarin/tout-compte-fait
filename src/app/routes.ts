@@ -25,6 +25,19 @@ const moreRoute = (): RouteDef => ({ path: MORE_PATH, label: t.nav.more, icon: N
 /* Segment fixe : React Router le classe avant `/recurrences/:id`, une
    récurrence ne peut donc pas éclipser le formulaire de création. */
 export const RECURRENCE_NEW_PATH = `${RECURRENCES_PATH}/nouveau`
+/**
+ * Le formulaire complet, sous le chemin rapide plutôt qu'à côté de lui.
+ *
+ * `RECURRENCE_NEW_PATH` est la porte commune — trois états vides y mènent, le
+ * bouton « + » de la liste aussi — et c'est le chemin en cartes qui l'occupe :
+ * c'est celui qui répond à quelqu'un qui n'a encore rien posé. Le formulaire ne
+ * disparaît pas pour autant, parce qu'il porte tout ce que trois cartes ne
+ * peuvent pas dire — sept cadences, un montant variable, une date de fin, un
+ * support d'épargne, une note. Il est à un doigt de la première carte, et il
+ * reste le seul écran de `/recurrences/:id/modifier` : reprendre une règle
+ * existante n'est pas la même chose que d'en écrire une.
+ */
+export const RECURRENCE_FULL_NEW_PATH = `${RECURRENCE_NEW_PATH}/complet`
 export const recurrencePath = (id: string): string => `${RECURRENCES_PATH}/${id}`
 export const recurrenceEditPath = (id: string): string => `${RECURRENCES_PATH}/${id}/modifier`
 
@@ -133,6 +146,26 @@ export function natureFromParam(
 ): 'expense' | 'income' | 'saving' {
   if (nature === SAVING_NATURE) return 'saving'
   return directionFromParam(direction) === 'in' ? 'income' : 'expense'
+}
+
+/**
+ * La saisie rapide — un montant, une catégorie, et c'est écrit.
+ *
+ * Sous `/depense` et non à côté : c'est la même saisie, en plus court, et son
+ * URL doit le dire. Elle prend les mêmes paramètres, qui disent d'où l'on
+ * vient — les trois portes de saisie mènent ici, sauf celle de l'épargne, dont
+ * la question n'est pas « quelle catégorie » mais « quel support » (voir
+ * `QuickEntryPage`).
+ *
+ * Segment fixe, donc classé avant `/depense/:id` : une entrée ne peut pas
+ * l'éclipser.
+ */
+export const ENTRY_QUICK_PATH = `${ENTRY_NEW_PATH}/rapide`
+
+export function entryQuickPath(options: { direction?: 'in' | 'out' } = {}): string {
+  if (options.direction === undefined) return ENTRY_QUICK_PATH
+  const params = new URLSearchParams({ [DIRECTION_PARAM]: DIRECTION_VALUE[options.direction] })
+  return `${ENTRY_QUICK_PATH}?${params.toString()}`
 }
 
 export function entryNewPath(

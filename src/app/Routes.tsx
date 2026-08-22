@@ -35,6 +35,8 @@ import {
   PRIVACY_PATH,
   PROJECTION_PATH,
   RECURRENCES_PATH,
+  ENTRY_QUICK_PATH,
+  RECURRENCE_FULL_NEW_PATH,
   RECURRENCE_NEW_PATH,
   REVIEW_PATH,
   SAVINGS_ANALYSIS_PATH,
@@ -121,6 +123,8 @@ const CreditFormPage = lazy(async () => ({ default: (await opsPages()).CreditFor
 const EntryPage = lazy(async () => ({ default: (await opsPages()).EntryPage }))
 const RecurrenceDetailPage = lazy(async () => ({ default: (await opsPages()).RecurrenceDetailPage }))
 const RecurrenceFormPage = lazy(async () => ({ default: (await opsPages()).RecurrenceFormPage }))
+const RecurrenceQuickPage = lazy(async () => ({ default: (await opsPages()).RecurrenceQuickPage }))
+const QuickEntryPage = lazy(async () => ({ default: (await opsPages()).QuickEntryPage }))
 
 /**
  * Les écrans que « Plus » ouvre, en un seul morceau.
@@ -239,6 +243,9 @@ export function AppRoutes() {
         <Routes>
           <Route path="/" element={<MonthPage />} />
           <Route path="/depense" element={<EntryPage />} />
+          {/* Segment fixe avant `:id` : les trois portes de saisie ouvrent la
+              version courte, et le formulaire reste à un doigt en dessous. */}
+          <Route path={ENTRY_QUICK_PATH} element={<QuickEntryPage />} />
           <Route path="/depense/:id" element={<EntryPage />} />
           {/* Les deux écrans qu'on n'ouvre que depuis une tuile du mois. Ils
               ne sont dans aucune navigation — voir `REVIEW_PATH` — mais ils ont
@@ -248,7 +255,8 @@ export function AppRoutes() {
           <Route path={FLOWS_PATH} element={<FlowsPage />} />
           <Route path="/calendrier" element={<CalendarPage />} />
           <Route path={RECURRENCES_PATH} element={<RecurrencesPage />} />
-          <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceFormPage />} />
+          <Route path={RECURRENCE_NEW_PATH} element={<RecurrenceQuickPage />} />
+          <Route path={RECURRENCE_FULL_NEW_PATH} element={<RecurrenceFormPage />} />
           <Route path={`${RECURRENCES_PATH}/:id`} element={<RecurrenceDetailPage />} />
           <Route path={`${RECURRENCES_PATH}/:id/modifier`} element={<RecurrenceFormPage />} />
           {/* L'écran s'appelait « Abonnements », et son URL le disait. Un lien

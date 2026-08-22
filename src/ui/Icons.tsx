@@ -54,6 +54,7 @@ import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { SquaresFour } from '@phosphor-icons/react/dist/csr/SquaresFour'
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
 import { Translate } from '@phosphor-icons/react/dist/csr/Translate'
+import { Trash } from '@phosphor-icons/react/dist/csr/Trash'
 import { TrendUp } from '@phosphor-icons/react/dist/csr/TrendUp'
 import { Users } from '@phosphor-icons/react/dist/csr/Users'
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
@@ -99,6 +100,11 @@ export const Close = adapt(X)
    et non sur le glyphe (§9.2) : c'est un bouton sans libellé visible. */
 export const BackspaceIcon = adapt(Backspace)
 export const Check = adapt(PhCheck)
+/* La suppression d'une ligne de liste, où le mot ne tient pas : le bouton
+   porte son nom et **nomme la ligne** (§9.2), le glyphe ne fait que le
+   retrouver. Le seul geste destructif assez fréquent pour mériter un glyphe —
+   ailleurs, « Supprimer » s'écrit en toutes lettres. */
+export const TrashIcon = adapt(Trash)
 export const Warning = adapt(WarningCircle)
 /* Le repère d'une tuile qui s'explique sur place, par opposition au chevron de
    celle qui mène ailleurs : deux gestes, deux glyphes. */

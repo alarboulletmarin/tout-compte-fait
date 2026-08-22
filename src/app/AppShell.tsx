@@ -9,7 +9,7 @@ import { useHotkeys } from '@/ui/useHotkeys'
 import { DataNotice } from './DataNotice'
 import { Sidebar, TabBar } from './Nav'
 import { QuickEntry } from './QuickEntry'
-import { entryNewPath, isFocusScreen, isFullFrame } from './routes'
+import { entryQuickPath, isFocusScreen, isFullFrame } from './routes'
 
 /** Coquille de l'app : navigation et gabarit. Aucune règle métier ici. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     n: focus
       ? undefined
       : () => {
-          void navigate(entryNewPath({ direction: 'out' }))
+          void navigate(entryQuickPath({ direction: 'out' }))
         },
   })
 

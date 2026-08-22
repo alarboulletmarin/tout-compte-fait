@@ -186,4 +186,10 @@ export const SCREENS: { path: string; heading: RegExp }[] = [
      manque. */
   { path: '/simulation', heading: /simulation/i },
   { path: '/plus', heading: /plus/i },
+  /* Les deux écrans d'écriture courts de la refonte. Ils sont dans cette liste
+     et pas les formulaires : ceux-là posent un pavé numérique, une rangée de
+     pilules et un chiffre héros — trois choses dont la hauteur et la largeur ne
+     se mesurent nulle part ailleurs, et qui doivent tenir à 320 points. */
+  { path: '/depense/rapide', heading: /ajouter une dépense/i },
+  { path: '/recurrences/nouveau', heading: /revient/i },
 ]

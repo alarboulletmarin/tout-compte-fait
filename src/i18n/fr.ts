@@ -1482,9 +1482,77 @@ export const fr = {
        enregistre se lit sur les bascules, juste dessous.
        Le bouton, lui, nomme ce qui va être créé : c'est le dernier endroit où
        le dire, et le seul qui ne change plus rien après. */
+    /* --- La saisie rapide -------------------------------------------------
+       Un écran plein, et non la feuille du prototype : le DS §6 réserve la
+       feuille à ce qui se lit et se referme, et celle-ci écrit. */
+    quickFull: 'Plus de détails',
+    /* La phrase du design, mot pour mot : ce que la saisie engage, dit là où on
+       la fait. C'est la contrepartie exacte de « rien ne sort d'ici ». */
+    quickPrivacy: 'enregistré dans ce navigateur · rien ne part ailleurs',
+
     addOperation: 'Ajouter une opération',
     saveOperation: 'Ajouter l’opération',
     saveRecurrence: 'Ajouter la récurrence',
+  },
+
+  /* Écrire une règle en quelques cartes — le chemin rapide du handoff.
+   *
+   * Un bloc à part de `recurrences` parce que c'est un **parcours**, pas une
+   * lecture : il a son avancement, ses questions et ses erreurs, comme la
+   * revue. Ce qu'il partage avec le formulaire — « Montant », « Catégorie »,
+   * « Membre », leurs messages — se lit sous `entry`, et n'est pas recopié :
+   * un même champ ne se nomme pas de deux façons selon la porte. */
+  quickRule: {
+    title: 'Écrire une règle',
+    quit: 'Abandonner',
+    counter: '%s / %s',
+    /* « Revenir » et non « Retour » : le second est le chevron d'en-tête, qui
+       quitte l'écran ; celui-ci recule d'une carte sans rien perdre. */
+    back: 'Revenir',
+    write: 'Écrire la règle',
+    steps: {
+      what: {
+        title: 'Qu’est-ce qui revient ?',
+        body: 'Prends un cas courant, ou donne-lui simplement un nom. L’un ou l’autre suffit.',
+      },
+      amount: { title: 'Combien ?', body: 'Le montant de chaque échéance.' },
+      when: { title: 'Quel jour ?', body: 'Le jour du mois où elle tombe.' },
+      details: {
+        title: 'Voilà ce que ça donne',
+        body: 'Relis, et corrige si quelque chose ne va pas.',
+      },
+    },
+    kindsLabel: 'Ce qui revient',
+    /* Les cinq cas les plus courants. Chacun désigne une **vraie** catégorie du
+       catalogue, et disparaît si elle a été supprimée : une règle posée sur un
+       identifiant mort se rangerait n'importe où. */
+    kindRent: 'Un loyer',
+    kindSubscription: 'Un abonnement',
+    kindSalary: 'Un salaire',
+    kindLoan: 'Une échéance de crédit',
+    kindSaving: 'Un virement d’épargne',
+    /* Le nom que la ligne portera. La puce pose une question — « Un loyer » —,
+       la ligne du mois répond — « Loyer ». */
+    nameRent: 'Loyer',
+    nameSubscription: 'Abonnement',
+    nameSalary: 'Salaire',
+    nameLoan: 'Crédit',
+    nameSaving: 'Épargne',
+    name: 'Son nom, si tu veux le préciser',
+    namePlaceholder: 'Mutuelle, cantine, forfait mobile…',
+    whatRequired: 'Choisis un cas, ou donne un nom à la règle.',
+    dayShortcuts: 'Jours les plus courants',
+    dayRequired: 'Le jour doit être compris entre 1 et 31.',
+    /* Le repli de la dernière carte. Ce qui est déjà juste n'a pas à être
+       redemandé ; ce qui manque ouvre le repli tout seul. */
+    details: 'Précisions',
+    noCategory: 'à choisir',
+    /* La sortie vers le formulaire, offerte tant que rien n'est saisi : sept
+       cadences, le montant variable, la date de fin, le support d'épargne et la
+       note n'ont pas de carte ici. */
+    fullForm: 'Ouvrir le formulaire complet',
+    foot: 'Trois questions, et la règle remplira chaque mois toute seule.',
+    footDetails: 'Cadence, date de fin, note : tout se règle ensuite depuis sa fiche.',
   },
 
   recurrences: {
@@ -1606,6 +1674,32 @@ export const fr = {
     removeConfirm:
       'La récurrence disparaît avec ses échéances à venir. Celles déjà confirmées restent dans l’historique.',
     stopHint: 'Les échéances déjà confirmées restent dans l’historique.',
+
+    /* --- Les gestes de la rangée -----------------------------------------
+       Le glissé se comporte ici comme sur la liste du mois : à droite ce qui
+       corrige, à gauche ce qui retire. La phrase l'apprend, et nomme les deux
+       boutons qui font exactement la même chose — rien sur une rangée ne dit
+       qu'elle se glisse. */
+    swipeHint:
+      'Glisse une règle à droite pour changer son montant, à gauche pour la retirer — ou sers-toi des deux boutons de la rangée.',
+    changeAmount: 'Changer le montant',
+    /* Les noms accessibles nomment la règle : douze boutons « Supprimer » se
+       listent douze fois à l'identique dans les contrôles d'un lecteur
+       d'écran, et rien n'y dirait lequel on vise. L'élision passe par `de()`,
+       qui écrit « d’Électricité » là où le gabarit ne peut pas le savoir. */
+    changeAmountOf: 'Changer le montant %s',
+    removeOf: 'Supprimer la récurrence %s',
+    /* Ce que l'enregistrement change, et jusqu'où. La maquette écrivait « à
+       partir de septembre » ; `syncRecurrenceEntries` ne touche jamais une
+       confirmée et refait les prévues datées **après aujourd'hui**. La coupure
+       est donc le jour même, et une échéance de ce mois-ci encore à confirmer
+       suivra le nouveau montant. */
+    amountAhead: 'à partir des échéances à venir · les mois déjà confirmés ne changent pas',
+    /* La sortie douce, offerte au moment exact où l'on s'apprête à supprimer :
+       c'est presque toujours le bon geste — on résilie un abonnement, on ne
+       l'efface pas — et il n'était offert que deux écrans plus loin. */
+    stopInstead:
+      'Tu résilies plutôt ? L’arrêter garde tout ce qui a déjà été payé, et la règle pourra être reprise.',
 
     /* Le geste inverse de « Ajouter une récurrence » : on découvre qu'une
        règle posée par erreur, ou devenue sans objet, ne se répète pas. Deux
