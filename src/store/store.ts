@@ -269,6 +269,38 @@ async function persist(data: Data): Promise<void> {
 }
 
 /**
+ * Ce qu'une écriture ratée déclenche, en un seul endroit.
+ *
+ * **Deux signaux et non un, parce qu'ils ne répondent pas à la même question.**
+ * Le bandeau décrit un *état* : tant qu'il est là, plus rien ne s'enregistre, et
+ * il porte les deux recours. Le message rouge, lui, se rattache à un *geste* :
+ * il tombe au moment où la saisie qu'on vient de finir se perd, et c'est la
+ * seule façon de relier l'échec à ce qu'on faisait — le bandeau, déjà allumé
+ * depuis la frappe d'avant, ne bouge pas et ne prouve donc rien. Le design
+ * demande les deux, et c'est bien deux choses.
+ *
+ * **Ce qui est à l'écran n'est pas défait, et c'est délibéré.** Le writer
+ * regroupe : entre la mutation et son échec — 400 ms de debounce, plus la
+ * transaction —, il a pu s'en produire trois autres, déjà affichées et déjà
+ * reprogrammées. Le seul état cohérent où revenir serait celui de la dernière
+ * écriture *réussie*, c'est-à-dire, sur un navigateur qui refuse d'écrire, celui
+ * du démarrage : chaque geste s'effacerait sous les doigts une demi-seconde
+ * après avoir été fait. Ça retirerait aussi à « Exporter d'abord » ce qu'il
+ * existe pour sauver, puisqu'il part de la copie en mémoire. L'app dit donc la
+ * vérité plutôt qu'elle n'efface le travail — c'est mot pour mot ce que promet
+ * le corps du bandeau : « ce que tu tapes reste à l'écran, mais rien n'est
+ * gardé ».
+ *
+ * Le message se dédoublonne tout seul : `useToasts` compte les répétitions au
+ * lieu de les empiler, si bien que dix frappes sur une base morte donnent
+ * « … · 10 » et non dix bandeaux.
+ */
+function reportWriteFailure(): void {
+  useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
+  toast(t.storage.writeFailedToast, 'danger')
+}
+
+/**
  * Les hooks référencent `useStore` dans leur corps et non à l'évaluation : le
  * writer est construit avant que le store existe, mais aucun d'eux ne peut
  * partir avant la première écriture, donc bien après.
@@ -280,9 +312,7 @@ const writer = createWriter(persist, WRITE_DELAY_MS, {
     const { error, setError } = useStore.getState()
     if (error?.kind === 'write') setError(null)
   },
-  onFailed() {
-    useStore.getState().setError({ kind: 'write', message: t.storage.writeFailed })
-  },
+  onFailed: reportWriteFailure,
 })
 
 /**
@@ -513,13 +543,16 @@ export const useStore = create<Store>()((set, get) => ({
     set({ data, status: 'ready', error: null, ym: currentYm(), filter: ALL_FILTER, review: null })
     // Le fichier importé peut dater : le mois courant n'y est pas forcément.
     get().ensureMonthOpen()
-    // Hors du writer, donc hors de ses hooks : cette écriture-là a besoin de son
-    // propre filet. Un import qui ne s'enregistre pas et qui ne le dit pas est
-    // la pire des pertes — on vient d'effacer ce qu'il remplace.
+    /* Hors du writer, donc hors de ses hooks : cette écriture-là a besoin de son
+       propre filet. Un import qui ne s'enregistre pas et qui ne le dit pas est
+       la pire des pertes — on vient d'effacer ce qu'il remplace. Elle passe par
+       le même signalement que les autres, message rouge compris : sans lui,
+       l'écran d'import annonçait « Importé » sur un document qui n'a jamais
+       atteint le disque. */
     try {
       await persist(get().data)
     } catch {
-      set({ error: { kind: 'write', message: t.storage.writeFailed } })
+      reportWriteFailure()
     }
   },
 

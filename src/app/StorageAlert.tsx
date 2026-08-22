@@ -64,14 +64,14 @@ export function StorageAlert() {
           size="sm"
           variant="secondary"
           onClick={() => {
-            void retryWrite().then(() => {
-              /* L'échec ne se voit pas deux fois : le bandeau est déjà là, et
-                 il n'aurait pas bougé. Sans un mot, appuyer sur « Réessayer »
-                 ne produit rien à l'écran — ni succès ni échec — et le geste
-                 paraît mort. Le message rouge est le seul retour possible d'un
-                 bouton dont la réussite se lit par une disparition. */
-              if (useStore.getState().error !== null) toast(t.storage.retryFailed, 'danger')
-            })
+            /* Rien à annoncer ici, et c'est un retrait : ce bouton poussait son
+               propre message rouge, parce qu'il était le seul endroit qui en
+               poussait un. Toute écriture ratée en pousse un maintenant — voir
+               `reportWriteFailure` dans le store —, et « Réessayer » repasse par
+               le writer comme les autres. Le garder ici en aurait fait deux pour
+               un seul clic. La réussite, elle, se lit toujours par la
+               disparition du bandeau. */
+            void retryWrite()
           }}
         >
           {t.storage.retry}

@@ -106,6 +106,44 @@ describe('store — échecs de persistance', () => {
     })
   })
 
+  /* Le bandeau décrit un état, le message rouge se rattache au geste : allumé
+     depuis la frappe d'avant, le bandeau ne bouge pas et ne dit donc pas que
+     *celle-ci* vient de se perdre. Le design demande les deux, et il n'y en
+     avait qu'un. */
+  it('annonce en rouge chaque écriture qui échoue', async () => {
+    const { store } = await freshStore({ write: () => Promise.reject(new Error('quota dépassé')) })
+    /* Le module des messages est repris après `vi.resetModules()` : celui
+       qu'importe le store neuf est neuf lui aussi, et l'instance chargée en tête
+       de fichier n'écouterait rien. */
+    const { useToasts } = await import('@/ui/toast')
+
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+
+    expect(useToasts.getState().toasts).toMatchObject([
+      { message: t.storage.writeFailedToast, tone: 'danger', count: 1 },
+    ])
+  })
+
+  /* Une base morte fait rater *toutes* les écritures : sans dédoublonnage, dix
+     frappes empileraient dix messages sur l'écran qu'on est en train de remplir.
+     `useToasts` les compte, et le compte est ce qui rend l'insistance lisible. */
+  it('compte les échecs répétés au lieu de les empiler', async () => {
+    const { store } = await freshStore({ write: () => Promise.reject(new Error('quota dépassé')) })
+    const { useToasts } = await import('@/ui/toast')
+
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+    store.getState().mutate((data) => ({ ...data, household: { ...data.household, name: 'A' } }))
+    await store.getState().flush()
+    store.getState().mutate((data) => ({ ...data, household: { ...data.household, name: 'B' } }))
+    await store.getState().flush()
+
+    expect(useToasts.getState().toasts).toMatchObject([
+      { message: t.storage.writeFailedToast, tone: 'danger', count: 3 },
+    ])
+  })
+
   it('efface le bandeau dès que l’écriture repasse', async () => {
     const write = vi
       .fn<(data: Data, rev: number) => Promise<void>>()

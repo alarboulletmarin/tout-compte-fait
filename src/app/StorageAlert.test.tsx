@@ -69,10 +69,11 @@ describe('StorageAlert', () => {
     expect(retry).toHaveBeenCalledTimes(1)
   })
 
-  /* Une réussite se lit par la disparition du bandeau ; un second échec ne se
-     lit par rien du tout, puisque rien n'a bougé. Le message rouge est le seul
-     retour possible de ce bouton-là. */
-  it('dit en rouge que le second essai a échoué lui aussi', async () => {
+  /* Le bandeau poussait autrefois son propre message rouge, parce qu'il était le
+     seul endroit qui en poussait un. C'est désormais le writer qui parle, pour
+     toute écriture ratée — voir `store.test.ts`. Le bouton, lui, ne doit plus
+     rien ajouter : deux messages pour un clic n'en font pas un plus vrai. */
+  it('n’ajoute aucun message de son côté quand on réessaie', async () => {
     useStore.setState({
       error: { kind: 'write', message: t.storage.writeFailed },
       retryWrite: () => Promise.resolve(),
@@ -81,9 +82,7 @@ describe('StorageAlert', () => {
     render(<StorageAlert />)
     await userEvent.click(screen.getByRole('button', { name: t.storage.retry }))
 
-    expect(useToasts.getState().toasts).toMatchObject([
-      { message: t.storage.retryFailed, tone: 'danger' },
-    ])
+    expect(useToasts.getState().toasts).toStrictEqual([])
   })
 
   /* Le point de tout le bandeau : quand IndexedDB ne répond plus, l'export ne
