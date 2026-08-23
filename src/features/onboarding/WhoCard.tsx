@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { Member } from '@/domain/types'
 import { enumerate, tpl } from '@/i18n/format'
 import { t } from '@/i18n/strings'
@@ -49,6 +49,7 @@ export function WhoCard({
   onRemove: (id: string) => void
 }) {
   const [name, setName] = useState('')
+  const hintId = useId()
   const trimmed = name.trim()
 
   const submit = (): void => {
@@ -71,6 +72,13 @@ export function WhoCard({
           onMode(next === 'multi')
         }}
         label={t.onboarding.whoLabel}
+        /* `Segmented` se dit `inline-flex` pour se serrer sur ses positions ;
+           dans une colonne, c'est `align-items: stretch` qui décide, et il
+           l'étirait sur toute la largeur — 163px de pilule vide à 390px, 317 à
+           1440, soit près de la moitié du contrôle. Une bascule qui traîne un
+           fond derrière sa dernière position ne se lit plus comme un choix à
+           deux positions, mais comme une piste dont il manque les autres. */
+        className="self-start"
       />
 
       {multi && (
@@ -100,31 +108,48 @@ export function WhoCard({
           )}
 
           {/* Un `<form>` : c'est ce qui fait qu'Entrée valide, sans écouteur de
-              touche à écrire ni à neutraliser dans les champs voisins. */}
+              touche à écrire ni à neutraliser dans les champs voisins.
+
+              **Il passe en colonne pour porter l'aide**, et c'est le même parti
+              qu'`ExtrasCard` prend pour porter son refus. `items-end` aligne le
+              bouton sur le bas de son voisin ; tant que ce voisin est un champ
+              nu, ce bas *est* la ligne de saisie et les deux se posent côte à
+              côte. Un `hint` dans le `Field` rallonge ce bas de deux lignes :
+              le bouton tombait alors 43px plus bas, à côté de la phrase d'aide
+              et non du champ — mesuré à 390px, et c'est ce qu'on voyait.
+              La phrase se pose donc sous la rangée entière, où elle ne décale
+              plus rien. Elle reste le `aria-describedby` du champ : ce qui
+              change est l'endroit où elle se dessine, pas ce qu'un lecteur
+              d'écran annonce en arrivant dessus. */}
           <form
-            className="flex flex-wrap items-end gap-2"
+            className="flex flex-col gap-1.5"
             onSubmit={(event) => {
               event.preventDefault()
               submit()
             }}
           >
-            <Field label={t.onboarding.namesLabel} hint={t.onboarding.namesHint} className="flex-1">
-              {(id, describedBy) => (
-                <TextInput
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={name}
-                  placeholder={t.onboarding.namesPlaceholder}
-                  maxLength={24}
-                  onChange={(event) => {
-                    setName(event.target.value)
-                  }}
-                />
-              )}
-            </Field>
-            <Button type="submit" variant="secondary" disabled={trimmed.length === 0}>
-              {t.onboarding.namesAdd}
-            </Button>
+            <div className="flex flex-wrap items-end gap-2">
+              <Field label={t.onboarding.namesLabel} className="flex-1">
+                {(id) => (
+                  <TextInput
+                    id={id}
+                    aria-describedby={hintId}
+                    value={name}
+                    placeholder={t.onboarding.namesPlaceholder}
+                    maxLength={24}
+                    onChange={(event) => {
+                      setName(event.target.value)
+                    }}
+                  />
+                )}
+              </Field>
+              <Button type="submit" variant="secondary" disabled={trimmed.length === 0}>
+                {t.onboarding.namesAdd}
+              </Button>
+            </div>
+            <p id={hintId} className="t-label">
+              {t.onboarding.namesHint}
+            </p>
           </form>
 
           {/* La règle de partage, dite là où elle se décide, et une seule fois.

@@ -173,6 +173,8 @@ Deux familles, pas trois. La largeur variable d'Archivo remplace un troisième f
 | Eyebrow | mono | 11px | 500 | majuscules, `tracking: 0.08em` |
 | Axe de graphique | mono | 11px | 400 | `color: var(--text-muted)` |
 
+**Un champ de saisie fait 16px sur iOS, et c'est la seule entorse à l'échelle.** WebKit y agrandit le cadrage dès qu'on met au point un contrôle dont la lettre est sous 16px, et il ne le rend jamais : la page reste zoomée, son bord droit hors de l'écran — sur la carte du foyer, le bouton « Ajouter » sortait du cadre à côté du champ qu'il sert. Aucun `maximum-scale` ne peut y répondre : couper le zoom du moteur couperait aussi celui qu'on fait exprès, et le §8 s'y refuse. Le seuil est celui du moteur, pas une préférence, et la règle est portée là où le moteur zoome — nulle part ailleurs. Le pixel d'écart avec le corps ne se voit pas ; le cadrage perdu se voyait.
+
 ### Chiffres
 
 `font-variant-numeric: tabular-nums` sur **tout** montant, sans exception. Une colonne de montants qui danse à chaque mise à jour est le défaut le plus visible d'une app de finances.

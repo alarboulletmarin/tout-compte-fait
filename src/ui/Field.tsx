@@ -3,6 +3,11 @@ import { cn } from '@/lib/cn'
 import { t } from '@/i18n/strings'
 import { Check, ChevronDown } from './Icons'
 
+/* La lettre d'un contrôle est celle du corps — 15px, DS §3 —, **sauf sur
+   iOS**, où `styles/base.css` la remonte à 16px pour tous les champs. Ce n'est
+   pas une variante de style : sous 16px, WebKit zoome le cadrage à la mise au
+   point et ne le rend pas. Le pourquoi et le pourquoi-pas-autrement sont
+   écrits là-bas, à côté de la règle. */
 const CONTROL = cn(
   'w-full rounded-input bg-surface-2 px-3.5 text-[15px] text-text',
   'border border-transparent outline-none',
