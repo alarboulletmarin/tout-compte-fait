@@ -295,7 +295,14 @@ export function ProjectionPage() {
             Une seule tuile : la bascule de mode, les champs du mode courant, la
             durée qui vaut pour les deux, et le repli des deux réglages qu'on ne
             tourne pas en arrivant. */}
-        <section className="tile flex flex-col gap-4 p-5 md:p-6">
+        /* `gap-5` sur la section, `gap-3` sur la pile intérieure : le titre
+           se tenait à 16px de son contenu quand un titre en demande 20 (DS §4),
+           et la tuile respirait à 16 quand sa voisine du dessous — cadre
+           identique, posée juste en dessous — respire à 12. Deux rythmes pour
+           deux cadres jumeaux se voient avant qu'on sache les nommer.
+           Pas de `mb-5` sur la rangée de titre : dans une colonne flex la marge
+           s'ajoute à la gouttière, le piège que `PageTitle` documente déjà. */
+        <section className="tile flex flex-col gap-5 p-5 md:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="t-section">{projection.settings}</h2>
             <Segmented
@@ -308,97 +315,100 @@ export function ProjectionPage() {
             />
           </div>
 
-          {!simple && (
-            /* Trois réglages qui se posent **compte par compte** : ils gardent
-               leur feuille, parce que dix comptes à plat font une page de
-               formulaire. Chaque pilule dit ce que vaut le réglage qu'elle
-               ouvre — le nom est dans son étiquette accessible. */
-            <div className="flex flex-wrap gap-2">
-              <SettingPill
-                label={projection.pillAccounts}
-                value={accountsLabel}
-                onClick={() => {
-                  setSheet('accounts')
+          <div className="flex flex-col gap-3">
+
+            {!simple && (
+              /* Trois réglages qui se posent **compte par compte** : ils gardent
+                 leur feuille, parce que dix comptes à plat font une page de
+                 formulaire. Chaque pilule dit ce que vaut le réglage qu'elle
+                 ouvre — le nom est dans son étiquette accessible. */
+              <div className="flex flex-wrap gap-2">
+                <SettingPill
+                  label={projection.pillAccounts}
+                  value={accountsLabel}
+                  onClick={() => {
+                    setSheet('accounts')
+                  }}
+                />
+                <SettingPill
+                  label={projection.pillRate}
+                  value={rateLabel}
+                  invalid={faulty.some(
+                    (id) =>
+                      errors.supports[id]?.rate !== undefined ||
+                      errors.supports[id]?.low !== undefined ||
+                      errors.supports[id]?.high !== undefined,
+                  )}
+                  onClick={() => {
+                    setSheet('rate')
+                  }}
+                />
+                <SettingPill
+                  label={projection.pillAmount}
+                  value={amountLabel}
+                  invalid={faulty.some((id) => errors.supports[id]?.amount !== undefined)}
+                  onClick={() => {
+                    setSheet('amount')
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Une grille de champs, et **deux colonnes dès le plus petit écran**.
+                Empilés, quatre champs et leurs aides poussaient la réponse à huit
+                cents pixels du haut : on réglait un versement sans voir le chiffre
+                qu'il produit. Les paires se lisent d'elles-mêmes — ce qu'on verse
+                et ce qu'on a déjà, le taux et l'horizon.
+
+                La durée y entre au même titre que les autres, dans les deux
+                modes : elle ne se pose pas compte par compte, c'est l'horizon de
+                toute la simulation. */}
+            <div className="grid grid-cols-2 gap-4">
+              {simple && (
+                <SimpleFields
+                  startText={draft.startText}
+                  payText={draft.payText}
+                  rateText={draft.rateText}
+                  every={draft.every}
+                  errors={errors}
+                  onStart={(startText) => {
+                    patch({ startText })
+                  }}
+                  onPay={(payText) => {
+                    patch({ payText })
+                  }}
+                  onRate={(rateText) => {
+                    patch({ rateText })
+                  }}
+                />
+              )}
+              <DurationField
+                years={draft.years}
+                onChange={(years) => {
+                  patch({ years })
                 }}
-              />
-              <SettingPill
-                label={projection.pillRate}
-                value={rateLabel}
-                invalid={faulty.some(
-                  (id) =>
-                    errors.supports[id]?.rate !== undefined ||
-                    errors.supports[id]?.low !== undefined ||
-                    errors.supports[id]?.high !== undefined,
-                )}
-                onClick={() => {
-                  setSheet('rate')
-                }}
-              />
-              <SettingPill
-                label={projection.pillAmount}
-                value={amountLabel}
-                invalid={faulty.some((id) => errors.supports[id]?.amount !== undefined)}
-                onClick={() => {
-                  setSheet('amount')
-                }}
+                {...(errors.years === undefined ? {} : { error: errors.years })}
               />
             </div>
-          )}
 
-          {/* Une grille de champs, et **deux colonnes dès le plus petit écran**.
-              Empilés, quatre champs et leurs aides poussaient la réponse à huit
-              cents pixels du haut : on réglait un versement sans voir le chiffre
-              qu'il produit. Les paires se lisent d'elles-mêmes — ce qu'on verse
-              et ce qu'on a déjà, le taux et l'horizon.
-
-              La durée y entre au même titre que les autres, dans les deux
-              modes : elle ne se pose pas compte par compte, c'est l'horizon de
-              toute la simulation. */}
-          <div className="grid grid-cols-2 gap-4">
-            {simple && (
-              <SimpleFields
-                startText={draft.startText}
-                payText={draft.payText}
-                rateText={draft.rateText}
+            <Disclosure title={projection.more} open={more} onOpenChange={setMore}>
+              <OtherSettings
                 every={draft.every}
-                errors={errors}
-                onStart={(startText) => {
-                  patch({ startText })
+                onEvery={(every: Period) => {
+                  patch({ every })
                 }}
-                onPay={(payText) => {
-                  patch({ payText })
+                constant={draft.constant}
+                onConstant={(constant) => {
+                  patch({ constant })
                 }}
-                onRate={(rateText) => {
-                  patch({ rateText })
+                inflationText={draft.inflationText}
+                onInflation={(inflationText) => {
+                  patch({ inflationText })
                 }}
+                {...(errors.inflation === undefined ? {} : { error: errors.inflation })}
               />
-            )}
-            <DurationField
-              years={draft.years}
-              onChange={(years) => {
-                patch({ years })
-              }}
-              {...(errors.years === undefined ? {} : { error: errors.years })}
-            />
+            </Disclosure>
           </div>
-
-          <Disclosure title={projection.more} open={more} onOpenChange={setMore}>
-            <OtherSettings
-              every={draft.every}
-              onEvery={(every: Period) => {
-                patch({ every })
-              }}
-              constant={draft.constant}
-              onConstant={(constant) => {
-                patch({ constant })
-              }}
-              inflationText={draft.inflationText}
-              onInflation={(inflationText) => {
-                patch({ inflationText })
-              }}
-              {...(errors.inflation === undefined ? {} : { error: errors.inflation })}
-            />
-          </Disclosure>
         </section>
 
         {/* --- Ce que ça donne ----------------------------------------------- */}
