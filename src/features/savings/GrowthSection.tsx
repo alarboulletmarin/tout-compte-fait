@@ -31,6 +31,7 @@
  * ==========================================================================*/
 
 import { useMemo, useState } from 'react'
+import { cn } from '@/lib/cn'
 import { GrowthAreas, type GrowthLayer } from '@/charts/GrowthAreas'
 import { today } from '@/domain/date'
 import type { Money } from '@/domain/money'
@@ -209,7 +210,9 @@ export function GrowthSection() {
     marks.map((rank, index) => ({ rank, index })).filter(({ rank }) => points[rank]?.known === true).map(({ index }) => index)
 
   return (
-    <section className="flex flex-col gap-4">
+    /* `gap-3` : l'étiquette d'une section coiffe son contenu à 12px sur les
+       cinq autres sections de la zone — et sur la branche vide de celle-ci. */
+    <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Eyebrow>{supports.growth}</Eyebrow>
         <Segmented
@@ -292,7 +295,19 @@ export function GrowthSection() {
                   supports.growthGain,
                   supports.growthTotal,
                 ].map((head) => (
-                  <th key={head} scope="col" className="py-2 pr-3 font-normal whitespace-nowrap">
+                  /* Les quatre colonnes de montants se lisent par la droite
+                     (DS §3) : elles étaient alignées à gauche, si bien que leurs
+                     chiffres tabulaires partaient du même bord et finissaient
+                     chacun où ils voulaient. La première colonne, elle, porte
+                     une date : elle reste à gauche. */
+                  <th
+                    key={head}
+                    scope="col"
+                    className={cn(
+                      'py-2 font-normal whitespace-nowrap',
+                      head === supports.growthWhen ? 'pr-3' : 'pl-3 text-right',
+                    )}
+                  >
                     {head}
                   </th>
                 ))}
@@ -309,7 +324,7 @@ export function GrowthSection() {
                     {[point?.base, point?.paid, point?.gain, point?.value].map((value, column) => (
                       <td
                         key={column}
-                        className="t-num-body tnum py-2 pr-3 whitespace-nowrap"
+                        className="t-num-body tnum py-2 pl-3 text-right whitespace-nowrap"
                       >
                         {value === undefined ? NO_VALUE : formatMoney(value, currency, false)}
                       </td>
