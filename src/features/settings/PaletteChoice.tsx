@@ -54,14 +54,17 @@ export function PaletteChoice({
   return (
     <fieldset className="min-w-0">
       <legend className="t-label mb-2">{t.appearance.paletteLabel}</legend>
-      {/* Deux colonnes, à toutes les largeurs : une vignette sous 140px ne
-          montre plus ses quatre pastilles, et la troisième colonne les y
-          envoyait précisément là où il n'y avait pas la place.
-          `sm:` se règle sur la **fenêtre**, quand la vignette dépend de la
-          **tuile** — or à partir de 768px cette tuile n'occupe plus qu'une
-          colonne de `.cols`, donc la moitié de ce que le seuil supposait.
-          Mesuré : 93px à 768, 115 à 900, 98 à 1024, 127 à 1200, et 141 à 1440
-          seulement. Deux colonnes tiennent le seuil partout. */}
+      {/* Deux colonnes, à toutes les largeurs.
+          `sm:` se réglait sur la **fenêtre**, quand la largeur d'une vignette
+          dépend de la **tuile** — or à partir de 768px cette tuile n'occupe
+          plus qu'une colonne de `.cols`, donc la moitié de ce que le seuil
+          supposait. La troisième colonne arrivait ainsi précisément là où il n'y
+          avait plus la place : mesuré 93px à 768, 115 à 900, 98 à 1024, 127 à
+          1200, et 141 à 1440 seulement.
+          Sur deux colonnes, la vignette va de 119px (320) à 215 (1440), et le
+          plancher tient : à 119px les cinq pastilles s'affichent en entier —
+          leur rangée mesure 39px — et le libellé n'est pas tronqué. Vérifié au
+          navigateur, aux trois paliers et au plancher de 320. */}
       <div className="grid grid-cols-2 gap-2">
         {PALETTES.map((palette) => {
           const active = palette === value
