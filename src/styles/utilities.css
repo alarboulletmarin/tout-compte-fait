@@ -129,6 +129,7 @@
   .justify-end { justify-content: flex-end; }
   .justify-between { justify-content: space-between; }
   .self-start { align-self: flex-start; }
+  .self-center { align-self: center; }
   .self-end { align-self: flex-end; }
 
   .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }

@@ -269,7 +269,16 @@ export function RecurrenceQuickPage() {
                 </Chip>
               ))}
             </div>
-            <Field label={t.recurrences.form.monthDay} hint={t.recurrences.form.monthDayHint}>
+            {/* 6rem sur l'enveloppe et non sur le champ : `TextInput` porte
+                `w-full`, `cn` concatène sans fusionner, et `.w-full` passe
+                après `.w-24` dans `utilities.css` — le `w-24` posé sur le
+                contrôle ne faisait rien, et le quantième prenait toute la
+                largeur pour deux caractères. */}
+            <Field
+              label={t.recurrences.form.monthDay}
+              hint={t.recurrences.form.monthDayHint}
+              className="w-24"
+            >
               {(id, describedBy) => (
                 <TextInput
                   id={id}
@@ -279,9 +288,6 @@ export function RecurrenceQuickPage() {
                   maxLength={2}
                   value={draft.dayText}
                   invalid={tried && error !== null}
-                  /* 6rem : un quantième d'un ou deux chiffres, exactement la
-                     largeur que le DS §6 lui donne. */
-                  className="w-24"
                   onChange={(event) => {
                     patch({ dayText: event.target.value })
                   }}

@@ -198,7 +198,19 @@ export function Checkbox({
       <label
         htmlFor={id}
         className={cn(
-          'flex min-h-11 items-center gap-3 text-[15px] text-text',
+          /* Le carré se pose sur la **première ligne** du libellé, pas au
+             milieu du bloc. `items-center` le centrait sur la hauteur totale :
+             sur un libellé de deux lignes — « Charge commune, à partager entre
+             les membres », à 390px — il tombait pile entre les deux, à 23px du
+             haut là où la première ligne se centre à 11. Une case posée dans
+             l'interligne n'appartient plus à rien.
+             La hauteur vient donc du rembourrage et non d'un `min-height` :
+             sous `items-start`, un plancher de 44px aurait collé le libellé en
+             haut d'une boîte trop grande dès qu'il tient sur une ligne, ce qui
+             est le cas courant. `py-3` sur une ligne de 22,5px rend 46,5px —
+             au-dessus du plancher tactile du DS §8, et le carré reste centré
+             sur le mot qu'il coche. */
+          'flex items-start gap-3 py-3 text-[15px] text-text',
           // Verrouillée, la case garde sa couleur de texte pleine, contrairement
           // aux boutons désactivés qui passent à 40 % : elle n'est pas hors
           // service, elle informe — atténuer ce qu'on met là pour être lu, et
@@ -208,7 +220,10 @@ export function Checkbox({
           disabled ? 'cursor-default' : 'cursor-pointer',
         )}
       >
-        <span className="relative inline-flex shrink-0 items-center justify-center">
+        {/* `min-h-6` : la hauteur d'une ligne de libellé, dans laquelle le
+            carré se recentre. Sans elle, `items-start` l'alignerait sur le haut
+            du glyphe et non sur le milieu du mot. */}
+        <span className="relative inline-flex min-h-6 shrink-0 items-center justify-center">
           <input
             id={id}
             type="checkbox"

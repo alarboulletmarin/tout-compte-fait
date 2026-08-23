@@ -131,13 +131,18 @@ export function ExtrasCard({
               />
             )}
           </Field>
-          <Field label={t.onboarding.extrasAmount}>
+          {/* La largeur est posée sur l'enveloppe, jamais sur le contrôle :
+              `AmountInput` porte déjà `w-full`, `cn` concatène sans fusionner,
+              et `.w-full` passe après `.w-28` dans `utilities.css` — un `w-28`
+              posé ici ne faisait donc rien, et la case prenait ses 192px de
+              plafond au lieu de 112. C'est le piège que l'en-tête de `Field`
+              décrit ; le `w-full` du contrôle remplit maintenant l'enveloppe. */}
+          <Field label={t.onboarding.extrasAmount} className="w-28">
             {(id) => (
               <AmountInput
                 id={id}
                 value={amount}
                 placeholder="0,00"
-                className="w-28"
                 onChange={(event) => {
                   setAmount(event.target.value)
                 }}

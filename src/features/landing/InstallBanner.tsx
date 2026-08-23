@@ -41,13 +41,13 @@ export function InstallBanner() {
            tenable : en rangée, un bouton `shrink-0` écrase la phrase sous sa
            largeur min-content et la fait tomber en colonne d'un mot. C'est la
            même mise en page que le rappel d'export, pour la même raison. */
-        <div className="tile flex w-full flex-col gap-3 p-4 sm:flex-row sm:items-center">
+        <div className="tile flex w-full flex-col gap-3 p-5 sm:flex-row sm:items-center md:p-6">
           <div className="flex min-w-0 flex-1 flex-col">
             <p className="t-body font-semibold">{landing.installTitle}</p>
             <p className="t-label">{landing.installBody}</p>
           </div>
           <Button
-            className="shrink-0 self-end sm:self-auto"
+            className="shrink-0 self-start sm:self-auto"
             onClick={() => {
               void promptInstall()
             }}
