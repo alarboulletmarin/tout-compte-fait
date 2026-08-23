@@ -271,19 +271,19 @@ export function RecurrenceQuickPage() {
                 </Chip>
               ))}
             </div>
-            {/* 6rem sur l'enveloppe et non sur le champ : `TextInput` porte
-                `w-full`, `cn` concatène sans fusionner, et `.w-full` passe
-                après `.w-24` dans `utilities.css` — le `w-24` posé sur le
-                contrôle ne faisait rien, et le quantième prenait toute la
-                largeur pour deux caractères. */}
-            <Field
-              label={t.recurrences.form.monthDay}
-              hint={t.recurrences.form.monthDayHint}
-              className="w-24"
-            >
+            <Field label={t.recurrences.form.monthDay} hint={t.recurrences.form.monthDayHint}>
               {(id, describedBy) => (
+                /* `max-w-24` et non `w-24` : `TextInput` porte `w-full`, `cn`
+                   concatène sans fusionner, et `.w-full` passe après `.w-24`
+                   dans `utilities.css` — une seconde `width` était donc perdue
+                   d'avance, et le quantième prenait toute la largeur pour deux
+                   caractères. Un plafond, lui, borne le `w-full` sans entrer en
+                   concurrence avec lui : c'est l'idiome de `PeriodFields`, qui
+                   pose le même champ. Sur l'enveloppe, il aurait écrasé du même
+                   coup le libellé et la phrase d'aide dans 96px. */
                 <TextInput
                   id={id}
+                  className="max-w-24"
                   aria-describedby={describedBy}
                   type="text"
                   inputMode="numeric"
