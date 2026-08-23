@@ -228,6 +228,9 @@
   .w-16 { width: 64px; }
   .w-24 { width: 96px; }
   .w-28 { width: 112px; }
+  /* 160px : la base 4 juste au-dessus des 152 que demande le plus long nom de
+     token du nuancier. Voir `styleguide/ColorSections`. */
+  .w-40 { width: 160px; }
   .w-32 { width: 128px; }
   .w-52 { width: 208px; }
   .w-56 { width: 224px; }
@@ -698,6 +701,9 @@
     .sm\:flex-row { flex-direction: row; }
     .sm\:items-center { align-items: center; }
     .sm\:gap-x-2 { column-gap: 8px; }
+    .sm\:gap-3 { gap: 12px; }
+    .sm\:w-40 { width: 160px; }
+    .sm\:shrink-0 { flex-shrink: 0; }
     .sm\:self-auto { align-self: auto; }
     .sm\:rounded-tile { border-radius: var(--r-tile); }
     .sm\:border-t-0 { border-top-width: 0; }

@@ -37,7 +37,11 @@ export function TypographySection() {
         <Tile className="flex flex-col gap-4">
           <Amount value={SAMPLE} size="hero" />
           <Amount value={SAMPLE} size="tile" />
-          <div className="flex items-center gap-4">
+          {/* `flex-wrap` : cinq montants de corps ne tiennent pas sur les 238px
+              utiles d'un téléphone de 320, et sans repli la rangée poussait la
+              page entière en défilement horizontal — un nuancier qui déborde ne
+              peut pas servir de référence de mise en page. */}
+          <div className="flex flex-wrap items-center gap-4">
             <Amount value={SAMPLE} size="body" direction="in" />
             <Amount value={SAMPLE} size="body" direction="out" />
             <Amount value={money(-4290)} size="body" />

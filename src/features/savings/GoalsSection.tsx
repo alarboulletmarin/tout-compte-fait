@@ -32,7 +32,13 @@ export function GoalsSection() {
 
   return (
     <section className="flex flex-col gap-3">
-      <Eyebrow>{t.savings.goals}</Eyebrow>
+      {/* La même hauteur de bandeau que la colonne d'en face, où l'eyebrow
+          partage sa rangée avec un bouton de 44px : sans elle, la pilule de
+          23px se posait 11px plus haut que sa voisine, et les deux étiquettes
+          de la grille `.cols` ne tombaient pas sur la même ligne dès 768px. */}
+      <div className="flex min-h-11 items-center">
+        <Eyebrow>{t.savings.goals}</Eyebrow>
+      </div>
 
       {/* Un écran vide est une invitation, pas un constat (DS §7) : la section
           ne s'efface pas, elle propose le seul geste qui la peuplerait. */}
