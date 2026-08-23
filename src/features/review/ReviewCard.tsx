@@ -182,7 +182,10 @@ export function ReviewCard({
       {/* Le pied ne bouge pas avec la carte : il porte les gestes, et un bouton
           qui s'efface sous le doigt au moment où l'on va l'atteindre est le
           seul mouvement que cet écran ne peut pas se permettre. */}
-      <div className="flex flex-col gap-2 border-t border-border bg-surface p-4 md:p-6">
+      {/* `p-5` : le corps de la carte est à 20px (ligne 149), et son pied
+          s'en tenait à 16 — les boutons débordaient donc de 4px du titre
+          qu'ils suivent, sous 768px. */}
+      <div className="flex flex-col gap-2 border-t border-border bg-surface p-5 md:p-6">
         {open ? (
           <>
             <Button full disabled={!usable} onClick={savePad}>

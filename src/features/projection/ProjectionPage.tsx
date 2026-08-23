@@ -285,7 +285,12 @@ export function ProjectionPage() {
       {/* Une colonne, plafonnée en largeur comme les autres écrans de lecture, et
           qui défile : les réglages d'abord, la réponse ensuite, la réserve en
           pied. C'est l'ordre dans lequel la question se pose. */}
-      <div className="flex w-full max-w-4xl flex-col gap-4">
+      {/* Pas de plafond ici : `PageTitle` — et le bouton d'explication qu'il
+          porte — vit **hors** de cette colonne, si bien qu'un contenu plafonné
+          à 896px laissait ce bouton pendre à droite des tuiles dès que la
+          fenêtre dépassait. C'est la mise en page de `/credits` et
+          `/avances`, qui portent le même genre de titre. */}
+      <div className="flex w-full flex-col gap-4">
         {/* --- Ce qu'on règle ------------------------------------------------
             Une seule tuile : la bascule de mode, les champs du mode courant, la
             durée qui vaut pour les deux, et le repli des deux réglages qu'on ne

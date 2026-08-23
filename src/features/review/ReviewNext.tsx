@@ -68,7 +68,10 @@ export function ReviewNext({ closed, onOpen }: { closed: YearMonth; onOpen: () =
                parcourt du regard, il doit s'aligner. */
             <li
               key={entry.id}
-              className="flex min-h-14 items-center gap-3 border-t border-border px-4 first:border-t-0"
+              /* `px-5` : le retrait d'une liste dans une tuile vaut 20px
+                 partout ailleurs, et la tuile accentuée juste au-dessus le
+                 tient. */
+              className="flex min-h-14 items-center gap-3 border-t border-border px-5 first:border-t-0"
             >
               <Dot color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'} outlined />
               <span className="t-body min-w-0 flex-1 truncate">{entry.label}</span>

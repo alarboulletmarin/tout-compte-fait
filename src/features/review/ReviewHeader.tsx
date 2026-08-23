@@ -26,8 +26,11 @@ export function ReviewHeader({
   total: number
   onQuit: () => void
 }) {
+  /* Sans retrait : le compteur juste dessous est à ras du cadre de page, et
+     douze pixels de plus rentraient la croix et la barre par rapport à lui.
+     C'est la mise en page de `RecurrenceQuickPage.Progress`. */
   return (
-    <div className="flex items-center gap-3 px-3 pt-3 lg:hidden">
+    <div className="flex items-center gap-3 lg:hidden">
       <IconButton label={t.review.quit} onClick={onQuit}>
         <Close />
       </IconButton>

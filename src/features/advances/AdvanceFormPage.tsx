@@ -249,6 +249,10 @@ export function AdvanceFormPage() {
                   <TextInput
                     id={id}
                     type="month"
+                    /* Borné comme les autres champs de date de l'app : un
+                       `YYYY-MM` a une longueur connue, et pleine largeur il
+                       faisait sauter le bord droit de la colonne. */
+                    className="max-w-48"
                     value={draft.from}
                     onChange={(e) => {
                       patch({ from: e.target.value })
@@ -265,6 +269,10 @@ export function AdvanceFormPage() {
                   <TextInput
                     id={id}
                     type="month"
+                    /* Borné comme les autres champs de date de l'app : un
+                       `YYYY-MM` a une longueur connue, et pleine largeur il
+                       faisait sauter le bord droit de la colonne. */
+                    className="max-w-48"
                     aria-describedby={describedBy}
                     value={draft.to}
                     invalid={shown.period !== undefined}
