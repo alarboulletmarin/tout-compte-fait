@@ -18,8 +18,14 @@ import {
    quittée sur le précédent. Le bouton « retour » du navigateur, lui, n'est pas
    concerné : il n'y a que la navigation par onglet qui remonte. */
 
+/* Pas de `justify-center` : une colonne de destinations se lit par son bord
+   gauche, et chaque couple icône+libellé centré dans le rail faisait danser la
+   colonne d'icônes d'un lien à l'autre — le glyphe de « Plus », le libellé le
+   plus court, se posait 23px à droite de celui de « Récurrences ». Les liens
+   tombent maintenant tous à 12px du bord intérieur, c'est-à-dire à l'abscisse
+   du bloc qui porte le nom du foyer juste au-dessus. */
 const ITEM = cn(
-  'flex items-center justify-center rounded-input px-3 text-[13px] font-medium',
+  'flex items-center rounded-input px-3 text-[13px] font-medium',
   'transition-colors duration-[var(--dur)] ease-ds',
 )
 

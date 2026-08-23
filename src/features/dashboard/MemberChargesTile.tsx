@@ -186,19 +186,29 @@ export function MemberChargesTile({
             la tuile Charges de la même page, et arrondies elles ne le
             redonnent plus (cahier §4.6). */}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <p className="flex flex-wrap items-baseline gap-x-2">
-            <span className="flex min-w-0 flex-1 items-center gap-2">
+          {/* `ml-auto` sur le montant plutôt que `flex-1` sur le libellé : le
+              `flex-1` prenait toute la place restante, si bien que le repli
+              promis par `flex-wrap` n'arrivait jamais — le libellé se cassait
+              en deux lignes à l'intérieur de sa boîte et le montant, aligné sur
+              la ligne de base, se posait entre les deux. À 320px, « Charges
+              perso » tombait sur deux lignes avec son montant à mi-hauteur.
+              Sans `flex-1`, la boîte du libellé fait sa largeur : la rangée
+              tient sur une ligne tant qu'elle peut, et passe proprement à la
+              ligne quand elle ne peut plus — d'où `gap-y-1`, qui n'avait
+              personne à espacer jusqu'ici. */}
+          <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="flex min-w-0 items-center gap-2">
               <Dot color={color} />
               <span className="t-label min-w-0">{t.dashboard.memberChargesOwn}</span>
             </span>
-            <Amount value={charges.own} size="label" direction="out" />
+            <Amount value={charges.own} size="label" direction="out" className="ml-auto" />
           </p>
-          <p className="flex flex-wrap items-baseline gap-x-2">
-            <span className="flex min-w-0 flex-1 items-center gap-2">
+          <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="flex min-w-0 items-center gap-2">
               <Dot color={COMMON_COLOR} />
               <span className="t-label min-w-0">{t.dashboard.memberChargesCommon}</span>
             </span>
-            <Amount value={common} size="label" direction="out" />
+            <Amount value={common} size="label" direction="out" className="ml-auto" />
           </p>
         </div>
       </div>
