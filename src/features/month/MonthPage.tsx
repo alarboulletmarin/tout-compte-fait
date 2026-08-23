@@ -233,7 +233,9 @@ export function MonthPage() {
               porte déjà, et deux affordances pour un même geste valent moins
               qu'une. */}
           {!isCurrent && (
-            <p className="t-axis">{ym < currentYm() ? t.month.pastNote : t.month.aheadNote}</p>
+            <p className="t-axis leading-tight">
+              {ym < currentYm() ? t.month.pastNote : t.month.aheadNote}
+            </p>
           )}
 
           <SituationGrid onShowEntries={showEntries} onExplain={setMetric} />

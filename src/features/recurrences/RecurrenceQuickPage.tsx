@@ -190,7 +190,9 @@ export function RecurrenceQuickPage() {
       <PageTitle title={t.quickRule.title} hidden />
       <Progress index={index} onQuit={quit} />
 
-      <section className="tile flex flex-col gap-4">
+      {/* Même oubli qu'à la saisie rapide : `.tile` ne pose pas de
+          rembourrage, et sans lui le contenu part du bord arrondi. */}
+      <section className="tile flex flex-col gap-4 p-5 md:p-6">
         <h2 className="t-section">{t.quickRule.steps[step].title}</h2>
         <p className="t-label">{t.quickRule.steps[step].body}</p>
 

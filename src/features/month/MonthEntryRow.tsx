@@ -90,6 +90,10 @@ export function MonthEntryRow({
     return (
       <SwipeableListRow
         disabled
+        /* La même réserve que les rangées à confirmer : c'est ce qui fait que
+           les montants d'un même jour tombent sur une seule verticale, qu'une
+           ligne porte deux boutons, un seul, ou aucun. */
+        reserve={2}
         {...(reversible
           ? {
               trailing: (
@@ -138,6 +142,7 @@ export function MonthEntryRow({
 
   return (
     <SwipeableListRow
+      reserve={2}
       right={{
         label: t.month.confirmOne,
         buttonLabel: tpl(t.month.confirmEntry, entry.label),
@@ -188,7 +193,7 @@ export function MonthEntryRow({
                 value={text}
                 aria-label={`${t.entry.amount} — ${entry.label}`}
                 placeholder="0,00"
-                className="min-w-0 flex-1 px-2"
+                className="min-w-0 flex-1"
                 onChange={(event) => {
                   setText(event.target.value)
                 }}

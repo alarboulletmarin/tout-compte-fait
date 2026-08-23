@@ -238,6 +238,10 @@
 
   .min-w-0 { min-width: 0; }
   .min-w-5 { min-width: 20px; }
+  /* Une et deux places d'action de rangée — 44px, et 44+4+44 avec la gouttière
+     de `gap-1` entre elles. Voir `ui/SwipeableListRow`. */
+  .min-w-11 { min-width: 44px; }
+  .min-w-23 { min-width: 92px; }
   .min-w-40 { min-width: 160px; }
   .min-w-100 { min-width: 400px; }
 

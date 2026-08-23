@@ -446,7 +446,9 @@ function GroupedList({
           deux boutons, qui font exactement la même chose. Sous la liste et non
           au-dessus : on ne lit pas un mode d'emploi avant d'avoir vu ce qu'il
           commande. */}
-      {shown.length > 0 && <p className="t-axis">{t.recurrences.swipeHint}</p>}
+      {/* Voir `EntriesSection` : l'interligne de `t-axis` vaut 1, et cette
+          phrase passe à la ligne. */}
+      {shown.length > 0 && <p className="t-axis leading-tight">{t.recurrences.swipeHint}</p>}
     </Tile>
   )
 }

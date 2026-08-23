@@ -128,7 +128,11 @@ export function QuickEntryPage() {
     <div className="mx-auto flex max-w-xl flex-col gap-4">
       <PageTitle title={direction === 'in' ? t.entry.addIn : t.entry.addOut} onBack={goBack} />
 
-      <section className="tile flex flex-col gap-4">
+      {/* Le cadre de la tuile, qu'elle n'avait pas : `.tile` ne pose aucun
+          rembourrage — c'est l'appelant qui le donne, et celui-ci l'avait
+          oublié. Le chiffre, les pilules et le pavé partaient donc du bord
+          arrondi. Les valeurs sont celles de `Tile.PADDING`, DS §4. */}
+      <section className="tile flex flex-col gap-4 p-5 md:p-6">
         {/* Le chiffre part de zéro et suit la frappe : la même place et la même
             taille que sur la carte de la revue, et il dit la vérité — il n'y a
             pas encore de montant. */}

@@ -14,6 +14,9 @@ import { SwipeRow } from './SwipeRow'
  * douze fois à l'identique dans les contrôles d'un lecteur d'écran, et rien n'y
  * dirait lequel on vise. C'est déjà la règle des coches du mois.
  */
+/** La largeur d'une et de deux places d'action, gouttière comprise. */
+const RESERVE: Record<1 | 2, string> = { 1: 'min-w-11', 2: 'min-w-23' }
+
 export type SwipeSide = {
   label: string
   buttonLabel: string
@@ -53,6 +56,7 @@ export function SwipeableListRow({
   disabled = false,
   children,
   trailing,
+  reserve,
   panel,
   className,
 }: {
@@ -79,6 +83,27 @@ export function SwipeableListRow({
    * et l'endroit où l'on cherche ce retour est la ligne où l'on vient d'agir.
    */
   trailing?: ReactNode
+  /**
+   * Le nombre de places d'action que **la liste** réserve sur chaque rangée.
+   *
+   * Une rangée ne sait pas combien de boutons portent ses voisines, et sans
+   * cette réserve la colonne d'action fait la largeur de ce que la rangée
+   * porte, elle : 92px à deux boutons, 44 à un, zéro à aucun. Or c'est cette
+   * largeur qui borne la boîte du contenu, donc l'abscisse où tombe le montant.
+   * Mesuré sur l'écran du mois, jeu d'exemple, 390px : 38 rangées d'une même
+   * liste, trois largeurs de colonne, et donc **trois colonnes de montants** à
+   * 237, 285 et 329 — 92px d'écart entre deux lignes qui se suivent.
+   *
+   * Une colonne de montants qui ne tombe pas d'aplomb est le défaut le plus
+   * visible d'une app de finances (DS §3, qui l'écrit pour les chiffres
+   * tabulaires et vaut a fortiori pour la colonne elle-même). La liste déclare
+   * donc sa réserve, une fois, et toutes ses rangées la portent — y compris
+   * celles qui n'ont rien à y mettre.
+   *
+   * Les boutons se rangent à droite de cette réserve : le dernier tombe
+   * toujours dans la même colonne, qu'il y en ait un ou deux.
+   */
+  reserve?: 1 | 2
   /** Ce qui se déplie sous la rangée. Hors du glissé, toujours. */
   panel?: ReactNode
   className?: string
@@ -101,7 +126,13 @@ export function SwipeableListRow({
               boutons-là font 44px, et un doigt qui les vise veut cliquer, pas
               glisser. La rangée, elle, garde le geste — même quand elle est un
               bouton qui ouvre la fiche de la ligne. */}
-          <span data-no-swipe className="flex items-center gap-1">
+          <span
+            data-no-swipe
+            className={cn(
+              'flex items-center justify-end gap-1',
+              reserve !== undefined && RESERVE[reserve],
+            )}
+          >
             {!disabled &&
               [right, left].map(
                 (side) =>

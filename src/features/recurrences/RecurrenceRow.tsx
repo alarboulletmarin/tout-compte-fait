@@ -284,6 +284,10 @@ export function RecurrenceRow({
 
   return (
     <SwipeableListRow
+      /* Voir `MonthEntryRow` : une règle modifiable porte deux boutons, une
+         règle arrêtée un seul, et sans réserve leurs montants tombaient à 48px
+         l'un de l'autre dans la même liste. */
+      reserve={2}
       {...(editable
         ? {
             right: {
