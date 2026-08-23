@@ -4,6 +4,7 @@ import { enumerate, tpl } from '@/i18n/format'
 import { t } from '@/i18n/strings'
 import { Amount } from '@/ui/Amount'
 import { cascadeStyle, useCascade } from '@/ui/cascade'
+import { Eyebrow } from '@/ui/Eyebrow'
 import type { OnboardingTotals } from './queue'
 
 /** Une ligne du récapitulatif : ce qu'on a répondu, et ce que ça vaut. */
@@ -114,10 +115,16 @@ export function SummaryCard({
       </section>
 
       <section
-        className="tile flex flex-col gap-2 p-5 transition-[transform,opacity] ease-ds md:p-6"
+        /* Le cadre de sa jumelle du bilan de revue, au pixel près
+           (`ReviewSummary`) : 12px de gouttière — l'intérieur d'une tuile
+           respire à 12 (DS §4) — et un vrai `Eyebrow`, dont le `py-1.5`
+           manquait à l'étiquette écrite à la main. Les deux tuiles portent le
+           même couple étiquette + chiffre héros ; elles ne peuvent pas
+           l'espacer de deux façons. */
+        className="tile flex flex-col gap-3 p-5 transition-[transform,opacity] ease-ds md:p-6"
         style={cascadeStyle(lines.length, shown)}
       >
-        <span className="t-eyebrow text-muted">{t.onboarding.summaryForecast}</span>
+        <Eyebrow>{t.onboarding.summaryForecast}</Eyebrow>
         <span className="fit-box block">
           <Amount value={totals.forecast} size="hero-fit" />
         </span>

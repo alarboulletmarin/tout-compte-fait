@@ -39,7 +39,9 @@ export function RecoveryDoor({ message }: { message: string }) {
     /* `div.tile` et non `<Tile>` : celui-ci ne prend pas de `role`, et une
        alerte que les lecteurs d'écran ne nomment pas n'en est pas une. */
     <div role="alert" className="tile flex flex-col gap-4 border-danger p-5 md:p-6">
-      <div className="flex flex-col gap-1">
+      {/* `gap-2` : 8px entre un titre et son message, comme partout ailleurs.
+          À 4px ils se touchaient, sur le bloc le plus important de la page. */}
+      <div className="flex flex-col gap-2">
         <h2 className="t-section text-danger-text">{t.storage.recoverTitle}</h2>
         <p className="t-body">{message}</p>
       </div>

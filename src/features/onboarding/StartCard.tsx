@@ -26,7 +26,10 @@ export function StartCard({ value, onChange }: { value: Start; onChange: (next: 
   const nextName = formatMonthName(next)
 
   return (
-    <div className="flex flex-col gap-3">
+    /* `gap-4` comme les cinq autres cartes de la file : celle-ci empilait à
+       12px, et la phrase de conséquence remontait donc de 4px sous la bascule
+       quand on traversait l'onboarding. */
+    <div className="flex flex-col gap-4">
       <Segmented<Start>
         options={[
           { value: 'current', label: t.onboarding.startCurrent },

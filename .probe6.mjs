@@ -19,9 +19,9 @@ await page.waitForTimeout(1200)
 console.log('after member:', page.url())
 
 await page.goto(BASE + '/epargne/nouveau'); await page.waitForLoadState('networkidle'); await page.waitForTimeout(800)
-await page.locator('form input[type=text]').first().fill('Livret A')
+await page.locator('form input').first().fill('Livret A')
 const selects = page.locator('form select')
-const n = await selects.count()
+const n = Math.min(3, await selects.count())
 console.log('selects', n)
 for (let i = 0; i < n; i++) {
   const vals = await selects.nth(i).locator('option').evaluateAll(os => os.map(o => o.value).filter(Boolean))
