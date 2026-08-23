@@ -141,7 +141,12 @@ export function DataSection() {
               value={lastExport === null ? t.storage.lastExportNever : formatDate(lastExport)}
             />
           </dl>
-          <Link to={STORAGE_PATH} className="t-label w-fit underline">
+          {/* Même idiome que les autres liens autonomes de la zone : 44px de
+              cible (DS §8), et le trait décollé du bas des lettres. */}
+          <Link
+            to={STORAGE_PATH}
+            className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
+          >
             {t.storage.statusMore}
           </Link>
         </Tile>

@@ -54,9 +54,15 @@ export function PaletteChoice({
   return (
     <fieldset className="min-w-0">
       <legend className="t-label mb-2">{t.appearance.paletteLabel}</legend>
-      {/* Deux colonnes au pouce, trois dès qu'il y a la place : une vignette
-          sous 140px ne montre plus ses quatre pastilles. */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {/* Deux colonnes, à toutes les largeurs : une vignette sous 140px ne
+          montre plus ses quatre pastilles, et la troisième colonne les y
+          envoyait précisément là où il n'y avait pas la place.
+          `sm:` se règle sur la **fenêtre**, quand la vignette dépend de la
+          **tuile** — or à partir de 768px cette tuile n'occupe plus qu'une
+          colonne de `.cols`, donc la moitié de ce que le seuil supposait.
+          Mesuré : 93px à 768, 115 à 900, 98 à 1024, 127 à 1200, et 141 à 1440
+          seulement. Deux colonnes tiennent le seuil partout. */}
+      <div className="grid grid-cols-2 gap-2">
         {PALETTES.map((palette) => {
           const active = palette === value
           return (

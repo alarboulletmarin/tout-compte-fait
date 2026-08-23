@@ -163,7 +163,11 @@ export function PeoplePage() {
                     ? recurrenceEditPath(unassigned[0].id)
                     : RECURRENCES_PATH
                 }
-                className="t-label underline underline-offset-2"
+                /* L'idiome des liens autonomes de la zone (`MemberPage`,
+                   et plus bas dans cette page) : 44px de cible, DS §8. Seul
+                   celui-ci restait un mot souligné de 18px, à côté d'un lien
+                   de même rôle qui, lui, en fait 44. */
+                className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
               >
                 {t.settings.incomeUnassignedFix}
               </Link>
