@@ -1478,6 +1478,17 @@ export const fr = {
        choisissait autre chose qu'une mensuelle. */
     firstDatePaid: 'Celle-ci est enregistrée comme payée ; les suivantes arriveront à confirmer.',
     firstDatePlanned: 'Elle arrivera à confirmer, comme les suivantes.',
+    /* Ce que le mois dégage encore, dit **au moment de placer** — c'est là que
+       la question se pose, et jusqu'ici elle n'avait de réponse que sur le
+       tableau de bord, deux écrans plus loin. Même calcul et même mois que la
+       tuile « Capacité d'épargne » (`domain/stats.savingLeft`), échéances
+       prévues comprises : deux chiffres qui se contrediraient seraient pires
+       que le second absent.
+       Trois phrases parce qu'il y a trois situations, et qu'un « 0 € encore
+       disponibles » ne dit pas la même chose qu'un dépassement. */
+    savingRoom: 'Ce mois-ci, %s restent à placer.',
+    savingRoomOver: 'Ce mois-ci, les versements dépassent déjà la capacité de %s.',
+    savingRoomNone: 'Ce mois-ci, les charges dépassent les revenus : il n’y a rien à placer.',
     /* En montant variable, le champ ne chiffre plus la règle — elle n'en fixe
        aucun — mais ce qu'on lui prête en attendant. */
     variableAmountHint:
