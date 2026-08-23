@@ -81,7 +81,9 @@ export function MetricInfo({
     <Sheet open={content !== null} onClose={onClose} title={content?.title ?? ''} pullToClose>
       {content !== null && metric !== null && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-baseline gap-x-3">
+          {/* `gap-y-1` : replié, le chiffre et sa lecture se touchaient — une
+              gouttière horizontale ne dit rien de l'écart vertical. */}
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <Amount value={metric.value} size="tile" />
             <span className="t-label">{metric.hint}</span>
           </div>

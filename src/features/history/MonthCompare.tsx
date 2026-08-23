@@ -163,7 +163,8 @@ function MonthCompareBody({
           composant ne dessine pas ; les récupérer ici corrigerait un seul écran
           au lieu du composant. Empilés, les deux gardent la même largeur, et
           c'est tout ce que la comparaison leur demande. */}
-      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+      {/* 16px : la gouttière d'une grille de contenu hors bento (DS §4). */}
+      <div className="grid grid-cols-1 gap-4 min-[360px]:grid-cols-2">
         <MonthSelect
           label={history.compareLeft}
           value={left}
@@ -256,16 +257,19 @@ function MonthCompareBody({
             /* Replié par défaut, et le compte reste lu : une section qu'il faut
                ouvrir pour savoir si elle vaut la peine ne fait gagner aucun
                défilement (DS §6). Le cadre négatif rend au survol la largeur
-               d'une rangée — collé au mot, il se lirait comme une sélection. */
+               d'une rangée — collé au mot, il se lirait comme une sélection.
+               `-mx-3` et non `-mx-2` : c'est le `px-3` du sommaire qu'il faut
+               rattraper, comme `MonthTile` l'écrit — d'un cran de moins, les
+               rangées repliées tombaient 4px à gauche des rangées changées. */
             <Disclosure
-              className="-mx-2"
+              className="-mx-3"
               open={openUnchanged}
               onOpenChange={setOpenUnchanged}
               title={<span className="t-label">{history.compareUnchanged}</span>}
               trailing={<span className="t-axis tnum">{unchanged.length}</span>}
             >
               <p className="t-axis px-3 pb-2">{history.compareUnchangedHint}</p>
-              <ul className="flex flex-col divide-y divide-border px-2">
+              <ul className="flex flex-col divide-y divide-border px-3">
                 {unchanged.map((delta) => (
                   <DeltaRow
                     key={delta.categoryId}

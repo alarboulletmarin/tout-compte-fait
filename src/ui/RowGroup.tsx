@@ -222,8 +222,17 @@ export function Row({
 
   if (control !== undefined) {
     return (
+      /* Le repère aussi sur cette branche : une rangée qui pose son contrôle
+         *sous* son libellé reste une rangée du groupe, et sans lui son libellé
+         partait seul dans la marge pendant que ses voisines gardaient leur
+         colonne de glyphes. La rangée de titre reprend donc le gabarit des
+         autres — marque sur la ligne du libellé —, et le contrôle se pose
+         dessous, aligné sur le texte et non sur le glyphe. */
       <div className="-mx-2 flex flex-col gap-2 px-2 py-3">
-        {heading}
+        <div className="flex items-start gap-3">
+          {mark !== undefined && <span className={LINE}>{mark}</span>}
+          {heading}
+        </div>
         {control}
       </div>
     )

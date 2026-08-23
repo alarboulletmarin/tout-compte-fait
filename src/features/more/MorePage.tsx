@@ -191,7 +191,12 @@ function LanguageRow() {
       label={t.language.label}
       icon={LanguageIcon}
       description={t.language.hint}
-      trailing={
+      /* Sous le libellé et non à sa droite : à 320px la bascule prend 217px
+         des 250 utiles, et la colonne du libellé tombait à 42px — « Langue »
+         tronqué, et sa phrase cassée en cinq lignes dont le mot le plus long
+         sortait de la boîte. C'est exactement ce que `control` existe pour
+         éviter, et ce que la rangée du thème fait déjà. */
+      control={
         <Segmented
           options={languages()}
           value={locale}
@@ -228,9 +233,14 @@ function CurrencyRow() {
       labelFor={id}
       icon={CurrencyIcon}
       description={t.settings.currencyHint}
-      trailing={
+      /* Sous le libellé, pour la même raison que la bascule de langue : à 320px
+         le sélecteur prenait la rangée et la phrase se cassait en cinq lignes
+         dans un ruban. `w-fit` pour qu'il ne s'étire pas sur toute la colonne —
+         une liste de trois codes n'a pas besoin de la largeur d'un écran. */
+      control={
         <Select
           id={id}
+          className="w-fit"
           value={currency}
           onChange={(event) => {
             setCurrency(event.target.value)

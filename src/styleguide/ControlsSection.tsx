@@ -91,7 +91,9 @@ function Controls() {
         title={<span className="t-body font-medium">Logement</span>}
         trailing={<span className="t-axis">5 catégories</span>}
       >
-        <p className="t-label pt-2 pl-6">Loyer et charges, énergies, assurance habitation…</p>
+        {/* 36px : le cadre du sommaire, le chevron et sa gouttière — la phrase
+            se pose sous le mot qu'elle développe, pas sous le glyphe. */}
+        <p className="t-label pt-2 pl-9">Loyer et charges, énergies, assurance habitation…</p>
       </Disclosure>
     </div>
   )
@@ -100,10 +102,12 @@ function Controls() {
 export function ControlsSection() {
   return (
     <Section title="Contrôles" note="Primitives de formulaire, alignées sur les mêmes tokens.">
-      <SubTitle>{t.styleguide.states}</SubTitle>
-      <DualTheme>
-        <Controls />
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>{t.styleguide.states}</SubTitle>
+        <DualTheme>
+          <Controls />
+        </DualTheme>
+      </div>
     </Section>
   )
 }

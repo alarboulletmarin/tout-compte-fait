@@ -129,8 +129,12 @@ export function Sidebar({ householdName }: { householdName: string }) {
             className={({ isActive }) =>
               cn(
                 ITEM,
-                'h-11 justify-start text-muted',
-                isActive ? 'bg-surface-2 text-text' : 'hover:bg-surface-2',
+                'h-11 justify-start',
+                /* La couleur de repos vit dans la branche inactive : posée sur
+                   la chaîne de base, elle restait en lice contre `text-text` et
+                   c'est l'ordre d'`utilities.css` qui départageait — les deux
+                   liens de pied gardaient l'encre atténuée une fois actifs. */
+                isActive ? 'bg-surface-2 text-text' : 'text-muted hover:bg-surface-2',
               )
             }
           >

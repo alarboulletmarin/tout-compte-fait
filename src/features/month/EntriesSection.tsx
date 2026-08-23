@@ -313,8 +313,10 @@ export function EntriesSection({
             manque des lignes. Une pilule à part des natures, et non une de
             plus parmi elles : celles-là sont un choix entre quatre, celle-ci
             est une condition en cours. */}
+        {/* Le cran des deux rangées de commande au-dessus : trois rangées
+            bâties à l'identique ne peuvent pas s'écarter de deux valeurs. */}
         {family !== null && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="t-axis">{t.month.familyFilter}</span>
             <Chip
               active

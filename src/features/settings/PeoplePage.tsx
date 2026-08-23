@@ -189,7 +189,9 @@ export function PeoplePage() {
               dans une tuile à elles : la première dit pourquoi aucun champ
               « revenu » n'existe ici — un comportement qu'on ne devine pas —, la
               seconde est la seule porte permanente vers la répartition. */}
-          <div className="flex flex-col gap-3 border-t border-border pt-4">
+          {/* `pt-3` : 12px de part et d'autre du filet, comme partout — il
+              respirait 12 au-dessus et 16 en dessous. */}
+          <div className="flex flex-col gap-3 border-t border-border pt-3">
             <p className="t-label">
               {t.settings.memberIncomeHint}{' '}
               <Link to={RECURRENCE_NEW_PATH} className="underline underline-offset-2">

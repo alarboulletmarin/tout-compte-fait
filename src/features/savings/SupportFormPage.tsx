@@ -187,14 +187,26 @@ function RateManagement({ supportId }: { supportId: string }) {
       {rate === null ? (
         <p className="t-label">{supports.ratesEmpty}</p>
       ) : (
+        /* La même composition que la fiche du support : la date et la nature à
+           gauche, le pourcentage seul à droite. Ensemble à droite, dans une
+           colonne `shrink-0`, ils écrasaient le libellé — à 320px la date
+           tombait à zéro et disparaissait. Deux écrans qui disent la même chose
+           ne peuvent pas la ranger dans deux sens (DS §4). */
         <div className="flex items-baseline justify-between gap-3">
-          <span className="t-label min-w-0 flex-1 truncate">
-            {isOrigin(rate.from) ? supports.rateFromOrigin : tpl(supports.rateFrom, formatDate(rate.from))}
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="t-label truncate">
+              {isOrigin(rate.from)
+                ? supports.rateFromOrigin
+                : tpl(supports.rateFrom, formatDate(rate.from))}
+            </span>
+            <span className="t-axis truncate">
+              {rate.kind === 'guaranteed'
+                ? t.savings.supportRateGuaranteed
+                : t.savings.supportRateAssumed}
+            </span>
           </span>
           <span className="t-num-body tnum shrink-0">
-            {`${formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)} · ${
-              rate.kind === 'guaranteed' ? t.savings.supportRateGuaranteed : t.savings.supportRateAssumed
-            }`}
+            {formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)}
           </span>
         </div>
       )}
