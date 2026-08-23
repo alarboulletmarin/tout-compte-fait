@@ -140,7 +140,15 @@ export function SavingTile() {
             label={t.dashboard.capacity}
             className="shrink-0"
           />
-          <Amount value={capacity} size="tile-fit" tone={capacity < 0 ? 'danger' : 'default'} />
+          {/* `fit-box` sur la colonne qui porte le chiffre, et non sur la
+              rangée : `tile-fit` se dimensionne en `cqi`, donc sur le conteneur
+              de requête le plus proche — la tuile entière, qui ne sait rien des
+              56px que l'anneau et sa gouttière lui prennent. Le montant
+              débordait dans le rembourrage droit entre 1024 et ~1100px. C'est
+              le motif de `CreditsPage`, `LandingTiles` et `HistoryPage`. */}
+          <span className="fit-box block min-w-0 flex-1">
+            <Amount value={capacity} size="tile-fit" tone={capacity < 0 ? 'danger' : 'default'} />
+          </span>
         </div>
         {/* Les deux clauses, chacune sur sa ligne et sans seuil : ce sont les
             deux moitiés de la capacité, elles doivent la redonner, et trois

@@ -17,22 +17,31 @@ const segments = (): RingSegment[] => [
 
 function Rings() {
   return (
-    <Tile className="flex flex-row flex-wrap items-center gap-8">
-      <Ring size={160} value={0.42} label="Progression du mois" srText="42 % du mois écoulé">
-        <span className="t-eyebrow text-muted">jour 13</span>
-        <span className="t-tile-num tnum">42 %</span>
-      </Ring>
+    /* La rangée est un enfant de la tuile, et non la tuile elle-même : `Tile`
+       pose `flex-col` dans ses propres classes, `cn` concatène sans fusionner,
+       et un `flex-row` passé par `className` ne l'emporte pas — les trois
+       anneaux s'empilaient donc verticalement sur toute la hauteur du
+       nuancier, là où ils sont censés se lire côte à côte. */
+    <Tile>
+      <div className="flex flex-wrap items-center gap-8">
+        <Ring size={160} value={0.42} label="Progression du mois" srText="42 % du mois écoulé">
+          <span className="t-eyebrow text-muted">jour 13</span>
+          <span className="t-tile-num tnum">42 %</span>
+        </Ring>
 
-      <Ring
-        size={160}
-        segments={segments()}
-        label="Répartition par catégorie"
-        srText={segments().map((s) => `${s.label} ${String(Math.round(s.value * 100))} %`).join(', ')}
-      >
-        <Amount value={money(191550)} size="body" direction="out" />
-      </Ring>
+        <Ring
+          size={160}
+          segments={segments()}
+          label="Répartition par catégorie"
+          srText={segments()
+            .map((s) => `${s.label} ${String(Math.round(s.value * 100))} %`)
+            .join(', ')}
+        >
+          <Amount value={money(191550)} size="body" direction="out" />
+        </Ring>
 
-      <Ring size={160} value={0} label="Anneau vide" />
+        <Ring size={160} value={0} label="Anneau vide" />
+      </div>
     </Tile>
   )
 }

@@ -180,7 +180,7 @@ function LandingPrinciples() {
           tombent sous 230px de large, où une ligne ne porte plus que cinq mots.
           `gap-4` comme toute grille de contenu de l'app — une gouttière propre
           à cette page se serait vue contre celle des tuiles, juste au-dessus. */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="cols">
         {[
           { title: landing.monthTitle, body: landing.monthBody },
           { title: landing.splitTitle, body: landing.splitBody },
@@ -221,7 +221,7 @@ function LandingDoors() {
   return (
     <section className="flex flex-col gap-5">
       <h2 className="t-section">{landing.doors}</h2>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="cols">
         <Tile className="gap-3">
           <Eyebrow icon={DataIcon}>{landing.importTitle}</Eyebrow>
           <p className="t-label">{landing.importHint}</p>

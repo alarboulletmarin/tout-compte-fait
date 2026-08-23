@@ -52,7 +52,11 @@ export function BreakdownTile({
 
   if (slices.length === 0) {
     return (
-      <Tile span={span} className="justify-between">
+      /* `gap-3` et non `justify-between` : ce format porte deux rangées, et
+         répartir deux éléments sur toute leur hauteur collait la phrase au bas
+         de la tuile, une centaine de pixels sous l'étiquette qu'elle suit. Un
+         état vide se lit sous son titre, pas au fond du cadre. */
+      <Tile span={span} className="gap-3">
         <Eyebrow icon={BreakdownIcon}>{t.dashboard.spending}</Eyebrow>
         <p className="t-label">{t.dashboard.noBreakdown}</p>
       </Tile>

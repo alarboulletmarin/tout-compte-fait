@@ -445,8 +445,12 @@ export function SplitPage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="t-label mt-2">{t.split.settlementHint}</p>
-                  <p className="t-label">{t.split.settlementNotACost}</p>
+                  {/* `px-3` : le rembourrage du `<summary>` et de `ListRow`,
+                      sans quoi ces deux phrases se posent 12px à gauche des
+                      rangées qu'elles commentent. Même geste que
+                      `MonthCompare.tsx:271`. */}
+                  <p className="t-label mt-2 px-3">{t.split.settlementHint}</p>
+                  <p className="t-label px-3">{t.split.settlementNotACost}</p>
                 </Disclosure>
               </Tile>
             )}

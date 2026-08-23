@@ -24,7 +24,14 @@ import { LANDING_PATH } from './routes'
  */
 export function PlainShell({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pt-4 pb-10 md:px-8 md:pt-8">
+    /* `max-w-3xl` : c'est la largeur que **tout** ce que cette coquille reçoit
+       se donne — `LegalPage` comme `AboutPage` posent leur colonne de tuiles à
+       768px, et le `PageTitle` qui les coiffe suit le cadre. Un cadre à 1024
+       laissait donc le titre et la rangée langue/thème partir 192 à 256px à
+       droite de la prose qu'ils accompagnent. Plafonner le cadre les remet tous
+       les trois sur la même colonne, là où plafonner une rangée n'en réglait
+       qu'une. */
+    <div className="mx-auto w-full max-w-3xl px-4 pt-4 pb-10 md:px-8 md:pt-8">
       {/* Le retour à gauche, la langue et le thème à droite, sur la même
           rangée. Ces quatre pages se lisent avant qu'un foyer existe — elles
           sont même les seules qu'un visiteur qui ne crée rien ouvrira jamais —

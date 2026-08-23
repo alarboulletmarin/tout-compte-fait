@@ -277,8 +277,16 @@ export function MorePage() {
     ),
   ].join(' · ')
 
+  /* Le titre dans le flux de bloc, hors de toute pile : `PageTitle` porte son
+     propre `mb-5`, qui vaut exactement les 20px que le DS §4 met entre un titre
+     et son contenu. Dans une colonne à gouttière, cette marge s'ajoutait à la
+     gouttière et le titre se retrouvait à 40px de son premier groupe — le
+     double de tous les autres écrans. C'est le piège que `PageTitle` documente
+     déjà pour sa variante à retour, et cet écran était le seul à y tomber.
+     La pile n'avait de toute façon que deux enfants : le titre, et la grille
+     `.cols` qui porte sa propre gouttière. */
   return (
-    <div className="flex flex-col gap-5">
+    <>
       <PageTitle title={t.nav.more} />
 
       {/* Cinq groupes sur deux colonnes au-delà de 768px, un seul en dessous.
@@ -388,6 +396,6 @@ export function MorePage() {
           />
         </RowGroup>
       </div>
-    </div>
+    </>
   )
 }

@@ -365,7 +365,11 @@ export function FlowsPage() {
     content = <EmptyState message={t.flows.filtered} />
   } else {
     content = (
-      <div className="flex max-w-3xl flex-col gap-5">
+      /* Pas de plafond : le bandeau, les chevrons de `MonthNav` et la piste
+         de pilules qui surmontent cet écran vivent dans la boîte de contenu
+         entière, et 768px arrêtaient la pile 224px avant eux — le même écran
+         se lisait sur deux largeurs. */
+      <div className="flex flex-col gap-5">
         {/* Le pot commun n'a pas de solde : il n'a aucun revenu, et une
             soustraction y vaudrait les charges au signe près. */}
         {!common && <HeadTile scope={scopeName === null ? t.flows.scopeHousehold : de(scopeName)} />}

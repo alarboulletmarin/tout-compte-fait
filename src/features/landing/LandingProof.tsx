@@ -54,7 +54,7 @@ export function LandingProof() {
           cascade, et deux tuiles étirées à la même laisseraient un tiers de la
           seconde vide. Une tuile qui prend sa hauteur ne se remarque pas ; un
           aplat vide, si. */}
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="cols">
         <SplitProof />
         <CapacityProof />
       </div>
