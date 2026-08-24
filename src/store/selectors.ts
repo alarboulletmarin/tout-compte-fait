@@ -85,6 +85,8 @@ import {
   type MemberCharges,
   type MemberIncome,
   type MemberShare,
+  cappedIncomes,
+  memberCaps,
   memberCharges,
   memberIncomes,
   memberShares,
@@ -351,7 +353,7 @@ export function useMonthScope(): MonthScope {
   const entries = useEntries()
   const filter = useMonthFilter()
   const kindOf = useKindOf()
-  const incomes = useMemberIncomes()
+  const incomes = useEffectiveIncomes()
 
   return useMemo(
     () => sharedScope(entries, filter, kindOf, incomes),
@@ -512,7 +514,9 @@ export function useUpcoming(limit = 5): Upcoming[] {
   const months = useStore((s) => s.data.months)
   const filter = useMonthFilter()
   const kindOf = useKindOf()
-  const incomes = useMemberIncomes()
+  // Les mêmes poids que la portée du mois : une échéance projetée doit se
+  // découper au centime comme sa jumelle posée, plafonds compris.
+  const incomes = useEffectiveIncomes()
 
   return useMemo(() => {
     const on = today()
@@ -677,6 +681,34 @@ export function useMemberIncomes(): MemberIncome[] {
   return useMemberIncomesOf(useCurrentYm())
 }
 
+/* Une seule copie plafonnée par lecture, comme `incomesByMonth` : la portée du
+   mois compare ses poids par référence (`memoLast`), et chaque composant qui
+   recalculerait sa propre copie casserait ce partage. Quand aucun plafond ne
+   mord — presque tous les mois —, `cappedIncomes` rend le tableau reçu,
+   référence comprise, et rien en aval ne voit de différence. */
+const sharedCappedIncomes = memoLast(cappedIncomes<MemberIncome>)
+
+/**
+ * Les revenus du mois affiché tels qu'ils doivent **peser** : le prorata,
+ * plafonné à ce qui rentre réellement sur le mois de chacun (`cappedIncomes`).
+ *
+ * C'est la lecture des poids, pas celle des revenus : un écran qui dit ce que
+ * quelqu'un gagne lit `useMemberIncomes`, un chiffre qui découpe une charge
+ * commune passe par ici — sans quoi un salaire réduit par un congé laissait sa
+ * part dépasser ce qui rentre, et le mois du membre se lisait négatif pendant
+ * que l'autre gardait de la marge.
+ */
+function useEffectiveIncomes(): readonly MemberIncome[] {
+  const entries = useEntries()
+  const month = useCurrentYm()
+  const kindOf = useKindOf()
+  const incomes = useMemberIncomes()
+  return useMemo(
+    () => sharedCappedIncomes(incomes, entries, month, kindOf),
+    [incomes, entries, month, kindOf],
+  )
+}
+
 /**
  * Les ressources actives que personne ne porte — elles ne comptent dans le
  * revenu d'aucun membre, et donc dans le prorata de personne.
@@ -745,7 +777,15 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
     return {
       total: sum(amounts),
       entries: shared,
-      shares: memberShares(incomes, amounts, adjustments(settlements), refunds),
+      shares: memberShares(
+        incomes,
+        amounts,
+        adjustments(settlements),
+        refunds,
+        // Le plafond de chacun — les mêmes parts, au centime, que la portée
+        // du mois, qui pèse avec `cappedIncomes` sur le même pot.
+        memberCaps(entries, month, incomes),
+      ),
       unknown: members.filter((m) => missing.has(m.id)),
       previousYm,
       advanced: advancedEntries(entries, previousYm, kindOf),

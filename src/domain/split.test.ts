@@ -5,8 +5,11 @@ import { money, sum } from './money'
 import { amountOn } from './priceHistory'
 import {
   allocate,
+  cappedIncomes,
+  cappedWeights,
   isSharedEntry,
   largestRemainder,
+  memberCaps,
   memberCharges,
   memberIncomes,
   memberRequired,
@@ -474,6 +477,166 @@ describe('parts au prorata des revenus', () => {
   it('ignore un report qui ne nomme personne du foyer', () => {
     const shares = memberShares(foyer, [eur(200_000)], new Map([['parti', money(900)]])) ?? []
     expect(shares.map((s) => s.toPay)).toEqual(shares.map((s) => s.due))
+  })
+})
+
+/* --- Le plafond de chacun -------------------------------------------------*/
+
+describe('le plafond de chacun : ce qui rentre sur son mois', () => {
+  const foyer = [
+    { memberId: 'm-1', income: eur(250_000) },
+    { memberId: 'm-2', income: eur(200_000) },
+  ]
+
+  const paie = (over: Parameters<typeof makeEntry>[0]): Entry =>
+    makeEntry({ direction: 'in', categoryId: 'salaire', ...over })
+
+  it('somme les rentrées du mois, échéances prévues comprises', () => {
+    const entries = [
+      paie({ date: '2026-07-01', amount: eur(210_000), memberId: 'm-1' }),
+      paie({ date: '2026-07-15', amount: eur(12_000), memberId: 'm-1', status: 'planned' }),
+      paie({ date: '2026-07-02', amount: eur(200_000), memberId: 'm-2' }),
+    ]
+    expect(memberCaps(entries, '2026-07', foyer)).toEqual([money(222_000), money(200_000)])
+  })
+
+  it('ignore les rentrées d’un autre mois', () => {
+    const entries = [
+      paie({ date: '2026-06-30', amount: eur(210_000), memberId: 'm-1' }),
+      paie({ date: '2026-07-02', amount: eur(200_000), memberId: 'm-2' }),
+    ]
+    expect(memberCaps(entries, '2026-07', foyer)).toEqual([null, money(200_000)])
+  })
+
+  it('ne dit rien sans aucune rentrée : un plafond inconnu ne plafonne rien', () => {
+    expect(memberCaps([], '2026-07', foyer)).toEqual([null, null])
+  })
+
+  it('ne dit rien quand une rentrée prévue attend encore son montant', () => {
+    const entries = [
+      paie({ date: '2026-07-01', amount: eur(0), memberId: 'm-1', status: 'planned' }),
+      paie({ date: '2026-07-15', amount: eur(12_000), memberId: 'm-1' }),
+    ]
+    // La case vide n'est pas un montant nul : rien ne permet de dire ce qui
+    // rentre, donc pas de plafond — la règle de `knownAmount`.
+    expect(memberCaps(entries, '2026-07', foyer)[0]).toBeNull()
+  })
+
+  it('une rentrée confirmée à zéro est un fait, et le plafond vaut zéro', () => {
+    const entries = [paie({ date: '2026-07-01', amount: eur(0), memberId: 'm-1' })]
+    expect(memberCaps(entries, '2026-07', foyer)[0]).toBe(0)
+  })
+})
+
+describe('les poids plafonnés', () => {
+  const weights = [eur(250_000), eur(200_000)]
+
+  it('ne dit rien quand aucun plafond ne mord : le prorata pur suffit', () => {
+    expect(cappedWeights(weights, [eur(250_000), eur(200_000)], eur(200_000))).toBeNull()
+    expect(cappedWeights(weights, [null, null], eur(200_000))).toBeNull()
+  })
+
+  it('ne dit rien pour le membre seul, ni sur un pot vide', () => {
+    expect(cappedWeights([eur(1)], [eur(0)], eur(200_000))).toBeNull()
+    expect(cappedWeights(weights, [eur(1), eur(1)], eur(0))).toBeNull()
+  })
+
+  it('ramène celui qui déborde à son plafond, et l’excédent bascule sur l’autre', () => {
+    // Sa part serait de 1 111,11 € ; il ne rentre que 900 € chez lui ce mois-ci.
+    const capped = cappedWeights(weights, [eur(90_000), null], eur(200_000))
+    expect(capped).toEqual([money(90_000), money(110_000)])
+  })
+
+  it('cascade : l’excédent peut faire déborder le suivant', () => {
+    const three = [eur(100_000), eur(100_000), eur(100_000)]
+    // Le premier tombe à 10 €, son excédent pousse le deuxième au-dessus de
+    // son propre plafond, et le troisième ramasse le reste.
+    const capped = cappedWeights(three, [eur(1_000), eur(35_000), null], eur(90_000))
+    expect(capped).toEqual([money(1_000), money(35_000), money(54_000)])
+  })
+
+  it('retombe sur le prorata pur quand tout le monde est au plafond', () => {
+    // Le pot dépasse ce qui rentre au foyer : chacun porte le découvert à
+    // proportion de ce qu'il gagne, exactement comme sans plafond.
+    const capped = cappedWeights(weights, [eur(250_000), eur(200_000)], eur(450_100))
+    expect(capped).toEqual(largestRemainder(450_100, weights).map((v) => money(v)))
+  })
+
+  it('la somme des parts vaut toujours le total, plafonds ou pas', () => {
+    for (const total of [1, 99, 200_000, 333_333, 450_100]) {
+      const capped = cappedWeights(weights, [eur(90_000), eur(150_000)], money(total))
+      if (capped === null) continue
+      const dues = largestRemainder(total, capped)
+      expect(dues.reduce((a, b) => a + b, 0)).toBe(total)
+    }
+  })
+})
+
+describe('la part plafonnée à ce qui rentre', () => {
+  /* Le cas qui a fait naître la règle : un congé parental fait tomber la paie
+     du mois à 60 % — l'échéance est réduite, la récurrence non. Le coefficient
+     reste assis sur les récurrences, et la part dépassait ce qui rentre. */
+  const foyer = [
+    { memberId: 'm-1', income: eur(210_000) },
+    { memberId: 'm-2', income: eur(298_500) },
+  ]
+  const september = [
+    makeEntry({ id: 'paie-1', date: '2026-09-01', direction: 'in', amount: eur(126_000), categoryId: 'salaire', memberId: 'm-1', status: 'planned' }),
+    makeEntry({ id: 'paie-2', date: '2026-09-01', direction: 'in', amount: eur(298_500), categoryId: 'salaire', memberId: 'm-2', status: 'planned' }),
+    makeEntry({ id: 'loyer', date: '2026-09-01', amount: eur(129_000), categoryId: 'logement', status: 'planned' }),
+    makeEntry({ id: 'credit', date: '2026-09-05', amount: eur(184_200), categoryId: 'auto', status: 'planned' }),
+  ]
+  const caps = memberCaps(september, '2026-09', foyer)
+  const commun = sharedEntries(september, '2026-09', kindOf)
+
+  it('ne fait jamais payer plus que ce qui rentre sur le mois', () => {
+    const shares = memberShares(foyer, commun.map((e) => e.amount), null, [], caps)
+    // Sa part au prorata aurait été de 1 293,45 € pour 1 260 € de paie : le
+    // mois entier dans le rouge. Le plafond la ramène à ce qui rentre, et
+    // l'excédent bascule sur celui qui a de la marge.
+    expect(shares?.map((s) => s.due)).toEqual([money(126_000), money(187_200)])
+    expect(shares && totalDue(shares)).toBe(313_200)
+  })
+
+  it('le coefficient affiché suit les parts réellement portées', () => {
+    const shares = memberShares(foyer, commun.map((e) => e.amount), null, [], caps)
+    expect(shares?.map((s) => s.shareBp)).toEqual(largestRemainder(10_000, [126_000, 187_200]))
+    // Et le revenu affiché reste le revenu déclaré, pas le poids plafonné.
+    expect(shares?.map((s) => s.income)).toEqual([money(210_000), money(298_500)])
+  })
+
+  it('sans plafond fourni, le prorata s’applique comme avant', () => {
+    const shares = memberShares(foyer, commun.map((e) => e.amount))
+    expect(shares?.map((s) => s.shareBp)).toEqual([4130, 5870])
+  })
+
+  it('le mois vu par le membre découpe aux mêmes poids, au centime', () => {
+    const scoped = scopeToMember(september, 'm-1', kindOf, cappedIncomes(foyer, september, '2026-09', kindOf))
+    const sienne = sum(
+      (scoped ?? []).filter((e) => commun.some((c) => c.id === e.id)).map((e) => e.amount),
+    )
+    const due = memberShares(foyer, commun.map((e) => e.amount), null, [], caps)?.[0]?.due
+    expect(sienne).toBe(due)
+    expect(sienne).toBe(126_000)
+  })
+
+  it('ce qu’un membre porte du mois suit le même plafond', () => {
+    const charges = memberCharges(september, '2026-09', 'm-1', kindOf, foyer)
+    expect(charges?.common).toBe(126_000)
+    expect(charges?.commonTotal).toBe(313_200)
+  })
+
+  it('rend les revenus tels quels — la référence comprise — quand rien ne mord', () => {
+    const calm = [
+      ...september.filter((e) => e.direction === 'in'),
+      makeEntry({ id: 'loyer', date: '2026-09-01', amount: eur(95_000), categoryId: 'logement', status: 'planned' }),
+    ]
+    expect(cappedIncomes(foyer, calm, '2026-09', kindOf)).toBe(foyer)
+  })
+
+  it('remplace les revenus par les parts plafonnées quand un plafond mord', () => {
+    const weighted = cappedIncomes(foyer, september, '2026-09', kindOf)
+    expect(weighted.map((w) => w.income)).toEqual([money(126_000), money(187_200)])
   })
 })
 

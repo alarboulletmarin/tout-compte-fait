@@ -50,6 +50,28 @@ describe('ce qu’un mois reporte sur le suivant', () => {
     const report = settle(july) ?? []
     expect(report.map((s) => s.adjustment)).toEqual([0, 0])
   })
+
+  it('pèse le « owed » aux poids du mois, plafonds compris', () => {
+    const reduced: IncomeWeight[] = [
+      { memberId: 'luca', income: eur(298_500) },
+      { memberId: 'clara', income: eur(210_000) },
+    ]
+    const july = [
+      // Les paies réellement rentrées : celle de Clara réduite par un congé.
+      makeEntry({ date: '2026-07-01', direction: 'in', amount: eur(298_500), categoryId: 'salaire', memberId: 'luca' }),
+      makeEntry({ date: '2026-07-01', direction: 'in', amount: eur(126_000), categoryId: 'salaire', memberId: 'clara' }),
+      // Le pot du mois, avancé en entier par Luca.
+      makeEntry({ date: '2026-07-05', amount: eur(313_200), categoryId: 'logement', memberId: 'luca', shared: true }),
+    ]
+    const [luca, clara] = settle(july, reduced) ?? []
+    // La part de Clara est plafonnée à ses 1 260 € de paie : le report lui
+    // réclame cette part-là, pas les 1 293,45 € du prorata pur — sinon la
+    // régularisation referait par-derrière le mois négatif que le plafond
+    // vient d'empêcher.
+    expect(clara?.owed).toBe(126_000)
+    expect(clara?.adjustment).toBe(126_000)
+    expect(luca?.adjustment).toBe(-126_000)
+  })
 })
 
 describe('la somme des reports vaut zéro', () => {

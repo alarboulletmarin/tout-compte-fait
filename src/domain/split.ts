@@ -6,6 +6,15 @@
  * deux. Le prorata règle ça d'une seule règle : chacun porte la part des
  * charges communes que son revenu représente dans les revenus du foyer.
  *
+ * Une seule exception : la part d'un membre est plafonnée à ce qui rentre
+ * réellement sur son mois. Un congé parental fait tomber un salaire à 60 % sans
+ * toucher au coefficient, qui se lit sur les récurrences — et la part dépassait
+ * alors ce que la personne gagne, un mois entier dans le rouge pendant que
+ * l'autre gardait de la marge. L'excédent bascule sur ceux qui en ont
+ * (`cappedWeights`), et quand personne n'en a, le prorata reprend ses droits :
+ * un foyer qui ne couvre pas ses charges les porte à proportion de ce que
+ * chacun gagne, il n'y a pas de meilleur partage d'un découvert.
+ *
  * Le module est pur — il ne connaît ni le store ni la persistance, et reçoit
  * la nature d'une catégorie sous forme de fonction, comme `stats.ts`.
  * ==========================================================================*/
@@ -305,7 +314,12 @@ export function unassignedIncomes(
 export type MemberShare = {
   memberId: string
   income: Money
-  /** Part du revenu du foyer, en points de base. 5556 = 55,56 %. */
+  /**
+   * Sa part effective du pot, en points de base. 5556 = 55,56 %. C'est la part
+   * du revenu du foyer — sauf quand un plafond mord : le coefficient suit alors
+   * les parts réellement portées, pour que le pourcentage affiché sous les
+   * charges communes reste celui qui les a découpées.
+   */
   shareBp: number
   /**
    * Sa part du **pot commun** du mois : tout ce qui y entre, au prorata.
@@ -372,6 +386,137 @@ export function prorataWeights(incomes: readonly IncomeWeight[]): Money[] | null
   return sum(known) <= 0 ? null : known
 }
 
+/* --- Le plafond de chacun -------------------------------------------------*/
+
+/**
+ * Ce qui rentre de chiffré sur le mois de chaque membre — le plafond de sa
+ * part, dans l'ordre d'`incomes`.
+ *
+ * Sur les **entrées** du mois, pas sur les récurrences : c'est tout le point.
+ * Le coefficient se lit sur les récurrences pour rester stable — une prime ne
+ * déplace pas la part du loyer. Mais le plafond répond à une autre question :
+ * « peut-elle seulement verser ça ce mois-ci ? », et elle se pose sur ce qui
+ * rentre vraiment — l'échéance de salaire réduite d'un congé, échéances
+ * prévues comprises, comme tous les chiffres prospectifs du mois.
+ *
+ * `null` quand rien ne permet de le dire, et non zéro — la doctrine de
+ * `monthlyIncome` : aucune rentrée sur le mois, ou une rentrée prévue laissée
+ * sans montant (la règle de `knownAmount` — une case vide n'est pas un montant
+ * nul). Un plafond inconnu ne plafonne rien ; un plafond à zéro, lui, est un
+ * fait, et il se respecte : un mois confirmé sans un centime de rentrée ne
+ * peut rien verser au pot.
+ */
+export function memberCaps(
+  entries: readonly Entry[],
+  month: YearMonth,
+  incomes: readonly IncomeWeight[],
+): (Money | null)[] {
+  const monthly = entriesOfMonth(entries, month)
+  return incomes.map(({ memberId }) => {
+    let total = ZERO
+    let found = false
+    for (const entry of monthly) {
+      if (entry.direction !== 'in' || entry.memberId !== memberId) continue
+      if (entry.status !== 'confirmed' && entry.amount <= ZERO) return null
+      found = true
+      total = add(total, entry.amount)
+    }
+    return found ? total : null
+  })
+}
+
+/**
+ * Les poids du mois une fois les plafonds appliqués, ou `null` quand aucun ne
+ * mord — le prorata pur suffit alors, et c'est le cas de presque tous les mois.
+ *
+ * Celui qui dépasse son plafond y est ramené, et l'excédent se répartit entre
+ * les autres au prorata de leurs revenus — en cascade, parce qu'il peut à son
+ * tour faire déborder quelqu'un. Quand tout le monde est au plafond, le pot
+ * dépasse ce qui rentre au foyer : le surplus se répartit alors au prorata sur
+ * tous, plafonds compris — un découvert du foyer se porte à proportion de ce
+ * que chacun gagne, le plafonner ne ferait que le taire.
+ *
+ * Le résultat est un jeu de poids, pas de parts : chaque charge continue de se
+ * découper ligne par ligne avec `allocate`, par le même chemin qu'avant — c'est
+ * ce qui garantit que la part d'un poste, d'un jour ou d'une moitié de mois se
+ * recompose exactement, plafond ou pas.
+ */
+export function cappedWeights(
+  weights: readonly Money[],
+  caps: readonly (Money | null)[],
+  total: Money,
+): Money[] | null {
+  // Le membre seul porte tout, plafond ou pas : il n'y a personne sur qui
+  // basculer l'excédent. Et un pot vide ne déborde de nulle part.
+  if (weights.length <= 1 || total <= ZERO) return null
+
+  const dues = largestRemainder(total, weights)
+  const capped = new Set<number>()
+
+  for (;;) {
+    let bound = false
+    for (const [index, cap] of caps.entries()) {
+      if (cap === null || capped.has(index)) continue
+      if ((dues[index] ?? 0) > cap) {
+        capped.add(index)
+        bound = true
+      }
+    }
+    if (!bound) break
+
+    const fixed = [...capped].reduce((acc, index) => acc + (caps[index] ?? 0), 0)
+    const rest = total - fixed
+    const free = weights.map((weight, index) => (capped.has(index) ? 0 : weight))
+
+    if (free.every((weight) => weight <= 0)) {
+      const extra = largestRemainder(rest, weights)
+      return caps.map((cap, index) =>
+        money((capped.has(index) ? (cap ?? 0) : 0) + (extra[index] ?? 0)),
+      )
+    }
+
+    const spread = largestRemainder(rest, free)
+    for (const [index, part] of spread.entries()) dues[index] = part
+    for (const index of capped) dues[index] = caps[index] ?? 0
+  }
+
+  return capped.size === 0 ? null : dues.map((due) => money(due))
+}
+
+/**
+ * Les revenus tels que la lecture d'un mois doit les peser : le prorata,
+ * plafonné à ce qui rentre sur le mois de chacun.
+ *
+ * C'est le point d'entrée de `scopeToMember` et des siens, qui reçoivent des
+ * revenus et n'ont pas à connaître le plafond : leur passer des revenus déjà
+ * plafonnés leur fait découper les mêmes parts que `memberShares`, au centime,
+ * sans changer une ligne chez eux. Le tableau rendu est **le même** tant
+ * qu'aucun plafond ne mord — la référence comprise, pour que les caches en
+ * aval continuent de reconnaître deux lectures identiques.
+ *
+ * Les montants qui en sortent servent de poids, jamais de revenus à afficher :
+ * un écran qui y lirait « ce que gagne » quelqu'un mentirait, c'est déjà la
+ * frontière que `memberShares` trace entre le poids et le revenu déclaré.
+ */
+export function cappedIncomes<T extends IncomeWeight>(
+  incomes: readonly T[],
+  entries: readonly Entry[],
+  month: YearMonth,
+  kindOf: KindOf,
+): readonly T[] {
+  if (incomes.length <= 1) return incomes
+  const weights = prorataWeights(incomes)
+  if (weights === null) return incomes
+
+  const effective = cappedWeights(
+    weights,
+    memberCaps(entries, month, incomes),
+    sharedTotal(entries, month, kindOf),
+  )
+  if (effective === null) return incomes
+  return incomes.map((income, index) => ({ ...income, income: effective[index] ?? ZERO }))
+}
+
 /**
  * Ce que chaque membre doit sur des charges communes, au prorata des revenus.
  *
@@ -403,9 +548,17 @@ export function memberShares(
    * redonner au centime ce que la tuile Charges annonce.
    */
   refunds: readonly Money[] = [],
+  /**
+   * Le plafond de chacun — ce qui rentre sur son mois (`memberCaps`), quand
+   * l'appelant lit un mois. Absent, le prorata s'applique sans plafond : c'est
+   * ce que veut le coefficient lu seul, hors de tout mois, qui compare des
+   * revenus et n'a aucun pot à ne pas dépasser.
+   */
+  caps: readonly (Money | null)[] | null = null,
 ): MemberShare[] | null {
-  const weights = prorataWeights(incomes)
-  if (weights === null) return null
+  const raw = prorataWeights(incomes)
+  if (raw === null) return null
+  const weights = (caps === null ? null : cappedWeights(raw, caps, sum(amounts))) ?? raw
 
   const shares = largestRemainder(10_000, weights)
   const split = (list: readonly Money[]): number[] => {
@@ -617,9 +770,9 @@ export function memberCharges(
   kindOf: KindOf,
   incomes: readonly IncomeWeight[],
 ): MemberCharges | null {
-  const weights = prorataWeights(incomes)
+  const raw = prorataWeights(incomes)
   const index = incomes.findIndex((income) => income.memberId === memberId)
-  if (weights === null || index < 0) return null
+  if (raw === null || index < 0) return null
 
   const solo = incomes.length === 1
   let own = ZERO
@@ -628,14 +781,13 @@ export function memberCharges(
   let commonDebt = ZERO
   let commonTotal = ZERO
 
+  /* Le commun se ramasse avant de se découper : le plafond se lit sur le total
+     du pot, qui n'est connu qu'une fois le mois parcouru. */
+  const commons: Entry[] = []
   for (const entry of entriesOfMonth(entries, month)) {
     if (isCommon(entry, kindOf)) {
-      const part = allocate(entry.amount, weights)[index] ?? ZERO
+      commons.push(entry)
       commonTotal = add(commonTotal, entry.amount)
-      common = add(common, part)
-      const kind = kindOf(entry.categoryId)
-      if (kind === 'charge') commonCharge = add(commonCharge, part)
-      else if (kind === 'debt') commonDebt = add(commonDebt, part)
       continue
     }
     // Seul du foyer, une ligne de personne est à lui — même règle que
@@ -646,6 +798,17 @@ export function memberCharges(
     if (entry.memberId !== memberId && !(solo && unowned)) continue
     if (entry.direction !== 'out' || !isSpending(kindOf(entry.categoryId))) continue
     own = add(own, entry.amount)
+  }
+
+  const weights =
+    cappedWeights(raw, memberCaps(entries, month, incomes), commonTotal) ?? raw
+
+  for (const entry of commons) {
+    const part = allocate(entry.amount, weights)[index] ?? ZERO
+    common = add(common, part)
+    const kind = kindOf(entry.categoryId)
+    if (kind === 'charge') commonCharge = add(commonCharge, part)
+    else if (kind === 'debt') commonDebt = add(commonDebt, part)
   }
 
   return {

@@ -17,7 +17,15 @@
 
 import type { YearMonth } from './date'
 import { type Money, ZERO, add, sub, sum } from './money'
-import { type IncomeWeight, allocate, isCommon, prorataWeights } from './split'
+import {
+  type IncomeWeight,
+  allocate,
+  cappedWeights,
+  isCommon,
+  memberCaps,
+  prorataWeights,
+  sharedTotal,
+} from './split'
 import { type KindOf, entriesOfMonth } from './stats'
 import type { Entry } from './types'
 
@@ -89,8 +97,16 @@ export function settleMonth(
   kindOf: KindOf,
   incomes: readonly IncomeWeight[],
 ): Settlement[] | null {
-  const weights = prorataWeights(incomes)
-  if (weights === null) return null
+  const raw = prorataWeights(incomes)
+  if (raw === null) return null
+
+  /* Les poids de ce mois-là, plafonds compris — sur le pot **entier** du mois,
+     pas sur les seules charges avancées : le plafond s'est lu là quand le mois
+     s'est réparti, et un `owed` pesé autrement rendrait un report qui ne
+     correspond plus aux parts que chacun devait. */
+  const weights =
+    cappedWeights(raw, memberCaps(entries, month, incomes), sharedTotal(entries, month, kindOf)) ??
+    raw
 
   const advanced = incomes.map(() => ZERO)
   const owed = incomes.map(() => ZERO)
