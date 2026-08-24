@@ -504,7 +504,13 @@
   @media (min-width: 768px) {
     .bento {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      /* 16px et non 14 : le DS §4 ne connaît que deux gouttières de bento,
+         12px en mobile et 16 au-delà, et 14 n'est ni l'une ni l'autre ni sur
+         l'échelle de 4. Le rembourrage intérieur des mêmes tuiles bascule bien,
+         lui, à 24px dès ce palier — la tuile respirait donc plus large au
+         dedans qu'au dehors, ce qui est exactement l'inverse de ce que la
+         grille doit donner à lire. */
+      gap: 16px;
       grid-auto-rows: 96px;
     }
   }

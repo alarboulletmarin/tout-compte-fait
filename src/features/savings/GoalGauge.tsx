@@ -17,6 +17,8 @@
  * l'apprendrait pas mieux.
  */
 
+import { cn } from '@/lib/cn'
+
 const SEGMENTS = 7
 
 export function GoalGauge({
@@ -38,15 +40,20 @@ export function GoalGauge({
   return (
     <span aria-hidden="true" className="flex items-center gap-0.5">
       {Array.from({ length: SEGMENTS }, (_, index) => (
+        /* `cn` et non un gabarit : `bg-text-muted` n'a jamais eu de règle — la
+           classe qui pose `background-color: var(--text-muted)` s'appelle
+           `bg-muted` —, si bien que les cases **pleines** d'un objectif en
+           retard ne recevaient aucun fond quand les vides gardaient le leur.
+           La jauge se lisait donc à l'envers, exactement sur les objectifs
+           qu'elle doit signaler. `classes:check` ne l'a pas vu parce qu'il
+           relève les classes littérales et non celles nées d'un gabarit : les
+           composer avec `cn`, comme partout ailleurs, les lui rend visibles. */
         <span
           key={index}
-          className={`h-2 w-2 rounded-[2px] ${
-            index < filled
-              ? tone === 'attention'
-                ? 'bg-text-muted'
-                : 'bg-accent'
-              : 'bg-surface-2'
-          }`}
+          className={cn(
+            'h-2 w-2 rounded-[2px]',
+            index < filled ? (tone === 'attention' ? 'bg-muted' : 'bg-accent') : 'bg-surface-2',
+          )}
         />
       ))}
     </span>

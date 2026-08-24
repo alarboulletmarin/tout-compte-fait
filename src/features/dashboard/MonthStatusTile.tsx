@@ -3,7 +3,7 @@ import { tpl } from '@/i18n/format'
 import { useMonthConfirmed, useMonthPending } from '@/store/selectors'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { ToConfirmIcon } from '@/ui/Icons'
-import { Tile } from '@/ui/Tile'
+import { Tile, type TileSpan } from '@/ui/Tile'
 
 /**
  * Où en est le mois : combien d'opérations sont confirmées, sur combien.
@@ -39,7 +39,15 @@ import { Tile } from '@/ui/Tile'
  * bas sur cette page, elle n'est pas sur un autre écran — c'est le repère des
  * deux tuiles de flux, qui mènent aux lignes du mois de la même façon.
  */
-export function MonthStatusTile({ onShowPending }: { onShowPending?: () => void }) {
+export function MonthStatusTile({
+  onShowPending,
+  /* `4x1` par défaut, la valeur qu'avaient toutes les compositions jusqu'ici :
+     seule `SituationGrid` la change, et seulement là où le pavage l'exige. */
+  span = '4x1',
+}: {
+  onShowPending?: () => void
+  span?: TileSpan
+}) {
   const { fixed, variable } = useMonthPending()
   const confirmed = useMonthConfirmed()
 
@@ -55,7 +63,7 @@ export function MonthStatusTile({ onShowPending }: { onShowPending?: () => void 
 
   return (
     <Tile
-      span="4x1"
+      span={span}
       className="justify-between"
       /* Cliquable, c'est le nom d'un bouton et il dit le geste ; sinon c'est le
          nom d'une section, et une région ne se nomme pas d'une phrase — les

@@ -46,8 +46,10 @@ export function StyleguidePage() {
   const palette = useStore((s) => s.data.settings.palette)
   const setPalette = useStore((s) => s.setPalette)
 
+  /* `px-4` : le cadre de page de toute l'app (DS §4), que le nuancier —
+     qui est censé la donner à lire — était seul à poser à 20. */
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-8 md:px-8 md:py-12">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="t-eyebrow text-muted">{t.app.name}</p>

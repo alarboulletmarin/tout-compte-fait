@@ -75,8 +75,11 @@ export function UpcomingSection() {
      déjà sur son propre état vide. */
   const hasRecurrence = useRecurrences().length > 0
 
+  /* `gap-3` : l'intérieur d'une tuile respire à 12px (DS §4), et l'étiquette se
+     retrouvait à 4px de sa liste quand ses voisines du tableau de bord tiennent
+     les 12. */
   return (
-    <Tile className="gap-1">
+    <Tile className="gap-3">
       <div className="flex items-center justify-between gap-2">
         {/* L'étiquette ne prend pas toute la tuile : le lien lui en retire
             soixante-dix pixels, et à 320 points « PROCHAINES ÉCHÉANCES » y
@@ -139,7 +142,17 @@ export function UpcomingSection() {
                     délai est vide. */}
                 <span className="sr-only-text">{formatDate(entry.date)}</span>
               </span>
-              <Amount value={entry.amount} direction={entry.direction} size="label" />
+              {/* `justify-end` : la troisième colonne de la grille fait la
+                  largeur du plus gros montant, et chaque `Amount` s'y posait à
+                  gauche — les cinq montants partaient donc du même bord et
+                  finissaient chacun où ils voulaient. Une colonne de montants
+                  se lit par la droite (DS §3). */}
+              <Amount
+                value={entry.amount}
+                direction={entry.direction}
+                size="label"
+                className="justify-end"
+              />
             </li>
           ))}
         </ul>

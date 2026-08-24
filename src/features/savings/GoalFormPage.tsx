@@ -173,135 +173,146 @@ function GoalForm({ goal, seed }: { goal?: SavingGoal; seed: Partial<GoalDraft> 
           submit()
         }}
       >
-        <Field
-          label={supports.goalLabel}
-          required
-          {...(errors.label === undefined ? {} : { error: errors.label })}
-        >
-          {(id, describedBy) => (
-            <TextInput
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.label}
-              invalid={errors.label !== undefined}
-              placeholder={supports.goalLabelPlaceholder}
-              maxLength={40}
-              autoFocus
-              onChange={(event) => {
-                patch({ label: event.target.value })
-              }}
-            />
-          )}
-        </Field>
+        {/* Les champs dans une tuile, comme sur l'écran d'un support
+            (`SupportFormPage`) et comme partout où l'app fait remplir
+            quelque chose : cet écran-ci n'en portait aucune, et ses
+            champs — fond `--surface-2` — flottaient donc à même le fond
+            de page, sans le cadre qui les rassemble ailleurs. */}
+        <Tile className="gap-4">
+          <Field
+            label={supports.goalLabel}
+            required
+            {...(errors.label === undefined ? {} : { error: errors.label })}
+          >
+            {(id, describedBy) => (
+              <TextInput
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.label}
+                invalid={errors.label !== undefined}
+                placeholder={supports.goalLabelPlaceholder}
+                maxLength={40}
+                autoFocus
+                onChange={(event) => {
+                  patch({ label: event.target.value })
+                }}
+              />
+            )}
+          </Field>
 
-        <Field
-          label={supports.goalOwner}
-          required
-          {...(errors.member === undefined ? {} : { error: errors.member })}
-        >
-          {(id, describedBy) => (
-            <Select
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.memberId}
-              invalid={errors.member !== undefined}
-              onChange={(event) => {
-                patch({ memberId: event.target.value })
-              }}
-            >
-              <option value="">{t.savings.supportOwnerPlaceholder}</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
+          <Field
+            label={supports.goalOwner}
+            required
+            {...(errors.member === undefined ? {} : { error: errors.member })}
+          >
+            {(id, describedBy) => (
+              <Select
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.memberId}
+                invalid={errors.member !== undefined}
+                onChange={(event) => {
+                  patch({ memberId: event.target.value })
+                }}
+              >
+                <option value="">{t.savings.supportOwnerPlaceholder}</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
 
-        <Field
-          label={supports.goalTarget}
-          required
-          {...(errors.target === undefined ? {} : { error: errors.target })}
-        >
-          {(id, describedBy) => (
-            <AmountInput
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.targetText}
-              invalid={errors.target !== undefined}
-              onChange={(event) => {
-                patch({ targetText: event.target.value })
-              }}
-            />
-          )}
-        </Field>
+          <Field
+            label={supports.goalTarget}
+            required
+            {...(errors.target === undefined ? {} : { error: errors.target })}
+          >
+            {(id, describedBy) => (
+              <AmountInput
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.targetText}
+                invalid={errors.target !== undefined}
+                onChange={(event) => {
+                  patch({ targetText: event.target.value })
+                }}
+              />
+            )}
+          </Field>
 
-        {/* L'échéance est facultative, et son absence a un sens : un cap sans
-            date s'atteint quand il s'atteint. C'est elle, en revanche, qui fait
-            exister le verdict — sans elle, l'app dit « quand », jamais « si ».
-            Un `<input type="month">` et non deux sélecteurs : c'est le contrôle
-            natif de ce qu'on saisit, il porte le clavier et le calendrier du
-            système, et il rend exactement le `YYYY-MM` du modèle. */}
-        <Field label={supports.goalDate} optional hint={supports.goalDateHint}>
-          {(id, describedBy) => (
-            <TextInput
-              id={id}
-              type="month"
-              aria-describedby={describedBy}
-              value={draft.targetOn}
-              onChange={(event) => {
-                patch({ targetOn: event.target.value })
-              }}
-            />
-          )}
-        </Field>
+          {/* L'échéance est facultative, et son absence a un sens : un cap sans
+              date s'atteint quand il s'atteint. C'est elle, en revanche, qui fait
+              exister le verdict — sans elle, l'app dit « quand », jamais « si ».
+              Un `<input type="month">` et non deux sélecteurs : c'est le contrôle
+              natif de ce qu'on saisit, il porte le clavier et le calendrier du
+              système, et il rend exactement le `YYYY-MM` du modèle. */}
+          <Field label={supports.goalDate} optional hint={supports.goalDateHint}>
+            {(id, describedBy) => (
+              /* Borné comme les deux montants de l'écran : un `YYYY-MM` a une
+                 longueur connue, et pleine largeur il faisait sauter le bord
+                 droit de la colonne une troisième fois. */
+              <TextInput
+                id={id}
+                type="month"
+                className="max-w-48"
+                aria-describedby={describedBy}
+                value={draft.targetOn}
+                onChange={(event) => {
+                  patch({ targetOn: event.target.value })
+                }}
+              />
+            )}
+          </Field>
 
-        {/* Le lien au réel, et le seul : cocher un compte suffit à donner à
-            l'objectif son capital, ses versements et son rendement. */}
-        <fieldset className="flex flex-col gap-2">
-          <legend className="t-label text-text">{supports.goalSupports}</legend>
-          <p className="t-label">{supports.goalSupportsHint}</p>
-          {accounts.length === 0 ? (
-            <p className="t-label">{t.savings.supportsEmpty}</p>
-          ) : (
-            <div className="flex flex-col gap-2 pt-1">
-              {accounts.map((support) => (
-                <Checkbox
-                  key={support.id}
-                  checked={draft.supportIds.includes(support.id)}
-                  label={support.label}
-                  onChange={(checked) => {
-                    patch({
-                      supportIds: checked
-                        ? [...draft.supportIds, support.id]
-                        : draft.supportIds.filter((one) => one !== support.id),
-                    })
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </fieldset>
+          {/* Le lien au réel, et le seul : cocher un compte suffit à donner à
+              l'objectif son capital, ses versements et son rendement. */}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="t-label text-text">{supports.goalSupports}</legend>
+            <p className="t-label">{supports.goalSupportsHint}</p>
+            {accounts.length === 0 ? (
+              <p className="t-label">{t.savings.supportsEmpty}</p>
+            ) : (
+              <div className="flex flex-col gap-2 pt-1">
+                {accounts.map((support) => (
+                  <Checkbox
+                    key={support.id}
+                    checked={draft.supportIds.includes(support.id)}
+                    label={support.label}
+                    onChange={(checked) => {
+                      patch({
+                        supportIds: checked
+                          ? [...draft.supportIds, support.id]
+                          : draft.supportIds.filter((one) => one !== support.id),
+                      })
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </fieldset>
 
-        <Field
-          label={supports.goalMonthly}
-          optional
-          hint={supports.goalMonthlyHint}
-          {...(errors.monthly === undefined ? {} : { error: errors.monthly })}
-        >
-          {(id, describedBy) => (
-            <AmountInput
-              id={id}
-              aria-describedby={describedBy}
-              value={draft.monthlyText}
-              invalid={errors.monthly !== undefined}
-              onChange={(event) => {
-                patch({ monthlyText: event.target.value })
-              }}
-            />
-          )}
-        </Field>
+          <Field
+            label={supports.goalMonthly}
+            optional
+            hint={supports.goalMonthlyHint}
+            {...(errors.monthly === undefined ? {} : { error: errors.monthly })}
+          >
+            {(id, describedBy) => (
+              <AmountInput
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.monthlyText}
+                invalid={errors.monthly !== undefined}
+                onChange={(event) => {
+                  patch({ monthlyText: event.target.value })
+                }}
+              />
+            )}
+          </Field>
+        </Tile>
 
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{t.common.save}</Button>

@@ -32,7 +32,14 @@ export function ThemePane({
     <div
       data-theme={theme}
       data-palette={palette ?? current}
-      className={cn('rounded-tile border border-border bg-bg p-5 text-text', className)}
+      /* `min-w-0` : un panneau est un enfant de grille, dont la taille minimale
+         automatique vaut `min-content`. Sans lui, un contenu large — le tableau
+         des natures, une rangée de montants — imposait sa largeur intrinsèque
+         au panneau, qui sortait alors de l'écran par la droite et emportait la
+         page entière en défilement horizontal. Le contenu qui doit défiler le
+         fait déjà dans sa propre boîte (`KindSection`) ; encore faut-il que le
+         panneau le laisse se réduire. */
+      className={cn('min-w-0 rounded-tile border border-border bg-bg p-5 text-text', className)}
     >
       <p className="t-eyebrow mb-4 text-muted">
         {theme === 'light' ? t.theme.light : t.theme.dark}

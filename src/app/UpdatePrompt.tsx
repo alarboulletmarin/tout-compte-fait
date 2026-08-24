@@ -23,7 +23,13 @@ export function UpdatePrompt() {
        `.tile` recopiée : elle n'aurait pas suivi `components.css` le jour où
        celui-ci change. Seul ce qui le fait flotter reste ici. */
     <Banner
-      className="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-md md:bottom-6"
+      /* Le dégagement du `Toaster`, au caractère près : 5rem écrits en dur ne
+         connaissaient ni la hauteur réelle de la barre d'onglets ni la marge de
+         sécurité de l'appareil, et le bandeau mordait de 11px dans la barre en
+         masquant 47 des 56px du disque de saisie — le bouton qu'on vise le plus,
+         sous un bandeau `z-50` contre son `z-40`. Le palier était faux du même
+         coup : la barre disparaît à 1024px, pas à 768. */
+      className="fixed inset-x-4 bottom-[calc(var(--nav-h)+3.25rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-md lg:bottom-5"
       title={t.settings.updateAvailable}
     >
       <Button

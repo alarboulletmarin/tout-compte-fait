@@ -789,6 +789,11 @@ export const en: Strings = {
     firstDate: 'First payment',
     firstDatePaid: 'This one is recorded as paid; the next ones will come up to confirm.',
     firstDatePlanned: 'It will come up to confirm, like the next ones.',
+    /* See `fr.ts`: what the month still frees up, said where the question is
+       asked. Same figure and same month as the “Saving capacity” tile. */
+    savingRoom: 'This month, %s left to set aside.',
+    savingRoomOver: 'This month, deposits already exceed capacity by %s.',
+    savingRoomNone: 'This month, charges exceed income: there is nothing to set aside.',
     variableAmountHint:
       'The amount will be asked for at each payment. This one serves as an order of magnitude in the meantime — for the recurring total, and for the split in proportion if it’s an income. Each costed payment takes over straight away.',
 

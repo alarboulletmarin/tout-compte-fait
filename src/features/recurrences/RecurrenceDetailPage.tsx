@@ -75,7 +75,14 @@ export function RecurrenceDetailPage() {
           augmentation de salaire n'en est pas, verser plus sur un livret non
           plus. */}
       {priceChange !== null && (
-        <p className={cn('tile flex items-start gap-2 p-4', costly && 'text-danger-text')}>
+        /* `p-5 md:p-6` : c'est une tuile, empilée sur des tuiles à 20/24px
+           — 16 la rentrait de quatre pixels par rapport à ses voisines. */
+        <p
+          className={cn(
+            'tile flex items-start gap-2 p-5 md:p-6',
+            costly && 'text-danger-text',
+          )}
+        >
           {costly && <Warning size={18} className="mt-0.5 shrink-0" />}
           <span className="t-label">
             {tpl(

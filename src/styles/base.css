@@ -38,6 +38,36 @@
   svg {
     display: block;
   }
+
+  /* Safari iOS agrandit le cadrage dès qu'on met au point un champ dont la
+     lettre est sous 16px, et il ne le rend jamais : la page reste zoomée, son
+     bord droit hors de l'écran. Sur la carte du foyer, « Ajouter » sortait du
+     cadre à côté du champ « Prénom » — le champ était à 15px (`ui/Field.tsx`),
+     comme le corps du DS §3.
+     Ce n'est pas une règle qu'on peut couper depuis `index.html` : un
+     `maximum-scale` empêcherait du même coup le zoom qu'on fait exprès, et le
+     plancher de qualité du DS §8 s'y refuse (WCAG 1.4.4). Le seul levier est
+     la taille de la lettre, et 16px est le seuil du moteur, pas une préférence.
+     La règle est donc portée là où le moteur zoome — `-webkit-touch-callout`
+     ne répond que sur WebKit iOS, c'est-à-dire sur tous les navigateurs de
+     l'appareil, qui zooment tous — et nulle part ailleurs : le pixel d'écart
+     avec le corps ne se voit pas, le cadrage perdu se voyait.
+
+     **`!important`, et c'est ici la règle et non l'exception.** Une déclaration
+     importante d'une couche basse l'emporte sur les couches hautes — la cascade
+     inverse l'ordre des couches pour elles. Sans ça, cette règle ne s'applique à
+     aucun champ de l'app : `text-[15px]` du `CONTROL` de `ui/Field.tsx` vit dans
+     `utilities`, `t-body` des deux champs de renommage dans `components`, et les
+     deux couches passent après `base`. Vérifié dans le moteur, pas déduit.
+     C'est exactement l'usage d'`!important` — une contrainte de plateforme, pas
+     une préférence de style, qui doit tenir devant n'importe quelle classe. */
+  @supports (-webkit-touch-callout: none) {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer components {

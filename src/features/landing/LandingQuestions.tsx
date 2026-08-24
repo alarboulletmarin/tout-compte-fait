@@ -39,7 +39,7 @@ export function LandingQuestions() {
       {/* Deux colonnes et non quatre, comme les principes : à `max-w-5xl`,
           quatre blocs de prose tombent sous 230px de large, où une ligne ne
           porte plus que cinq mots. */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="cols">
         <Answer title={landing.deviceTitle} body={landing.deviceBody} />
         <Answer title={landing.lossTitle} body={landing.lossBody} />
         <Answer title={landing.catchTitle} body={landing.catchBody} />

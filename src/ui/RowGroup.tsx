@@ -62,7 +62,26 @@ export function RowGroup({
  * rangée qu'on vise au pouce dans une liste en prend douze de plus, comme
  * `ListRow`.
  */
-const ROW = '-mx-2 flex min-h-14 items-center gap-3 rounded-inner px-2 py-2 text-left'
+const ROW = '-mx-2 flex min-h-14 gap-3 rounded-inner px-2 py-2 text-left'
+
+/**
+ * Sur quoi la pastille, le compte et le chevron se centrent.
+ *
+ * Sans seconde ligne, la rangée n'a qu'une ligne et `items-center` la centre
+ * avec tout ce qui l'accompagne : c'est le cas courant, et il ne change pas.
+ *
+ * Avec une seconde ligne, `items-center` centrait ces trois-là sur le **bloc
+ * entier** — libellé plus description —, c'est-à-dire à côté de la description
+ * et non du libellé qu'ils accompagnent. Mesuré sur « Plus », « Réglages » et
+ * « Épargne » : 9px sous la ligne du libellé quand la description tient sur une
+ * ligne, 18 quand elle passe à deux. Un chevron qui promet un écran doit tomber
+ * en face du nom de cet écran, pas en face de ce qu'il contient.
+ *
+ * Ils se posent donc en haut, et chacun se recentre dans la hauteur d'une ligne
+ * de libellé (`LINE`) — sans quoi ils s'aligneraient sur le haut du glyphe et
+ * non sur le milieu du mot.
+ */
+const LINE = 'flex min-h-6 shrink-0 items-center'
 
 const ROW_ACTION =
   'transition-colors duration-[var(--dur)] ease-ds hover:bg-surface-2 active:bg-surface-2'
@@ -175,21 +194,45 @@ export function Row({
 
   const Marker = affordance === 'explain' ? InfoIcon : ChevronRight
 
+  /* Voir `LINE` : une rangée sans seconde ligne se centre en bloc, une rangée
+     qui en porte une aligne ses marques sur la ligne du libellé. */
+  const align = description === undefined ? 'items-center' : 'items-start'
+
   const content = (marker: boolean): ReactNode => (
     <>
-      {mark}
+      {mark !== undefined && <span className={LINE}>{mark}</span>}
       {heading}
-      {trailing !== undefined && <span className="flex shrink-0 items-center">{trailing}</span>}
+      {/* Le compte, lui, garde le centre du bloc — et non la ligne du libellé.
+          Il porte parfois un contrôle qui fait la hauteur d'un champ : posé sur
+          la première ligne, un sélecteur de 44px déborde sous la description au
+          lieu de lui faire face, et « Devise » le montrait à 11px. Une marque
+          suit le mot qu'elle marque, un contrôle occupe la rangée. */}
+      {trailing !== undefined && (
+        <span className="flex shrink-0 items-center self-center">{trailing}</span>
+      )}
       {/* `aria-hidden` : le nom accessible du lien dit déjà où il mène, et un
           chevron annoncé une seconde fois ne l'apprendrait pas mieux. */}
-      {marker && <Marker size={16} className="shrink-0 text-muted" aria-hidden="true" />}
+      {marker && (
+        <span className={LINE}>
+          <Marker size={16} className="shrink-0 text-muted" aria-hidden="true" />
+        </span>
+      )}
     </>
   )
 
   if (control !== undefined) {
     return (
+      /* Le repère aussi sur cette branche : une rangée qui pose son contrôle
+         *sous* son libellé reste une rangée du groupe, et sans lui son libellé
+         partait seul dans la marge pendant que ses voisines gardaient leur
+         colonne de glyphes. La rangée de titre reprend donc le gabarit des
+         autres — marque sur la ligne du libellé —, et le contrôle se pose
+         dessous, aligné sur le texte et non sur le glyphe. */
       <div className="-mx-2 flex flex-col gap-2 px-2 py-3">
-        {heading}
+        <div className="flex items-start gap-3">
+          {mark !== undefined && <span className={LINE}>{mark}</span>}
+          {heading}
+        </div>
         {control}
       </div>
     )
@@ -197,7 +240,7 @@ export function Row({
 
   if (to !== undefined) {
     return (
-      <Link to={to} className={cn(ROW, ROW_ACTION)}>
+      <Link to={to} className={cn(ROW, align, ROW_ACTION)}>
         {content(true)}
       </Link>
     )
@@ -205,11 +248,11 @@ export function Row({
 
   if (onClick !== undefined) {
     return (
-      <button type="button" onClick={onClick} className={cn(ROW, ROW_ACTION)}>
+      <button type="button" onClick={onClick} className={cn(ROW, align, ROW_ACTION)}>
         {content(true)}
       </button>
     )
   }
 
-  return <div className={ROW}>{content(false)}</div>
+  return <div className={cn(ROW, align)}>{content(false)}</div>
 }

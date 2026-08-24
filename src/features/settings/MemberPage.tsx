@@ -103,7 +103,9 @@ function MemberView({ member }: { member?: Member }) {
     member === undefined ? [] : supports.filter((support) => support.memberId === member.id)
 
   return (
-    <div className="flex max-w-xl flex-col gap-4">
+    /* `gap-5` : un titre d'écran est à 20px de son contenu (DS §4), comme sur
+       les autres écrans de saisie de l'app. */
+    <div className="flex max-w-xl flex-col gap-5">
       <PageTitle title={member?.name ?? t.settings.memberAdd} onBack={back}>
         {member !== undefined && <Dot color={member.color} size={10} className="shrink-0" />}
       </PageTitle>

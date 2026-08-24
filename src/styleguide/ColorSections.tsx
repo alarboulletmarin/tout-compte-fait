@@ -58,8 +58,16 @@ function SemanticList() {
             className="size-8 shrink-0 rounded-inner border border-border"
             style={{ backgroundColor: `var(${entry.name})` }}
           />
-          <span className="t-axis w-52 shrink-0">{entry.name}</span>
-          <span className="t-label truncate">{entry.value}</span>
+          {/* Nom et valeur empilés tant que trois colonnes ne tiennent pas :
+              208px figés pour le nom sur les 238 disponibles à 320px ne
+              laissaient que 30px à la valeur, et les deux panneaux sortaient de
+              l'écran par la droite. En rangée, le nom garde une largeur FIXE —
+              c'est la seule chose qui donne aux quatorze lignes une abscisse
+              commune —, ramenée aux 160px que le plus long demande. */}
+          <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-3">
+            <span className="t-axis truncate sm:w-40 sm:shrink-0">{entry.name}</span>
+            <span className="t-label truncate">{entry.value}</span>
+          </div>
         </li>
       ))}
     </ul>
@@ -69,7 +77,7 @@ function SemanticList() {
 export function SemanticTokensSection() {
   return (
     <Section title={t.styleguide.sections.semantic} note={t.styleguide.semanticNote}>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <ThemePane theme="light">
           <SemanticList />
         </ThemePane>
@@ -98,7 +106,7 @@ function SwatchRow({ entries }: { entries: TokenEntry[] }) {
 export function CategoryPaletteSection() {
   return (
     <Section title={t.styleguide.sections.categories} note={t.styleguide.categoriesNote}>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <ThemePane theme="light">
           <SwatchRow entries={CATEGORY_PALETTE} />
         </ThemePane>
@@ -113,7 +121,7 @@ export function CategoryPaletteSection() {
 export function MemberPaletteSection() {
   return (
     <Section title={t.styleguide.sections.members} note={t.styleguide.membersNote}>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <ThemePane theme="light">
           <SwatchRow entries={MEMBER_PALETTE} />
         </ThemePane>
@@ -140,7 +148,7 @@ export function PalettesSection() {
         {PALETTES.map((palette) => (
           <div key={palette} className="flex flex-col gap-2">
             <SubTitle>{paletteName()[palette]}</SubTitle>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {(['light', 'dark'] as const).map((theme) => (
                 <ThemePane key={theme} theme={theme} palette={palette}>
                   <div className="flex flex-col gap-3">

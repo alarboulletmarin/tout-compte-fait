@@ -35,7 +35,7 @@ import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
 import { EmptyState } from '@/ui/EmptyState'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { Select } from '@/ui/Field'
-import { ChevronDown, Plus, RecurrencesIcon } from '@/ui/Icons'
+import { Plus, RecurrencesIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
 import { Row as GroupRow, RowGroup } from '@/ui/RowGroup'
 import { AdvancesRow } from '@/features/advances/AdvancesRow'
@@ -189,10 +189,6 @@ function SortField({
             </option>
           ))}
         </Select>
-        <ChevronDown
-          size={14}
-          className="pointer-events-none absolute right-3 text-muted"
-        />
       </span>
     </div>
   )
@@ -446,7 +442,9 @@ function GroupedList({
           deux boutons, qui font exactement la même chose. Sous la liste et non
           au-dessus : on ne lit pas un mode d'emploi avant d'avoir vu ce qu'il
           commande. */}
-      {shown.length > 0 && <p className="t-axis">{t.recurrences.swipeHint}</p>}
+      {/* Voir `EntriesSection` : l'interligne de `t-axis` vaut 1, et cette
+          phrase passe à la ligne. */}
+      {shown.length > 0 && <p className="t-axis leading-tight">{t.recurrences.swipeHint}</p>}
     </Tile>
   )
 }
@@ -484,7 +482,10 @@ function StoppedList({
             </span>
           }
         >
-          <ul className="flex flex-col pl-9 [&>*+*]:border-t [&>*+*]:border-border">
+          {/* `pl-6` comme les groupes actifs : c'est la même relation — les
+              lignes s'alignent sous le nom du groupe, chevron et gouttière
+              compris — et elle ne peut pas valoir 24px ici et 36 là. */}
+          <ul className="flex flex-col pl-6 [&>*+*]:border-t [&>*+*]:border-border">
             {rows.map((row) => (
               <li key={row.recurrence.id}>
                 <RecurrenceRow

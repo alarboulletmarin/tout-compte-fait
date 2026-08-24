@@ -163,7 +163,11 @@ export function PeoplePage() {
                     ? recurrenceEditPath(unassigned[0].id)
                     : RECURRENCES_PATH
                 }
-                className="t-label underline underline-offset-2"
+                /* L'idiome des liens autonomes de la zone (`MemberPage`,
+                   et plus bas dans cette page) : 44px de cible, DS §8. Seul
+                   celui-ci restait un mot souligné de 18px, à côté d'un lien
+                   de même rôle qui, lui, en fait 44. */
+                className="t-label inline-flex min-h-11 w-fit items-center rounded-input underline underline-offset-2"
               >
                 {t.settings.incomeUnassignedFix}
               </Link>
@@ -185,7 +189,9 @@ export function PeoplePage() {
               dans une tuile à elles : la première dit pourquoi aucun champ
               « revenu » n'existe ici — un comportement qu'on ne devine pas —, la
               seconde est la seule porte permanente vers la répartition. */}
-          <div className="flex flex-col gap-3 border-t border-border pt-4">
+          {/* `pt-3` : 12px de part et d'autre du filet, comme partout — il
+              respirait 12 au-dessus et 16 en dessous. */}
+          <div className="flex flex-col gap-3 border-t border-border pt-3">
             <p className="t-label">
               {t.settings.memberIncomeHint}{' '}
               <Link to={RECURRENCE_NEW_PATH} className="underline underline-offset-2">

@@ -137,176 +137,197 @@ export function AdvanceFormPage() {
       ) : supports.length === 0 ? (
         <p className="t-label">{t.advances.savingSupportNone}</p>
       ) : (
-        <form
-          onSubmit={(event) => {
-            event.preventDefault()
-            submit()
-          }}
-        >
-          <Tile className="gap-4">
-            <Field
-              label={t.advances.label}
-              required
-              {...(shown.label === undefined ? {} : { error: shown.label })}
-            >
-              {(id, describedBy) => (
-                <TextInput
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={draft.label}
-                  invalid={shown.label !== undefined}
-                  placeholder={t.advances.labelPlaceholder}
-                  maxLength={60}
-                  autoFocus
-                  onChange={(e) => {
-                    patch({ label: e.target.value })
-                  }}
-                />
-              )}
-            </Field>
-
-            <Field
-              label={t.advances.amount}
-              required
-              hint={t.advances.amountHint}
-              {...(shown.amount === undefined ? {} : { error: shown.amount })}
-            >
-              {(id, describedBy) => (
-                <AmountInput
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={draft.amountText}
-                  invalid={shown.amount !== undefined}
-                  placeholder="600,00"
-                  onChange={(e) => {
-                    patch({ amountText: e.target.value })
-                  }}
-                />
-              )}
-            </Field>
-
-            <Field label={t.advances.paidOn} required>
-              {(id) => (
-                <DateInput
-                  id={id}
-                  value={draft.paidOn}
-                  onChange={(e) => {
-                    const next = e.target.value
-                    // Le mois de départ suit le paiement tant qu'on ne l'a pas
-                    // déplacé soi-même : une avance couvre presque toujours la
-                    // période qui commence le mois où on l'a réglée.
-                    patch(
-                      ymOf(draft.paidOn) === draft.from
-                        ? { paidOn: next, from: ymOf(next) }
-                        : { paidOn: next },
-                    )
-                  }}
-                />
-              )}
-            </Field>
-
-            <Field
-              label={t.advances.category}
-              required
-              {...(shown.category === undefined ? {} : { error: shown.category })}
-            >
-              {(id, describedBy) => (
-                <CategorySelect
-                  id={id}
-                  aria-describedby={describedBy}
-                  direction="out"
-                  value={draft.categoryId}
-                  invalid={shown.category !== undefined}
-                  onChange={(e) => {
-                    patch({ categoryId: e.target.value })
-                  }}
-                />
-              )}
-            </Field>
-
-            <Field
-              label={t.advances.savingSupport}
-              required
-              hint={t.advances.savingSupportHint}
-              {...(shown.saving === undefined ? {} : { error: shown.saving })}
-            >
-              {(id, describedBy) => (
-                <SupportSelect
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={draft.savingSupportId}
-                  invalid={shown.saving !== undefined}
-                  onChange={(e) => {
-                    patch({ savingSupportId: e.target.value })
-                  }}
-                />
-              )}
-            </Field>
-
-            <div className="flex flex-wrap gap-4">
-              <Field label={t.advances.from} className="min-w-40 flex-1">
-                {(id) => (
-                  <TextInput
-                    id={id}
-                    type="month"
-                    value={draft.from}
-                    onChange={(e) => {
-                      patch({ from: e.target.value })
-                    }}
-                  />
-                )}
-              </Field>
+        <>
+          {/* La gouttière de l'écran, `gap-5`, jusqu'au bout : les blocs du
+              formulaire s'écartaient de 16px par des `mt-4` posés à la main,
+              soit un rythme de moins que la pile qui les contient. */}
+          <form
+            id="advance-form"
+            className="flex flex-col gap-5"
+            onSubmit={(event) => {
+              event.preventDefault()
+              submit()
+            }}
+          >
+            <Tile className="gap-4">
               <Field
-                label={t.advances.to}
-                className="min-w-40 flex-1"
-                {...(shown.period === undefined ? {} : { error: shown.period })}
+                label={t.advances.label}
+                required
+                {...(shown.label === undefined ? {} : { error: shown.label })}
               >
                 {(id, describedBy) => (
                   <TextInput
                     id={id}
-                    type="month"
                     aria-describedby={describedBy}
-                    value={draft.to}
-                    invalid={shown.period !== undefined}
+                    value={draft.label}
+                    invalid={shown.label !== undefined}
+                    placeholder={t.advances.labelPlaceholder}
+                    maxLength={60}
+                    autoFocus
                     onChange={(e) => {
-                      patch({ to: e.target.value })
+                      patch({ label: e.target.value })
                     }}
                   />
                 )}
               </Field>
-            </div>
 
-            {/* La case ne s'affiche qu'à partir de deux membres, comme sur la
-                saisie : à un seul, tout est déjà à la même personne. */}
-            {members.length > 1 && (
-              <Checkbox
-                checked={draft.shared}
-                label={t.entry.shared}
-                hint={t.advances.methodShared}
-                onChange={(next) => {
-                  patch({ shared: next })
-                }}
-              />
-            )}
-          </Tile>
+              <Field
+                label={t.advances.amount}
+                required
+                hint={t.advances.amountHint}
+                {...(shown.amount === undefined ? {} : { error: shown.amount })}
+              >
+                {(id, describedBy) => (
+                  <AmountInput
+                    id={id}
+                    aria-describedby={describedBy}
+                    value={draft.amountText}
+                    invalid={shown.amount !== undefined}
+                    placeholder="600,00"
+                    onChange={(e) => {
+                      patch({ amountText: e.target.value })
+                    }}
+                  />
+                )}
+              </Field>
 
-          {/* La mensualité se lit avant d'enregistrer : c'est le chiffre qui
-              tombera chaque mois, et le seul moyen de vérifier que la période
-              saisie est la bonne. */}
-          {monthly !== null && errors.period === undefined && (
-            <Tile variant="accent" className="mt-4 gap-1">
-              <span className="t-label">{t.advances.monthly}</span>
-              <Amount value={monthly} size="tile" direction="out" />
-              <span className="t-axis">
-                {tpl(t.advances.monthlyOf, formatMoney(monthly, currency, false), months)}
-              </span>
+              <Field label={t.advances.paidOn} required>
+                {(id) => (
+                  <DateInput
+                    id={id}
+                    value={draft.paidOn}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      // Le mois de départ suit le paiement tant qu'on ne l'a pas
+                      // déplacé soi-même : une avance couvre presque toujours la
+                      // période qui commence le mois où on l'a réglée.
+                      patch(
+                        ymOf(draft.paidOn) === draft.from
+                          ? { paidOn: next, from: ymOf(next) }
+                          : { paidOn: next },
+                      )
+                    }}
+                  />
+                )}
+              </Field>
+
+              <Field
+                label={t.advances.category}
+                required
+                {...(shown.category === undefined ? {} : { error: shown.category })}
+              >
+                {(id, describedBy) => (
+                  <CategorySelect
+                    id={id}
+                    aria-describedby={describedBy}
+                    direction="out"
+                    value={draft.categoryId}
+                    invalid={shown.category !== undefined}
+                    onChange={(e) => {
+                      patch({ categoryId: e.target.value })
+                    }}
+                  />
+                )}
+              </Field>
+
+              <Field
+                label={t.advances.savingSupport}
+                required
+                hint={t.advances.savingSupportHint}
+                {...(shown.saving === undefined ? {} : { error: shown.saving })}
+              >
+                {(id, describedBy) => (
+                  <SupportSelect
+                    id={id}
+                    aria-describedby={describedBy}
+                    value={draft.savingSupportId}
+                    invalid={shown.saving !== undefined}
+                    onChange={(e) => {
+                      patch({ savingSupportId: e.target.value })
+                    }}
+                  />
+                )}
+              </Field>
+
+              <div className="flex flex-wrap gap-4">
+                <Field label={t.advances.from} className="min-w-40 flex-1">
+                  {(id) => (
+                    <TextInput
+                      id={id}
+                      type="month"
+                      /* Borné comme les autres champs de date de l'app : un
+                         `YYYY-MM` a une longueur connue, et pleine largeur il
+                         faisait sauter le bord droit de la colonne. */
+                      className="max-w-48"
+                      value={draft.from}
+                      onChange={(e) => {
+                        patch({ from: e.target.value })
+                      }}
+                    />
+                  )}
+                </Field>
+                <Field
+                  label={t.advances.to}
+                  className="min-w-40 flex-1"
+                  {...(shown.period === undefined ? {} : { error: shown.period })}
+                >
+                  {(id, describedBy) => (
+                    <TextInput
+                      id={id}
+                      type="month"
+                      /* Borné comme les autres champs de date de l'app : un
+                         `YYYY-MM` a une longueur connue, et pleine largeur il
+                         faisait sauter le bord droit de la colonne. */
+                      className="max-w-48"
+                      aria-describedby={describedBy}
+                      value={draft.to}
+                      invalid={shown.period !== undefined}
+                      onChange={(e) => {
+                        patch({ to: e.target.value })
+                      }}
+                    />
+                  )}
+                </Field>
+              </div>
+
+              {/* La case ne s'affiche qu'à partir de deux membres, comme sur la
+                  saisie : à un seul, tout est déjà à la même personne. */}
+              {members.length > 1 && (
+                <Checkbox
+                  checked={draft.shared}
+                  label={t.entry.shared}
+                  hint={t.advances.methodShared}
+                  onChange={(next) => {
+                    patch({ shared: next })
+                  }}
+                />
+              )}
             </Tile>
-          )}
 
-          <Button type="submit" full className="mt-4">
-            {t.common.save}
-          </Button>
-        </form>
+            {/* La mensualité se lit avant d'enregistrer : c'est le chiffre qui
+                tombera chaque mois, et le seul moyen de vérifier que la période
+                saisie est la bonne. */}
+            {monthly !== null && errors.period === undefined && (
+              <Tile variant="accent" className="gap-1">
+                <span className="t-label">{t.advances.monthly}</span>
+                <Amount value={monthly} size="tile" direction="out" />
+                <span className="t-axis">
+                  {tpl(t.advances.monthlyOf, formatMoney(monthly, currency, false), months)}
+                </span>
+              </Tile>
+            )}
+          </form>
+
+          {/* Hors du formulaire, comme sur les six autres écrans de saisie : un
+              bouton pleine largeur enfermé dedans cassait la gouttière de
+              l'écran et n'avait pas la forme de ses pairs. `form=` le relie
+              sans le contenir. */}
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" form="advance-form">
+              {t.common.save}
+            </Button>
+          </div>
+        </>
       )}
 
       <Tile className="gap-2">

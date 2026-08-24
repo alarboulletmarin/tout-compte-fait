@@ -127,8 +127,11 @@ function SupportView({ support }: { support: SavingSupport }) {
           <>
             <Amount value={known} size="tile" />
             <span className="t-label">{freshness(value.knownOn, support.pace)}</span>
+            {/* `mt-1` : 8 de gouttière plus 4 font les 12px d'intérieur de tuile
+                (DS §4), que les trois groupes de cette tuile posaient à 16 — un
+                écart avec les tuiles jumelles de l'épargne. */}
             {value.movedSince !== ZERO && value.estimated !== null && (
-              <div className="mt-2 flex flex-col gap-1 border-t border-border pt-3">
+              <div className="mt-1 flex flex-col gap-1 border-t border-border pt-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="t-label min-w-0 flex-1 truncate">{t.savings.estimated}</span>
                   <Amount value={value.estimated} size="body" className="shrink-0" />
@@ -151,7 +154,7 @@ function SupportView({ support }: { support: SavingSupport }) {
             En mots et sans couleur : un livret plein n'est pas une erreur, et
             le DS §2.3 réserve l'alerte aux dépassements. */}
         {cap.kind !== 'none' && (
-          <div className="mt-2 flex flex-col items-start gap-2">
+          <div className="mt-1 flex flex-col items-start gap-2">
             <p className="t-label">
               {cap.kind === 'unknown'
                 ? tpl(supports.capUnknown, exact(cap.cap))
@@ -185,7 +188,7 @@ function SupportView({ support }: { support: SavingSupport }) {
           </div>
         )}
 
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-1 flex flex-wrap items-center gap-3">
           <span className="t-label inline-flex items-center gap-2">
             <Dot color={member?.color ?? 'var(--cat-rest)'} />
             {member?.name ?? ''}
@@ -325,16 +328,28 @@ function SupportView({ support }: { support: SavingSupport }) {
                             formatDate(rate.from),
                           )
                     }
-                    {...(index === 0
-                      ? {}
-                      : { meta: tpl(supports.rateUntil, formatDate(rates[index - 1]?.from ?? '')) })}
+                    /* La nature du taux passe à gauche, avec la date : la colonne
+                       de droite ne peut pas rétrécir — `ListRow` la pose en
+                       `shrink-0` —, et « 2,50 % · Rendement hypothétique » y
+                       demandait 45px de plus que la tuile n'en a à 320px. Le
+                       libellé de gauche tombait alors à zéro et la date
+                       disparaissait : on lisait un taux sans savoir depuis quand
+                       il court, ce que la rangée existe précisément pour dire.
+                       À droite il ne reste que le pourcentage — borné, tnum,
+                       comme toute colonne de nombres de l'app. */
+                    meta={[
+                      rate.kind === 'guaranteed'
+                        ? t.savings.supportRateGuaranteed
+                        : t.savings.supportRateAssumed,
+                      index === 0
+                        ? null
+                        : tpl(supports.rateUntil, formatDate(rates[index - 1]?.from ?? '')),
+                    ]
+                      .filter((part) => part !== null)
+                      .join(' · ')}
                     trailing={
                       <span className="t-num-body tnum">
-                        {`${formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)} · ${
-                          rate.kind === 'guaranteed'
-                            ? t.savings.supportRateGuaranteed
-                            : t.savings.supportRateAssumed
-                        }`}
+                        {formatPercent(rate.rateBp / 10_000, rate.rateBp % 100 === 0 ? 0 : 2)}
                       </span>
                     }
                     onClick={() => {

@@ -1,5 +1,5 @@
 import { useIsCommonFilter } from '@/store/selectors'
-import { BentoGrid } from '@/ui/Tile'
+import { BentoGrid, type TileSpan } from '@/ui/Tile'
 import { BalanceTile } from './BalanceTile'
 import { ChargesTile, IncomeTile } from './FlowTiles'
 import type { Metric } from './MetricInfo'
@@ -125,14 +125,27 @@ export function SituationGrid({
      du format des autres. */
   const split = useHasSplit()
 
+  /* Le format des deux tuiles plates du pot commun. Sur un foyer d'une seule
+     personne, le commun ne garde que Charges et Suivi du mois : deux `4x1` sur
+     six colonnes se rangent l'une sous l'autre et laissent un trou de deux
+     colonnes sur deux rangées au palier bureau, que rien ne vient combler.
+     En `6x1` elles referment le pavage aux trois paliers.
+     Le conditionnel n'est pas cosmétique : à deux membres, la `2x2` du partage
+     bloque deux colonnes et `['2x2','6x1','6x1']` laisserait huit cases vides —
+     c'est `4x1` qui referme dans ce cas. */
+  const flat: TileSpan = common && !split ? '6x1' : '4x1'
+
   return (
     <BentoGrid>
       {!common && <BalanceTile span={split ? '4x2' : '6x2'} onExplain={onExplain} />}
       <SplitTile />
       {!common && <IncomeTile />}
-      <ChargesTile span={common ? '4x1' : '2x1'} />
+      <ChargesTile span={common ? flat : '2x1'} />
       {!common && <SavingTile />}
-      <MonthStatusTile {...(onShowEntries === undefined ? {} : { onShowPending: onShowEntries })} />
+      <MonthStatusTile
+        span={flat}
+        {...(onShowEntries === undefined ? {} : { onShowPending: onShowEntries })}
+      />
     </BentoGrid>
   )
 }

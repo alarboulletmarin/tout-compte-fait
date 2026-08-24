@@ -380,9 +380,20 @@ export function CalendarGrid({
             <span
               key={cell.date}
               aria-hidden="true"
-              className="flex min-h-11 items-center justify-center p-1 min-[448px]:aspect-square"
+              /* Exactement la boîte et la pile d'une case active : même
+                 `flex-col`, même gouttière, même réserve de pastilles. Sans
+                 elles, la case inerte n'avait qu'un chiffre à centrer quand sa
+                 voisine en centre une pile de 42px, et son quantième tombait
+                 11px plus bas — la ligne des chiffres se cassait sur la
+                 première et la dernière semaine. Centrer la pile ne suffisait
+                 pas : dès que le carré rend la case plus haute que son contenu,
+                 deux piles de hauteurs différentes ne tombent plus au même y. */
+              className="flex min-h-11 flex-col items-center justify-center gap-0.5 p-1 min-[448px]:aspect-square"
             >
-              <span className="t-body tnum leading-none text-muted opacity-50">{cell.day}</span>
+              <span className={cn(PILL, 'border-transparent text-muted opacity-50')}>
+                {cell.day}
+              </span>
+              <Dots entries={[]} colorOf={colorOf} />
             </span>
           ),
         )}

@@ -457,18 +457,25 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <Disclosure
-      open={open}
-      onOpenChange={onOpenChange}
-      className="-mx-3 border-t border-border pt-2"
-      title={
-        <span className="flex min-w-0 flex-col">
-          <span className="t-body">{title}</span>
-          {!open && <span className="t-label truncate">{summary}</span>}
-        </span>
-      }
-    >
-      <div className="flex flex-col gap-4 px-3 pt-3 pb-1">{children}</div>
-    </Disclosure>
+    /* Le filet sur la colonne, le débordement sur le repliable. Portés
+       ensemble, `-mx-3` étirait aussi le trait : il dépassait de 12px de chaque
+       côté la colonne de champs qu'il est censé séparer, seul élément de
+       l'écran à le faire. Le rembourrage de la rangée reste au repliable, qui
+       en a besoin pour son fond de survol. */
+    <div className="border-t border-border pt-2">
+      <Disclosure
+        open={open}
+        onOpenChange={onOpenChange}
+        className="-mx-3"
+        title={
+          <span className="flex min-w-0 flex-col">
+            <span className="t-body">{title}</span>
+            {!open && <span className="t-label truncate">{summary}</span>}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-4 px-3 pt-3 pb-1">{children}</div>
+      </Disclosure>
+    </div>
   )
 }

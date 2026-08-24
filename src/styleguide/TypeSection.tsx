@@ -30,22 +30,28 @@ export function TypographySection() {
         <TypeScale />
       </DualTheme>
 
-      <SubTitle>{t.styleguide.sampleAmount}</SubTitle>
-      <DualTheme>
-        {/* Dans une tuile, comme partout dans l'app : un montant ne se pose
-            jamais directement sur le fond de page. */}
-        <Tile className="flex flex-col gap-4">
-          <Amount value={SAMPLE} size="hero" />
-          <Amount value={SAMPLE} size="tile" />
-          <div className="flex items-center gap-4">
-            <Amount value={SAMPLE} size="body" direction="in" />
-            <Amount value={SAMPLE} size="body" direction="out" />
-            <Amount value={money(-4290)} size="body" />
-            <Amount value={money(-4290)} size="body" tone="danger" />
-            <Amount value={SAMPLE} size="label" tone="muted" />
-          </div>
-        </Tile>
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>{t.styleguide.sampleAmount}</SubTitle>
+        <DualTheme>
+          {/* Dans une tuile, comme partout dans l'app : un montant ne se pose
+              jamais directement sur le fond de page. */}
+          <Tile className="flex flex-col gap-4">
+            <Amount value={SAMPLE} size="hero" />
+            <Amount value={SAMPLE} size="tile" />
+            {/* `flex-wrap` : cinq montants de corps ne tiennent pas sur les 238px
+                utiles d'un téléphone de 320, et sans repli la rangée poussait la
+                page entière en défilement horizontal — un nuancier qui déborde ne
+                peut pas servir de référence de mise en page. */}
+            <div className="flex flex-wrap items-center gap-4">
+              <Amount value={SAMPLE} size="body" direction="in" />
+              <Amount value={SAMPLE} size="body" direction="out" />
+              <Amount value={money(-4290)} size="body" />
+              <Amount value={money(-4290)} size="body" tone="danger" />
+              <Amount value={SAMPLE} size="label" tone="muted" />
+            </div>
+          </Tile>
+        </DualTheme>
+      </div>
     </Section>
   )
 }

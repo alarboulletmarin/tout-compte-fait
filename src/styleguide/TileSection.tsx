@@ -15,8 +15,9 @@ const VARIANTS: { variant: TileVariant; eyebrow: string }[] = [
 ]
 
 function TileVariants() {
+  /* 16px, la gouttière que le parent écarte déjà entre ses sections. */
   return (
-    <div className="grid gap-3 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3">
       {VARIANTS.map(({ variant, eyebrow }) => (
         <Tile key={variant} variant={variant}>
           <Eyebrow icon={BalanceIcon}>{eyebrow}</Eyebrow>

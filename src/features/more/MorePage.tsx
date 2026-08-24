@@ -191,7 +191,12 @@ function LanguageRow() {
       label={t.language.label}
       icon={LanguageIcon}
       description={t.language.hint}
-      trailing={
+      /* Sous le libellé et non à sa droite : à 320px la bascule prend 217px
+         des 250 utiles, et la colonne du libellé tombait à 42px — « Langue »
+         tronqué, et sa phrase cassée en cinq lignes dont le mot le plus long
+         sortait de la boîte. C'est exactement ce que `control` existe pour
+         éviter, et ce que la rangée du thème fait déjà. */
+      control={
         <Segmented
           options={languages()}
           value={locale}
@@ -228,9 +233,14 @@ function CurrencyRow() {
       labelFor={id}
       icon={CurrencyIcon}
       description={t.settings.currencyHint}
-      trailing={
+      /* Sous le libellé, pour la même raison que la bascule de langue : à 320px
+         le sélecteur prenait la rangée et la phrase se cassait en cinq lignes
+         dans un ruban. `w-fit` pour qu'il ne s'étire pas sur toute la colonne —
+         une liste de trois codes n'a pas besoin de la largeur d'un écran. */
+      control={
         <Select
           id={id}
+          className="w-fit"
           value={currency}
           onChange={(event) => {
             setCurrency(event.target.value)
@@ -277,8 +287,16 @@ export function MorePage() {
     ),
   ].join(' · ')
 
+  /* Le titre dans le flux de bloc, hors de toute pile : `PageTitle` porte son
+     propre `mb-5`, qui vaut exactement les 20px que le DS §4 met entre un titre
+     et son contenu. Dans une colonne à gouttière, cette marge s'ajoutait à la
+     gouttière et le titre se retrouvait à 40px de son premier groupe — le
+     double de tous les autres écrans. C'est le piège que `PageTitle` documente
+     déjà pour sa variante à retour, et cet écran était le seul à y tomber.
+     La pile n'avait de toute façon que deux enfants : le titre, et la grille
+     `.cols` qui porte sa propre gouttière. */
   return (
-    <div className="flex flex-col gap-5">
+    <>
       <PageTitle title={t.nav.more} />
 
       {/* Cinq groupes sur deux colonnes au-delà de 768px, un seul en dessous.
@@ -388,6 +406,6 @@ export function MorePage() {
           />
         </RowGroup>
       </div>
-    </div>
+    </>
   )
 }

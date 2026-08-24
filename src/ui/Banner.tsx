@@ -61,7 +61,13 @@ export function Banner({
       {...(role === undefined ? {} : { role })}
       {...(label === undefined ? {} : { 'aria-label': label })}
       className={cn(
-        'tile flex flex-col gap-3 p-4 sm:flex-row sm:items-center',
+        /* Le cadre d'une tuile, parce que c'en est une : le bandeau se pose
+           dans `<main>` juste au-dessus du contenu, à la même largeur que les
+           tuiles qui le suivent, et 16px de rembourrage y décalaient son texte
+           de quatre pixels par rapport au leur — un écart qui ne se nomme pas
+           mais se voit, deux blocs l'un sous l'autre n'ayant pas la même marge
+           intérieure. C'est la paire de `Tile.PADDING`, DS §4. */
+        'tile flex flex-col gap-3 p-5 sm:flex-row sm:items-center md:p-6',
         tone === 'danger' && 'border-danger',
         className,
       )}
@@ -82,7 +88,12 @@ export function Banner({
         {body !== undefined && <p className="t-label">{body}</p>}
       </div>
       {children !== undefined && (
-        <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">{children}</div>
+        /* Empilés sous le texte, les gestes restent sur son bord : `self-end`
+           les envoyait au bord droit d'un bloc aligné à gauche, si bien que le
+           bandeau se lisait en deux colonnes qu'il n'a pas. En rangée — dès
+           640px — c'est la rangée qui les place, et `sm:self-auto` lui rend la
+           main. */
+        <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">{children}</div>
       )}
     </div>
   )

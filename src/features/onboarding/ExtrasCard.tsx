@@ -76,7 +76,12 @@ export function ExtrasCard({
       {extras.length === 0 ? (
         <p className="t-label">{t.onboarding.extrasEmpty}</p>
       ) : (
-        <ul aria-label={t.onboarding.extrasList} className="flex flex-col">
+        /* `-mx-3` : `ListRow` porte son propre `px-3`, et sans le rattraper
+           ici la pastille et le libellé partaient 12px à l'intérieur de la
+           colonne de la carte — c'est la convention que `PeoplePage` et
+           `MonthTile` posent déjà, et c'est ce qui fait déborder le fond de
+           survol du texte plutôt que de le coller au mot. */
+        <ul aria-label={t.onboarding.extrasList} className="-mx-3 flex flex-col">
           {extras.map((extra) => (
             <li key={extra.id}>
               {/* `ListRow` et non une rangée à part : c'est une donnée, et la
@@ -131,13 +136,18 @@ export function ExtrasCard({
               />
             )}
           </Field>
-          <Field label={t.onboarding.extrasAmount}>
+          {/* La largeur est posée sur l'enveloppe, jamais sur le contrôle :
+              `AmountInput` porte déjà `w-full`, `cn` concatène sans fusionner,
+              et `.w-full` passe après `.w-28` dans `utilities.css` — un `w-28`
+              posé ici ne faisait donc rien, et la case prenait ses 192px de
+              plafond au lieu de 112. C'est le piège que l'en-tête de `Field`
+              décrit ; le `w-full` du contrôle remplit maintenant l'enveloppe. */}
+          <Field label={t.onboarding.extrasAmount} className="w-28">
             {(id) => (
               <AmountInput
                 id={id}
                 value={amount}
                 placeholder="0,00"
-                className="w-28"
                 onChange={(event) => {
                   setAmount(event.target.value)
                 }}
@@ -156,9 +166,17 @@ export function ExtrasCard({
       </form>
 
       {extras.length > 0 && (
+        /* Le total réserve la colonne du bouton de suppression que portent
+           les rangées au-dessus. Sans elle, son montant se posait 60px à droite
+           de ceux qu'il additionne : la colonne de chiffres se cassait sur la
+           ligne même qui prétend en faire la somme. 4px de gouttière plus les
+           44px du bouton, soit le gabarit exact du `trailing` d'une rangée. */
         <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
           <span className="t-label">{t.onboarding.extrasTotal}</span>
-          <Amount value={total} size="body" />
+          <span className="flex items-center gap-1">
+            <Amount value={total} size="body" />
+            <span aria-hidden="true" className="w-11" />
+          </span>
         </div>
       )}
 

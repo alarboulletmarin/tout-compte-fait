@@ -37,8 +37,11 @@ export function ReviewQueue({
   onGoTo: (step: number) => void
   onQuit: () => void
 }) {
+  /* `md:p-6` : cette colonne n'existe qu'à partir de 1024px, donc toujours
+     au-delà du palier où une tuile passe à 24px de cadre — elle gardait le
+     rembourrage mobile d'un écran qu'elle ne voit jamais. */
   return (
-    <aside className="tile hidden flex-col gap-3 p-5 lg:flex">
+    <aside className="tile hidden flex-col gap-3 p-5 md:p-6 lg:flex">
       <Eyebrow icon={ToConfirmIcon}>{t.review.title}</Eyebrow>
       <span className="t-axis">{counterLong(index, lines.length)}</span>
 

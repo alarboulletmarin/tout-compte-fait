@@ -14,6 +14,7 @@ import {
   useKindTotals,
   useMemberMap,
   useMembers,
+  useSavingTotal,
   useScopedSavingSupports,
 } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
@@ -128,6 +129,10 @@ export function SavingsPage() {
   const members = useMembers()
   const memberMap = useMemberMap()
   const supports = useScopedSavingSupports()
+  /* Aucun relevé, aucune tuile d'autonomie : `CoverageTile` se retire de
+     lui-même (`total.valued === 0`), et la rangée qui l'accueille doit alors
+     cesser d'être une grille à deux colonnes. */
+  const covered = useSavingTotal().valued > 0
   /* Pose une personne quand aucune ne l'est. Le filtre est posé même quand la
      rangée ne s'affiche pas : sans lui, l'écran lirait le foyer entier en solo,
      c'est-à-dire la somme que cet écran existe pour ne pas montrer. */
@@ -197,10 +202,19 @@ export function SavingsPage() {
               étroite à treize caractères : « Combien de temps je tiens » en fait
               vingt-cinq. Côte à côte à 320, la rangée ne dirait plus rien de ce
               qu'elle nomme. */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <CoverageTile />
+          {/* `CoverageTile` se retire faute du moindre relevé, et la grille
+              restait alors à deux colonnes avec un seul enfant : « Ce mois »
+              occupait la moitié gauche, l'autre moitié vide. Le DS §5 refuse
+              cette mise en page et demande que ce soit à l'écran de reprendre
+              la pile — c'est ce que fait la branche du bas. */}
+          {covered ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CoverageTile />
+              <MonthPreview />
+            </div>
+          ) : (
             <MonthPreview />
-          </div>
+          )}
 
           {/* Ce qui conclut à gauche, ce qui détaille à droite — au-delà de
               768px seulement. L'ordre du DOM ne bouge pas d'une ligne : les

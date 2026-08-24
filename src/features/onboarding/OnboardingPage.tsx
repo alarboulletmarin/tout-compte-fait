@@ -207,7 +207,9 @@ export function OnboardingPage() {
           l'écran, et le contenu s'y centre. La revue a le même parti, à ceci
           près qu'elle garde son cadre : une carte qu'on traverse est un objet
           qui passe, une question qu'on se pose ne l'est pas. */}
-      <section className="flex flex-1 flex-col justify-center gap-4 py-2">
+      {/* `gap-5` : un titre de section est à 20px de son contenu (DS §4), et
+          la question se tenait à 16 de la réponse sur les sept cartes. */}
+      <section className="flex flex-1 flex-col justify-center gap-5 py-2">
         <div className="flex flex-col gap-2">
           <h2 className="t-section">{cardTitle(card)}</h2>
           <p className="t-label">{cardBody(card)}</p>

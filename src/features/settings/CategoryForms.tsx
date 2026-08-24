@@ -42,7 +42,9 @@ function FormScreen({
   children: ReactNode
 }) {
   return (
-    <div className="flex max-w-xl flex-col gap-4">
+    /* `gap-5` : voir `MemberPage`. Le châssis des deux créations du catalogue
+       posait son titre à 16px du formulaire, contre 20 ailleurs. */
+    <div className="flex max-w-xl flex-col gap-5">
       <PageTitle title={title} onBack={onBack}>
         {badge !== undefined && <Eyebrow className="shrink-0">{badge}</Eyebrow>}
       </PageTitle>

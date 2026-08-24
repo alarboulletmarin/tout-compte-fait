@@ -26,7 +26,10 @@ export function StartCard({ value, onChange }: { value: Start; onChange: (next: 
   const nextName = formatMonthName(next)
 
   return (
-    <div className="flex flex-col gap-3">
+    /* `gap-4` comme les cinq autres cartes de la file : celle-ci empilait à
+       12px, et la phrase de conséquence remontait donc de 4px sous la bascule
+       quand on traversait l'onboarding. */
+    <div className="flex flex-col gap-4">
       <Segmented<Start>
         options={[
           { value: 'current', label: t.onboarding.startCurrent },
@@ -35,6 +38,10 @@ export function StartCard({ value, onChange }: { value: Start; onChange: (next: 
         value={value}
         onChange={onChange}
         label={t.onboarding.startMonthLabel}
+        /* Voir `WhoCard` : dans une colonne, l'`inline-flex` de `Segmented` ne
+           suffit pas à le serrer sur ses positions, et il partait sur toute la
+           largeur — 127px de pilule vide à 390px, 281 à 1440. */
+        className="self-start"
       />
       {/* La conséquence, nommée avec les vrais mois : « le mois prochain » ne
           dit pas lequel, et c'est précisément ce qu'on veut vérifier avant de

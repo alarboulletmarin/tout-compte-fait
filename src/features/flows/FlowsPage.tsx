@@ -120,18 +120,25 @@ function FlowSection({ section }: { section: Section }) {
           tiennent pas ensemble sur les 288px utiles d'un téléphone de 320, et
           un eyebrow est en `nowrap` — il déborderait au lieu de se serrer.
           C'est déjà la parade de l'en-tête de la liste du mois. */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-0.5">
-        <Eyebrow className="text-muted">{section.title}</Eyebrow>
-        <Amount
-          value={section.total}
-          size="body"
-          {...(section.direction === undefined
-            ? { signed: true }
-            : { direction: section.direction })}
-        />
-      </div>
+      <Tile className="gap-2 p-2! md:p-2!">
+        {/* L'en-tête **dans** la tuile : le `px-3` d'une `ListRow` pose la
+            verticale des montants à 21px du bord de section — un pixel de
+            bordure, huit de cadre, douze de rangée —, et 21 n'est pas sur
+            l'échelle du DS. Aucun utilitaire posé du dehors ne pouvait donc
+            tomber juste, et le total se lisait 19px à droite de la colonne
+            qu'il additionne. Dedans, il partage le rembourrage des rangées et
+            tombe dessus sans qu'on ait à calculer quoi que ce soit. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-3 pt-1">
+          <Eyebrow className="text-muted">{section.title}</Eyebrow>
+          <Amount
+            value={section.total}
+            size="body"
+            {...(section.direction === undefined
+              ? { signed: true }
+              : { direction: section.direction })}
+          />
+        </div>
 
-      <Tile className="p-2! md:p-2!">
         <ul className="flex flex-col">
           {section.lines.map(({ entry, meta }) => (
             <li key={entry.id}>
@@ -147,7 +154,7 @@ function FlowSection({ section }: { section: Section }) {
         </ul>
       </Tile>
 
-      {section.meta !== null && <p className="t-axis px-0.5">{section.meta}</p>}
+      {section.meta !== null && <p className="t-axis">{section.meta}</p>}
     </section>
   )
 }
@@ -365,7 +372,11 @@ export function FlowsPage() {
     content = <EmptyState message={t.flows.filtered} />
   } else {
     content = (
-      <div className="flex max-w-3xl flex-col gap-5">
+      /* Pas de plafond : le bandeau, les chevrons de `MonthNav` et la piste
+         de pilules qui surmontent cet écran vivent dans la boîte de contenu
+         entière, et 768px arrêtaient la pile 224px avant eux — le même écran
+         se lisait sur deux largeurs. */
+      <div className="flex flex-col gap-5">
         {/* Le pot commun n'a pas de solde : il n'a aucun revenu, et une
             soustraction y vaudrait les charges au signe près. */}
         {!common && <HeadTile scope={scopeName === null ? t.flows.scopeHousehold : de(scopeName)} />}

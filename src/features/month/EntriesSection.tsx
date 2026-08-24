@@ -313,8 +313,10 @@ export function EntriesSection({
             manque des lignes. Une pilule à part des natures, et non une de
             plus parmi elles : celles-là sont un choix entre quatre, celle-ci
             est une condition en cours. */}
+        {/* Le cran des deux rangées de commande au-dessus : trois rangées
+            bâties à l'identique ne peuvent pas s'écarter de deux valeurs. */}
         {family !== null && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="t-axis">{t.month.familyFilter}</span>
             <Chip
               active
@@ -445,7 +447,13 @@ export function EntriesSection({
             dit qu'elle se glisse, et le doigt ne découvre pas tout seul un
             fond qu'il faut déplacer de quatre-vingt-douze pixels pour voir.
             La phrase nomme aussi les deux boutons qui font la même chose. */}
-        {!readOnly && pending > 0 && <p className="t-axis">{t.month.swipeHint}</p>}
+        {/* `leading-tight` : `t-axis` a un interligne de 1, taillé pour une
+            étiquette d'axe d'une ligne. Cette phrase-ci en fait 123 caractères
+            et tombe sur trois à quatre lignes à 390px, collées les unes aux
+            autres sans un pixel de blanc. */}
+        {!readOnly && pending > 0 && (
+          <p className="t-axis leading-tight">{t.month.swipeHint}</p>
+        )}
 
         {/* Le retour en arrière en masse — le seul geste que ni la revue ni le
             glissé n'offrent, et le seul qui recule. Il reste atteignable tant

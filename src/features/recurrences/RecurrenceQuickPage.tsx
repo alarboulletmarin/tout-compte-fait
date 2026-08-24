@@ -190,7 +190,9 @@ export function RecurrenceQuickPage() {
       <PageTitle title={t.quickRule.title} hidden />
       <Progress index={index} onQuit={quit} />
 
-      <section className="tile flex flex-col gap-4">
+      {/* Même oubli qu'à la saisie rapide : `.tile` ne pose pas de
+          rembourrage, et sans lui le contenu part du bord arrondi. */}
+      <section className="tile flex flex-col gap-4 p-5 md:p-6">
         <h2 className="t-section">{t.quickRule.steps[step].title}</h2>
         <p className="t-label">{t.quickRule.steps[step].body}</p>
 
@@ -271,17 +273,23 @@ export function RecurrenceQuickPage() {
             </div>
             <Field label={t.recurrences.form.monthDay} hint={t.recurrences.form.monthDayHint}>
               {(id, describedBy) => (
+                /* `max-w-24` et non `w-24` : `TextInput` porte `w-full`, `cn`
+                   concatène sans fusionner, et `.w-full` passe après `.w-24`
+                   dans `utilities.css` — une seconde `width` était donc perdue
+                   d'avance, et le quantième prenait toute la largeur pour deux
+                   caractères. Un plafond, lui, borne le `w-full` sans entrer en
+                   concurrence avec lui : c'est l'idiome de `PeriodFields`, qui
+                   pose le même champ. Sur l'enveloppe, il aurait écrasé du même
+                   coup le libellé et la phrase d'aide dans 96px. */
                 <TextInput
                   id={id}
+                  className="max-w-24"
                   aria-describedby={describedBy}
                   type="text"
                   inputMode="numeric"
                   maxLength={2}
                   value={draft.dayText}
                   invalid={tried && error !== null}
-                  /* 6rem : un quantième d'un ou deux chiffres, exactement la
-                     largeur que le DS §6 lui donne. */
-                  className="w-24"
                   onChange={(event) => {
                     patch({ dayText: event.target.value })
                   }}

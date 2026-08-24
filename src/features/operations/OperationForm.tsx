@@ -6,7 +6,11 @@ import { PeriodFields } from '@/features/recurrences/PeriodFields'
 import { CapAlert } from '@/features/savings/CapAlert'
 import { SupportCreateSheet, SupportSelect } from '@/features/savings/SupportSelect'
 import { useSupportCreateSheet } from '@/features/savings/supportDraft'
-import { useActiveSavingSupports, useMembers } from '@/store/selectors'
+import { ZERO, abs } from '@/domain/money'
+import { savingLeft } from '@/domain/stats'
+import { formatMoney, tpl } from '@/i18n/format'
+import { useActiveSavingSupports, useKindTotals, useMembers } from '@/store/selectors'
+import { useCurrency } from '@/ui/currency'
 import { Button } from '@/ui/Button'
 import { CategorySelect } from '@/ui/CategorySelect'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
@@ -113,6 +117,11 @@ export function OperationForm({
 }: OperationFormProps) {
   const members = useMembers()
   const supports = useActiveSavingSupports()
+  /* Échéances prévues comprises, comme la tuile « Capacité d'épargne » :
+     deux chiffres qui se contrediraient d'un écran à l'autre seraient pires
+     que le second absent. */
+  const totals = useKindTotals(true)
+  const currency = useCurrency()
   const {
     draft,
     patch,
@@ -162,6 +171,21 @@ export function OperationForm({
         ? (operation.entry.status === 'confirmed' ? t.entry.firstDatePaid : t.entry.firstDatePlanned)
         : undefined
 
+  /* Ce que le mois dégage encore, dit au moment de placer.
+     À la création seulement : sur une reprise, `totals.saving` compte déjà
+     l'opération qu'on est en train de corriger, et « reste à placer » serait
+     minoré du montant qu'on a sous les yeux. Et au versement seulement — une
+     reprise d'épargne ne consomme aucune capacité, elle en rend. */
+  const room = savingLeft(totals)
+  const savingRoomHint =
+    operation === null && draft.nature === 'saving' && draft.direction === 'out'
+      ? room < 0
+        ? tpl(t.entry.savingRoomOver, formatMoney(abs(room), currency))
+        : room === ZERO
+          ? t.entry.savingRoomNone
+          : tpl(t.entry.savingRoom, formatMoney(room, currency))
+      : undefined
+
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <PageTitle title={titleFor(operation, draft.nature)} onBack={guard.request} />
@@ -177,7 +201,15 @@ export function OperationForm({
           {/* Les trois choix, dans l'ordre où ils se posent : ce que
               j'enregistre, à quel rythme, et — seulement alors, parce que la
               question n'existe pas ailleurs — quel genre de montant. */}
-          <div className="flex flex-wrap gap-2">
+          {/* 8px entre deux bascules d'une même ligne, 12 entre deux lignes.
+              Sur un téléphone, les trois — quatre en récurrence — passent
+              chacune à la ligne, et `gap-2` les empilait à 8px quand tout le
+              reste de la tuile respire à 16 : la pile se lisait comme un bloc
+              serré posé au-dessus d'un formulaire aéré. 12px est la valeur que
+              le DS §4 donne à l'intérieur d'une tuile — assez pour que les
+              bascules se détachent, pas assez pour qu'elles cessent d'être un
+              groupe et se lisent comme trois questions séparées. */}
+          <div className="flex flex-wrap gap-x-2 gap-y-3">
             <Segmented
               options={natures()}
               value={draft.nature}
@@ -235,7 +267,14 @@ export function OperationForm({
             label={t.entry.amount}
             {...(optionalAmount
               ? { optional: true, hint: t.entry.variableAmountHint }
-              : { required: true })}
+              : {
+                  required: true,
+                  /* La capacité se dit sous le champ où l'on tape le montant :
+                     c'est là que la question se pose. Elle cède la place à
+                     l'erreur, que `Field` fait passer devant — un refus prime
+                     sur une information. */
+                  ...(savingRoomHint === undefined ? {} : { hint: savingRoomHint }),
+                })}
             {...(errors.amount ? { error: errors.amount } : {})}
           >
             {(id, describedBy) => (

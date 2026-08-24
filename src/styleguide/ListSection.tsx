@@ -93,25 +93,33 @@ function Nav() {
 export function ListSection() {
   return (
     <Section title="Chip · ListRow · RowGroup · MonthNav">
-      <SubTitle>Chip</SubTitle>
-      <DualTheme>
-        <Chips />
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>Chip</SubTitle>
+        <DualTheme>
+          <Chips />
+        </DualTheme>
+      </div>
 
-      <SubTitle>ListRow</SubTitle>
-      <DualTheme>
-        <Rows />
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>ListRow</SubTitle>
+        <DualTheme>
+          <Rows />
+        </DualTheme>
+      </div>
 
-      <SubTitle>RowGroup</SubTitle>
-      <DualTheme>
-        <Group />
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>RowGroup</SubTitle>
+        <DualTheme>
+          <Group />
+        </DualTheme>
+      </div>
 
-      <SubTitle>MonthNav</SubTitle>
-      <DualTheme>
-        <Nav />
-      </DualTheme>
+      <div className="flex flex-col gap-3">
+        <SubTitle>MonthNav</SubTitle>
+        <DualTheme>
+          <Nav />
+        </DualTheme>
+      </div>
     </Section>
   )
 }
