@@ -54,11 +54,13 @@ export function App() {
     void hydrate()
   }, [hydrate])
 
-  /* Le writer débounce à 400 ms : sans ce flush, fermer l'onglet dans la
-     seconde qui suit une saisie la perdait, en silence. Le store est lu par
-     `getState` plutôt que par un sélecteur — l'effet ne doit se réabonner à
-     rien, il doit vivre aussi longtemps que la page. */
-  useEffect(() => onPageHidden(() => void useStore.getState().flush()), [])
+  /* Le writer débounce à 400 ms : sans ce geste, fermer l'onglet dans la
+     seconde qui suit une saisie la perdait, en silence. `pageHidden` pose
+     d'abord le filet synchrone puis vide la file — le vidage seul ne suffisait
+     pas, sa transaction IndexedDB mourant avec la page (voir `rescue.ts`). Le
+     store est lu par `getState` plutôt que par un sélecteur — l'effet ne doit
+     se réabonner à rien, il doit vivre aussi longtemps que la page. */
+  useEffect(() => onPageHidden(() => useStore.getState().pageHidden()), [])
 
   return (
     <CurrencyContext value={currency}>

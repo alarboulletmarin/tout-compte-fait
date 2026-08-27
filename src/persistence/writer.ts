@@ -18,6 +18,14 @@ export type Writer = {
    */
   flush: () => Promise<void>
   cancel: () => void
+  /**
+   * Vrai tant que quelque chose n'a pas atteint le disque : une écriture
+   * encore dans la fenêtre du debounce, ou partie mais pas encore commise.
+   * C'est la question que pose la sortie de page — faut-il poser le filet ?
+   * (voir `rescue.ts`) — et elle ne se déduit d'aucun des deux autres états :
+   * `flush()` consomme l'attente avant que la transaction n'aboutisse.
+   */
+  dirty: () => boolean
 }
 
 /**
@@ -45,6 +53,9 @@ export function createWriter(
   let timer: ReturnType<typeof setTimeout> | null = null
   let pending: Data | null = null
   let chain: Promise<void> = Promise.resolve()
+  /* Les maillons posés et pas encore aboutis. Compteur et non booléen : un
+     `flush()` pendant qu'un maillon court en pose un second derrière. */
+  let inFlight = 0
 
   const run = (): void => {
     const data = pending
@@ -63,12 +74,15 @@ export function createWriter(
        pour rattraper. L'échec sort par `onFailed`, et c'est aussi pourquoi ce
        module n'importe pas le store : c'est à l'appelant d'en faire quelque
        chose. */
+    inFlight += 1
     chain = chain.then(async () => {
       try {
         await write(data)
         hooks.onWritten?.()
       } catch (cause) {
         hooks.onFailed?.(cause)
+      } finally {
+        inFlight -= 1
       }
     })
   }
@@ -90,6 +104,9 @@ export function createWriter(
       if (timer !== null) clearTimeout(timer)
       timer = null
       pending = null
+    },
+    dirty() {
+      return pending !== null || inFlight > 0
     },
   }
 }

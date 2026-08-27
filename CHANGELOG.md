@@ -8,6 +8,15 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Corrigé — fermer l'onglet juste après une saisie ne la perd plus
+
+C'est la famille de pertes qui faisait dire « l'app perd mes saisies », et l'audit en navigateur l'a reproduite au geste près : elle frappait précisément qui range son téléphone juste après avoir noté une dépense.
+
+- **Le foyer qu'on vient de créer s'écrit tout de suite.** La première écriture attendait ses 400 ms de regroupement : recharger ou fermer dans la seconde qui suivait « Commencer » perdait le document *entier*, et l'app rouvrait sur la présentation comme si l'onboarding n'avait jamais eu lieu. Elle part désormais sans délai — seule la première : toute mutation d'après ne risque que sa fenêtre de regroupement, qui garde son sens.
+- **Et cette fenêtre-là a maintenant un filet.** Le vidage de sortie de page ouvrait une transaction IndexedDB qui meurt avec la page : une saisie encore en attente — ou partie mais pas commise — se perdait en silence à la fermeture, à la navigation, au retour sur l'écran d'accueil du téléphone. La sortie pose désormais une copie **synchrone** en `localStorage` (`rescue.ts`), que le lancement suivant adopte si la base est restée en retard, et jette sinon — la base fait foi, à la révision près, exactement comme entre deux onglets. Chaque écriture qui aboutit efface le filet : en régime normal, il n'existe pas. Un échec d'écriture le pose aussi à la sortie — la dernière chance d'une mémoire en avance sur un disque qui refuse.
+- **Effacer, c'est effacer le filet avec.** La réinitialisation et l'abandon d'un document illisible le retirent : rien ne renaît au lancement suivant de ce que la triple confirmation a promis disparu.
+- Pas de migration de schéma : le filet relit par le même chemin que tout document — migrations et validation comprises, il peut avoir été posé par une version précédente de l'app.
+
 ### Ajouté — « Réglé par » : la balance entre membres, façon Tricount
 
 *Migration de schéma : version 15.* Rien à convertir, et surtout rien à deviner : le champ est facultatif et n'entre que par le formulaire. L'écriture historique de l'avance — une charge commune attribuée à un membre et cochée « à partager » — reste lisible telle quelle.

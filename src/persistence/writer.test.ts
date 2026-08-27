@@ -112,6 +112,39 @@ describe('écriture en debounce', () => {
     expect(order).toStrictEqual(['première', 'seconde', 'flush'])
   })
 
+  /* La sortie de page demande « quelque chose n'a-t-il pas atteint le
+     disque ? » — et la réponse doit rester vraie entre le moment où `flush()`
+     consomme l'attente et celui où la transaction aboutit : c'est précisément
+     dans cet interstice que la page meurt. */
+  it('se dit sale de la programmation jusqu’à la fin de l’écriture', async () => {
+    let release = (): void => {}
+    const first = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const write = vi.fn().mockReturnValueOnce(first).mockResolvedValue(undefined)
+    const writer = createWriter(write, 400)
+
+    expect(writer.dirty()).toBe(false)
+    writer.schedule(emptyData())
+    expect(writer.dirty()).toBe(true)
+
+    const flushed = writer.flush()
+    // L'attente est consommée, l'écriture court encore : toujours sale.
+    expect(writer.dirty()).toBe(true)
+
+    release()
+    await flushed
+    expect(writer.dirty()).toBe(false)
+  })
+
+  it('redevient propre quand on abandonne l’attente', () => {
+    const write = vi.fn().mockResolvedValue(undefined)
+    const writer = createWriter(write, 400)
+    writer.schedule(emptyData())
+    writer.cancel()
+    expect(writer.dirty()).toBe(false)
+  })
+
   it('rapporte l’échec au lieu de rejeter', async () => {
     const cause = new Error('quota dépassé')
     const write = vi.fn().mockRejectedValue(cause)

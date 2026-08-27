@@ -86,6 +86,9 @@ function setVisibility(state: DocumentVisibilityState): void {
 describe('store — échecs de persistance', () => {
   beforeEach(async () => {
     await clearDocument()
+    // Le filet de sortie est partagé par `localStorage` : un test qui le pose
+    // ne doit pas le laisser au suivant, dont l'hydratation le lirait.
+    localStorage.removeItem('tout-compte-fait.rescue')
   })
 
   afterEach(() => {
@@ -366,6 +369,85 @@ describe('store — échecs de persistance', () => {
     await Promise.resolve()
 
     expect(write).toHaveBeenCalledWith(expect.anything(), 1)
+  })
+
+  /* Le vidage de la sortie de page ouvre une transaction IndexedDB qui meurt
+     avec la page : fermer l'onglet dans les 400 ms qui suivent une saisie la
+     perdait. Le filet, lui, est synchrone — voir `rescue.ts`. */
+  it('pose le filet à la sortie quand une écriture n’a pas atteint le disque', async () => {
+    const { store } = await freshStore()
+    await store.getState().hydrate()
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+
+    store.getState().mutate((data) => ({ ...data, household: { ...data.household, name: 'Pressé' } }))
+    store.getState().pageHidden()
+
+    // Posé tout de suite, avant que la file soit vidée : c'est le point.
+    expect(localStorage.getItem('tout-compte-fait.rescue')).toContain('Pressé')
+    // Ici la page survit, l'écriture aboutit : le filet se lève tout seul.
+    await store.getState().flush()
+    expect(localStorage.getItem('tout-compte-fait.rescue')).toBeNull()
+  })
+
+  it('ne pose rien à la sortie quand tout est déjà écrit', async () => {
+    const { store } = await freshStore()
+    await store.getState().hydrate()
+    store.getState().finishOnboarding()
+    await store.getState().flush()
+
+    store.getState().pageHidden()
+
+    expect(localStorage.getItem('tout-compte-fait.rescue')).toBeNull()
+  })
+
+  it('adopte au lancement un filet plus récent que la base', async () => {
+    /* Le store d'abord : `freshStore` vide le writer du test précédent, et une
+       écriture qui y traînait écraserait le document que ce test vient poser. */
+    const { store } = await freshStore()
+    // La fermeture a tué l'écriture : la base est restée à la révision 3, le
+    // filet porte ce que la révision 4 aurait écrit.
+    await saveDocument(makeData({ household: { name: 'En retard', members: [] } }), 3)
+    localStorage.setItem(
+      'tout-compte-fait.rescue',
+      JSON.stringify({ rev: 4, data: makeData({ household: { name: 'Rescapé', members: [] } }) }),
+    )
+
+    await store.getState().hydrate()
+
+    expect(store.getState().status).toBe('ready')
+    expect(store.getState().data.household.name).toBe('Rescapé')
+    // La base a rattrapé, et le filet est levé.
+    await expect(loadDocument()).resolves.toMatchObject({
+      data: { household: { name: 'Rescapé' } },
+    })
+    expect(localStorage.getItem('tout-compte-fait.rescue')).toBeNull()
+  })
+
+  it('jette au lancement un filet plus vieux que la base', async () => {
+    const { store } = await freshStore()
+    // Un autre onglet a continué d'écrire après la sortie : la base fait foi.
+    await saveDocument(makeData({ household: { name: 'À jour', members: [] } }), 9)
+    localStorage.setItem(
+      'tout-compte-fait.rescue',
+      JSON.stringify({ rev: 2, data: makeData({ household: { name: 'Périmé', members: [] } }) }),
+    )
+
+    await store.getState().hydrate()
+
+    expect(store.getState().data.household.name).toBe('À jour')
+    expect(localStorage.getItem('tout-compte-fait.rescue')).toBeNull()
+  })
+
+  it('ignore un filet illisible sans empêcher l’ouverture', async () => {
+    const { store } = await freshStore()
+    await saveDocument(makeData({ household: { name: 'Chez nous', members: [] } }), 2)
+    localStorage.setItem('tout-compte-fait.rescue', '{pas du JSON')
+
+    await store.getState().hydrate()
+
+    expect(store.getState().status).toBe('ready')
+    expect(store.getState().data.household.name).toBe('Chez nous')
   })
 
   it('emporte l’anneau quand on efface tout', async () => {
