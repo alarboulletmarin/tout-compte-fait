@@ -6,7 +6,7 @@
  * le rendu en boucle.
  * ==========================================================================*/
 
-import { useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import {
   type ISODate,
   type YearMonth,
@@ -112,6 +112,7 @@ import {
   type SavingValuation,
   isSpending,
 } from '@/domain/types'
+import { MonthFilterOverrideContext } from './filterOverride'
 import { type MonthFilter, useStore } from './store'
 
 /**
@@ -157,7 +158,18 @@ export const useSavingRates = (): SavingRate[] => useStore((s) => s.data.savingR
 export const useMembers = (): Member[] => useStore((s) => s.data.household.members)
 export const useHouseholdName = (): string => useStore((s) => s.data.household.name)
 export const useCurrentYm = (): YearMonth => useStore((s) => s.ym)
-export const useMonthFilter = (): MonthFilter => useStore((s) => s.filter)
+
+/**
+ * La portée de lecture en cours : le filtre du store, sauf là où un écran en
+ * pose une autre par-dessus (`MonthFilterOverrideContext`) — l'épargne, qui se
+ * lit toujours au nom de quelqu'un, sans plus écrire le filtre du mois pour ça.
+ * Partout ailleurs le contexte est `null` et rien ne change.
+ */
+export function useMonthFilter(): MonthFilter {
+  const override = useContext(MonthFilterOverrideContext)
+  const stored = useStore((s) => s.filter)
+  return override ?? stored
+}
 
 /**
  * Le mois affiché est-il celui qu'on vit ?
@@ -176,13 +188,18 @@ export const useIsCurrentMonth = (): boolean => useStore((s) => s.ym === current
  *
  * `undefined` aussi bien sur « Tout » que sur « Commun » : ces deux lectures
  * n'ont pas de membre, et tout ce qui demande « qui ? » n'a rien à en tirer.
- * Ce qui doit distinguer les deux lit `useMonthFilter`.
+ * Ce qui doit distinguer les deux lit `useMonthFilter` — d'où ces deux-ci
+ * dérivent, portée posée par un écran comprise.
  */
-export const useMemberFilter = (): string | undefined =>
-  useStore((s) => (s.filter.kind === 'member' ? s.filter.memberId : undefined))
+export function useMemberFilter(): string | undefined {
+  const filter = useMonthFilter()
+  return filter.kind === 'member' ? filter.memberId : undefined
+}
 
 /** Le pot commun seul — ni les lignes de personne, ni le prorata. */
-export const useIsCommonFilter = (): boolean => useStore((s) => s.filter.kind === 'common')
+export function useIsCommonFilter(): boolean {
+  return useMonthFilter().kind === 'common'
+}
 export const useCurrencyCode = (): string => useStore((s) => s.data.settings.currency)
 
 /** Les catégories utilisables : les archivées ne sont plus proposées. */

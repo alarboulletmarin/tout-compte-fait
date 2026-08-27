@@ -16,6 +16,7 @@ import { PageTitle } from '@/ui/PageTitle'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
+import { IndividualScope } from './IndividualScope'
 import { useIndividualScope } from './individualScope'
 
 /**
@@ -38,7 +39,19 @@ import { useIndividualScope } from './individualScope'
  * création d'un support : on ne connaît pas forcément tous ses chiffres le même
  * jour, et poser un relevé faute de mieux vaudrait moins que ne rien poser.
  */
+/* La portée individuelle se pose par-dessus le filtre du mois, sans
+   l'écrire : « Commun » et « Tout le monde » survivent au détour par
+   l'épargne. Le fournisseur enveloppe le contenu parce qu'un composant ne
+   peut pas consommer le contexte qu'il fournit lui-même. */
 export function ValuationsFormPage() {
+  return (
+    <IndividualScope>
+      <ValuationsFormPageContent />
+    </IndividualScope>
+  )
+}
+
+function ValuationsFormPageContent() {
   const navigate = useNavigate()
   const supports = useActiveSavingSupports()
   /* La même personne que l'écran d'où l'on vient : l'épargne se lit à son nom,

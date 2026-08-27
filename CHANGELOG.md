@@ -8,6 +8,11 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Corrigé — « Commun » survit à un détour par l'épargne
+
+- **Le filtre du mois n'est plus écrasé.** Les écrans d'épargne se lisent toujours au nom de quelqu'un — l'épargne n'a pas de lecture au foyer — et ils **écrivaient** pour ça le filtre global : on partait du mois avec « Commun » ou « Tout le monde », on passait par la tuile Capacité, et on revenait filtré sur la première personne du foyer sans avoir rien demandé. La personne se pose désormais **en portée de lecture** (`IndividualScope`, un contexte que `useMonthFilter` sert aux seuls écrans qu'il couvre) : le store n'en sait rien, la pilule active reste juste, et seul un appui explicite sur une pilule change encore le filtre du mois.
+- **Le formulaire d'objectif suit la même portée.** Sa liste de comptes à rattacher se lit au nom de quelqu'un, et elle ne tenait jusqu'ici que parce que l'écran précédent venait d'écraser le filtre.
+
 ### Modifié — les écrans qu'une tuile du mois ouvre ont leur retour
 
 - **« Capacité d'épargne » menait à un cul-de-sac.** La tuile ouvre `/epargne`, la barre d'onglets y allume « Plus », et l'écran n'avait pas de bouton retour : le seul chemin de sortie était un onglet, c'est-à-dire repartir de zéro. Même impasse sur la Répartition et les Crédits, atteints eux aussi depuis des tuiles du mois — seul « Revenus & charges » avait son chevron. Les trois le portent désormais.

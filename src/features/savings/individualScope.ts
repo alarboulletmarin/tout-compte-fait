@@ -9,38 +9,24 @@
  *
  * L'écran s'en remet donc au filtre du bandeau, comme tous les autres : c'est
  * lui qui applique déjà le prorata des charges communes, et s'en donner un
- * second, local, referait ce calcul à côté du premier. Il se contente de
- * **poser une personne** quand aucune ne l'est.
+ * second, local, referait ce calcul à côté du premier. Quand aucune personne
+ * n'est filtrée, il retombe sur la première — **sans l'écrire** : la portée se
+ * pose par-dessus le filtre (`IndividualScope`, sur
+ * `MonthFilterOverrideContext`), et « Commun » ou « Tout le monde » survivent
+ * au détour par l'épargne. L'écrire, c'était les perdre : on partait du mois
+ * avec « Commun », on passait par la tuile Capacité, et on revenait filtré sur
+ * quelqu'un sans avoir rien demandé. Seule une pilule tapée — un geste
+ * explicite — change le filtre du mois.
  * ==========================================================================*/
 
-import { useLayoutEffect } from 'react'
-import { useMemberFilter, useMembers } from '@/store/selectors'
-import { useStore } from '@/store/store'
+import { useMemberFilter } from '@/store/selectors'
 
 /**
- * S'assure qu'une personne est sélectionnée, et rend la sienne.
+ * La personne au nom de qui l'écran se lit, sous un `IndividualScope`.
  *
- * `null` quand le foyer n'a encore personne : il n'y a alors rien à filtrer —
- * tout est déjà à la seule personne qui saisit, et l'écran d'épargne dit de
- * toute façon qu'il faut quelqu'un avant de poser un support.
- *
- * `useLayoutEffect` et non `useEffect`, pour une fois : le second s'exécute
- * après la peinture, et l'écran afficherait donc pendant une image le total du
- * foyer entier — c'est-à-dire précisément la somme qui ne veut rien dire, sur
- * l'écran fait pour ne pas la montrer.
+ * `null` quand le foyer n'a encore personne. Le hook ne pose plus rien : la
+ * portée vient du fournisseur, et le filtre du mois n'est jamais écrit.
  */
 export function useIndividualScope(): string | null {
-  const members = useMembers()
-  const active = useMemberFilter()
-  const setFilter = useStore((s) => s.setFilter)
-
-  const known = active !== undefined && members.some((member) => member.id === active)
-  const fallback = members[0]?.id ?? null
-
-  useLayoutEffect(() => {
-    if (known || fallback === null) return
-    setFilter({ kind: 'member', memberId: fallback })
-  }, [known, fallback, setFilter])
-
-  return known ? (active ?? null) : fallback
+  return useMemberFilter() ?? null
 }

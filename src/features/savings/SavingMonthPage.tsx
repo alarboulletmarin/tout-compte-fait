@@ -30,14 +30,23 @@ import { Button } from '@/ui/Button'
 import { PageTitle } from '@/ui/PageTitle'
 import { MonthTile } from './MonthTile'
 import { PlacedSection } from './PlacedSection'
-import { useIndividualScope } from './individualScope'
+import { IndividualScope } from './IndividualScope'
 
+/* La portée individuelle se pose par-dessus le filtre du mois, sans
+   l'écrire : « Commun » et « Tout le monde » survivent au détour par
+   l'épargne. Le fournisseur enveloppe le contenu parce qu'un composant ne
+   peut pas consommer le contexte qu'il fournit lui-même. */
 export function SavingMonthPage() {
+  return (
+    <IndividualScope>
+      <SavingMonthPageContent />
+    </IndividualScope>
+  )
+}
+
+function SavingMonthPageContent() {
   const navigate = useNavigate()
   const totals = useKindTotals(true)
-  /* Pose une personne quand aucune ne l'est : l'épargne n'a pas de lecture au
-     foyer, ici comme sur la vue d'ensemble. */
-  useIndividualScope()
 
   return (
     <>
