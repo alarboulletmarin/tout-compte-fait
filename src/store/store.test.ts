@@ -349,6 +349,25 @@ describe('store — échecs de persistance', () => {
     await expect(listBackups()).resolves.toStrictEqual([])
   })
 
+  /* La perte la plus chère de toutes : recharger ou fermer l'onglet dans les
+     400 ms qui suivent « Commencer » perdait le document *entier* — la première
+     écriture attendait son debounce, et le vidage de `pagehide` n'a pas le
+     temps de commettre une transaction pendant que la page se démonte. L'app
+     rouvrait sur la présentation, foyer disparu. */
+  it('écrit le foyer dès la fin de l’onboarding, sans attendre le debounce', async () => {
+    const write = vi.fn<(data: Data, rev: number) => Promise<void>>().mockResolvedValue(undefined)
+    const { store } = await freshStore({ write })
+    await store.getState().hydrate()
+
+    store.getState().finishOnboarding()
+    /* Un tour de micro-tâches, et surtout pas `flush()` : lui déclenche ce qui
+       est en attente, donc il ferait passer le test même si l'écriture
+       attendait encore son délai. */
+    await Promise.resolve()
+
+    expect(write).toHaveBeenCalledWith(expect.anything(), 1)
+  })
+
   it('emporte l’anneau quand on efface tout', async () => {
     // La triple confirmation annonce qu'il ne reste rien.
     await backupDaily(makeData({ household: { name: 'hier', members: [] } }), '2026-08-01')

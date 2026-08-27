@@ -432,7 +432,7 @@ export const useStore = create<Store>()((set, get) => ({
        un document enregistré : au lancement suivant `loadDocument` le trouvait,
        l'app s'ouvrait « prête » sur un foyer sans membre et un mois vide, et
        les deux questions ne revenaient jamais. C'est `finishOnboarding` qui
-       programme la première écriture — il le faisait déjà explicitement, et cet
+       déclenche la première écriture — il le faisait déjà explicitement, et cet
        appel-là n'a de sens que si rien n'a été écrit avant lui.
        Le thème fait exception sans le savoir : `setTheme` mire déjà sa
        préférence en `localStorage`, d'où `initialData` la relit. */
@@ -503,6 +503,16 @@ export const useStore = create<Store>()((set, get) => ({
     set({ status: 'ready' })
     get().ensureMonthOpen()
     writer.schedule(get().data)
+    /* La première écriture part tout de suite, pas dans 400 ms. C'est la seule
+       dont l'attente coûte le document *entier* : recharger ou fermer l'onglet
+       juste après « Commencer » tombait dans la fenêtre du debounce, et le
+       vidage de `pagehide` n'a pas le temps de commettre sa transaction pendant
+       que la page se démonte — le foyer qu'on venait de créer n'avait jamais
+       existé, et l'app rouvrait sur la présentation. Toute mutation d'après ne
+       risque, elle, que ses 400 ms de saisie : le regroupement garde son sens.
+       L'écriture reste dans le writer — mêmes crochets, donc même bandeau si
+       elle échoue — et `flush` ne rejette jamais, d'où le `void`. */
+    void writer.flush()
   },
 
   ensureMonthOpen(ym = currentYm()) {
