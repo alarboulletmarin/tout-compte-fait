@@ -33,6 +33,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { SplitIcon } from '@/ui/Icons'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
@@ -215,6 +216,10 @@ export function SplitPage() {
   const categories = useCategoryMap()
   const currency = useCurrency()
   const navigate = useNavigate()
+  /* Les tuiles Répartition et « À verser sur le commun » du mois ouvrent cet
+     écran, et la barre d'onglets y allume « Plus » : sans retour, c'était un
+     cul-de-sac. */
+  const back = useBackTo()
   const fronted = shares?.some((share) => share.advanced !== 0) ?? false
 
   /* Nommé une fois, rendu à deux endroits : il ouvre la carte des parts quand
@@ -253,8 +258,8 @@ export function SplitPage() {
   // où le pot se vérifie ligne à ligne — la tuile « Part du foyer » y mène.
   if (members.length === 0) {
     return (
-      <>
-        <PageTitle title={t.split.title} />
+      <div className="flex flex-col gap-4">
+        <PageTitle title={t.split.title} onBack={back} />
         <EmptyState
           message={t.split.soloTitle}
           actionLabel={t.split.goToSettings}
@@ -262,7 +267,7 @@ export function SplitPage() {
         >
           <p className="t-label max-w-xs">{t.split.soloHint}</p>
         </EmptyState>
-      </>
+      </div>
     )
   }
 
@@ -273,8 +278,8 @@ export function SplitPage() {
       incomes.filter((income) => income.gap === 'zero').length,
     )
     return (
-      <>
-        <PageTitle title={t.split.title} />
+      <div className="flex flex-col gap-4">
+        <PageTitle title={t.split.title} onBack={back} />
         {/* Le mois compte jusque dans cette impasse : les revenus se lisent sur
             le mois affiché, et une récurrence qui démarre le mois prochain
             laisse celui-ci sans répartition. Sans navigation, il fallait
@@ -299,16 +304,19 @@ export function SplitPage() {
             </p>
           )}
         </EmptyState>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <PageTitle title={t.split.title} />
-      {/* L'écran lit `ym` du store — les charges communes, les revenus et le
-          report du mois précédent en dépendent tous — et n'offrait aucun moyen
-          d'en changer : vérifier la répartition de juillet imposait de repasser
+    /* La colonne à gouttière des écrans à retour : la variante à chevron de
+       `PageTitle` ne pose pas de marge basse, c'est la gouttière qui espace —
+       le gabarit de `FlowsPage`. */
+    <div className="flex flex-col gap-4">
+      <PageTitle title={t.split.title} onBack={back} />
+      {/* L'écran lit `ym` du store — les charges communes, les revenus et les
+          avances du mois en dépendent tous — et n'offrait aucun moyen d'en
+          changer : vérifier la répartition de juillet imposait de repasser
           par l'écran du mois. Sans filtre par membre : cet écran montre les
           parts de tout le monde, et n'en garder qu'une le viderait de ce qu'il
           existe pour dire. */}
@@ -526,6 +534,6 @@ export function SplitPage() {
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>
       </div>
-    </>
+    </div>
   )
 }

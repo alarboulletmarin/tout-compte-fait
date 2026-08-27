@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { RECURRENCES_PATH, RECURRENCE_FULL_NEW_PATH } from '@/app/routes'
 import { ZERO } from '@/domain/money'
 import type { CategoryKind } from '@/domain/types'
@@ -23,6 +23,7 @@ import { PageTitle } from '@/ui/PageTitle'
 import { StepBar } from '@/ui/StepBar'
 import { toast } from '@/ui/toast'
 import { useHotkeys } from '@/ui/useHotkeys'
+import { useBackTo } from '@/ui/useBackTo'
 import { LAST_DAY, describePeriod } from './period'
 import {
   DAY_SHORTCUTS,
@@ -109,7 +110,6 @@ function Recap({ label, children }: { label: string; children: ReactNode }) {
  */
 export function RecurrenceQuickPage() {
   const navigate = useNavigate()
-  const location = useLocation()
   const ym = useCurrentYm()
   const categories = useCategoryMap()
   const kindOf = useKindOf()
@@ -132,13 +132,7 @@ export function RecurrenceQuickPage() {
   const index = STEPS.indexOf(step)
   const error = quickRuleError(step, draft, { amount, kind, hasMembers: members.length > 0 })
 
-  const quit = (): void => {
-    /* Arrivé par un lien direct ou un rechargement, il n'y a pas d'écran
-       précédent dans l'app : revenir en arrière sortirait du site. Même règle
-       que le formulaire complet. */
-    if (location.key === 'default') void navigate(RECURRENCES_PATH)
-    else void navigate(-1)
-  }
+  const quit = useBackTo(RECURRENCES_PATH)
 
   useHotkeys({ Escape: quit })
 

@@ -28,6 +28,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { ForecastIcon } from '@/ui/Icons'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 
@@ -207,6 +208,7 @@ function FlowSection({ section }: { section: Section }) {
  */
 export function FlowsPage() {
   const navigate = useNavigate()
+  const back = useBackTo()
   const currency = useCurrency()
   const ym = useCurrentYm()
   const scoped = useScopedMonthEntries()
@@ -399,12 +401,10 @@ export function FlowsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageTitle
-        title={t.flows.title}
-        onBack={() => {
-          void navigate('/')
-        }}
-      />
+      {/* L'écran précédent quand il existe, le mois sinon : arrivé par la
+          tuile, on repart sur elle ; arrivé par un signet, on ne sort pas du
+          site. */}
+      <PageTitle title={t.flows.title} onBack={back} />
       <MonthHeader prorataNote />
       {content}
     </div>

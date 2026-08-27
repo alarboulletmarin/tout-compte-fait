@@ -52,6 +52,14 @@ describe('CreditsPage', () => {
     useStore.setState({ data: initial })
   })
 
+  /* La tuile Crédits du mois ouvre cet écran, et la barre d'onglets y allume
+     « Plus » : sans retour, c'était un cul-de-sac. */
+  it('porte un retour', () => {
+    renderPage([makeDebt({ id: 'd-1', principal: eur(1_200_000) })])
+
+    expect(screen.getByRole('button', { name: t.common.back })).toBeInTheDocument()
+  })
+
   /* Aucune mensualité confirmée : rien n'est remboursé, et l'anneau le dit.
      Le nom accessible porte le pourcentage — un arc ne se lit pas tout seul. */
   it('porte la part remboursée de l’ensemble à côté du capital restant', () => {

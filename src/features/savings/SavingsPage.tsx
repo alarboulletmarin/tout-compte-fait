@@ -22,6 +22,7 @@ import { EmptyState } from '@/ui/EmptyState'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { NavCalendar, YearsIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Row, RowGroup } from '@/ui/RowGroup'
 import { Tile } from '@/ui/Tile'
 import { CapitalTile } from './CapitalTile'
@@ -137,21 +138,23 @@ export function SavingsPage() {
      rangée ne s'affiche pas : sans lui, l'écran lirait le foyer entier en solo,
      c'est-à-dire la somme que cet écran existe pour ne pas montrer. */
   const owner = useIndividualScope()
+  /* La tuile « Capacité d'épargne » du mois ouvre cet écran, et la barre
+     d'onglets y allume « Plus » : sans retour, c'était un cul-de-sac — le
+     seul chemin de sortie était un onglet. */
+  const back = useBackTo()
 
   const noFlow = add(totals.resource, add(totals.charge, add(totals.debt, totals.saving))) === ZERO
   const nothing = noFlow && supports.length === 0
 
   return (
-    <>
-      <PageTitle title={t.savings.title} />
+    /* La colonne à gouttière des écrans à retour : la variante à chevron de
+       `PageTitle` ne pose pas de marge basse, c'est la gouttière qui espace. */
+    <div className="flex flex-col gap-5">
+      <PageTitle title={t.savings.title} onBack={back} />
 
       {/* Un contrôle à une seule valeur n'est pas un contrôle : la rangée ne
           s'affiche qu'à partir de deux personnes. */}
-      {members.length > 1 && (
-        <div className="mb-5">
-          <MonthFilterChips personsOnly />
-        </div>
-      )}
+      {members.length > 1 && <MonthFilterChips personsOnly />}
 
       {nothing ? (
         /* Deux vides, deux causes, deux gestes — et le premier avait perdu le
@@ -244,6 +247,6 @@ export function SavingsPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

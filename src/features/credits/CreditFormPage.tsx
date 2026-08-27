@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { CREDITS_PATH } from '@/app/routes'
 import { type ISODate, today } from '@/domain/date'
 import { parseAmount, toAmountInput } from '@/domain/money'
@@ -19,6 +19,7 @@ import { Tile } from '@/ui/Tile'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
 import { useCurrency } from '@/ui/currency'
 import { toast } from '@/ui/toast'
+import { useBackTo } from '@/ui/useBackTo'
 
 type Draft = {
   label: string
@@ -305,13 +306,8 @@ function RemoveDebt({ debt, onDone }: { debt: Debt; onDone: () => void }) {
 export function CreditFormPage() {
   const { id } = useParams()
   const status = useDebtStatus(id)
-  const navigate = useNavigate()
-  const location = useLocation()
 
-  const goBack = (): void => {
-    if (location.key === 'default') void navigate(CREDITS_PATH)
-    else void navigate(-1)
-  }
+  const goBack = useBackTo(CREDITS_PATH)
 
   if (id !== undefined && status === null) return <Navigate to={CREDITS_PATH} replace />
 

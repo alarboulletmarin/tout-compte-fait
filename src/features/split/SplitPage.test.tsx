@@ -101,6 +101,15 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     useStore.setState({ data: initial })
   })
 
+  /* Les tuiles Répartition et « À verser sur le commun » du mois ouvrent cet
+     écran, et la barre d'onglets y allume « Plus » : sans retour, c'était un
+     cul-de-sac. */
+  it('porte un retour', () => {
+    household()
+
+    expect(screen.getByRole('button', { name: t.common.back })).toBeInTheDocument()
+  })
+
   /* L'objet même du changement : le versement se lisait en tête de tuile, avant
      les termes qui le donnent. Un chiffre annoncé avant ses raisons se croit sur
      parole, et c'est précisément ce qu'un partage entre deux personnes ne fait

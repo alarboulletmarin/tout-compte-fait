@@ -13,6 +13,7 @@ import { EmptyState } from '@/ui/EmptyState'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { CreditsIcon, Plus } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Ring } from '@/ui/Ring'
 import { RowGroup } from '@/ui/RowGroup'
 import { Tile } from '@/ui/Tile'
@@ -110,6 +111,9 @@ function AdvancesSection() {
 export function CreditsPage() {
   const statuses = useDebtStatuses()
   const navigate = useNavigate()
+  /* La tuile Crédits du mois ouvre cet écran, et la barre d'onglets y allume
+     « Plus » : sans retour, c'était un cul-de-sac. */
+  const back = useBackTo()
 
   /* La part remboursée de l'ensemble : un moins ce qui reste sur ce qui a été
      emprunté. Elle se prend sur les capitaux et non sur la moyenne des parts —
@@ -125,15 +129,21 @@ export function CreditsPage() {
   }
 
   return (
-    <>
+    /* La colonne à gouttière des écrans à retour : la variante à chevron de
+       `PageTitle` ne pose pas de marge basse, c'est la gouttière qui espace. */
+    <div className="flex flex-col gap-5">
       {/* L'état vide porte déjà le même bouton : le garder en titre l'afficherait
-          deux fois dans le même écran. */}
-      <PageTitle title={t.credits.title}>
+          deux fois dans le même écran. `ml-auto` : la variante à retour aligne
+          ses enfants à la suite du titre, et le bouton d'ajout se lit au bord
+          droit, comme sur les autres écrans. */}
+      <PageTitle title={t.credits.title} onBack={back}>
         {statuses.length > 0 && (
-          <Button onClick={openCreate}>
-            <Plus size={18} />
-            {t.common.add}
-          </Button>
+          <span className="ml-auto">
+            <Button onClick={openCreate}>
+              <Plus size={18} />
+              {t.common.add}
+            </Button>
+          </span>
         )}
       </PageTitle>
 
@@ -188,6 +198,6 @@ export function CreditsPage() {
           <AdvancesSection />
         </div>
       )}
-    </>
+    </div>
   )
 }

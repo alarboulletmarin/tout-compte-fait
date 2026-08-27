@@ -8,6 +8,11 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Modifié — les écrans qu'une tuile du mois ouvre ont leur retour
+
+- **« Capacité d'épargne » menait à un cul-de-sac.** La tuile ouvre `/epargne`, la barre d'onglets y allume « Plus », et l'écran n'avait pas de bouton retour : le seul chemin de sortie était un onglet, c'est-à-dire repartir de zéro. Même impasse sur la Répartition et les Crédits, atteints eux aussi depuis des tuiles du mois — seul « Revenus & charges » avait son chevron. Les trois le portent désormais.
+- **Le retour revient d'où l'on vient.** L'écran précédent quand il existe, le mois sinon : arrivé par la tuile, on repart sur elle ; arrivé par un signet ou un rechargement, revenir en arrière sortirait du site et le chevron ramène au mois. C'est la garde que six écrans de saisie recopiaient mot pour mot (`location.key === 'default'`), écrite une fois dans `useBackTo` — les six copies passent par elle, et « Revenus & charges » y gagne un vrai retour d'historique au lieu d'un chemin en dur.
+
 ### Modifié — chaque ligne qui montre une entrée est une porte vers sa fiche
 
 - **Un montant qu'on lit se corrige là où on le lit.** Le seul écran qui savait ouvrir la fiche d'une ligne était celui du mois ; Revenus & charges, le détail de la Répartition et les avances du mois affichaient les mêmes entrées en lecture seule, et corriger un montant repéré là demandait de repasser par le mois et de retrouver la ligne. Toutes ces lignes ouvrent désormais `/depense/:id` d'un appui — une copie découpée par la portée garde l'identifiant de l'entrée réelle, donc la porte ouvre la ligne entière : on corrige une ligne, jamais une part.

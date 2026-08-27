@@ -1,4 +1,5 @@
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
+import { useBackTo } from '@/ui/useBackTo'
 import { RECURRENCES_PATH } from '@/app/routes'
 import { useCurrentYm, useRecurrenceRow } from '@/store/selectors'
 import { OperationForm } from '@/features/operations/OperationForm'
@@ -21,15 +22,8 @@ export function RecurrenceFormPage() {
   const { id } = useParams()
   const row = useRecurrenceRow(id)
   const ym = useCurrentYm()
-  const navigate = useNavigate()
-  const location = useLocation()
 
-  const goBack = (): void => {
-    // Arrivé par un lien direct ou un rechargement, il n'y a pas d'écran
-    // précédent dans l'app : revenir en arrière sortirait du site.
-    if (location.key === 'default') void navigate(RECURRENCES_PATH)
-    else void navigate(-1)
-  }
+  const goBack = useBackTo(RECURRENCES_PATH)
 
   if (id !== undefined && row === null) return <Navigate to={RECURRENCES_PATH} replace />
 

@@ -91,6 +91,15 @@ afterEach(() => {
 })
 
 describe('l’épargne se lit au nom d’une personne', () => {
+  /* La tuile « Capacité d'épargne » du mois ouvre cet écran, et la barre
+     d'onglets y allume « Plus » : sans retour, c'était un cul-de-sac. */
+  it('porte un retour', () => {
+    seed()
+    open()
+
+    expect(screen.getByRole('button', { name: t.common.back })).toBeInTheDocument()
+  })
+
   /* « Tout le monde » rendrait une somme, « Commun » rendrait des zéros :
      ni l'une ni l'autre n'est une lecture de l'épargne. */
   it('ne propose que les personnes dans le bandeau', () => {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   DIRECTION_PARAM,
   NATURE_PARAM,
@@ -21,6 +21,7 @@ import { amountFromKeys } from '@/ui/keypad'
 import { PageTitle } from '@/ui/PageTitle'
 import { kindsOfNature } from '@/ui/categoryKinds'
 import { toast } from '@/ui/toast'
+import { useBackTo } from '@/ui/useBackTo'
 import { defaultDateFor } from './defaultDate'
 import { quickCategories } from './quickEntry'
 
@@ -54,7 +55,6 @@ import { quickCategories } from './quickEntry'
  */
 export function QuickEntryPage() {
   const navigate = useNavigate()
-  const location = useLocation()
   const [params] = useSearchParams()
   const ym = useCurrentYm()
   const entries = useEntries()
@@ -89,12 +89,7 @@ export function QuickEntryPage() {
           ? t.entry.memberRequired
           : null
 
-  const goBack = (): void => {
-    // Arrivé par un lien direct ou un rechargement, il n'y a pas d'écran
-    // précédent dans l'app : revenir en arrière sortirait du site.
-    if (location.key === 'default') void navigate('/')
-    else void navigate(-1)
-  }
+  const goBack = useBackTo()
 
   /* Voir l'en-tête : l'épargne se saisit au formulaire, qui demande le support.
      Le renvoi est un `replace` — cette URL-là n'a rien à laisser dans
