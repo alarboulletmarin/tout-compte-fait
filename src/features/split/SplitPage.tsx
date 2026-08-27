@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH } from '@/app/routes'
+import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH, entryPath } from '@/app/routes'
 import { abs, neg, sub, sum } from '@/domain/money'
 import { totalDue, totalToPay } from '@/domain/split'
 import type { MemberShare } from '@/domain/split'
@@ -436,11 +436,17 @@ export function SplitPage() {
                   <ul className="flex flex-col">
                     {advanced.map((entry) => (
                       <li key={entry.id}>
+                        {/* La porte vers la fiche, comme sur toute ligne qui
+                            montre une entrée : une avance mal saisie se
+                            corrige là où elle s'est écrite. */}
                         <ListRow
                           color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
                           label={entry.label}
                           meta={metaOf(entry)}
                           trailing={<Amount value={entry.amount} direction="out" />}
+                          onClick={() => {
+                            void navigate(entryPath(entry.id))
+                          }}
                         />
                       </li>
                     ))}
@@ -479,12 +485,18 @@ export function SplitPage() {
                 <ul className="flex flex-col">
                   {entries.map((entry) => (
                     <li key={entry.id}>
+                      {/* Une dépense qui n'a rien à faire dans le pot se
+                          repère en la voyant — et se corrige d'un appui, sans
+                          repasser par l'écran du mois. */}
                       <ListRow
                         color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
                         label={entry.label}
                         meta={metaOf(entry)}
                         planned={entry.status === 'planned'}
                         trailing={<Amount value={entry.amount} direction="out" />}
+                        onClick={() => {
+                          void navigate(entryPath(entry.id))
+                        }}
                       />
                     </li>
                   ))}

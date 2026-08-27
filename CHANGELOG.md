@@ -8,6 +8,12 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Modifié — chaque ligne qui montre une entrée est une porte vers sa fiche
+
+- **Un montant qu'on lit se corrige là où on le lit.** Le seul écran qui savait ouvrir la fiche d'une ligne était celui du mois ; Revenus & charges, le détail de la Répartition et les avances du mois affichaient les mêmes entrées en lecture seule, et corriger un montant repéré là demandait de repasser par le mois et de retrouver la ligne. Toutes ces lignes ouvrent désormais `/depense/:id` d'un appui — une copie découpée par la portée garde l'identifiant de l'entrée réelle, donc la porte ouvre la ligne entière : on corrige une ligne, jamais une part.
+- **Les prochaines échéances aussi, chacune selon ce qu'elle est.** Une échéance posée dans le document ouvre sa fiche ; une échéance projetée d'un mois jamais ouvert n'existe nulle part, et sa porte honnête est la règle qui la projette. Les lignes passent à 44px — devenues cibles tactiles, elles tiennent le plancher du DS §8, et la tuile vit hors de la grille bento : sa hauteur vient de son contenu.
+- Les totaux et les agrégats restent des lectures : une somme n'a pas de fiche.
+
 ### Modifié — ce qu'on a déjà avancé se déduit du virement, tout de suite
 
 - **Qui a réglé la facture ne la paie pas deux fois.** Une charge commune réglée par une seule personne — le loyer parti de son compte, l'assurance qu'elle a avancée — comptait dans sa part sans que l'écran Répartition n'en dise rien : « À verser » lui réclamait sa part pleine le mois même où elle venait de sortir l'argent, et la correction n'arrivait qu'au mois suivant, sous le nom de « Régularisation ». Ce détour disparaît : ce que chacun a déjà avancé sur le pot **du mois affiché** se déduit aussitôt de son virement. `À verser = part du pot − déjà avancé`, et quand l'avance dépasse la part, la ligne devient « À recevoir ».

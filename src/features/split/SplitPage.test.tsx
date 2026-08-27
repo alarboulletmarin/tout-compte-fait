@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
+import { ENTRY_NEW_PATH } from '@/app/routes'
 import { type Money, money } from '@/domain/money'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import type { Entry, Period, Recurrence } from '@/domain/types'
@@ -207,5 +209,42 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     expect(screen.getByText(t.split.nothing)).toBeInTheDocument()
     expect(screen.queryByText(t.split.checkTotal)).not.toBeInTheDocument()
     expect(screen.getByText(t.split.method)).toBeInTheDocument()
+  })
+
+  /* Une dépense qui n'a rien à faire dans le pot se repère en la voyant — et
+     se corrige d'un appui : chaque ligne du détail est une porte vers sa
+     fiche, sans repasser par l'écran du mois. */
+  it('ouvre la fiche d’une ligne du détail', async () => {
+    useStore.setState({
+      ym: '2026-08',
+      filter: ALL_FILTER,
+      data: makeData({
+        household: { name: 'Foyer', members: [ALIX, CAMILLE] },
+        families: FAMILIES,
+        categories: CATEGORIES,
+        recurrences: [salary('m-1', money(200_000)), salary('m-2', money(100_000))],
+        entries: [
+          makeEntry({
+            id: 'e-loyer',
+            date: '2026-08-05',
+            label: 'Loyer',
+            categoryId: 'loyer',
+            amount: eur(90_000),
+          }),
+        ],
+      }),
+    })
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<SplitPage />} />
+          <Route path={`${ENTRY_NEW_PATH}/:id`} element={<p>fiche-entree</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(screen.getByText(t.split.detail))
+    await userEvent.click(screen.getByRole('button', { name: /Loyer/ }))
+    expect(screen.getByText('fiche-entree')).toBeInTheDocument()
   })
 })
