@@ -7,7 +7,7 @@
  * ==========================================================================*/
 
 import { monthlyInstalment } from './advance'
-import { type ISODate, type YearMonth, endOfMonth, parseISO, startOfMonth, today, ymOf } from './date'
+import { type ISODate, type YearMonth, diffDays, endOfMonth, parseISO, startOfMonth, today, ymOf } from './date'
 import { type Money, ZERO } from './money'
 import { buildPlannedEntry, planMonth } from './month'
 import type { RateKind } from './projection'
@@ -957,6 +957,98 @@ export function replaceEntry(
           }
         : e,
     ),
+  }
+}
+
+/**
+ * Reporte la correction d'une échéance sur la règle qui la pose.
+ *
+ * Le formulaire d'une échéance générée ne touchait jamais sa récurrence : on
+ * corrigeait le loyer d'août, et septembre retombait sur l'ancien prix. Ici,
+ * ce que la règle possède passe sur la règle — libellé, catégorie, sens,
+ * membre, support, partage, et le montant si la règle en fixe un —, puis
+ * `syncRecurrenceEntries` refait les échéances à venir, exactement comme une
+ * reprise depuis la fiche de la règle. Une règle à montant variable garde son
+ * `null` : chaque échéance y chiffre la sienne, et lui écrire un montant la
+ * changerait de nature.
+ *
+ * Ce que l'échéance possède reste à l'échéance : sa date, son statut, sa note
+ * et — sur une règle variable — son montant ne remontent pas. Sa période, sa
+ * première échéance et sa date de fin non plus : le formulaire d'une échéance
+ * ne les montre pas, et écrire ce qu'on n'a pas montré serait pire que de ne
+ * rien écrire.
+ *
+ * L'échéance corrigée, elle, garde son identifiant quoi qu'il arrive : la
+ * synchronisation jette et refait les prévues du mois courant et au-delà, et
+ * l'écran `/depense/:id` resterait sinon ouvert sur une ligne disparue. La
+ * régénérée la plus proche de sa date d'origine lui cède la place — une règle
+ * hebdomadaire peut en poser plusieurs par mois, la plus proche est la seule
+ * réponse déterministe — et s'il n'en repousse aucune (règle arrêtée, période
+ * qui ne couvre plus le mois), la saisie est réinsérée telle quelle : un fait
+ * qu'on vient d'écrire ne s'évapore pas.
+ */
+export function applyEntryEditToRule(
+  data: Data,
+  entryId: string,
+  next: Omit<Entry, 'id' | 'recurrenceId'>,
+  makeId: () => string,
+  from: ISODate = today(),
+): Data {
+  const entry = data.entries.find((e) => e.id === entryId)
+  const recurrence = data.recurrences.find((r) => r.id === entry?.recurrenceId)
+  // Détachée depuis un autre onglet, ou jamais liée : il ne reste qu'elle à corriger.
+  if (entry === undefined || recurrence === undefined) return replaceEntry(data, entryId, next)
+
+  /* Les champs à présence facultative suivent la sémantique de réécriture de
+     `replaceRecurrence` : vidé dans le formulaire, le champ disparaît de la
+     règle — une fusion garderait le membre qu'on vient de rendre au commun. */
+  const {
+    memberId: _member,
+    savingSupportId: _support,
+    shared: _shared,
+    ...kept
+  } = recurrence
+  const nextRule: Omit<Recurrence, 'id'> = {
+    ...kept,
+    label: next.label,
+    categoryId: next.categoryId,
+    direction: next.direction,
+    amount: recurrence.amount === null ? null : next.amount,
+    ...(next.memberId === undefined ? {} : { memberId: next.memberId }),
+    ...(next.savingSupportId === undefined ? {} : { savingSupportId: next.savingSupportId }),
+    ...(next.shared === undefined ? {} : { shared: next.shared }),
+  }
+
+  const synced = syncRecurrenceEntries(
+    replaceRecurrence(data, recurrence.id, nextRule),
+    recurrence.id,
+    makeId,
+    from,
+  )
+
+  // Confirmée, ou prévue dans un mois passé : la synchronisation l'a laissée.
+  if (synced.entries.some((e) => e.id === entryId)) return replaceEntry(synced, entryId, next)
+
+  const restored: Entry = { ...next, id: entryId, recurrenceId: recurrence.id }
+  const twins = synced.entries.filter(
+    (e) =>
+      e.recurrenceId === recurrence.id &&
+      e.status === 'planned' &&
+      ymOf(e.date) === ymOf(entry.date),
+  )
+  const twin = twins.reduce<Entry | undefined>((best, candidate) => {
+    if (best === undefined) return candidate
+    const gap = Math.abs(diffDays(entry.date, candidate.date))
+    const bestGap = Math.abs(diffDays(entry.date, best.date))
+    return gap < bestGap || (gap === bestGap && candidate.date < best.date) ? candidate : best
+  }, undefined)
+
+  return {
+    ...synced,
+    entries:
+      twin === undefined
+        ? [...synced.entries, restored]
+        : synced.entries.map((e) => (e.id === twin.id ? restored : e)),
   }
 }
 

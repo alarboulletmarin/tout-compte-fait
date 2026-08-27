@@ -10,6 +10,7 @@ import {
   makeEntry,
   makeFamily,
   makeMember,
+  makeRecurrence,
   makeSavingSupport,
   makeSavingValuation,
 } from '@/domain/fixtures'
@@ -347,6 +348,101 @@ describe('convertir une entrée ponctuelle en récurrence', () => {
     expect(entries().some((e) => e.id === 'e1')).toBe(false)
     expect(recurrences()).toHaveLength(1)
     expect(entries().filter((e) => e.status === 'confirmed')).toHaveLength(0)
+  })
+})
+
+/* ============================================================================
+ * Corriger une échéance générée : elle seule, ou toute la règle.
+ *
+ * Le formulaire ne touchait jamais la règle : on corrigeait le loyer d'août,
+ * et septembre retombait sur l'ancien prix sans que rien ne le dise. La
+ * bascule de portée pose la question, à la place exacte du rythme — c'est la
+ * question du rythme, posée à une ligne qui en a déjà un.
+ * ==========================================================================*/
+describe('corriger une échéance générée : elle seule, ou toute la règle', () => {
+  const seedOccurrence = (rule: Partial<Parameters<typeof makeRecurrence>[0]> = {}) => {
+    useStore.setState((state) => ({
+      data: {
+        ...state.data,
+        recurrences: [
+          makeRecurrence({
+            id: 'r1',
+            label: 'Loyer',
+            categoryId: 'cat-rent',
+            amount: eur(85000),
+            period: { unit: 'month', every: 1, anchorDay: 10 },
+            ...rule,
+          }),
+        ],
+        entries: [
+          makeEntry({
+            id: 'e1',
+            recurrenceId: 'r1',
+            date: TODAY,
+            label: 'Loyer',
+            categoryId: 'cat-rent',
+            amount: eur(85000),
+            status: 'confirmed',
+          }),
+        ],
+      },
+    }))
+  }
+
+  const setAmount = (value: string): void => {
+    fireEvent.change(field(t.entry.amount), { target: { value } })
+  }
+
+  it('propose la portée sur une échéance générée, pas sur une saisie ponctuelle', () => {
+    seedOccurrence()
+    editingEntry('e1')
+    expect(choice(t.entry.scopeOccurrence)).toHaveAttribute('aria-checked', 'true')
+    expect(choice(t.entry.scopeRule)).toBeInTheDocument()
+    cleanup()
+
+    fromEntryDoor()
+    expect(screen.queryByRole('radio', { name: t.entry.scopeOccurrence })).not.toBeInTheDocument()
+  })
+
+  it('laisse la règle tranquille tant que la portée reste à cette échéance', async () => {
+    seedOccurrence()
+    editingEntry('e1')
+    setAmount('900')
+    await userEvent.click(save())
+
+    expect(entries().find((e) => e.id === 'e1')?.amount).toBe(eur(90000))
+    expect(recurrences()[0]?.amount).toBe(eur(85000))
+  })
+
+  it('reporte la correction sur la règle quand la portée le demande', async () => {
+    seedOccurrence()
+    editingEntry('e1')
+    setAmount('900')
+    await userEvent.click(choice(t.entry.scopeRule))
+    await userEvent.click(save())
+
+    expect(recurrences()[0]?.amount).toBe(eur(90000))
+    expect(entries().find((e) => e.id === 'e1')?.amount).toBe(eur(90000))
+  })
+
+  it('annonce la conséquence du choix, et la règle variable garde son montant', async () => {
+    seedOccurrence({ amount: null })
+    editingEntry('e1')
+    expect(screen.getByText(t.entry.scopeOccurrenceHint)).toBeInTheDocument()
+
+    await userEvent.click(choice(t.entry.scopeRule))
+    expect(screen.getByText(t.entry.scopeRuleHintVariable)).toBeInTheDocument()
+
+    await userEvent.click(save())
+    expect(recurrences()[0]?.amount).toBeNull()
+    expect(entries().find((e) => e.id === 'e1')?.amount).toBe(eur(85000))
+  })
+
+  it('annonce ce qui suit la règle quand son montant est fixe', async () => {
+    seedOccurrence()
+    editingEntry('e1')
+    await userEvent.click(choice(t.entry.scopeRule))
+    expect(screen.getByText(t.entry.scopeRuleHint)).toBeInTheDocument()
   })
 })
 

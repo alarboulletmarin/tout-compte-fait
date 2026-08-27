@@ -789,6 +789,16 @@ export const en: Strings = {
     firstDate: 'First payment',
     firstDatePaid: 'This one is recorded as paid; the next ones will come up to confirm.',
     firstDatePlanned: 'It will come up to confirm, like the next ones.',
+
+    editScope: 'Scope of the change',
+    scopeOccurrence: 'This payment',
+    scopeRule: 'The whole rule',
+    scopeOccurrenceHint: 'Only this payment changes — the rule and the next ones stay put.',
+    scopeRuleHint:
+      'The label, category, person, sharing and amount move onto the rule, from upcoming payments onwards — months already confirmed don’t change. The date, status and note stay with this payment.',
+    scopeRuleHintVariable:
+      'The label, category, person and sharing move onto the rule, from upcoming payments onwards — months already confirmed don’t change. The amount, date, status and note stay with this payment.',
+    updatedRule: 'Rule updated — upcoming payments follow',
     /* See `fr.ts`: what the month still frees up, said where the question is
        asked. Same figure and same month as the “Saving capacity” tile. */
     savingRoom: 'This month, %s left to set aside.',

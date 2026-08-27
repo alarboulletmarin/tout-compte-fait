@@ -394,6 +394,20 @@ export function replaceEntry(id: string, next: Omit<Entry, 'id' | 'recurrenceId'
   mutate((data) => updates.replaceEntry(data, id, next))
 }
 
+/**
+ * Reporte la correction d'une échéance sur la règle qui l'a posée.
+ *
+ * Le geste vient du formulaire `/depense/:id`, quand la portée choisie est
+ * « toute la règle » : ce que la règle possède passe sur la règle, les
+ * échéances à venir sont refaites dans la foulée — même invariant que toute
+ * écriture de récurrence —, et l'échéance corrigée garde sa saisie et son
+ * identifiant. Une seule mutation : un rendu, une écriture, et la règle ne
+ * peut pas changer sans que ses échéances suivent.
+ */
+export function applyEntryEditToRule(entryId: string, next: Omit<Entry, 'id' | 'recurrenceId'>): void {
+  mutate((data) => updates.applyEntryEditToRule(data, entryId, next, makeId))
+}
+
 export function removeEntry(id: string): void {
   mutate((data) => updates.removeEntry(data, id))
 }

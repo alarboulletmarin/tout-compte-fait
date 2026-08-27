@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { today, ymOf } from './date'
+import type { Entry } from './types'
 import {
   eur,
   makeAdvance,
@@ -17,6 +18,7 @@ import {
   addEntry,
   addMember,
   addSavingValuation,
+  applyEntryEditToRule,
   archiveCategory,
   archiveSavingSupport,
   confirmEntries,
@@ -990,5 +992,138 @@ describe('synchronisation d’une récurrence', () => {
     }
     const after = syncRecurrenceEntries(data, 'r1', sequentialIds(), '2026-07-15')
     expect(after.entries.find((e) => e.id === 'autre')).toBeDefined()
+  })
+})
+
+describe('reporter une correction d’échéance sur sa règle', () => {
+  const FROM = '2026-07-15'
+
+  /** Deux mois ouverts, une règle fixe, et ses deux échéances déjà posées. */
+  function posed(rule: Partial<Parameters<typeof makeRecurrence>[0]> = {}) {
+    return syncRecurrenceEntries(
+      makeData({
+        recurrences: [
+          makeRecurrence({
+            id: 'r1',
+            label: 'Loyer',
+            amount: eur(95000),
+            period: { unit: 'month', every: 1, anchorDay: 10 },
+            ...rule,
+          }),
+        ],
+        months: [
+          { ym: '2026-07', openedAt: '2026-07-01', closed: false },
+          { ym: '2026-08', openedAt: '2026-08-01', closed: false },
+        ],
+      }),
+      'r1',
+      sequentialIds(),
+      FROM,
+    )
+  }
+
+  const edited = (over: Partial<Entry> = {}): Omit<Entry, 'id' | 'recurrenceId'> => ({
+    label: 'Nouveau loyer',
+    categoryId: 'cat-1',
+    direction: 'out',
+    amount: eur(99000),
+    date: '2026-08-10',
+    status: 'planned',
+    ...over,
+  })
+
+  it('reporte le libellé et le montant sur la règle, et les échéances à venir suivent', () => {
+    const data = posed()
+    const aout = data.entries.find((e) => e.date === '2026-08-10')
+    const after = applyEntryEditToRule(data, aout?.id ?? '', edited(), sequentialIds('b'), FROM)
+
+    expect(after.recurrences[0]).toMatchObject({ label: 'Nouveau loyer', amount: eur(99000) })
+    // L'échéance corrigée garde son identifiant, sa saisie, et reste seule sur son mois.
+    const kept = after.entries.find((e) => e.id === aout?.id)
+    expect(kept).toMatchObject({ label: 'Nouveau loyer', amount: eur(99000), date: '2026-08-10' })
+    expect(after.entries.filter((e) => e.date.startsWith('2026-08'))).toHaveLength(1)
+    // Le montant déjà daté de juillet survit, sous le libellé neuf de la règle.
+    const juillet = after.entries.find((e) => e.date === '2026-07-10')
+    expect(juillet).toMatchObject({ label: 'Nouveau loyer', amount: eur(95000) })
+  })
+
+  it('réécrit aussi une échéance confirmée, que la synchronisation ne touche pas', () => {
+    const data = posed()
+    const juillet = data.entries.find((e) => e.date === '2026-07-10')
+    const confirmed = confirmEntries(data, [juillet?.id ?? ''])
+    const after = applyEntryEditToRule(
+      confirmed,
+      juillet?.id ?? '',
+      edited({ date: '2026-07-10', status: 'confirmed' }),
+      sequentialIds('b'),
+      FROM,
+    )
+
+    expect(after.entries.find((e) => e.id === juillet?.id)).toMatchObject({
+      amount: eur(99000),
+      status: 'confirmed',
+    })
+    // La règle et l'échéance d'août suivent le nouveau prix.
+    expect(after.recurrences[0]?.amount).toBe(eur(99000))
+    expect(after.entries.find((e) => e.date === '2026-08-10')?.amount).toBe(eur(99000))
+  })
+
+  it('laisse son montant à une règle variable : chaque échéance chiffre la sienne', () => {
+    const data = posed({ amount: null })
+    const aout = data.entries.find((e) => e.date === '2026-08-10')
+    const after = applyEntryEditToRule(
+      data,
+      aout?.id ?? '',
+      edited({ label: 'Électricité', amount: eur(8742) }),
+      sequentialIds('b'),
+      FROM,
+    )
+
+    expect(after.recurrences[0]).toMatchObject({ label: 'Électricité', amount: null })
+    expect(after.entries.find((e) => e.id === aout?.id)?.amount).toBe(eur(8742))
+  })
+
+  it('garde à l’échéance sa date et sa note, sous son identifiant d’origine', () => {
+    const data = posed()
+    const aout = data.entries.find((e) => e.date === '2026-08-10')
+    const after = applyEntryEditToRule(
+      data,
+      aout?.id ?? '',
+      edited({ date: '2026-08-12', note: 'reporté' }),
+      sequentialIds('b'),
+      FROM,
+    )
+
+    expect(after.entries.find((e) => e.id === aout?.id)).toMatchObject({
+      date: '2026-08-12',
+      note: 'reporté',
+      recurrenceId: 'r1',
+    })
+    expect(after.entries.filter((e) => e.recurrenceId === 'r1' && e.date.startsWith('2026-08'))).toHaveLength(1)
+  })
+
+  it('efface de la règle le membre et le partage que le formulaire a vidés', () => {
+    const data = posed({ memberId: 'm1', shared: true })
+    const aout = data.entries.find((e) => e.date === '2026-08-10')
+    const after = applyEntryEditToRule(data, aout?.id ?? '', edited(), sequentialIds('b'), FROM)
+
+    expect(after.recurrences[0]).not.toHaveProperty('memberId')
+    expect(after.recurrences[0]).not.toHaveProperty('shared')
+  })
+
+  it('retombe sur la simple réécriture quand l’entrée n’a pas de règle', () => {
+    const data = makeData({
+      entries: [makeEntry({ id: 'seule', date: '2026-07-03', amount: eur(2500) })],
+    })
+    const after = applyEntryEditToRule(
+      data,
+      'seule',
+      edited({ date: '2026-07-03', status: 'confirmed' }),
+      sequentialIds('b'),
+      FROM,
+    )
+
+    expect(after.entries.find((e) => e.id === 'seule')?.amount).toBe(eur(99000))
+    expect(after.recurrences).toHaveLength(0)
   })
 })

@@ -8,6 +8,13 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Ajouté — corriger une échéance seule, ou toute la règle qui la pose
+
+- **La question que le formulaire ne posait pas.** Reprendre une échéance générée par une récurrence ne corrigeait qu'elle : on corrigeait le loyer d'août, et septembre retombait sur l'ancien prix sans que rien à l'écran ne dise lequel des deux gestes on venait de faire. Une bascule de portée le demande désormais — « Cette échéance » ou « Toute la règle » —, à la place exacte où une ligne sans règle propose son rythme : c'est la même question, posée à une ligne qui a déjà répondu.
+- **Ce qui suit la règle, et ce qui reste à l'échéance.** En portée « règle », le libellé, la catégorie, la personne, le partage et le montant passent sur la récurrence, et les échéances à venir sont refaites dans la foulée — même invariant que toute écriture de règle, même coupure que le panneau de montant des récurrences : à partir des échéances à venir, jamais les mois déjà confirmés. La date, le statut et la note restent à l'échéance ; une règle à montant variable garde son montant à saisir, chaque échéance chiffrant la sienne.
+- **La conséquence se lit avant d'enregistrer.** Une phrase sous les bascules dit, pour chaque portée, ce qui va bouger et ce qui ne bougera pas — le pendant de ce que la liste des récurrences écrit déjà sous son panneau de montant.
+- Pas de migration de schéma : rien de stocké ne change de forme, seule l'écriture choisit sa cible.
+
 ### Modifié — la présentation s'ouvre sur le produit, pas sur ses réglages
 
 - **La langue et le thème rétrécissent.** Ils ouvraient la page en cinq pilules à libellé plein — « Français | English » et « Clair | Sombre | Système » —, soit la largeur entière d'un téléphone occupée par deux préférences secondaires, lues avant le nom du produit. Le parcours de cette page est « produit → promesse → explication → action », et il commençait par « réglages ». C'est désormais « FR | EN » et trois glyphes : cinq carrés de 44px, environ 250px en tout, collés au-dessus de l'étiquette du titre plutôt que séparés par la gouttière de section, où ils formaient une bande à eux seuls que l'œil comptait comme une section.

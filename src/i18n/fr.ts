@@ -1478,6 +1478,24 @@ export const fr = {
        choisissait autre chose qu'une mensuelle. */
     firstDatePaid: 'Celle-ci est enregistrée comme payée ; les suivantes arriveront à confirmer.',
     firstDatePlanned: 'Elle arrivera à confirmer, comme les suivantes.',
+
+    /* Jusqu'où porte la correction d'une échéance générée — la question que le
+       formulaire ne posait pas : corriger le loyer d'août laissait septembre
+       sur l'ancien prix, et rien à l'écran ne disait lequel des deux gestes on
+       venait de faire. La coupure est la même que `recurrences.amountAhead`,
+       dite avec les mêmes mots : à partir des échéances à venir, jamais les
+       mois déjà confirmés. */
+    editScope: 'Portée de la modification',
+    scopeOccurrence: 'Cette échéance',
+    scopeRule: 'Toute la règle',
+    scopeOccurrenceHint: 'Seule cette échéance change — la règle et les suivantes ne bougent pas.',
+    scopeRuleHint:
+      'Le libellé, la catégorie, la personne, le partage et le montant passent sur la règle, à partir des échéances à venir — les mois déjà confirmés ne changent pas. La date, le statut et la note restent à cette échéance.',
+    /* Une règle à montant variable laisse chaque échéance chiffrer la sienne :
+       lui écrire le montant du mois la changerait de nature. */
+    scopeRuleHintVariable:
+      'Le libellé, la catégorie, la personne et le partage passent sur la règle, à partir des échéances à venir — les mois déjà confirmés ne changent pas. Le montant, la date, le statut et la note restent à cette échéance.',
+    updatedRule: 'Règle modifiée — les échéances à venir suivent',
     /* Ce que le mois dégage encore, dit **au moment de placer** — c'est là que
        la question se pose, et jusqu'ici elle n'avait de réponse que sur le
        tableau de bord, deux écrans plus loin. Même calcul et même mois que la

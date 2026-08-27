@@ -12,6 +12,7 @@ import {
   addEntry,
   addRecurrence,
   addRecurrencePaidOn,
+  applyEntryEditToRule,
   convertEntryToRecurrence,
   replaceEntry,
   replaceRecurrence,
@@ -31,12 +32,27 @@ const toasts = () => ({
 const toastKey = (nature: EntryNature, direction: Direction): 'in' | 'out' | 'saving' =>
   nature === 'saving' ? 'saving' : direction
 
-export function saveOperation(built: Built, operation: Operation | null): void {
+/**
+ * Jusqu'où porte la reprise d'une échéance générée : elle seule, ou la règle
+ * qui la pose. Sans objet partout ailleurs — création, ponctuel, récurrence.
+ */
+export type EditScope = 'occurrence' | 'rule'
+
+export function saveOperation(
+  built: Built,
+  operation: Operation | null,
+  scope: EditScope = 'occurrence',
+): void {
   if (built.kind === 'entry') {
     const key = toastKey(built.nature, built.payload.direction)
     if (operation?.kind === 'entry') {
-      replaceEntry(operation.entry.id, built.payload)
-      toast(toasts().updated[key])
+      if (scope === 'rule' && operation.entry.recurrenceId !== undefined) {
+        applyEntryEditToRule(operation.entry.id, built.payload)
+        toast(t.entry.updatedRule)
+      } else {
+        replaceEntry(operation.entry.id, built.payload)
+        toast(toasts().updated[key])
+      }
     } else {
       addEntry(built.payload)
       toast(toasts().added[key])
