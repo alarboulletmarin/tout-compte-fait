@@ -8,6 +8,10 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Ajouté — l'audit fonctionnel, rejouable
+
+- **Des parcours complets dans un vrai navigateur**, à côté de l'audit d'interface : l'argent de zéro (onboarding → prorata → balance → mois suivant), tous les écrans sur le jeu d'exemple, la revue, la langue, et un export réimporté sur un profil neuf — 42 vérifications qui recomposent les chiffres au lieu de constater que les écrans s'ouvrent. C'est lui qui a trouvé les deux pertes de données ci-dessous, et ses sondes restent en place pour qu'elles ne reviennent pas. Verdict et fausses pistes dans `audit/fonctionnel.md`.
+
 ### Corrigé — fermer l'onglet juste après une saisie ne la perd plus
 
 C'est la famille de pertes qui faisait dire « l'app perd mes saisies », et l'audit en navigateur l'a reproduite au geste près : elle frappait précisément qui range son téléphone juste après avoir noté une dépense.

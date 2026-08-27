@@ -44,6 +44,11 @@ audit/*-avant/
 audit/focus/
 audit/lighthouse/
 
+# L'audit fonctionnel écrit son relevé et ses captures d'échec à côté de ses
+# scripts — des sorties d'une machine et d'un instant, jamais commitées.
+audit/fonctionnel/*.json
+audit/fonctionnel/échec-*.png
+
 # Références de design (hors dépôt)
 design_handoff_le_passage/
 thoughts/
