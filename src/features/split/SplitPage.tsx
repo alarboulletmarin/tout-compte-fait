@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
 import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH, entryPath } from '@/app/routes'
 import { abs, neg, sub, sum } from '@/domain/money'
-import { totalDue, totalToPay } from '@/domain/split'
+import { payerOf, totalDue, totalToPay } from '@/domain/split'
 import type { MemberShare } from '@/domain/split'
 import type { Entry, Member } from '@/domain/types'
 import { t } from '@/i18n/strings'
@@ -133,11 +133,14 @@ function ShareRow({ share }: { share: MemberShare }) {
         </div>
       )}
 
-      {/* Sans avance ni remboursement, ces lignes ne disent rien : la part
-          recopierait à l'identique le « À verser » juste dessous, et un
+      {/* Sans avance, prêt ni remboursement, ces lignes ne disent rien : la
+          part recopierait à l'identique le « À verser » juste dessous, et un
           « Déjà avancé 0,00 € » laisserait croire à une avance là où les
           comptes tombaient justes. */}
-      {(share.advanced !== 0 || share.refund !== 0) && (
+      {(share.advanced !== 0 ||
+        share.refund !== 0 ||
+        share.lent !== 0 ||
+        share.borrowed !== 0) && (
         <>
           {/* Avec ses centimes, contrairement au revenu : c'est le premier
               terme de la soustraction qu'on lit juste en dessous, et arrondi il
@@ -175,6 +178,25 @@ function ShareRow({ share }: { share: MemberShare }) {
                   `MemberShareTile`. */}
               <span className="t-axis tnum shrink-0">
                 {formatSignedMoney(neg(share.advanced), currency)}
+              </span>
+            </div>
+          )}
+          {/* La balance entre membres — le geste Tricount : la ligne d'un
+              autre, son argent à lui. L'autre le lui doit, et les deux lignes
+              se compensent d'un membre à l'autre au centime. */}
+          {share.lent !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="t-axis min-w-0">{t.split.lentLine}</span>
+              <span className="t-axis tnum shrink-0">
+                {formatSignedMoney(neg(share.lent), currency)}
+              </span>
+            </div>
+          )}
+          {share.borrowed !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="t-axis min-w-0">{t.split.borrowedLine}</span>
+              <span className="t-axis tnum shrink-0">
+                {formatSignedMoney(share.borrowed, currency)}
               </span>
             </div>
           )}
@@ -221,6 +243,15 @@ export function SplitPage() {
      cul-de-sac. */
   const back = useBackTo()
   const fronted = shares?.some((share) => share.advanced !== 0) ?? false
+  /* Un mois sans pot peut quand même porter une balance : Alix a réglé
+     l'abonnement de Camille, et le virement du mois n'est plus que ce
+     remboursement-là. Le taire ferait disparaître de l'écran la seule chose
+     qu'il reste à faire. */
+  const hasBalance =
+    shares?.some(
+      (share) =>
+        share.toPay !== 0 || share.advanced !== 0 || share.lent !== 0 || share.borrowed !== 0,
+    ) ?? false
 
   /* Nommé une fois, rendu à deux endroits : il ouvre la carte des parts quand
      il y en a, et tient seul le mois sans charge commune — où il n'y a pas de
@@ -239,10 +270,11 @@ export function SplitPage() {
   )
   const disclosure = useDisclosureGroup(keys, false)
 
-  /** La date, et le nom de qui a avancé la dépense quand il y en a un. */
+  /** La date, et le nom de qui a sorti l'argent quand quelqu'un l'a fait. */
   const metaOf = (entry: Entry): string => {
     const day = formatDayMonthShort(entry.date)
-    const name = entry.memberId === undefined ? undefined : memberMap.get(entry.memberId)?.name
+    const payer = payerOf(entry)
+    const name = payer === undefined ? undefined : memberMap.get(payer)?.name
     return name === undefined ? day : `${day} · ${tpl(t.split.advancedBy, name)}`
   }
 
@@ -342,7 +374,7 @@ export function SplitPage() {
           <span className="t-label mt-1">{t.split.totalHint}</span>
         </Tile>
 
-        {total <= 0 ? (
+        {total <= 0 && !hasBalance ? (
           <>
             <p className="t-label">{subtitle}</p>
             <p className="t-label">{t.split.nothing}</p>
@@ -531,6 +563,7 @@ export function SplitPage() {
               peut pas déduire des deux puces au-dessus, et la seule qui
               explique qu'un virement dépasse ce que le mois a coûté. */}
           <p className="t-label">{t.split.methodAdvance}</p>
+          <p className="t-label">{t.split.methodPaidBy}</p>
         </Tile>
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>

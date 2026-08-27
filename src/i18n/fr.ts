@@ -1511,6 +1511,17 @@ export const fr = {
     variableAmountHint:
       'Le montant sera demandé à chaque échéance. Celui-ci sert d’ordre de grandeur en attendant — pour le total des récurrences, et pour la répartition au prorata s’il s’agit d’un revenu. Chaque échéance chiffrée prend aussitôt le dessus.',
 
+    /* Qui a sorti l'argent, quand ce n'est pas la personne de la ligne — le
+       geste Tricount : Alix règle l'abonnement de Camille, la ligne est à
+       Camille, l'argent est sorti de chez Alix, et Camille le lui doit. Sur
+       une ligne commune, il désigne qui a avancé le pot sans avoir à
+       s'attribuer la ligne. Il ne change aucun coût : seul le virement bouge,
+       et l'écran Répartition fait la balance. */
+    paidBy: 'Réglé par',
+    paidByDefault: 'La personne de la ligne — ou le pot, en commun',
+    paidByHint:
+      'Si quelqu’un d’autre a sorti l’argent : sur une ligne commune, c’est une avance qui se déduit de son virement ; sur la ligne de quelqu’un d’autre, l’autre le lui doit — la répartition fait la balance.',
+
     /* Un seul écran de saisie, donc un seul titre : la nature et le rythme s'y
        changent d'un doigt, et un titre qui suivrait les six combinaisons
        donnerait l'impression d'avoir changé d'écran sans bouger. Ce qu'on
@@ -1826,6 +1837,11 @@ export const fr = {
        la facture et une fois sa part. Signé négatif à l'écran : c'est le terme
        qui se retranche. */
     advancedLine: 'Déjà avancé',
+    /* La balance entre membres — la ligne d'un autre, son argent à lui, et le
+       miroir. Les deux se compensent d'un membre à l'autre au centime : c'est
+       ce qui laisse la somme des virements valoir le pot moins les avances. */
+    lentLine: 'Payé pour quelqu’un d’autre',
+    borrowedLine: 'Payé par quelqu’un d’autre',
     /* Quand l'avance dépasse la part : le pot lui doit, et « À verser » à qui
        on doit cette somme serait le contresens exact. */
     toReceive: 'À recevoir',
@@ -1882,6 +1898,9 @@ export const fr = {
       'L’épargne n’est pas partagée : elle sort du compte, mais elle reste à qui la met de côté.',
     methodAdvance:
       'Une exception : quand quelqu’un a réglé une dépense du foyer depuis son épargne, la mensualité qui la lui rembourse est partagée. Elle se verse sans rien coûter au mois — c’est pourquoi un virement peut dépasser ce que le mois a coûté.',
+    /* Le champ « Réglé par » de la saisie, lu du côté du calcul. */
+    methodPaidBy:
+      'Une ligne « réglée par » quelqu’un d’autre ne change pas ce qu’elle coûte : elle se déduit du virement de qui a payé, et s’ajoute à celui de qui devait.',
     nothing: 'Aucune charge commune ce mois-ci.',
     /* Ce qui manque est nommé plutôt que remplacé par un zéro : un prorata au
        dénominateur incomplet ne vaut pas zéro, il ne veut rien dire. */

@@ -810,6 +810,11 @@ export const en: Strings = {
     quickFull: 'More details',
     quickPrivacy: 'saved in this browser · nothing goes anywhere else',
 
+    paidBy: 'Settled by',
+    paidByDefault: 'The line’s person — or the pot, when shared',
+    paidByHint:
+      'If someone else put up the money: on a shared line it’s an advance, deducted from their transfer; on someone else’s line, that person owes them — the split balances it out.',
+
     addOperation: 'Add an operation',
     saveOperation: 'Add the operation',
     saveRecurrence: 'Add the recurring rule',
@@ -992,6 +997,8 @@ export const en: Strings = {
     expandAll: 'Expand all',
     advancedBy: 'paid up front by %s',
     advancedLine: 'Already paid up front',
+    lentLine: 'Paid for someone else',
+    borrowedLine: 'Paid by someone else',
     toReceive: 'To receive',
     settlementShare: 'Share of the pot',
     settlementRefund: 'Advance repayment',
@@ -1016,6 +1023,8 @@ export const en: Strings = {
       'Savings aren’t shared: the money leaves the account, but it stays with whoever set it aside.',
     methodAdvance:
       'One exception: when someone has settled a household expense out of their savings, the instalment that pays them back is shared. It is transferred without costing the month anything — which is why a transfer can exceed what the month cost.',
+    methodPaidBy:
+      'A line “settled by” someone else doesn’t change what it costs: it comes off the payer’s transfer, and goes onto the transfer of whoever owed it.',
     nothing: 'No shared cost this month.',
     /* Les six phrases qui suivent reçoivent `de(prénoms)`. Voir `format.de`. */
     missingOne: 'Add the income %s to split the costs.',

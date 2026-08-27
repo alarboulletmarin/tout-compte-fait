@@ -13,9 +13,9 @@ import {
   valuationAge,
 } from '@/domain/saving'
 import {
-  advancedByMember,
   memberIncomes,
   memberShares,
+  monthBalances,
   sharedEntries,
   totalDue,
   totalToPay,
@@ -523,19 +523,19 @@ describe('ce que le domaine sait en tirer', () => {
   it('déduit du versement de chacun ce qu’il a déjà avancé sur le mois', () => {
     const monthIncomes = incomes()
     const knownIds = new Set(monthIncomes.map((i) => i.memberId))
-    const advanced = advancedByMember(data.entries, anchor, kindOf, knownIds)
+    const balances = monthBalances(data.entries, anchor, kindOf, knownIds)
     // Trois personnes avancent chacune une charge commune : la déduction
     // n'est plus un aller-retour entre deux comptes, et c'est là qu'elle cesse
     // de pouvoir se lire de travers sans qu'on s'en aperçoive.
-    expect(advanced.size).toBe(3)
+    expect([...balances.values()].filter((b) => b.advanced > 0)).toHaveLength(3)
 
     const amounts = sharedEntries(data.entries, anchor, kindOf).map((e) => e.amount)
-    const shares = memberShares(monthIncomes, amounts, advanced)
+    const shares = memberShares(monthIncomes, amounts, balances)
     expect(shares).not.toBeNull()
     expect(shares!.every((s) => s.advanced > 0)).toBe(true)
     // La somme des parts vaut le pot ; celle des versements, le pot moins ce
     // qui est déjà sorti de la poche de chacun.
-    const fronted = [...advanced.values()].reduce<number>((sum, value) => sum + value, 0)
+    const fronted = [...balances.values()].reduce<number>((sum, b) => sum + b.advanced, 0)
     expect(totalToPay(shares!)).toBe(totalDue(shares!) - fronted)
   })
 

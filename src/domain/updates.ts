@@ -625,8 +625,8 @@ export function replaceRecurrence(data: Data, id: string, next: Omit<Recurrence,
 
 /**
  * Recolle une échéance sur la règle qui l'a posée : sous quel libellé et quelle
- * catégorie elle se lit, dans quel sens, à qui elle est, sur quel support elle
- * tombe et si elle se partage.
+ * catégorie elle se lit, dans quel sens, à qui elle est, qui la règle, sur
+ * quel support elle tombe et si elle se partage.
  *
  * Tout le reste lui appartient — son montant, sa date, son statut, sa note :
  * ce sont les seuls champs qu'une échéance peut porter contre sa règle, et les
@@ -636,6 +636,7 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
   const {
     memberId: _member,
     shared: _shared,
+    paidById: _paidBy,
     savingSupportId: _support,
     ...rest
   } = entry
@@ -649,6 +650,7 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
       ? {}
       : { savingSupportId: recurrence.savingSupportId }),
     ...(recurrence.shared === undefined ? {} : { shared: recurrence.shared }),
+    ...(recurrence.paidById === undefined ? {} : { paidById: recurrence.paidById }),
   }
 }
 
@@ -1018,6 +1020,7 @@ export function applyEntryEditToRule(
     memberId: _member,
     savingSupportId: _support,
     shared: _shared,
+    paidById: _paidBy,
     ...kept
   } = recurrence
   const nextRule: Omit<Recurrence, 'id'> = {
@@ -1029,6 +1032,7 @@ export function applyEntryEditToRule(
     ...(next.memberId === undefined ? {} : { memberId: next.memberId }),
     ...(next.savingSupportId === undefined ? {} : { savingSupportId: next.savingSupportId }),
     ...(next.shared === undefined ? {} : { shared: next.shared }),
+    ...(next.paidById === undefined ? {} : { paidById: next.paidById }),
   }
 
   const synced = syncRecurrenceEntries(

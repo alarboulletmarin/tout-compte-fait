@@ -220,6 +220,31 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     expect(screen.getByText(t.split.method)).toBeInTheDocument()
   })
 
+  /* Le geste Tricount : la ligne de Camille, l'argent d'Alix. Le coût ne
+     bouge pas — la ligne reste à Camille — mais la balance des virements se
+     déplace des deux côtés, et se compense au centime. */
+  it('fait la balance d’une ligne réglée par quelqu’un d’autre', () => {
+    household({
+      entries: [
+        makeEntry({ date: '2026-08-05', label: 'Loyer', categoryId: 'loyer', amount: eur(90_000) }),
+        makeEntry({
+          date: '2026-08-12',
+          label: 'Pharmacie',
+          categoryId: 'loyer',
+          amount: eur(6_000),
+          memberId: 'm-2',
+          paidById: 'm-1',
+        }),
+      ],
+    })
+
+    expect(screen.getByText(t.split.lentLine)).toBeInTheDocument()
+    expect(screen.getByText(t.split.borrowedLine)).toBeInTheDocument()
+    // Parts 600/300 sur le pot de 900 ; Alix a prêté 60, Camille les doit.
+    expect(screen.getByText(out(eur(54_000)))).toBeInTheDocument()
+    expect(screen.getByText(out(eur(36_000)))).toBeInTheDocument()
+  })
+
   /* Le bug que ce test épingle : le revenu se lisait sur la règle seule, et
      corriger le salaire du mois ligne à ligne ne déplaçait jamais la part de
      ce mois-là — la répartition se lisait figée quel que soit le chiffre

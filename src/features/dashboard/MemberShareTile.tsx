@@ -1,5 +1,5 @@
 import { SPLIT_PATH } from '@/app/routes'
-import { add, neg, sub } from '@/domain/money'
+import { add, money, neg, sub } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatSignedMoney, tpl } from '@/i18n/format'
 import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
@@ -70,10 +70,12 @@ export function MemberShareTile() {
   const members = useMemberMap()
   const currency = useCurrency()
 
-  // Pas de pot ce mois-ci : pas de part, pas d'avance, pas de virement — et
-  // une tuile à zéro le dirait moins bien que son absence.
+  // Ni pot ni balance ce mois-ci : pas de virement — et une tuile à zéro le
+  // dirait moins bien que son absence. Un mois sans pot mais où quelqu'un a
+  // réglé pour quelqu'un d'autre garde la tuile : le virement n'est plus que
+  // ce remboursement-là, et c'est le mois où il faut le lire.
   if (filter === undefined || charges === null) return null
-  if (charges.commonTotal <= 0) return null
+  if (charges.commonTotal <= 0 && charges.lent === 0 && charges.borrowed === 0) return null
 
   const member = members.get(filter)
   /* Les trois termes du virement, et rien d'autre.
@@ -95,8 +97,11 @@ export function MemberShareTile() {
      payer deux fois. */
   const refund = sub(charges.common, add(charges.commonCharge, charges.commonDebt))
   const spending = sub(charges.common, refund)
-  const deducted = charges.advanced !== 0 || refund !== 0
-  const toPay = sub(charges.common, charges.advanced)
+  const deducted =
+    charges.advanced !== 0 || refund !== 0 || charges.lent !== 0 || charges.borrowed !== 0
+  const toPay = money(
+    charges.common - charges.advanced - charges.lent + charges.borrowed,
+  )
 
   /* Le montant du virement, en corps de tuile : c'est la réponse, et on vient
      la recopier dans une application bancaire.
@@ -187,6 +192,24 @@ export function MemberShareTile() {
                     et le signe est toute la lecture. */}
                 <span className="t-axis tnum">
                   {formatSignedMoney(neg(charges.advanced), currency)}
+                </span>
+              </li>
+            )}
+            {/* La balance entre membres — les mêmes lignes que `ShareRow`,
+                dans les mêmes mots et le même ordre. */}
+            {charges.lent !== 0 && (
+              <li className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="t-axis min-w-0">{t.split.lentLine}</span>
+                <span className="t-axis tnum">
+                  {formatSignedMoney(neg(charges.lent), currency)}
+                </span>
+              </li>
+            )}
+            {charges.borrowed !== 0 && (
+              <li className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="t-axis min-w-0">{t.split.borrowedLine}</span>
+                <span className="t-axis tnum">
+                  {formatSignedMoney(charges.borrowed, currency)}
                 </span>
               </li>
             )}

@@ -497,6 +497,34 @@ export function OperationForm({
             }}
           />
 
+          {/* Qui a sorti l'argent, quand ce n'est pas la personne de la ligne.
+              Sur une ligne commune : une avance, déduite de son virement. Sur
+              la ligne de quelqu'un d'autre : l'autre le lui doit, et la
+              répartition fait la balance — le geste Tricount. À une personne,
+              la question ne se pose pas : il n'y a personne d'autre pour
+              régler. */}
+          {members.length > 1 && draft.nature === 'expense' && (
+            <Field label={t.entry.paidBy} optional hint={t.entry.paidByHint}>
+              {(id, describedBy) => (
+                <Select
+                  id={id}
+                  aria-describedby={describedBy}
+                  value={draft.paidById}
+                  onChange={(e) => {
+                    patch({ paidById: e.target.value })
+                  }}
+                >
+                  <option value="">{t.entry.paidByDefault}</option>
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+          )}
+
           {/* La note se lit sur la ligne du mois et se cherche depuis
               l'historique. En dernier : c'est le champ dont on se passe. */}
           <Field label={t.entry.note} optional>

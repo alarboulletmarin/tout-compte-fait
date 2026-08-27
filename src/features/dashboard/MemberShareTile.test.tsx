@@ -149,6 +149,29 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
     expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
   })
 
+  /* Le geste Tricount, lu de la tuile : la ligne de Camille, l'argent
+     d'Alix. Sa part du pot (600 €) se réduit de ce qu'elle a prêté (60 €),
+     et la ligne le dit dans les mots de l'écran Répartition. */
+  it('déduit ce qu’elle a réglé pour quelqu’un d’autre', () => {
+    mount({
+      filterOn: 'm-1',
+      entries: [
+        RENT,
+        makeEntry({
+          date: '2026-08-14',
+          label: 'Pharmacie',
+          categoryId: 'courses',
+          amount: eur(6_000),
+          memberId: 'm-2',
+          paidById: 'm-1',
+        }),
+      ],
+    })
+
+    expect(screen.getByText(t.split.lentLine)).toBeInTheDocument()
+    expect(screen.getByText(out(eur(54_000)))).toBeInTheDocument()
+  })
+
   /* Qui a avancé plus que sa part reçoit au lieu de verser : le pot d'Alix ne
      vaut que son assurance de 300 €, sa part 200 €, et le commun lui doit
      100 €. Le montant garde son signe au lieu de s'annoncer comme une

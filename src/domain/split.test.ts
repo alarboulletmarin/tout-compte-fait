@@ -4,7 +4,7 @@ import { eur, makeEntry, makeMember, makeRecurrence } from './fixtures'
 import { money, sum } from './money'
 import { amountOn } from './priceHistory'
 import {
-  advancedByMember,
+  type MemberBalance,
   advancedEntries,
   allocate,
   cappedIncomes,
@@ -16,6 +16,7 @@ import {
   memberIncomes,
   memberRequired,
   memberShares,
+  monthBalances,
   monthlyIncome,
   scopeToMember,
   scopeToMembers,
@@ -387,6 +388,8 @@ describe('parts au prorata des revenus', () => {
         // d'avance n'y a été passée.
         refund: money(0),
         advanced: money(0),
+        lent: money(0),
+        borrowed: money(0),
         toPay: money(200_000),
       },
     ])
@@ -445,10 +448,16 @@ describe('parts au prorata des revenus', () => {
     expect(shares && totalDue(shares)).toBe(sum(amounts))
   })
 
-  /* Ce qu'un membre a déjà avancé sur le pot — voir `advancedByMember`. Ça se
+  /* Ce qu'un membre a déjà réglé sur le mois — voir `monthBalances`. Ça se
      déduit de son virement sans toucher à sa part : ce qu'un mois coûte ne
      bouge pas, seul ce qu'il reste à verser se réduit de ce qui est déjà
      sorti de sa poche. */
+  const balanceOf = (over: Partial<MemberBalance>): MemberBalance => ({
+    advanced: money(0),
+    lent: money(0),
+    borrowed: money(0),
+    ...over,
+  })
   it('ne bouge ni les parts ni les versements sans avance', () => {
     const shares = memberShares(foyer, [eur(200_000)]) ?? []
     expect(shares.map((s) => s.advanced)).toEqual([money(0), money(0)])
@@ -456,7 +465,7 @@ describe('parts au prorata des revenus', () => {
   })
 
   it('déduit l’avance du versement, jamais de la part', () => {
-    const advanced = new Map([['m-1', money(1_500)]])
+    const advanced = new Map([['m-1', balanceOf({ advanced: money(1_500) })]])
     const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
     expect(shares.map((s) => s.due)).toEqual([money(111_111), money(88_889)])
     expect(shares.map((s) => s.toPay)).toEqual([money(109_611), money(88_889)])
@@ -464,23 +473,39 @@ describe('parts au prorata des revenus', () => {
 
   it('rend négatif le versement de qui a avancé plus que sa part', () => {
     // Tout le pot avancé par m-2 : le pot lui doit, il ne verse plus.
-    const advanced = new Map([['m-2', money(200_000)]])
+    const advanced = new Map([['m-2', balanceOf({ advanced: money(200_000) })]])
     const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
     expect(shares.map((s) => s.toPay)).toEqual([money(111_111), money(-111_111)])
   })
 
   it('laisse le total des versements valoir le pot moins ce qui est avancé', () => {
     const advanced = new Map([
-      ['m-1', money(30_000)],
-      ['m-2', money(20_000)],
+      ['m-1', balanceOf({ advanced: money(30_000) })],
+      ['m-2', balanceOf({ advanced: money(20_000) })],
     ])
     const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
     expect(totalDue(shares)).toBe(200_000)
     expect(totalToPay(shares)).toBe(150_000)
   })
 
+  /* Le geste Tricount : la ligne de m-2, l'argent de m-1. Le coût ne bouge
+     pas — seule la balance des virements se déplace, et elle se compense au
+     centime d'un membre à l'autre. */
+  it('déplace la balance d’un prêt entre membres, sans toucher au total', () => {
+    const balances = new Map([
+      ['m-1', balanceOf({ lent: money(4_000) })],
+      ['m-2', balanceOf({ borrowed: money(4_000) })],
+    ])
+    const shares = memberShares(foyer, [eur(200_000)], balances) ?? []
+    expect(shares.map((s) => s.due)).toEqual([money(111_111), money(88_889)])
+    expect(shares.map((s) => s.toPay)).toEqual([money(107_111), money(92_889)])
+    // Les prêts se compensent : la somme des virements vaut encore le pot.
+    expect(totalToPay(shares)).toBe(200_000)
+  })
+
   it('ignore une avance qui ne nomme personne du foyer', () => {
-    const shares = memberShares(foyer, [eur(200_000)], new Map([['parti', money(900)]])) ?? []
+    const shares =
+      memberShares(foyer, [eur(200_000)], new Map([['parti', balanceOf({ advanced: money(900) })]])) ?? []
     expect(shares.map((s) => s.toPay)).toEqual(shares.map((s) => s.due))
   })
 })
@@ -524,10 +549,10 @@ describe('les charges avancées d’un mois', () => {
       // virement de personne — la compter ferait mentir la vérification.
       makeEntry({ date: '2026-07-18', amount: eur(7_777), categoryId: 'courses', memberId: 'parti', shared: true }),
     ]
-    const advanced = advancedByMember(july, '2026-07', kindOf, MEMBERS)
-    expect(advanced.get('luca')).toBe(125_000)
-    expect(advanced.get('clara')).toBe(4_000)
-    expect(advanced.has('parti')).toBe(false)
+    const balances = monthBalances(july, '2026-07', kindOf, MEMBERS)
+    expect(balances.get('luca')?.advanced).toBe(125_000)
+    expect(balances.get('clara')?.advanced).toBe(4_000)
+    expect(balances.has('parti')).toBe(false)
   })
 
   it('compte la mensualité d’avance que son porteur règle lui-même', () => {
@@ -536,7 +561,45 @@ describe('les charges avancées d’un mois', () => {
     const july = [
       makeEntry({ date: '2026-07-05', amount: eur(5_600), categoryId: 'livret', memberId: 'luca', shared: true }),
     ]
-    expect(advancedByMember(july, '2026-07', kindOf, MEMBERS).get('luca')).toBe(5_600)
+    expect(monthBalances(july, '2026-07', kindOf, MEMBERS).get('luca')?.advanced).toBe(5_600)
+  })
+
+  /* « Réglé par » sur une ligne du pot : l'avance sans avoir à s'attribuer la
+     ligne — c'est la réponse à « j'ai payé le loyer commun, et l'écran ne le
+     savait pas ». */
+  it('crédite l’avance à qui a réglé une ligne du pot, « réglé par » compris', () => {
+    const july = [
+      makeEntry({ date: '2026-07-05', amount: eur(95_000), categoryId: 'logement', paidById: 'clara' }),
+    ]
+    expect(advancedEntries(july, '2026-07', kindOf).map((e) => e.amount)).toEqual([95_000])
+    expect(monthBalances(july, '2026-07', kindOf, MEMBERS).get('clara')?.advanced).toBe(95_000)
+  })
+
+  /* Le geste Tricount, du côté des entrées : la ligne de clara, l'argent de
+     luca. Elle lui doit le montant, et les deux colonnes se compensent. */
+  it('inscrit un prêt quand quelqu’un règle la ligne d’un autre', () => {
+    const july = [
+      makeEntry({ date: '2026-07-08', amount: eur(4_000), categoryId: 'courses', memberId: 'clara', paidById: 'luca' }),
+    ]
+    const balances = monthBalances(july, '2026-07', kindOf, MEMBERS)
+    expect(balances.get('luca')?.lent).toBe(4_000)
+    expect(balances.get('clara')?.borrowed).toBe(4_000)
+    // Pas une avance sur le pot : la ligne n'est pas commune.
+    expect(balances.get('luca')?.advanced ?? 0).toBe(0)
+  })
+
+  it('n’inscrit rien d’une prévue, ni d’un prêt dont un bout manque', () => {
+    const july = [
+      // Prévue : personne n'a encore rien réglé.
+      makeEntry({ date: '2026-07-08', amount: eur(4_000), categoryId: 'courses', memberId: 'clara', paidById: 'luca', status: 'planned' }),
+      // Réglée par quelqu'un qui n'est plus du foyer.
+      makeEntry({ date: '2026-07-09', amount: eur(2_000), categoryId: 'courses', memberId: 'clara', paidById: 'parti' }),
+      // La ligne de personne n'endette personne.
+      makeEntry({ date: '2026-07-10', amount: eur(3_000), categoryId: 'livret', paidById: 'luca', shared: false }),
+    ]
+    const balances = monthBalances(july, '2026-07', kindOf, MEMBERS)
+    expect(balances.get('luca')?.lent ?? 0).toBe(0)
+    expect(balances.get('clara')?.borrowed ?? 0).toBe(0)
   })
 })
 

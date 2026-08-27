@@ -20,7 +20,7 @@
  * ==========================================================================*/
 
 import type { YearMonth } from './date'
-import { type Money, ZERO, add, money, sub, sum } from './money'
+import { type Money, ZERO, add, money, sum } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { type KindOf, type MemberFilter, entriesOfMonth } from './stats'
 import {
@@ -177,8 +177,21 @@ export function sharedEntries(
 /* --- Ce qu'une seule personne a déjà réglé ---------------------------------*/
 
 /**
- * Les charges communes du mois qu'une personne a avancées — celles qui portent
- * un membre.
+ * Qui a sorti l'argent d'une ligne, quand quelqu'un l'a fait.
+ *
+ * « Réglé par » l'emporte quand il est posé ; sinon c'est le membre de la
+ * ligne — une charge commune attribuée à quelqu'un et cochée « à partager »
+ * est l'écriture historique de l'avance, et elle reste lisible telle quelle.
+ * `undefined` : personne, c'est-à-dire le pot.
+ */
+export function payerOf(entry: Entry): string | undefined {
+  if (entry.paidById !== undefined && entry.paidById !== '') return entry.paidById
+  return entry.memberId !== undefined && entry.memberId !== '' ? entry.memberId : undefined
+}
+
+/**
+ * Les charges communes du mois qu'une personne a avancées — celles dont
+ * quelqu'un a sorti l'argent (`payerOf`).
  *
  * La répartition dit ce que chacun doit sur le pot commun. Elle ne dit pas qui
  * a sorti l'argent — et c'est souvent une seule personne : Clara règle 300 €
@@ -186,10 +199,10 @@ export function sharedEntries(
  * qu'elle a avancé se **déduit de son virement du mois même** (`memberShares`),
  * sans quoi elle paierait deux fois — une fois la facture, une fois sa part.
  *
- * Une charge commune **sans** membre a été réglée par le pot : elle n'avance
- * rien à personne, et reste donc hors du calcul des deux côtés à la fois.
- * C'est cette symétrie qui fait que la somme des virements vaut exactement le
- * pot moins ce qui a déjà été avancé.
+ * Une charge commune que personne n'a réglée l'a été par le pot : elle
+ * n'avance rien à personne, et reste donc hors du calcul des deux côtés à la
+ * fois. C'est cette symétrie qui fait que la somme des virements vaut
+ * exactement le pot moins ce qui a déjà été avancé.
  *
  * **Confirmées seulement.** Une échéance prévue n'a été payée par personne, et
  * dire d'elle qu'un membre l'a avancée serait inventer un fait. C'est déjà la
@@ -214,34 +227,75 @@ export function advancedEntries(
       (entry) =>
         isCommon(entry, kindOf) &&
         entry.status === 'confirmed' &&
-        entry.memberId !== undefined &&
-        entry.memberId !== '',
+        payerOf(entry) !== undefined,
     )
     .sort((a, b) => b.amount - a.amount)
 }
 
 /**
- * Ce que chaque membre a avancé sur le mois, sous la forme qu'attend
- * `memberShares` : une table par membre.
+ * Ce qu'un membre a déjà réglé sur le mois, et ce qu'on a réglé pour lui.
  *
- * Bornée aux membres donnés — ceux du foyer : une charge avancée par quelqu'un
- * qui n'en est plus ne se déduit du virement de personne, et la compter d'un
- * seul côté ferait mentir la vérification — la somme des virements ne vaudrait
- * plus le pot moins ce que la liste des avances affiche.
+ * Trois termes, et ils ne bougent que le virement — jamais un coût :
+ * - `advanced` : le pot qu'il a avancé (les charges communes confirmées dont
+ *   il a sorti l'argent) ;
+ * - `lent` : ce qu'il a réglé **pour quelqu'un d'autre** — la ligne d'un autre
+ *   membre, son argent à lui : l'autre lui doit le montant ;
+ * - `borrowed` : le miroir — ses lignes à lui, l'argent d'un autre.
  */
-export function advancedByMember(
+export type MemberBalance = {
+  advanced: Money
+  lent: Money
+  borrowed: Money
+}
+
+const EMPTY_BALANCE: MemberBalance = { advanced: ZERO, lent: ZERO, borrowed: ZERO }
+
+/**
+ * La balance du mois, membre par membre — la table qu'attend `memberShares`.
+ *
+ * Bornée aux membres donnés — ceux du foyer : une ligne réglée par quelqu'un
+ * qui n'en est plus ne se déduit du virement de personne, et la compter d'un
+ * seul côté ferait mentir la vérification. Un prêt entre membres exige les
+ * deux bouts : la ligne d'un membre connu, l'argent d'un autre membre connu —
+ * `lent` et `borrowed` se compensent alors exactement d'un membre à l'autre,
+ * et la somme des virements vaut toujours le pot moins ce qui a été avancé.
+ *
+ * **Confirmées seulement**, comme les avances : une échéance prévue n'a été
+ * réglée par personne.
+ */
+export function monthBalances(
   entries: readonly Entry[],
   month: YearMonth,
   kindOf: KindOf,
   memberIds: ReadonlySet<string>,
-): Map<string, Money> {
-  const advanced = new Map<string, Money>()
-  for (const entry of advancedEntries(entries, month, kindOf)) {
-    const by = entry.memberId ?? ''
-    if (!memberIds.has(by)) continue
-    advanced.set(by, add(advanced.get(by) ?? ZERO, entry.amount))
+): Map<string, MemberBalance> {
+  const balances = new Map<string, MemberBalance>()
+  const balance = (id: string): MemberBalance => {
+    const found = balances.get(id) ?? { ...EMPTY_BALANCE }
+    balances.set(id, found)
+    return found
   }
-  return advanced
+
+  for (const entry of entriesOfMonth(entries, month)) {
+    if (entry.status !== 'confirmed' || entry.direction !== 'out') continue
+    const payer = payerOf(entry)
+    if (payer === undefined || !memberIds.has(payer)) continue
+
+    if (isCommon(entry, kindOf)) {
+      balance(payer).advanced = add(balance(payer).advanced, entry.amount)
+      continue
+    }
+
+    /* La ligne d'un membre, l'argent d'un autre : un prêt. La ligne de
+       personne — un versement d'épargne sans porteur — n'endette personne. */
+    const owner = entry.memberId
+    if (owner === undefined || owner === '' || owner === payer) continue
+    if (!memberIds.has(owner)) continue
+    balance(payer).lent = add(balance(payer).lent, entry.amount)
+    balance(owner).borrowed = add(balance(owner).borrowed, entry.amount)
+  }
+
+  return balances
 }
 
 /* --- Le revenu d'un membre ------------------------------------------------*/
@@ -415,14 +469,24 @@ export type MemberShare = {
   refund: Money
   /**
    * Ce qu'il a déjà réglé de sa poche sur le pot de ce mois : les charges
-   * communes confirmées qui portent son nom (`advancedEntries`), mensualités
-   * d'avance comprises. Il ne va pas le payer deux fois — c'est déjà sorti.
+   * communes confirmées dont il a sorti l'argent (`advancedEntries`),
+   * mensualités d'avance comprises. Il ne va pas le payer deux fois — c'est
+   * déjà sorti.
    */
   advanced: Money
   /**
-   * Ce qu'il lui reste à verser ce mois-ci : `due − advanced`. Négatif, il a
-   * avancé plus que sa part et c'est le pot qui lui doit. La somme vaut le
-   * total des charges communes moins tout ce qui a déjà été avancé.
+   * Ce qu'il a réglé **pour quelqu'un d'autre** : la ligne d'un autre membre,
+   * son argent à lui. L'autre le lui doit, et ça se déduit de son virement.
+   */
+  lent: Money
+  /** Le miroir : ses lignes à lui, réglées par l'argent d'un autre. */
+  borrowed: Money
+  /**
+   * Ce qu'il lui reste à verser ce mois-ci :
+   * `due − advanced − lent + borrowed`. Négatif, on lui doit plus qu'il ne
+   * doit, et c'est le pot qui lui rend. La somme vaut le total des charges
+   * communes moins tout ce qui a été avancé — les prêts entre membres se
+   * compensent exactement.
    */
   toPay: Money
 }
@@ -600,16 +664,17 @@ export function cappedIncomes<T extends IncomeWeight>(
  * Répartir la somme laisserait l'écran du mois filtré sur quelqu'un et l'écran
  * Répartition annoncer deux chiffres à un centime l'un de l'autre.
  *
- * `advanced` porte ce que chacun a déjà réglé sur le pot de ce mois
- * (`advancedByMember`) : ça se déduit de son virement, jamais de sa part —
- * une avance ne change pas ce que le mois lui coûte, seulement ce qu'il
- * verse. Absente, chacun verse sa part et rien d'autre : c'est ce que veut le
- * coefficient lu seul, hors de tout mois.
+ * `balances` porte ce que chacun a déjà réglé sur le mois (`monthBalances`) —
+ * le pot qu'il a avancé, ce qu'il a payé pour les autres, ce qu'on a payé pour
+ * lui : ça se déduit de son virement, jamais de sa part — une avance ne change
+ * pas ce que le mois lui coûte, seulement ce qu'il verse. Absente, chacun
+ * verse sa part et rien d'autre : c'est ce que veut le coefficient lu seul,
+ * hors de tout mois.
  */
 export function memberShares(
   incomes: readonly IncomeWeight[],
   amounts: readonly Money[],
-  advanced: ReadonlyMap<string, Money> | null = null,
+  balances: ReadonlyMap<string, MemberBalance> | null = null,
   /**
    * Le sous-ensemble d'`amounts` qui ne se consomme pas — les mensualités
    * d'avance. Passé à part plutôt que déduit ici : la nature d'une ligne se lit
@@ -649,7 +714,7 @@ export function memberShares(
 
   return incomes.map((entry, index) => {
     const due = money(dues[index] ?? 0)
-    const fronted = advanced?.get(entry.memberId) ?? ZERO
+    const balance = balances?.get(entry.memberId) ?? EMPTY_BALANCE
     return {
       memberId: entry.memberId,
       // Le revenu déclaré, pas le poids : à plusieurs ils sont identiques, mais
@@ -659,8 +724,10 @@ export function memberShares(
       shareBp: shares[index] ?? 0,
       due,
       refund: money(refunded[index] ?? 0),
-      advanced: fronted,
-      toPay: sub(due, fronted),
+      advanced: balance.advanced,
+      lent: balance.lent,
+      borrowed: balance.borrowed,
+      toPay: money(due - balance.advanced - balance.lent + balance.borrowed),
     }
   })
 }

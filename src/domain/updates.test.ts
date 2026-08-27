@@ -1149,6 +1149,22 @@ describe('reporter une correction d’échéance sur sa règle', () => {
     expect(after.entries.filter((e) => e.recurrenceId === 'r1' && e.date.startsWith('2026-08'))).toHaveLength(1)
   })
 
+  it('reporte aussi « réglé par » sur la règle, et ses échéances en héritent', () => {
+    const data = posed()
+    const aout = data.entries.find((e) => e.date === '2026-08-10')
+    const after = applyEntryEditToRule(
+      data,
+      aout?.id ?? '',
+      edited({ memberId: 'm1', shared: true, paidById: 'm2' }),
+      sequentialIds('b'),
+      FROM,
+    )
+
+    expect(after.recurrences[0]?.paidById).toBe('m2')
+    // La régénérée de juillet hérite de la règle, comme du membre.
+    expect(after.entries.find((e) => e.date === '2026-07-10')?.paidById).toBe('m2')
+  })
+
   it('efface de la règle le membre et le partage que le formulaire a vidés', () => {
     const data = posed({ memberId: 'm1', shared: true })
     const aout = data.entries.find((e) => e.date === '2026-08-10')

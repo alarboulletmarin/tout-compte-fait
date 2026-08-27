@@ -8,6 +8,14 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Ajouté — « Réglé par » : la balance entre membres, façon Tricount
+
+*Migration de schéma : version 15.* Rien à convertir, et surtout rien à deviner : le champ est facultatif et n'entre que par le formulaire. L'écriture historique de l'avance — une charge commune attribuée à un membre et cochée « à partager » — reste lisible telle quelle.
+
+- **Je paye, mais c'est pour elle.** La saisie d'une dépense gagne un champ « Réglé par » : qui a sorti l'argent, quand ce n'est pas la personne de la ligne. Alix règle la pharmacie de Camille — la ligne reste à Camille, c'est son coût —, et la répartition inscrit le prêt : « Payé pour quelqu'un d'autre » se déduit du virement d'Alix, « Payé par quelqu'un d'autre » s'ajoute à celui de Camille, et les deux se compensent au centime. Un mois sans charge commune mais où quelqu'un a réglé pour quelqu'un d'autre garde sa carte et sa tuile : le virement n'est plus que ce remboursement-là.
+- **Et sur une ligne du pot, c'est l'avance sans détour.** Une charge commune « réglée par » quelqu'un se déduit de son virement sans qu'il ait à s'attribuer la ligne — c'est la réponse propre à « j'ai payé le loyer commun, et l'écran ne le savait pas ». Sur une récurrence, le champ se pose une fois et ses échéances en héritent, comme du partage.
+- **Rien ne change aux coûts.** Ce qu'une ligne coûte reste à qui la porte ; seul le virement bouge, et la méthode de l'écran le dit. Égal au membre de la ligne, le champ ne s'écrit pas — une exception, jamais une copie, comme « à partager » — et un « réglé par » qui ne désigne plus personne du foyer se coupe à l'import, comme un membre.
+
 ### Corrigé — la répartition suit le salaire du mois qu'on corrige
 
 - **L'échéance du mois passe devant la règle.** Le revenu qui pèse dans le prorata se lisait sur la récurrence seule : corriger la paie d'un mois ligne à ligne — un congé, un salaire réduit — ne déplaçait jamais la part de ce mois-là, et la répartition se lisait figée quel que soit le chiffre saisi. Désormais l'échéance chiffrée du mois l'emporte — confirmée, ou prévue à un montant saisi à la main — parce qu'elle est le fait de ce mois-là ; la règle reste ce qu'elle est, et une prime ponctuelle ne déplace toujours rien. La méthode de l'écran Répartition le dit en toutes lettres.

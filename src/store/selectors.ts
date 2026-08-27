@@ -82,17 +82,19 @@ import { rateOn, ratesOf } from '@/domain/savingRate'
 import { convertsToSingleEntry } from '@/domain/updates'
 import { type ProjectionPart, supportParts } from '@/domain/projectionStart'
 import {
+  type MemberBalance,
   type MemberCharges,
   type MemberIncome,
   type MemberShare,
-  advancedByMember,
   advancedEntries,
   cappedIncomes,
   memberCaps,
   memberCharges,
   memberIncomes,
   memberShares,
+  monthBalances,
   isCommon,
+  payerOf,
   scopeToMember,
   sharedEntries,
   unassignedIncomes,
@@ -796,7 +798,7 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
       shares: memberShares(
         incomes,
         amounts,
-        advancedByMember(entries, month, kindOf, knownIds),
+        monthBalances(entries, month, kindOf, knownIds),
         refunds,
         // Le plafond de chacun — les mêmes parts, au centime, que la portée
         // du mois, qui pèse avec `cappedIncomes` sur le même pot.
@@ -804,23 +806,21 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
       ),
       unknown: members.filter((m) => missing.has(m.id)),
       advanced: advancedEntries(entries, month, kindOf).filter((e) =>
-        knownIds.has(e.memberId ?? ''),
+        knownIds.has(payerOf(e) ?? ''),
       ),
     }
   }, [entries, month, kindOf, members, incomes])
 }
 
 /**
- * Ce qu'un membre porte du mois, plus ce qu'il a déjà avancé dessus.
+ * Ce qu'un membre porte du mois, plus sa balance dessus.
  *
- * L'avance est à côté de `own` et `common`, jamais dedans : ces deux-là sont
+ * La balance est à côté de `own` et `common`, jamais dedans : ces deux-là sont
  * des coûts, et leur somme doit continuer de valoir exactement le total des
- * charges du mois filtré. L'avance, elle, ne change que le virement.
+ * charges du mois filtré. Ce qu'il a avancé sur le pot, réglé pour les autres
+ * ou fait régler par eux ne change que le virement.
  */
-export type MemberChargesWithAdvance = MemberCharges & {
-  /** Ce qu'il a déjà réglé de sa poche sur le pot du mois. */
-  advanced: Money
-}
+export type MemberChargesWithBalance = MemberCharges & MemberBalance
 
 /**
  * Ce que le mois affiché coûte au membre filtré, ses charges d'un côté et sa
@@ -830,7 +830,7 @@ export type MemberChargesWithAdvance = MemberCharges & {
  * et tant que le prorata ne se calcule pas : l'en-tête du mois dit alors ce qui
  * manque, et une tuile de plus le répéterait sans rien ajouter.
  */
-export function useMemberCharges(): MemberChargesWithAdvance | null {
+export function useMemberCharges(): MemberChargesWithBalance | null {
   const entries = useEntries()
   const current = useCurrentYm()
   const member = useMemberFilter()
@@ -842,9 +842,12 @@ export function useMemberCharges(): MemberChargesWithAdvance | null {
     const charges = memberCharges(entries, current, member, kindOf, incomes)
     if (charges === null) return null
     const knownIds = new Set(incomes.map((i) => i.memberId))
+    const balance = monthBalances(entries, current, kindOf, knownIds).get(member)
     return {
       ...charges,
-      advanced: advancedByMember(entries, current, kindOf, knownIds).get(member) ?? ZERO,
+      advanced: balance?.advanced ?? ZERO,
+      lent: balance?.lent ?? ZERO,
+      borrowed: balance?.borrowed ?? ZERO,
     }
   }, [entries, current, member, kindOf, incomes])
 }

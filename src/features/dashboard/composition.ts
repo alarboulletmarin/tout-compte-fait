@@ -57,9 +57,11 @@ export function useMemberShareSpan(): TileSpan | null {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   if (filter === undefined || charges === null) return null
-  if (charges.commonTotal <= 0) return null
+  if (charges.commonTotal <= 0 && charges.lent === 0 && charges.borrowed === 0) return null
   const refund = sub(charges.common, add(charges.commonCharge, charges.commonDebt))
-  return charges.advanced !== 0 || refund !== 0 ? '4x2' : '4x1'
+  return charges.advanced !== 0 || refund !== 0 || charges.lent !== 0 || charges.borrowed !== 0
+    ? '4x2'
+    : '4x1'
 }
 
 /** Les formats des quatre tuiles de l'analyse, pour une composition donnée. */

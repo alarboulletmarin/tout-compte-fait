@@ -380,6 +380,8 @@ export type Recurrence = {
   endedOn?: string
   /** Voir `Entry.shared` : les échéances en héritent. */
   shared?: boolean
+  /** Voir `Entry.paidById` : les échéances en héritent, comme du partage. */
+  paidById?: string
   note?: string
 }
 
@@ -409,6 +411,24 @@ export type Entry = {
    * ce qui évite d'avoir à requalifier tout ce qui a déjà été saisi.
    */
   shared?: boolean
+  /**
+   * Qui a **sorti l'argent**, quand ce n'est pas déjà dit par la ligne.
+   *
+   * `memberId` dit à qui la ligne est — qui elle coûte. Ce champ dit qui l'a
+   * réglée, et il ne se pose que lorsque les deux divergent : Alix règle
+   * l'abonnement de Camille — la ligne est à Camille, l'argent est sorti de
+   * chez Alix, et Camille lui doit le montant. Sur une ligne commune, il
+   * désigne qui a avancé le pot, sans avoir à s'attribuer la ligne.
+   *
+   * Il ne change **aucun coût** : ce qu'une ligne coûte reste à qui la porte.
+   * Il ne bouge que le virement — l'écran Répartition déduit du versement de
+   * qui a payé, et ajoute au versement de qui devait. Une échéance confirmée
+   * seulement : une prévue n'a encore été réglée par personne.
+   *
+   * Une exception, jamais une copie : égal au membre de la ligne, il ne dit
+   * rien de plus et n'est pas stocké.
+   */
+  paidById?: string
   note?: string
 }
 
