@@ -682,6 +682,14 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
  * **à venir**, elles, se refont entièrement : là, c'est bien la règle qui dit
  * ce qui va tomber.
  *
+ * `previousAmount` affine cette survie, quand l'appelant sait ce que la règle
+ * valait avant lui : une prévue restée à l'**ancien montant fixe** n'a jamais
+ * été saisie — c'est l'emplacement que l'ouverture du mois a posé — et la
+ * préserver figeait le mois en cours sur l'ancien prix pendant que le total
+ * des récurrences annonçait le nouveau. Deux chiffres du même produit qui ne
+ * disent pas pareil se lisent comme une erreur. Un montant qui diffère de
+ * l'ancien prix, lui, a été tapé : il survit, comme avant.
+ *
  * Rejouer l'opération ne duplique rien : `planMonth` reconnaît une échéance
  * déjà posée à sa paire récurrence + date.
  */
@@ -690,6 +698,7 @@ export function syncRecurrenceEntries(
   recurrenceId: string,
   makeId: () => string,
   from: ISODate = today(),
+  previousAmount?: Money | null,
 ): Data {
   const fromMonth = ymOf(from)
   const recurrence = data.recurrences.find((r) => r.id === recurrenceId)
@@ -705,10 +714,13 @@ export function syncRecurrenceEntries(
   /* Ce qu'on retient des prévues qu'on vient de jeter : leur montant, à leur
      date, tant qu'elles ne sont pas à venir. Un zéro ne compte pas — c'est
      l'emplacement vide que l'ouverture du mois pose sur un montant variable,
-     pas un montant saisi (même lecture que `knownAmount`). */
+     pas un montant saisi (même lecture que `knownAmount`). Le montant resté à
+     l'ancien prix fixe de la règle ne compte pas non plus : posé, pas saisi. */
   const savedAmounts = new Map<ISODate, Money>()
   for (const entry of dropped) {
     if (entry.date > from || entry.amount === ZERO) continue
+    if (previousAmount !== undefined && previousAmount !== null && entry.amount === previousAmount)
+      continue
     savedAmounts.set(entry.date, entry.amount)
   }
 
@@ -1024,6 +1036,8 @@ export function applyEntryEditToRule(
     recurrence.id,
     makeId,
     from,
+    // L'ancien prix de la règle : une prévue restée dessus suit le nouveau.
+    recurrence.amount,
   )
 
   // Confirmée, ou prévue dans un mois passé : la synchronisation l'a laissée.

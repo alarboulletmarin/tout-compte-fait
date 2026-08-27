@@ -220,6 +220,34 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     expect(screen.getByText(t.split.method)).toBeInTheDocument()
   })
 
+  /* Le bug que ce test épingle : le revenu se lisait sur la règle seule, et
+     corriger le salaire du mois ligne à ligne ne déplaçait jamais la part de
+     ce mois-là — la répartition se lisait figée quel que soit le chiffre
+     saisi. L'échéance du mois est un fait, et un fait passe devant une règle. */
+  it('suit le salaire corrigé sur le mois, sans toucher à la règle', () => {
+    // La paie d'Alix est tombée réduite : 1 000 € au lieu des 2 000 € de la
+    // règle. À revenus égaux, les parts valent 50/50 — dues 450/450.
+    household({
+      entries: [
+        makeEntry({ date: '2026-08-05', label: 'Loyer', categoryId: 'loyer', amount: eur(90_000) }),
+        makeEntry({
+          id: 'paie-alix',
+          recurrenceId: 'rec-m-1',
+          date: '2026-08-01',
+          label: 'Salaire',
+          categoryId: 'salaire',
+          direction: 'in',
+          memberId: 'm-1',
+          amount: eur(100_000),
+          status: 'confirmed',
+        }),
+      ],
+    })
+
+    expect(screen.getAllByText(said('50,0 %'))).toHaveLength(2)
+    expect(screen.getAllByText(out(eur(45_000)))).toHaveLength(2)
+  })
+
   /* Une dépense qui n'a rien à faire dans le pot se repère en la voyant — et
      se corrige d'un appui : chaque ligne du détail est une porte vers sa
      fiche, sans repasser par l'écran du mois. */

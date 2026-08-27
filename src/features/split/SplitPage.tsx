@@ -519,6 +519,7 @@ export function SplitPage() {
           <Eyebrow>{t.split.method}</Eyebrow>
           <p className="t-body mt-1">{t.split.methodFormula}</p>
           <p className="t-label">{t.split.methodIncome}</p>
+          <p className="t-label">{t.split.methodMonthOverride}</p>
           <p className="t-label">{t.split.methodVariable}</p>
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li className="t-label">{t.split.methodIncluded}</li>

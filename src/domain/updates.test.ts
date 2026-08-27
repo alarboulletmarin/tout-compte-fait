@@ -919,6 +919,51 @@ describe('synchronisation d’une récurrence', () => {
       expect(after.entries.find((e) => e.date === '2026-08-10')?.amount).toBe(eur(6000))
     })
 
+    /* L'appelant qui connaît l'ancien prix le passe : une prévue restée
+       dessus n'a jamais été saisie — c'est l'emplacement posé par l'ouverture
+       du mois — et la préserver figeait le mois en cours sur l'ancien prix
+       pendant que le total des récurrences annonçait le nouveau. */
+    it('réaligne la prévue restée à l’ancien prix quand l’appelant le donne', () => {
+      const fixe = makeData({
+        ...variable(),
+        recurrences: [
+          makeRecurrence({
+            id: 'r1',
+            amount: eur(5000),
+            period: { unit: 'month', every: 1, anchorDay: 10 },
+          }),
+        ],
+        entries: [
+          // Posée à l'ancien prix : elle suit la règle, dès ce mois.
+          makeEntry({ id: 'posee', recurrenceId: 'r1', date: '2026-07-10', status: 'planned', amount: eur(5000) }),
+        ],
+      })
+      const raised = updateRecurrence(fixe, 'r1', { amount: eur(6000) })
+      const after = syncRecurrenceEntries(raised, 'r1', sequentialIds('b'), '2026-07-15', eur(5000))
+
+      expect(after.entries.find((e) => e.date === '2026-07-10')?.amount).toBe(eur(6000))
+    })
+
+    it('préserve, ancien prix connu, le montant qui en diffère : il a été tapé', () => {
+      const fixe = makeData({
+        ...variable(),
+        recurrences: [
+          makeRecurrence({
+            id: 'r1',
+            amount: eur(5000),
+            period: { unit: 'month', every: 1, anchorDay: 10 },
+          }),
+        ],
+        entries: [
+          makeEntry({ id: 'tapee', recurrenceId: 'r1', date: '2026-07-10', status: 'planned', amount: eur(8742) }),
+        ],
+      })
+      const raised = updateRecurrence(fixe, 'r1', { amount: eur(6000) })
+      const after = syncRecurrenceEntries(raised, 'r1', sequentialIds('b'), '2026-07-15', eur(5000))
+
+      expect(after.entries.find((e) => e.date === '2026-07-10')?.amount).toBe(eur(8742))
+    })
+
     /* À venir, c'est bien la règle qui dit ce qui va tomber : rien à préserver,
        et préserver serait ici rendre la règle sans effet. */
     it('ne s’applique pas à une prévue encore à venir', () => {
@@ -1042,9 +1087,11 @@ describe('reporter une correction d’échéance sur sa règle', () => {
     const kept = after.entries.find((e) => e.id === aout?.id)
     expect(kept).toMatchObject({ label: 'Nouveau loyer', amount: eur(99000), date: '2026-08-10' })
     expect(after.entries.filter((e) => e.date.startsWith('2026-08'))).toHaveLength(1)
-    // Le montant déjà daté de juillet survit, sous le libellé neuf de la règle.
+    // La prévue de juillet, restée à l'ancien prix, n'a jamais été saisie :
+    // elle suit la règle, dès ce mois — c'est ce qui empêche la liste et le
+    // prorata d'annoncer deux prix pour la même règle.
     const juillet = after.entries.find((e) => e.date === '2026-07-10')
-    expect(juillet).toMatchObject({ label: 'Nouveau loyer', amount: eur(95000) })
+    expect(juillet).toMatchObject({ label: 'Nouveau loyer', amount: eur(99000) })
   })
 
   it('réécrit aussi une échéance confirmée, que la synchronisation ne touche pas', () => {

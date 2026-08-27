@@ -1006,6 +1006,8 @@ export const en: Strings = {
     methodFormula: 'Each share = their income ÷ the sum of the incomes.',
     methodIncome:
       'Income comes from everyone’s salary and benefit recurring rules, brought back to the month. A one-off bonus doesn’t move it — it happens, but it says nothing about what you earn.',
+    methodMonthOverride:
+      'The month’s payment wins when it has a figure: a reduced or corrected pay moves the share of the month it lands in, without touching the rule.',
     methodVariable:
       'A salary with a variable amount is worth its last costed payment, failing that its usual amount. A recurring rule left “shared” counts towards nobody’s income.',
     methodIncluded: 'The costs and loans nobody has claimed.',

@@ -19,7 +19,7 @@ import {
 import { type MonthPoint, trailingMonths } from '@/domain/history'
 import { type MonthBounds, navigationBounds } from '@/domain/month'
 import { type Money, ZERO, sum } from '@/domain/money'
-import { type PriceChange, amountOn, detectPriceChange } from '@/domain/priceHistory'
+import { type PriceChange, amountInMonth, amountOn, detectPriceChange } from '@/domain/priceHistory'
 import { annualCost, monthlyEquivalent, nextOccurrence } from '@/domain/recurrence'
 import {
   type CategorySlice,
@@ -627,11 +627,11 @@ export type MonthSplit = {
  * suivant n'existait pas encore — le foyer qui venait de poser ses deux
  * salaires n'avait aucune répartition, et en aurait eu une le lendemain.
  *
- * Le montant de chaque récurrence passe par `useAmountOf` — le même que celui
- * du total des récurrences et de la liste : le salaire qui pèse dans le prorata
- * est au centime celui qui s'affiche sur sa fiche. Il se lit en fin de mois,
- * comme les charges qu'il sert à répartir : c'est la même question, « combien
- * ce mois-ci », et non « combien à cet instant ».
+ * Le montant de chaque récurrence passe par `amountInMonth` : l'échéance
+ * chiffrée du mois passe devant le montant de la règle, parce qu'elle est le
+ * fait de ce mois-là — le salaire réduit d'un congé réduit la part du mois où
+ * il tombe, sans attendre que la règle bouge. Hors échéance corrigée, c'est la
+ * même lecture que la fiche de la règle, au centime.
  */
 export function useMemberIncomesOf(month: YearMonth): MemberIncome[] {
   const members = useMembers()
@@ -676,11 +676,15 @@ function sharedIncomes(
   const hit = cached.get(month)
   if (hit !== undefined) return hit
 
-  /* Le même résolveur que `useAmountOf`, construit ici plutôt que reçu : c'est
-     lui qui portait l'instabilité, et il ne sert qu'à ce calcul-ci. La règle ne
-     change pas — le montant d'une récurrence se lit en fin de mois. */
+  /* La lecture **du mois**, pas celle de la règle : l'échéance chiffrée du
+     mois passe devant le montant de la récurrence (`amountInMonth`). Sans
+     elle, un salaire corrigé ligne à ligne — un congé, une paie réduite — ne
+     déplaçait jamais la part de ce mois-là, et la répartition se lisait figée
+     quel que soit le chiffre saisi. La fiche de la règle, elle, continue de
+     dire ce que la règle vaut (`useAmountOf`) : les deux peuvent diverger le
+     mois où une échéance a été corrigée, et c'est exactement l'information. */
   const amountOf = (recurrence: Recurrence): Money | null =>
-    amountOn(recurrence, entries, endOfMonth(month))
+    amountInMonth(recurrence, entries, month)
   const computed = memberIncomes(members, recurrences, kindOf, amountOf, month)
   cached.set(month, computed)
   return computed

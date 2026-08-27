@@ -1861,6 +1861,11 @@ export const fr = {
        part : une seconde vérité finirait par diverger de la première. */
     methodIncome:
       'Le revenu vient des récurrences de salaire et d’allocation de chacun, ramenées au mois. Une prime ponctuelle ne le déplace pas — elle a lieu, mais elle ne dit rien de ce qu’on gagne.',
+    /* L'échéance du mois est un fait, et un fait passe devant une règle : sans
+       cette phrase, la part qui bouge après une paie corrigée se lirait comme
+       une erreur — et celle qui ne bougeait pas se lisait comme un bug. */
+    methodMonthOverride:
+      'L’échéance du mois l’emporte quand elle est chiffrée : une paie réduite ou corrigée déplace la part du mois où elle tombe, sans toucher à la règle.',
     methodVariable:
       'Un salaire à montant variable vaut sa dernière échéance chiffrée, à défaut son montant habituel. Une récurrence laissée « en commun » ne compte dans le revenu de personne.',
     methodIncluded: 'Les charges et les crédits que personne ne s’est attribués.',

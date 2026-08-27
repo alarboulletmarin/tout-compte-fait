@@ -297,9 +297,11 @@ export type MemberIncome = IncomeWeight & MemberIncomeValue
  * règle, une prime est une `Entry` ponctuelle — elle a lieu, mais elle ne dit
  * rien de ce que chacun gagne, et elle ne déplace donc pas la part du loyer.
  *
- * `amountOf` répond pour chaque récurrence — fixe ou variable — et c'est la
- * même fonction que pour le total des récurrences : le salaire qui pèse dans le
- * prorata est au centime celui que la liste des récurrences affiche.
+ * `amountOf` répond pour chaque récurrence — fixe ou variable. La lecture du
+ * store lui passe `amountInMonth` : l'échéance chiffrée du mois passe devant
+ * le montant de la règle, parce qu'elle est le fait de ce mois-là — le salaire
+ * réduit d'un congé réduit la part du mois où il tombe, sans attendre que la
+ * règle bouge.
  *
  * Le revenu se lit **sur un mois**, jamais sur un jour. Lu au jour où l'on
  * regarde, un salaire dont la première échéance tombe le 1er du mois suivant

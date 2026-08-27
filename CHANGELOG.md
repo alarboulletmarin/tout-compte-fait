@@ -8,6 +8,11 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Corrigé — la répartition suit le salaire du mois qu'on corrige
+
+- **L'échéance du mois passe devant la règle.** Le revenu qui pèse dans le prorata se lisait sur la récurrence seule : corriger la paie d'un mois ligne à ligne — un congé, un salaire réduit — ne déplaçait jamais la part de ce mois-là, et la répartition se lisait figée quel que soit le chiffre saisi. Désormais l'échéance chiffrée du mois l'emporte — confirmée, ou prévue à un montant saisi à la main — parce qu'elle est le fait de ce mois-là ; la règle reste ce qu'elle est, et une prime ponctuelle ne déplace toujours rien. La méthode de l'écran Répartition le dit en toutes lettres.
+- **Et changer la règle déplace aussi le mois en cours.** La synchronisation préservait le montant de toute prévue déjà datée, y compris celle restée à l'ancien prix — que personne n'avait tapée : après une hausse, la liste du mois affichait l'ancien montant pendant que le total des récurrences annonçait le nouveau. La synchronisation reçoit maintenant l'ancien prix des appelants qui le connaissent, et ne préserve que les montants réellement saisis. Les échéances confirmées ne bougent jamais, comme toujours.
+
 ### Corrigé — « Commun » survit à un détour par l'épargne
 
 - **Le filtre du mois n'est plus écrasé.** Les écrans d'épargne se lisent toujours au nom de quelqu'un — l'épargne n'a pas de lecture au foyer — et ils **écrivaient** pour ça le filtre global : on partait du mois avec « Commun » ou « Tout le monde », on passait par la tuile Capacité, et on revenait filtré sur la première personne du foyer sans avoir rien demandé. La personne se pose désormais **en portée de lecture** (`IndividualScope`, un contexte que `useMonthFilter` sert aux seuls écrans qu'il couvre) : le store n'en sait rien, la pilule active reste juste, et seul un appui explicite sur une pilule change encore le filtre du mois.
