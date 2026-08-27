@@ -20,7 +20,7 @@
  * ==========================================================================*/
 
 import type { YearMonth } from './date'
-import { type Money, ZERO, add, money, sum } from './money'
+import { type Money, ZERO, add, money, sub, sum } from './money'
 import { monthlyEquivalent } from './recurrence'
 import { type KindOf, type MemberFilter, entriesOfMonth } from './stats'
 import {
@@ -132,9 +132,9 @@ export function memberRequired(
 /**
  * La même frontière que `sharedEntries`, en un seul endroit.
  *
- * Exportée pour `settle.ts`, qui doit poser exactement la même : une ligne que
- * la répartition compte et que la régularisation ignorerait — ou l'inverse —
- * ferait diverger le report du total dont il se retranche.
+ * `advancedEntries` doit poser exactement la même : une ligne que la
+ * répartition compte et que la déduction ignorerait — ou l'inverse — ferait
+ * diverger ce qui a été avancé du total dont il se retranche.
  */
 export function isCommon(entry: Entry, kindOf: KindOf): boolean {
   return entry.direction === 'out' && isSharedEntry(entry, kindOf(entry.categoryId))
@@ -172,6 +172,76 @@ export function sharedEntries(
   return entriesOfMonth(entries, month, memberId)
     .filter((e) => isCommon(e, kindOf))
     .sort((a, b) => b.amount - a.amount)
+}
+
+/* --- Ce qu'une seule personne a déjà réglé ---------------------------------*/
+
+/**
+ * Les charges communes du mois qu'une personne a avancées — celles qui portent
+ * un membre.
+ *
+ * La répartition dit ce que chacun doit sur le pot commun. Elle ne dit pas qui
+ * a sorti l'argent — et c'est souvent une seule personne : Clara règle 300 €
+ * qui rentrent dans le commun, elle en portait 47 %, elle a payé 100 %. Ce
+ * qu'elle a avancé se **déduit de son virement du mois même** (`memberShares`),
+ * sans quoi elle paierait deux fois — une fois la facture, une fois sa part.
+ *
+ * Une charge commune **sans** membre a été réglée par le pot : elle n'avance
+ * rien à personne, et reste donc hors du calcul des deux côtés à la fois.
+ * C'est cette symétrie qui fait que la somme des virements vaut exactement le
+ * pot moins ce qui a déjà été avancé.
+ *
+ * **Confirmées seulement.** Une échéance prévue n'a été payée par personne, et
+ * dire d'elle qu'un membre l'a avancée serait inventer un fait. C'est déjà la
+ * règle de tous les chiffres rétrospectifs dérivés — le capital restant dû
+ * d'un crédit (`debt.ts`) et ce qui reste à remettre sur une avance
+ * (`advance.ts`) ne comptent que les échéances effectivement confirmées.
+ *
+ * Les mensualités d'avance, de nature épargne et pourtant « à partager »,
+ * comptent comme le reste : elles sont dans le pot (`isCommon` les prend), et
+ * quand c'est leur porteur qui les règle, il avance leur montant comme
+ * n'importe quelle charge. La déduction porte sur le virement, jamais sur la
+ * part qui coûte — `refund` continue de séparer ce qui se consomme de ce qui
+ * se rembourse.
+ */
+export function advancedEntries(
+  entries: readonly Entry[],
+  month: YearMonth,
+  kindOf: KindOf,
+): Entry[] {
+  return entriesOfMonth(entries, month)
+    .filter(
+      (entry) =>
+        isCommon(entry, kindOf) &&
+        entry.status === 'confirmed' &&
+        entry.memberId !== undefined &&
+        entry.memberId !== '',
+    )
+    .sort((a, b) => b.amount - a.amount)
+}
+
+/**
+ * Ce que chaque membre a avancé sur le mois, sous la forme qu'attend
+ * `memberShares` : une table par membre.
+ *
+ * Bornée aux membres donnés — ceux du foyer : une charge avancée par quelqu'un
+ * qui n'en est plus ne se déduit du virement de personne, et la compter d'un
+ * seul côté ferait mentir la vérification — la somme des virements ne vaudrait
+ * plus le pot moins ce que la liste des avances affiche.
+ */
+export function advancedByMember(
+  entries: readonly Entry[],
+  month: YearMonth,
+  kindOf: KindOf,
+  memberIds: ReadonlySet<string>,
+): Map<string, Money> {
+  const advanced = new Map<string, Money>()
+  for (const entry of advancedEntries(entries, month, kindOf)) {
+    const by = entry.memberId ?? ''
+    if (!memberIds.has(by)) continue
+    advanced.set(by, add(advanced.get(by) ?? ZERO, entry.amount))
+  }
+  return advanced
 }
 
 /* --- Le revenu d'un membre ------------------------------------------------*/
@@ -342,14 +412,15 @@ export type MemberShare = {
    */
   refund: Money
   /**
-   * Le report du mois précédent : ce qu'il aurait dû verser sur ce que l'autre
-   * a avancé, moins ce qu'il a avancé lui-même. Négatif, il a trop avancé.
+   * Ce qu'il a déjà réglé de sa poche sur le pot de ce mois : les charges
+   * communes confirmées qui portent son nom (`advancedEntries`), mensualités
+   * d'avance comprises. Il ne va pas le payer deux fois — c'est déjà sorti.
    */
-  adjustment: Money
+  advanced: Money
   /**
-   * Ce qu'il verse ce mois-ci, régularisation comprise : `due + adjustment`.
-   * La somme vaut le total des charges communes au centime — les reports
-   * s'annulent (voir `settle.ts`).
+   * Ce qu'il lui reste à verser ce mois-ci : `due − advanced`. Négatif, il a
+   * avancé plus que sa part et c'est le pot qui lui doit. La somme vaut le
+   * total des charges communes moins tout ce qui a déjà été avancé.
    */
   toPay: Money
 }
@@ -527,16 +598,16 @@ export function cappedIncomes<T extends IncomeWeight>(
  * Répartir la somme laisserait l'écran du mois filtré sur quelqu'un et l'écran
  * Répartition annoncer deux chiffres à un centime l'un de l'autre.
  *
- * `adjustments` porte le report du mois précédent, quand il y en a un — une
- * table plutôt que les `Settlement` eux-mêmes, pour que ce module n'ait pas à
- * connaître `settle.ts`, qui le connaît déjà. Absente, chacun verse sa part et
- * rien d'autre : c'est le comportement de toujours, et c'est aussi ce que veut
- * le coefficient lu seul, hors de tout mois.
+ * `advanced` porte ce que chacun a déjà réglé sur le pot de ce mois
+ * (`advancedByMember`) : ça se déduit de son virement, jamais de sa part —
+ * une avance ne change pas ce que le mois lui coûte, seulement ce qu'il
+ * verse. Absente, chacun verse sa part et rien d'autre : c'est ce que veut le
+ * coefficient lu seul, hors de tout mois.
  */
 export function memberShares(
   incomes: readonly IncomeWeight[],
   amounts: readonly Money[],
-  adjustments: ReadonlyMap<string, Money> | null = null,
+  advanced: ReadonlyMap<string, Money> | null = null,
   /**
    * Le sous-ensemble d'`amounts` qui ne se consomme pas — les mensualités
    * d'avance. Passé à part plutôt que déduit ici : la nature d'une ligne se lit
@@ -576,7 +647,7 @@ export function memberShares(
 
   return incomes.map((entry, index) => {
     const due = money(dues[index] ?? 0)
-    const adjustment = adjustments?.get(entry.memberId) ?? ZERO
+    const fronted = advanced?.get(entry.memberId) ?? ZERO
     return {
       memberId: entry.memberId,
       // Le revenu déclaré, pas le poids : à plusieurs ils sont identiques, mais
@@ -586,8 +657,8 @@ export function memberShares(
       shareBp: shares[index] ?? 0,
       due,
       refund: money(refunded[index] ?? 0),
-      adjustment,
-      toPay: add(due, adjustment),
+      advanced: fronted,
+      toPay: sub(due, fronted),
     }
   })
 }
@@ -710,9 +781,9 @@ export function totalDue(shares: readonly MemberShare[]): Money {
 }
 
 /**
- * Somme de ce que chacun verse, régularisation comprise. Vaut le même total :
- * les reports se compensent exactement d'un membre à l'autre, puisqu'ils
- * répartissent les mêmes montants entre les mêmes poids (voir `settle.ts`).
+ * Somme de ce qu'il reste à verser, avances déduites. Vaut le total réparti
+ * moins tout ce qui a déjà été avancé — c'est la vérification que l'écran
+ * Répartition affiche à côté de la somme des parts.
  */
 export function totalToPay(shares: readonly MemberShare[]): Money {
   return shares.reduce((acc, share) => add(acc, share.toPay), ZERO)

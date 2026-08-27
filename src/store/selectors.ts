@@ -18,7 +18,7 @@ import {
 } from '@/domain/date'
 import { type MonthPoint, trailingMonths } from '@/domain/history'
 import { type MonthBounds, navigationBounds } from '@/domain/month'
-import { type Money, sum } from '@/domain/money'
+import { type Money, ZERO, sum } from '@/domain/money'
 import { type PriceChange, amountOn, detectPriceChange } from '@/domain/priceHistory'
 import { annualCost, monthlyEquivalent, nextOccurrence } from '@/domain/recurrence'
 import {
@@ -85,6 +85,8 @@ import {
   type MemberCharges,
   type MemberIncome,
   type MemberShare,
+  advancedByMember,
+  advancedEntries,
   cappedIncomes,
   memberCaps,
   memberCharges,
@@ -95,13 +97,6 @@ import {
   sharedEntries,
   unassignedIncomes,
 } from '@/domain/split'
-import {
-  type Settlement,
-  advancedEntries,
-  adjustmentOf,
-  adjustments,
-  settleMonth,
-} from '@/domain/settle'
 import {
   type Advance,
   type Category,
@@ -601,9 +596,7 @@ export type MonthSplit = {
   shares: MemberShare[] | null
   /** Les membres dont le revenu n'est pas connu, pour pouvoir les nommer. */
   unknown: Member[]
-  /** Le mois d'où vient la régularisation, pour la nommer à l'écran. */
-  previousYm: YearMonth
-  /** Les charges avancées le mois précédent, qui produisent le report. */
+  /** Les charges avancées **ce mois-ci**, déjà déduites des versements. */
   advanced: Entry[]
 }
 
@@ -761,9 +754,7 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
   const members = useMembers()
   const kindOf = useKindOf()
   const month = ym ?? current
-  const previousYm = addMonthsToYm(month, -1)
   const incomes = useMemberIncomesOf(month)
-  const settlements = usePreviousMonthSettlement(month)
 
   return useMemo(() => {
     const shared = sharedEntries(entries, month, kindOf)
@@ -774,58 +765,40 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
        ce qu'on verse et ce qu'on paie, et il n'avait pas de nom. */
     const refunds = shared.filter((e) => !isSpending(kindOf(e.categoryId))).map((e) => e.amount)
     const missing = new Set(incomes.filter((i) => i.income === null).map((i) => i.memberId))
+    /* Le même ensemble des deux côtés — la table qui se déduit des versements
+       et la liste qui se montre : c'est ce qui fait que la somme des versements
+       vaut, au centime, le pot moins le total de la liste. */
+    const knownIds = new Set(incomes.map((i) => i.memberId))
     return {
       total: sum(amounts),
       entries: shared,
       shares: memberShares(
         incomes,
         amounts,
-        adjustments(settlements),
+        advancedByMember(entries, month, kindOf, knownIds),
         refunds,
         // Le plafond de chacun — les mêmes parts, au centime, que la portée
         // du mois, qui pèse avec `cappedIncomes` sur le même pot.
         memberCaps(entries, month, incomes),
       ),
       unknown: members.filter((m) => missing.has(m.id)),
-      previousYm,
-      advanced: advancedEntries(entries, previousYm, kindOf),
+      advanced: advancedEntries(entries, month, kindOf).filter((e) =>
+        knownIds.has(e.memberId ?? ''),
+      ),
     }
-  }, [entries, month, previousYm, kindOf, members, incomes, settlements])
+  }, [entries, month, kindOf, members, incomes])
 }
 
 /**
- * Ce que le mois précédent reporte sur celui qu'on affiche.
+ * Ce qu'un membre porte du mois, plus ce qu'il a déjà avancé dessus.
  *
- * Les revenus lus sont ceux **du mois précédent** : l'écart s'est creusé sous
- * son prorata à lui, et le rattraper au coefficient d'aujourd'hui rendrait une
- * somme que personne n'a avancée.
- *
- * `null` quand ce mois-là ne se répartissait pas — l'écran n'a alors rien à
- * dire, et un report à zéro laisserait croire que les comptes étaient justes.
- */
-export function usePreviousMonthSettlement(ym?: YearMonth): Settlement[] | null {
-  const entries = useEntries()
-  const current = useCurrentYm()
-  const kindOf = useKindOf()
-  const previous = addMonthsToYm(ym ?? current, -1)
-  const incomes = useMemberIncomesOf(previous)
-
-  return useMemo(
-    () => settleMonth(entries, previous, kindOf, incomes),
-    [entries, previous, kindOf, incomes],
-  )
-}
-
-/**
- * Ce qu'un membre porte du mois, plus le report du mois précédent.
- *
- * Le report est à côté de `own` et `common`, jamais dedans : ces deux-là sont
+ * L'avance est à côté de `own` et `common`, jamais dedans : ces deux-là sont
  * des coûts, et leur somme doit continuer de valoir exactement le total des
- * charges du mois filtré. Le report, lui, ne change que le virement.
+ * charges du mois filtré. L'avance, elle, ne change que le virement.
  */
-export type MemberChargesWithSettlement = MemberCharges & {
-  /** Ce que le mois précédent ajoute au virement. Négatif : il verse moins. */
-  adjustment: Money
+export type MemberChargesWithAdvance = MemberCharges & {
+  /** Ce qu'il a déjà réglé de sa poche sur le pot du mois. */
+  advanced: Money
 }
 
 /**
@@ -836,20 +809,23 @@ export type MemberChargesWithSettlement = MemberCharges & {
  * et tant que le prorata ne se calcule pas : l'en-tête du mois dit alors ce qui
  * manque, et une tuile de plus le répéterait sans rien ajouter.
  */
-export function useMemberCharges(): MemberChargesWithSettlement | null {
+export function useMemberCharges(): MemberChargesWithAdvance | null {
   const entries = useEntries()
   const current = useCurrentYm()
   const member = useMemberFilter()
   const kindOf = useKindOf()
   const incomes = useMemberIncomes()
-  const settlements = usePreviousMonthSettlement()
 
   return useMemo(() => {
     if (member === undefined) return null
     const charges = memberCharges(entries, current, member, kindOf, incomes)
     if (charges === null) return null
-    return { ...charges, adjustment: adjustmentOf(settlements, member) }
-  }, [entries, current, member, kindOf, incomes, settlements])
+    const knownIds = new Set(incomes.map((i) => i.memberId))
+    return {
+      ...charges,
+      advanced: advancedByMember(entries, current, kindOf, knownIds).get(member) ?? ZERO,
+    }
+  }, [entries, current, member, kindOf, incomes])
 }
 
 /* --- Épargne --------------------------------------------------------------*/

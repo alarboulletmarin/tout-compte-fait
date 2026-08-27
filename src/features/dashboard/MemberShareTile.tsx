@@ -1,9 +1,8 @@
 import { SPLIT_PATH } from '@/app/routes'
-import { addMonthsToYm } from '@/domain/date'
-import { add, sub } from '@/domain/money'
+import { add, neg, sub } from '@/domain/money'
 import { t } from '@/i18n/strings'
-import { de, formatMoney, formatMonthName, formatSignedMoney, tpl } from '@/i18n/format'
-import { useCurrentYm, useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
+import { formatMoney, formatSignedMoney, tpl } from '@/i18n/format'
+import { useMemberCharges, useMemberFilter, useMemberMap } from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { SplitIcon } from '@/ui/Icons'
@@ -29,12 +28,9 @@ import { useCurrency } from '@/ui/currency'
  * tuile — `MemberChargesTile` —, qui l'éclate en perso et part du commun.
  *
  * **À la place, la tuile pose le calcul de son propre chiffre**, dans les mots
- * et l'ordre de `ShareRow` : sa part du mois, plus la régularisation, égale ce
- * qu'elle verse. Le report avait sa tuile à lui, où il se lisait une seconde
- * fois alors qu'il était déjà compris — silencieusement — dans le chiffre de
- * tête : rien ne disait que les deux montants voisins ne s'ajoutaient pas. Ce
- * n'est pas un cinquième élément (DS §5) mais la **composition du chiffre**, à
- * l'intérieur de sa lecture secondaire.
+ * et l'ordre de `ShareRow` : sa part du mois, moins ce qu'elle a déjà avancé,
+ * égale ce qu'il lui reste à verser. Ce n'est pas un cinquième élément (DS §5)
+ * mais la **composition du chiffre**, à l'intérieur de sa lecture secondaire.
  *
  * **L'anneau est parti, et c'est ce qui reste à dire.** Il dessinait 45,3 % — la
  * part du pot commun que le prorata des revenus met sur cette personne. Or un
@@ -59,28 +55,25 @@ import { useCurrency } from '@/ui/currency'
  * peut pas vérifier sur l'écran où il s'affiche n'explique rien, quel que soit
  * le mot qu'on lui accroche.
  *
- * Les deux lignes ne s'affichent que s'il y a un report — la règle de
- * `ShareRow`, pour la même raison : sans lui, « Sa part du mois » recopierait à
- * l'identique le chiffre de tête, et une régularisation à zéro laisserait croire
- * à un rattrapage là où les comptes tombaient justes.
+ * Les deux lignes ne s'affichent que s'il y a une avance à déduire — la règle
+ * de `ShareRow`, pour la même raison : sans elle, « Part du commun »
+ * recopierait à l'identique le chiffre de tête, et une avance à zéro laisserait
+ * croire à une déduction là où les comptes tombaient justes.
  *
  * Elle s'efface sans filtre et sans prorata calculable — l'en-tête du mois nomme
- * alors ce qui manque. Elle reste, en revanche, quand le mois n'a **aucune**
- * charge commune mais qu'un report attend : c'est exactement le cas où le
- * virement n'est plus que le report, et le taire le ferait disparaître de
- * l'écran le jour où il est la seule chose à faire.
+ * alors ce qui manque — et sur un mois sans aucune charge commune : sans pot,
+ * il n'y a ni part ni avance, donc pas de virement à annoncer.
  */
 export function MemberShareTile() {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   const members = useMemberMap()
-  const month = useCurrentYm()
   const currency = useCurrency()
 
-  // Ni part à verser ni report à rattraper : il n'y a pas de virement, et une
-  // tuile à zéro le dirait moins bien que son absence.
+  // Pas de pot ce mois-ci : pas de part, pas d'avance, pas de virement — et
+  // une tuile à zéro le dirait moins bien que son absence.
   if (filter === undefined || charges === null) return null
-  if (charges.commonTotal <= 0 && charges.adjustment === 0) return null
+  if (charges.commonTotal <= 0) return null
 
   const member = members.get(filter)
   /* Les trois termes du virement, et rien d'autre.
@@ -97,31 +90,30 @@ export function MemberShareTile() {
      due — le foyer rembourse qui a réglé une dépense commune depuis son
      épargne.
 
-     Puis le report, qui se rattrape : celui qui a trop avancé le mois passé
-     verse moins ce mois-ci, et l'autre un peu plus. */
+     Puis ce qui est déjà sorti de sa poche : les charges communes du mois
+     qu'elle a réglées elle-même se déduisent aussitôt — elle ne va pas les
+     payer deux fois. */
   const refund = sub(charges.common, add(charges.commonCharge, charges.commonDebt))
   const spending = sub(charges.common, refund)
-  const settled = charges.adjustment !== 0 || refund !== 0
-  const toPay = add(charges.common, charges.adjustment)
-  const previous = de(formatMonthName(addMonthsToYm(month, -1)))
+  const deducted = charges.advanced !== 0 || refund !== 0
+  const toPay = sub(charges.common, charges.advanced)
 
   /* Le montant du virement, en corps de tuile : c'est la réponse, et on vient
      la recopier dans une application bancaire.
 
-     Une sortie tant que c'en est une, et un solde sinon : le mois sans charge
-     commune ne laisse que le report, et celui qui a tout avancé le mois d'avant
-     reçoit alors au lieu de verser. `direction` afficherait la valeur absolue et
-     la ferait annoncer « sortie » — donc « 282,56 € à verser » à qui on doit
-     cette somme. */
+     Une sortie tant que c'en est une, et un solde sinon : qui a avancé plus
+     que sa part reçoit au lieu de verser. `direction` afficherait la valeur
+     absolue et la ferait annoncer « sortie » — donc « 282,56 € à verser » à
+     qui on doit cette somme. */
   const amount = (
     <Amount value={toPay} size="tile-fit" {...(toPay < 0 ? {} : { direction: 'out' as const })} />
   )
 
   return (
     /* **Le format suit le contenu, et ce contenu a deux tailles** (DS §5). Avec
-       un report, la tuile porte un chiffre et l'addition qui le donne : deux
-       rangées, qui se remplissent du calcul là où elles se remplissaient d'un
-       anneau de 80px. Sans report, elle ne porte plus que son chiffre — et une
+       une avance déduite, la tuile porte un chiffre et le calcul qui le donne :
+       deux rangées, qui se remplissent du calcul là où elles se remplissaient
+       d'un anneau de 80px. Sans, elle ne porte plus que son chiffre — et une
        `4x2` y laisserait exactement les quarante pixels de vide que le DS
        reproche à une tuile de deux rangées sans visualisation. C'est alors la
        tuile plate, qui tient un eyebrow et un montant.
@@ -135,8 +127,8 @@ export function MemberShareTile() {
        hors du flux — c'est ce qui lui permet de ne rien coûter aux 148px de
        contenu, qui sont comptés. */
     <Tile
-      span={settled ? '4x2' : '4x1'}
-      className={settled ? 'gap-3' : 'justify-between'}
+      span={deducted ? '4x2' : '4x1'}
+      className={deducted ? 'gap-3' : 'justify-between'}
       /* Le nom du membre nomme la région : rien dans le contenu ne le porte —
          il vient du filtre, que la tuile ne redit pas —, et il vivait jusqu'ici
          dans la lecture parlée de l'anneau, partie avec lui. Un lecteur d'écran
@@ -156,7 +148,7 @@ export function MemberShareTile() {
           bas — le libellé remontait sous l'eyebrow, le total à payer sortait
           par le bas. */}
       <Eyebrow icon={SplitIcon}>{t.dashboard.memberShare}</Eyebrow>
-      {settled ? (
+      {deducted ? (
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-1">
           {amount}
           {/* En `t-axis`, comme les mêmes lignes sur l'écran Répartition : c'est
@@ -188,14 +180,13 @@ export function MemberShareTile() {
                 <span className="t-axis tnum">{formatMoney(refund, currency)}</span>
               </li>
             )}
-            {charges.adjustment !== 0 && (
+            {charges.advanced !== 0 && (
               <li className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className="t-axis min-w-0">{tpl(t.split.settlement, previous)}</span>
-                {/* Signé, et sans direction : ce n'est pas un flux dont on
-                    lirait la valeur absolue, c'est un écart dont le signe est
-                    toute la lecture. */}
+                <span className="t-axis min-w-0">{t.split.advancedLine}</span>
+                {/* Signé, et sans direction : c'est le terme qui se retranche,
+                    et le signe est toute la lecture. */}
                 <span className="t-axis tnum">
-                  {formatSignedMoney(charges.adjustment, currency)}
+                  {formatSignedMoney(neg(charges.advanced), currency)}
                 </span>
               </li>
             )}

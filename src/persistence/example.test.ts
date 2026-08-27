@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { advanceStatus } from '@/domain/advance'
-import { type ISODate, addMonthsToYm, diffMonths, endOfMonth, ymOf } from '@/domain/date'
+import { type ISODate, diffMonths, endOfMonth, ymOf } from '@/domain/date'
 import { debtStatus } from '@/domain/debt'
 import { hasDataInYear, trailingMonths } from '@/domain/history'
 import { detectPriceChange, amountOn, isCostly, priceHistory } from '@/domain/priceHistory'
@@ -12,8 +12,14 @@ import {
   supportsDue,
   valuationAge,
 } from '@/domain/saving'
-import { settleMonth, settlementBalance } from '@/domain/settle'
-import { memberIncomes, memberShares, sharedEntries } from '@/domain/split'
+import {
+  advancedByMember,
+  memberIncomes,
+  memberShares,
+  sharedEntries,
+  totalDue,
+  totalToPay,
+} from '@/domain/split'
 import {
   OTHER_CATEGORY,
   breakdownByFamily,
@@ -40,7 +46,6 @@ const ON: ISODate = '2027-03-15'
 
 const data = exampleData(ON)
 const anchor = ymOf(ON)
-const previous = addMonthsToYm(anchor, -1)
 
 const kindOf = (id: string): CategoryKind => kindOfCategory(data.families, data.categories, id)
 const amountOf = (recurrence: Recurrence) =>
@@ -515,16 +520,23 @@ describe('ce que le domaine sait en tirer', () => {
     expect(shares!.reduce<number>((sum, share) => sum + share.due, 0)).toBe(total)
   })
 
-  it('reporte sur le mois courant ce que le précédent a laissé de travers', () => {
-    const settlements = settleMonth(data.entries, previous, kindOf, incomes())
-    expect(settlements).not.toBeNull()
-    expect(settlements!.some((s) => s.adjustment !== 0)).toBe(true)
-    // Ce qu'une personne verse en trop, les autres le versent en moins.
-    expect(settlementBalance(settlements!)).toBe(0)
-    // Trois personnes avancent chacune une charge commune : la régularisation
+  it('déduit du versement de chacun ce qu’il a déjà avancé sur le mois', () => {
+    const monthIncomes = incomes()
+    const knownIds = new Set(monthIncomes.map((i) => i.memberId))
+    const advanced = advancedByMember(data.entries, anchor, kindOf, knownIds)
+    // Trois personnes avancent chacune une charge commune : la déduction
     // n'est plus un aller-retour entre deux comptes, et c'est là qu'elle cesse
     // de pouvoir se lire de travers sans qu'on s'en aperçoive.
-    expect(settlements!.filter((s) => s.advanced > 0)).toHaveLength(3)
+    expect(advanced.size).toBe(3)
+
+    const amounts = sharedEntries(data.entries, anchor, kindOf).map((e) => e.amount)
+    const shares = memberShares(monthIncomes, amounts, advanced)
+    expect(shares).not.toBeNull()
+    expect(shares!.every((s) => s.advanced > 0)).toBe(true)
+    // La somme des parts vaut le pot ; celle des versements, le pot moins ce
+    // qui est déjà sorti de la poche de chacun.
+    const fronted = [...advanced.values()].reduce<number>((sum, value) => sum + value, 0)
+    expect(totalToPay(shares!)).toBe(totalDue(shares!) - fronted)
   })
 
   it('amortit les crédits en cours, sans les solder', () => {

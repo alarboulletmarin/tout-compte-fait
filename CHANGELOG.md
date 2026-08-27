@@ -8,6 +8,13 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Modifié — ce qu'on a déjà avancé se déduit du virement, tout de suite
+
+- **Qui a réglé la facture ne la paie pas deux fois.** Une charge commune réglée par une seule personne — le loyer parti de son compte, l'assurance qu'elle a avancée — comptait dans sa part sans que l'écran Répartition n'en dise rien : « À verser » lui réclamait sa part pleine le mois même où elle venait de sortir l'argent, et la correction n'arrivait qu'au mois suivant, sous le nom de « Régularisation ». Ce détour disparaît : ce que chacun a déjà avancé sur le pot **du mois affiché** se déduit aussitôt de son virement. `À verser = part du pot − déjà avancé`, et quand l'avance dépasse la part, la ligne devient « À recevoir ».
+- **La régularisation différée disparaît, parce qu'elle ferait la correction deux fois.** Un virement déjà réduit de l'avance n'a plus rien à rattraper le mois suivant. La section « Ce qui a été avancé » reste, mais elle parle du mois qu'on regarde — confirmé seulement : une échéance prévue n'a été payée par personne, et dire d'elle qu'un membre l'a avancée inventerait un fait.
+- **Deux lignes de vérification au lieu d'une.** La somme des parts vaut toujours le pot au centime ; la somme des virements vaut le pot moins ce qui a déjà été avancé, et la seconde ligne le dit — sans elle, un total des virements plus petit que le pot se lirait comme un centime perdu. La tuile « À verser sur le commun » du mois suit le même calcul, ligne « Déjà avancé » comprise, et la page de présentation démontre le nouveau mécanisme comme elle démontrait l'ancien.
+- Pas de migration de schéma : rien de stocké ne change, tout est dérivé — le même document se lit simplement autrement, et un mois passé se relit avec la déduction au lieu du report.
+
 ### Ajouté — corriger une échéance seule, ou toute la règle qui la pose
 
 - **La question que le formulaire ne posait pas.** Reprendre une échéance générée par une récurrence ne corrigeait qu'elle : on corrigeait le loyer d'août, et septembre retombait sur l'ancien prix sans que rien à l'écran ne dise lequel des deux gestes on venait de faire. Une bascule de portée le demande désormais — « Cette échéance » ou « Toute la règle » —, à la place exacte où une ligne sans règle propose son rythme : c'est la même question, posée à une ligne qui a déjà répondu.

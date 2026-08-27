@@ -5,7 +5,7 @@ import { type Money, money } from '@/domain/money'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import type { Entry, Period, Recurrence } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { de, formatMoney, formatYearMonth, tpl } from '@/i18n/format'
+import { formatMoney } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { SplitPage } from './SplitPage'
 
@@ -51,12 +51,13 @@ function salary(memberId: string, amount: Money): Recurrence {
 
 /**
  * Le foyer d'essai : deux revenus au double l'un de l'autre, une charge commune
- * de 900 € en août, et 300 € avancés par Alix seule en juillet.
+ * de 900 € en août, et 300 € de plus avancés par Alix seule le même mois.
  *
  * Les chiffres sont choisis pour que tout tombe rond et que chaque assertion
- * porte sur une valeur qu'on peut vérifier de tête : parts 66,7 / 33,3, dues
- * 600 / 300, report −100 / +100, versements 500 / 400 — dont la somme vaut
- * encore 900. C'est exactement ce que la carte prétend montrer.
+ * porte sur une valeur qu'on peut vérifier de tête : pot 1 200, parts
+ * 66,7 / 33,3, dues 800 / 400, avance −300 chez Alix, versements 500 / 400 —
+ * dont la somme vaut 900, le pot moins l'avance. C'est exactement ce que la
+ * carte prétend montrer.
  */
 function household(over: { members?: typeof ALIX[]; entries?: Entry[] } = {}): void {
   useStore.setState({
@@ -70,10 +71,10 @@ function household(over: { members?: typeof ALIX[]; entries?: Entry[] } = {}): v
       entries: over.entries ?? [
         makeEntry({ date: '2026-08-05', label: 'Loyer', categoryId: 'loyer', amount: eur(90_000) }),
         /* `shared` explicite : une dépense qui porte un membre n'est pas
-           commune par défaut, et sans lui il n'y aurait ni avance ni report. */
+           commune par défaut, et sans lui il n'y aurait rien d'avancé. */
         makeEntry({
-          date: '2026-07-05',
-          label: 'Loyer',
+          date: '2026-08-12',
+          label: 'Assurance',
           categoryId: 'loyer',
           amount: eur(30_000),
           memberId: 'm-1',
@@ -123,27 +124,34 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     )
   })
 
-  /* L'argument entier de la carte : la somme des versements vaut le pot commun
-     au centime, reports compris — ils s'annulent d'un membre à l'autre. Si ces
-     montants divergent un jour, l'écran dément à l'affichage ce que la ligne
-     du dessous promet. */
-  it('rend le total des versements égal au pot commun', () => {
+  /* L'argument entier de la carte, en deux lignes : la somme des parts vaut le
+     pot au centime, et la somme des versements vaut le pot moins ce qui a déjà
+     été avancé — qui a réglé la facture ne la paie pas deux fois. Si ces
+     montants divergent un jour, l'écran dément à l'affichage ce que les lignes
+     du dessous promettent. */
+  it('déduit l’avance du versement, et le dit sur les deux totaux', () => {
     household()
 
-    expect(screen.getByText(out(eur(50_000)))).toBeInTheDocument() // Alix verse
-    expect(screen.getByText(out(eur(40_000)))).toBeInTheDocument() // Camille verse
-    /* Trois fois : la tuile du pot commun, la ligne de vérification, et le
-       total replié de « Ce qui est partagé ». C'est le même chiffre lu de trois
-       façons, et c'est bien ce qu'on veut — la carte le redonne pour qu'on
-       n'ait pas à remonter le chercher. */
-    expect(screen.getAllByText(out(eur(90_000)))).toHaveLength(3)
+    expect(screen.getByText(out(eur(50_000)))).toBeInTheDocument() // Alix : 800 − 300
+    expect(screen.getByText(out(eur(40_000)))).toBeInTheDocument() // Camille verse sa part
+    expect(screen.getByText(t.split.advancedLine)).toBeInTheDocument()
+    /* Deux fois en sortie : la ligne de vérification et le total replié de
+       « Ce qui est partagé ». C'est le même chiffre que la tuile du pot, lu
+       de deux façons de plus — la carte le redonne pour qu'on n'ait pas à
+       remonter le chercher. */
+    expect(screen.getAllByText(out(eur(120_000)))).toHaveLength(2)
     expect(screen.getByText(t.split.checkHint)).toBeInTheDocument()
+    /* Le total des virements : une fois sur sa ligne de vérification, une fois
+       sur la ligne du loyer que personne n'a avancé — même montant, hasard des
+       chiffres ronds. */
+    expect(screen.getByText(t.split.checkTransfers)).toBeInTheDocument()
+    expect(screen.getAllByText(out(eur(90_000)))).toHaveLength(2)
   })
 
-  /* Sans report, « Sa part du mois » recopierait à l'identique le « À verser »
-     juste dessous, et une régularisation à zéro laisserait croire à un
-     rattrapage là où les comptes tombaient justes. */
-  it('tait le report du mois où il n’y en a pas', () => {
+  /* Sans avance, « Part du commun » recopierait à l'identique le « À verser »
+     juste dessous, et un « Déjà avancé 0,00 € » laisserait croire à une
+     avance là où les comptes tombaient justes. */
+  it('tait la déduction du mois où personne n’a rien avancé', () => {
     household({
       entries: [
         makeEntry({ date: '2026-08-05', label: 'Loyer', categoryId: 'loyer', amount: eur(90_000) }),
@@ -151,9 +159,8 @@ describe('La répartition, dans une carte qui se lit d’un trait', () => {
     })
 
     expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
-    expect(
-      screen.queryByText(tpl(t.split.settlement, de(formatYearMonth('2026-07')))),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.advancedLine)).not.toBeInTheDocument()
+    expect(screen.queryByText(t.split.checkTransfers)).not.toBeInTheDocument()
     expect(screen.getAllByText(t.split.income)).toHaveLength(2)
     expect(screen.getAllByText(t.split.due)).toHaveLength(2)
   })

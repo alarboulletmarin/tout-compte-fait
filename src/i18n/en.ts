@@ -543,7 +543,7 @@ export const en: Strings = {
         calculation:
           'Your costs and loans in your name, plus your share of the shared costs and loans — in proportion to income. It’s the figure on the Costs tile, to the penny: this one doesn’t contradict it, it breaks it apart.',
         apart:
-          'It isn’t what you pay into the pot. The transfer also carries last month’s settlement, and the instalment of an advance — when someone settled a household expense out of their savings and the household pays them back. Those two are transferred without costing the month anything: a cost is settled in the month the spending happened.',
+          'It isn’t what you pay into the pot. The transfer deducts what you’ve already paid up front this month, and also carries the instalment of an advance — when someone settled a household expense out of their savings and the household pays them back. Those two move the transfer without changing the cost: a cost is settled in the month the spending happened.',
       },
     },
     srBreakdown: 'Breakdown of costs and loans: %s',
@@ -991,14 +991,17 @@ export const en: Strings = {
     collapseAll: 'Collapse all',
     expandAll: 'Expand all',
     advancedBy: 'paid up front by %s',
-    settlement: 'Settlement %s',
+    advancedLine: 'Already paid up front',
+    toReceive: 'To receive',
     settlementShare: 'Share of the pot',
     settlementRefund: 'Advance repayment',
-    settlementDetail: 'What was paid up front in %s',
-    settlementHint:
-      'These shared costs were settled by a single person. Everyone owed their share: the month catches up here, and the payments still add up to the total.',
-    settlementNotACost:
-      'A settlement doesn’t change what the month cost someone, only what they pay.',
+    advancedDetail: 'Already paid up front this month',
+    advancedHint:
+      'These shared costs were settled by a single person. Everyone owed their share: what’s already been paid comes off the transfer, and the transfers add up to the pot minus what was paid up front.',
+    advancedNotACost:
+      'Paying up front doesn’t change what the month cost someone, only what they transfer.',
+    checkTransfers: 'Total of the transfers',
+    checkTransfersHint: 'The transfers make the total, minus what was already paid up front.',
     method: 'How it’s worked out',
     methodFormula: 'Each share = their income ÷ the sum of the incomes.',
     methodIncome:

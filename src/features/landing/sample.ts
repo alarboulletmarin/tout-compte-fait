@@ -1,4 +1,4 @@
-import { money, neg } from '@/domain/money'
+import { money } from '@/domain/money'
 
 /**
  * Les chiffres de la présentation. En dur, et non tirés de
@@ -20,9 +20,11 @@ import { money, neg } from '@/domain/money'
  *   1 984 ÷ 3 200 = 62 %, 1 216 ÷ 3 200 = 38 % ;
  * - leurs parts du pot commun le redonnent au centime :
  *   520,80 + 319,20 = 840 ;
- * - et le report s'annule d'un membre à l'autre, si bien que la somme des
- *   versements vaut encore 840 : c'est exactement ce que `t.split.checkHint`
- *   promet sur le vrai écran, et le montrer vaut mieux que l'affirmer.
+ * - et ce qu'une seule personne a avancé se déduit de son virement, si bien
+ *   que la somme des versements vaut le pot moins l'avance :
+ *   (520,80 − 120) + 319,20 = 720 = 840 − 120. C'est exactement ce que
+ *   `t.split.checkTransfersHint` promet sur le vrai écran, et le montrer vaut
+ *   mieux que l'affirmer.
  *
  * Une grille dont les chiffres ne se recomposent pas se lit comme une erreur —
  * c'est vrai du vrai tableau de bord, ça l'est encore plus de celui qui sert à
@@ -33,16 +35,8 @@ import { money, neg } from '@/domain/money'
  * écran qui ment.
  */
 
-/** Ce qu'une seule personne a réglé le mois dernier, et qui se rattrape ici. */
+/** Ce qu'une seule personne a déjà réglé ce mois-ci, déduit de son virement. */
 const ADVANCED = money(12_000)
-
-/**
- * La part du report qui change de poche : celui qui a avancé porte déjà sa
- * propre part, il ne récupère donc que celle de l'autre — 38 % de 120 €.
- * Écrit une fois et repris avec les deux signes, parce que la vérification à
- * zéro n'est vraie que si c'est le même chiffre des deux côtés.
- */
-const ADJUSTMENT = money(4_560)
 
 export const SAMPLE = {
   /** Confirmé sur prévu — la jauge de l'anneau, et le chiffre en son centre. */
@@ -55,7 +49,7 @@ export const SAMPLE = {
    * de la vraie tuile Répartition découpe des parts, pas une jauge, et deux
    * segments qui ne feraient pas le tour laisseraient un arc vide sans nom.
    *
-   * `income`, `due` et `adjustment` ne servent qu'à `LandingProof` : la grille
+   * `income`, `due` et `advanced` ne servent qu'à `LandingProof` : la grille
    * bento n'en montre aucun, et c'est bien le reproche auquel cette page
    * répond — le prorata s'y lisait en pourcentage sans qu'on voie jamais d'où
    * il sort ni ce qu'il donne à verser.
@@ -68,8 +62,8 @@ export const SAMPLE = {
       color: 'var(--member-1)',
       income: money(198_400),
       due: money(52_080),
-      /* Alix a avancé : le mois suivant lui rend la part de Camille. */
-      adjustment: neg(ADJUSTMENT),
+      /* Alix a réglé les 120 € elle-même : ils se déduisent de son virement. */
+      advanced: ADVANCED,
     },
     {
       id: 'b',
@@ -78,7 +72,7 @@ export const SAMPLE = {
       color: 'var(--member-2)',
       income: money(121_600),
       due: money(31_920),
-      adjustment: ADJUSTMENT,
+      advanced: money(0),
     },
   ],
   /** Le total au centre de l'anneau, comme `SplitTile` le pose. */

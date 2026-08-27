@@ -4,6 +4,8 @@ import { eur, makeEntry, makeMember, makeRecurrence } from './fixtures'
 import { money, sum } from './money'
 import { amountOn } from './priceHistory'
 import {
+  advancedByMember,
+  advancedEntries,
   allocate,
   cappedIncomes,
   cappedWeights,
@@ -384,7 +386,7 @@ describe('parts au prorata des revenus', () => {
         // Rien qui ne se consomme pas dans ce pot-ci : aucune mensualité
         // d'avance n'y a été passée.
         refund: money(0),
-        adjustment: money(0),
+        advanced: money(0),
         toPay: money(200_000),
       },
     ])
@@ -443,40 +445,98 @@ describe('parts au prorata des revenus', () => {
     expect(shares && totalDue(shares)).toBe(sum(amounts))
   })
 
-  /* Le report du mois précédent — voir `settle.ts`. Il déplace le versement de
-     chacun sans toucher à sa part : ce qu'un mois coûte est arrêté au mois où
-     la dépense a eu lieu, et seul le virement se rattrape. */
-  it('ne bouge ni les parts ni les versements sans report', () => {
+  /* Ce qu'un membre a déjà avancé sur le pot — voir `advancedByMember`. Ça se
+     déduit de son virement sans toucher à sa part : ce qu'un mois coûte ne
+     bouge pas, seul ce qu'il reste à verser se réduit de ce qui est déjà
+     sorti de sa poche. */
+  it('ne bouge ni les parts ni les versements sans avance', () => {
     const shares = memberShares(foyer, [eur(200_000)]) ?? []
-    expect(shares.map((s) => s.adjustment)).toEqual([money(0), money(0)])
+    expect(shares.map((s) => s.advanced)).toEqual([money(0), money(0)])
     expect(shares.map((s) => s.toPay)).toEqual(shares.map((s) => s.due))
   })
 
-  it('applique le report au versement, jamais à la part', () => {
-    const report = new Map([
-      ['m-1', money(1_500)],
-      ['m-2', money(-1_500)],
-    ])
-    const shares = memberShares(foyer, [eur(200_000)], report) ?? []
+  it('déduit l’avance du versement, jamais de la part', () => {
+    const advanced = new Map([['m-1', money(1_500)]])
+    const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
     expect(shares.map((s) => s.due)).toEqual([money(111_111), money(88_889)])
-    expect(shares.map((s) => s.toPay)).toEqual([money(112_611), money(87_389)])
+    expect(shares.map((s) => s.toPay)).toEqual([money(109_611), money(88_889)])
   })
 
-  it('laisse le total des versements valoir le total réparti', () => {
-    // Les reports se compensent d'un membre à l'autre : c'est ce qui permet à
-    // la ligne de vérification de l'écran Répartition de rester vraie.
-    const report = new Map([
-      ['m-1', money(1_500)],
-      ['m-2', money(-1_500)],
+  it('rend négatif le versement de qui a avancé plus que sa part', () => {
+    // Tout le pot avancé par m-2 : le pot lui doit, il ne verse plus.
+    const advanced = new Map([['m-2', money(200_000)]])
+    const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
+    expect(shares.map((s) => s.toPay)).toEqual([money(111_111), money(-111_111)])
+  })
+
+  it('laisse le total des versements valoir le pot moins ce qui est avancé', () => {
+    const advanced = new Map([
+      ['m-1', money(30_000)],
+      ['m-2', money(20_000)],
     ])
-    const shares = memberShares(foyer, [eur(200_000)], report) ?? []
-    expect(totalToPay(shares)).toBe(200_000)
-    expect(totalToPay(shares)).toBe(totalDue(shares))
+    const shares = memberShares(foyer, [eur(200_000)], advanced) ?? []
+    expect(totalDue(shares)).toBe(200_000)
+    expect(totalToPay(shares)).toBe(150_000)
   })
 
-  it('ignore un report qui ne nomme personne du foyer', () => {
+  it('ignore une avance qui ne nomme personne du foyer', () => {
     const shares = memberShares(foyer, [eur(200_000)], new Map([['parti', money(900)]])) ?? []
     expect(shares.map((s) => s.toPay)).toEqual(shares.map((s) => s.due))
+  })
+})
+
+/* --- Ce qu'une seule personne a déjà réglé ---------------------------------*/
+
+describe('les charges avancées d’un mois', () => {
+  const MEMBERS = new Set(['luca', 'clara'])
+
+  it('liste les charges communes confirmées qui portent un membre, de la plus lourde à la plus légère', () => {
+    const july = [
+      makeEntry({ date: '2026-07-15', amount: eur(4_000), categoryId: 'courses', memberId: 'clara', shared: true }),
+      makeEntry({ date: '2026-07-05', amount: eur(95_000), categoryId: 'logement', memberId: 'luca', shared: true }),
+      makeEntry({ date: '2026-07-08', amount: eur(12_000), categoryId: 'courses' }),
+    ]
+    expect(advancedEntries(july, '2026-07', kindOf).map((e) => e.amount)).toEqual([95_000, 4_000])
+  })
+
+  it('écarte ce que personne n’a avancé', () => {
+    const july = [
+      // Payée par le pot : elle se répartit, mais elle n'avance rien.
+      makeEntry({ date: '2026-07-05', amount: eur(95_000), categoryId: 'logement' }),
+      // Personne ne l'a payée : dire qu'elle a été avancée inventerait un fait.
+      makeEntry({ date: '2026-07-15', amount: eur(30_000), categoryId: 'courses', memberId: 'clara', shared: true, status: 'planned' }),
+      // Personnelle : elle n'est pas commune.
+      makeEntry({ date: '2026-07-16', amount: eur(30_000), categoryId: 'courses', memberId: 'clara' }),
+      // Un versement d'épargne ne se partage jamais.
+      makeEntry({ date: '2026-07-12', amount: eur(20_000), categoryId: 'livret', memberId: 'clara' }),
+      // Un autre mois que celui demandé.
+      makeEntry({ date: '2026-06-15', amount: eur(30_000), categoryId: 'courses', memberId: 'clara', shared: true }),
+    ]
+    expect(advancedEntries(july, '2026-07', kindOf)).toEqual([])
+  })
+
+  it('somme par membre, bornée au foyer', () => {
+    const july = [
+      makeEntry({ date: '2026-07-05', amount: eur(95_000), categoryId: 'logement', memberId: 'luca', shared: true }),
+      makeEntry({ date: '2026-07-10', amount: eur(30_000), categoryId: 'auto', memberId: 'luca', shared: true }),
+      makeEntry({ date: '2026-07-15', amount: eur(4_000), categoryId: 'courses', memberId: 'clara', shared: true }),
+      // Avancée par quelqu'un qui n'est plus du foyer : elle ne se déduit du
+      // virement de personne — la compter ferait mentir la vérification.
+      makeEntry({ date: '2026-07-18', amount: eur(7_777), categoryId: 'courses', memberId: 'parti', shared: true }),
+    ]
+    const advanced = advancedByMember(july, '2026-07', kindOf, MEMBERS)
+    expect(advanced.get('luca')).toBe(125_000)
+    expect(advanced.get('clara')).toBe(4_000)
+    expect(advanced.has('parti')).toBe(false)
+  })
+
+  it('compte la mensualité d’avance que son porteur règle lui-même', () => {
+    // De nature épargne et pourtant « à partager » : elle est dans le pot, et
+    // confirmée au nom de son porteur, c'est lui qui l'a réglée.
+    const july = [
+      makeEntry({ date: '2026-07-05', amount: eur(5_600), categoryId: 'livret', memberId: 'luca', shared: true }),
+    ]
+    expect(advancedByMember(july, '2026-07', kindOf, MEMBERS).get('luca')).toBe(5_600)
   })
 })
 

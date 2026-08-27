@@ -43,7 +43,7 @@ export const en: LandingStrings = {
   monthBody:
     'The month opens on its own with everything that comes back. You tick off what landed; the rest goes on showing as planned, without disappearing from the forecast.',
   splitBody:
-    'Shared costs are split between members in proportion to their incomes, and the shares add up to exactly the total, to the penny. What a single person paid up front is settled the following month.',
+    'Shared costs are split between members in proportion to their incomes, and the shares add up to exactly the total, to the penny. What a single person paid up front is deducted right away from what they transfer.',
   privacyBody:
     'No account, no server, no analytics. Your data lives in this browser, and the export is the only way out — you’re the one who opens it.',
 
@@ -60,9 +60,8 @@ export const en: LandingStrings = {
   proofBody:
     'The same example, from the calculation’s side. A split between two people isn’t taken on trust: it’s checked line by line, and it’s the screen’s job to make that possible.',
 
-  settlement: 'Last month’s settlement',
   advanced:
-    '%s paid %s of shared costs up front last month. Everyone owed their share: the following month makes up the difference, without changing what the month cost anyone.',
+    '%s paid %s of shared costs up front this month. Everyone owed their share: what’s already been settled comes off the transfer right away, without changing what the month cost anyone.',
 
   capacityBody:
     'A contribution to a savings account isn’t a cost: it leaves the account, but it stays with whoever makes it. The month balance, for its part, counts it as spending — that’s why this figure exists alongside it.',

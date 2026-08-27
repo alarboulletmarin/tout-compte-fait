@@ -1,4 +1,4 @@
-import { type Money, add, sum } from '@/domain/money'
+import { type Money, neg, sub, sum } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatPercent, formatSignedMoney, tpl } from '@/i18n/format'
 import { landing } from '@/i18n/landing'
@@ -10,16 +10,16 @@ import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { SAMPLE } from './sample'
 
-/** Ce que verse un membre : sa part du mois, corrigée du report. */
+/** Ce que verse un membre : sa part du mois, moins ce qu'il a déjà avancé. */
 function toPay(share: (typeof SAMPLE.shares)[number]): Money {
-  return add(share.due, share.adjustment)
+  return sub(share.due, share.advanced)
 }
 
 /**
  * Le calcul que la page racontait sans jamais le montrer.
  *
  * La grille bento démontre **un** écran : le mois. Ce qui distingue vraiment
- * l'app — la répartition au prorata, la régularisation du mois suivant, la
+ * l'app — la répartition au prorata, la déduction de ce qui a été avancé, la
  * cascade de la capacité d'épargne — n'existait au-dessus qu'en prose, dans
  * `landing.splitBody` et `landing.kindsBody`. C'est le meilleur argument du
  * produit, et il était raconté au lieu d'être montré.
@@ -63,28 +63,27 @@ export function LandingProof() {
 }
 
 /**
- * La répartition, ligne à ligne, et sa vérification à zéro.
+ * La répartition, ligne à ligne, et ses deux vérifications.
  *
  * C'est `SplitPage` en condensé : le pot commun, la part de chacun au prorata
- * de son revenu, le report du mois précédent, et le total des versements posé
- * à côté du total des charges. Les deux sont égaux au centime — c'est ce que
+ * de son revenu, ce qu'une seule personne a déjà avancé, et les deux totaux
+ * posés l'un sous l'autre — la somme des parts vaut le pot au centime, la
+ * somme des virements vaut le pot moins ce qui est déjà sorti. C'est ce que
  * garantit la répartition aux plus forts restes, et le montrer vaut mieux que
  * de l'affirmer. C'est aussi ce qui rend un partage acceptable entre deux
  * personnes, donc la seule chose que cette page avait à démontrer ici.
  *
- * La régularisation n'est pas un décor de démonstration : c'est la moitié de
- * la promesse de `landing.splitBody`, et celle qui ne se lisait nulle part.
- * Les deux reports s'annulent d'un membre à l'autre, si bien que la
- * vérification reste vraie au centime — sans quoi elle ne prouverait rien.
+ * La déduction n'est pas un décor de démonstration : c'est la moitié de la
+ * promesse de `landing.splitBody`, et celle qui ne se lisait nulle part —
+ * qui a réglé la facture ne la paie pas deux fois.
  */
 function SplitProof() {
   const currency = useCurrency()
 
-  /* Celui dont le report est négatif est celui qui a avancé : il porte déjà sa
-     part, on ne lui rend que celle de l'autre. Lu depuis les chiffres plutôt
-     que nommé à côté d'eux — un prénom recopié dans la phrase se retrouve un
-     jour à désigner l'autre membre. */
-  const advancer = SAMPLE.shares.find((share) => share.adjustment < 0)
+  /* Celui qui a avancé se lit depuis les chiffres plutôt que nommé à côté
+     d'eux — un prénom recopié dans la phrase se retrouve un jour à désigner
+     l'autre membre. */
+  const advancer = SAMPLE.shares.find((share) => share.advanced > 0)
 
   return (
     <Tile className="gap-3">
@@ -93,9 +92,9 @@ function SplitProof() {
         <Amount value={SAMPLE.shared} size="body" direction="out" />
       </div>
       <p className="t-label">{t.split.subtitle}</p>
-      {/* Avant les lignes, et non après : sans elle, les deux reports qui
-          s'annulent passent pour une correction inexpliquée, et on ne comprend
-          ce qu'on vient de lire qu'une fois arrivé en bas. */}
+      {/* Avant les lignes, et non après : sans elle, la déduction passe pour
+          une correction inexpliquée, et on ne comprend ce qu'on vient de lire
+          qu'une fois arrivé en bas. */}
       {advancer !== undefined && (
         <p className="t-label">
           {tpl(landing.advanced, advancer.label, formatMoney(SAMPLE.advanced, currency))}
@@ -132,15 +131,18 @@ function SplitProof() {
               <span className="t-axis min-w-0">{t.split.settlementShare}</span>
               <span className="t-axis tnum shrink-0">{formatMoney(share.due, currency)}</span>
             </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="t-axis min-w-0">{landing.settlement}</span>
-              {/* Signé, et sans `direction` : ce n'est pas un flux dont on lirait
-                  la valeur absolue, c'est un écart dont le signe est toute la
-                  lecture — la règle qu'applique déjà `MemberShareTile`. */}
-              <span className="t-axis tnum shrink-0">
-                {formatSignedMoney(share.adjustment, currency)}
-              </span>
-            </div>
+            {/* La ligne qui manquait à l'argument : ce qui est déjà sorti de
+                sa poche se retranche, et le signe est toute la lecture — la
+                règle de `ShareRow`, à zéro elle laisserait croire à une
+                avance là où les comptes tombaient justes. */}
+            {share.advanced !== 0 && (
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="t-axis min-w-0">{t.split.advancedLine}</span>
+                <span className="t-axis tnum shrink-0">
+                  {formatSignedMoney(neg(share.advanced), currency)}
+                </span>
+              </div>
+            )}
 
             <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
               <span className="t-label">{t.split.due}</span>
@@ -152,12 +154,18 @@ function SplitProof() {
 
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
         <span className="t-body">{t.split.checkTotal}</span>
-        {/* Le total des versements, report compris — et non la somme des parts
-            avant report, qui vaudrait le même chiffre pour une raison plus
-            faible. C'est la ligne entière qui est l'argument. */}
-        <Amount value={sum(SAMPLE.shares.map(toPay))} size="body" direction="out" />
+        {/* La somme des parts, avances non déduites : c'est elle qui vaut le
+            pot au centime — la première moitié de la preuve. */}
+        <Amount value={sum(SAMPLE.shares.map((share) => share.due))} size="body" direction="out" />
       </div>
       <p className="t-label">{t.split.checkHint}</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
+        <span className="t-body">{t.split.checkTransfers}</span>
+        {/* La seconde moitié : les virements font le pot moins ce qui est déjà
+            sorti — qui a réglé la facture ne la paie pas deux fois. */}
+        <Amount value={sum(SAMPLE.shares.map(toPay))} size="body" direction="out" />
+      </div>
+      <p className="t-label">{t.split.checkTransfersHint}</p>
     </Tile>
   )
 }

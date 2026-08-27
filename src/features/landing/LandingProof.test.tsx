@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import type { Money } from '@/domain/money'
+import { type Money, neg, sub, sum } from '@/domain/money'
 import { t } from '@/i18n/strings'
 import { formatMoney, formatSignedMoney } from '@/i18n/format'
-import { landing } from '@/i18n/landing'
 import { LandingProof } from './LandingProof'
 import { SAMPLE } from './sample'
 
@@ -31,19 +30,22 @@ describe('La démonstration du calcul', () => {
     expect(screen.getByText(t.split.checkHint)).toBeInTheDocument()
   })
 
-  /* La régularisation est la moitié de la promesse qui ne se lisait nulle part.
-     Elle doit se voir des deux côtés, signe compris — c'est le signe qui dit
-     lequel des deux rattrape l'autre, et sans les deux la ligne de vérification
-     ne prouverait rien. */
-  it('montre le report du mois précédent des deux côtés', () => {
+  /* La déduction est la moitié de la promesse qui ne se lisait nulle part.
+     Elle se voit sur la ligne de qui a avancé — signe compris, c'est lui qui
+     dit que le montant se retranche — et sur le total des virements, qui vaut
+     le pot moins ce qui est déjà sorti. */
+  it('montre ce qui a été avancé, et le total des virements qui s’en déduit', () => {
     render(<LandingProof />)
 
-    expect(screen.getAllByText(landing.settlement)).toHaveLength(SAMPLE.shares.length)
-    for (const share of SAMPLE.shares) {
-      expect(
-        screen.getByText(said(formatSignedMoney(share.adjustment, 'EUR'))),
-      ).toBeInTheDocument()
-    }
+    const advancer = SAMPLE.shares.find((share) => share.advanced > 0)
+    expect(screen.getByText(t.split.advancedLine)).toBeInTheDocument()
+    expect(
+      screen.getByText(said(formatSignedMoney(neg(advancer?.advanced ?? SAMPLE.advanced), 'EUR'))),
+    ).toBeInTheDocument()
+
+    expect(screen.getByText(t.split.checkTransfers)).toBeInTheDocument()
+    const transfers = sum(SAMPLE.shares.map((share) => sub(share.due, share.advanced)))
+    expect(screen.getByText(out(transfers))).toBeInTheDocument()
   })
 
   /* La cascade, terme par terme : c'est elle qui distingue la capacité du solde
