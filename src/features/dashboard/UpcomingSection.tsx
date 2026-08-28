@@ -2,10 +2,17 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ymOf } from '@/domain/date'
 import { upcomingRows } from '@/domain/stats'
+import { entryPath, recurrencePath } from '@/app/routes'
 import { t } from '@/i18n/strings'
 import { formatDate, formatRelativeDays } from '@/i18n/format'
 import { cn } from '@/lib/cn'
-import { useCategoryMap, useCurrentYm, useRecurrences, useUpcoming } from '@/store/selectors'
+import {
+  useCategoryMap,
+  useCurrentYm,
+  useEntries,
+  useRecurrences,
+  useUpcoming,
+} from '@/store/selectors'
 import { Amount } from '@/ui/Amount'
 import { Dot } from '@/ui/Dot'
 import { Eyebrow } from '@/ui/Eyebrow'
@@ -75,6 +82,13 @@ export function UpcomingSection() {
      déjà sur son propre état vide. */
   const hasRecurrence = useRecurrences().length > 0
 
+  /* Les échéances **posées** dans le document, par identifiant : une ligne
+     d'ici peut aussi être une projection d'un mois jamais ouvert
+     (`upcomingDue`), qui n'existe nulle part et n'a donc pas de fiche à
+     ouvrir. Sa porte honnête est la règle qui la projette. */
+  const documentEntries = useEntries()
+  const posed = useMemo(() => new Set(documentEntries.map((e) => e.id)), [documentEntries])
+
   /* `gap-3` : l'intérieur d'une tuile respire à 12px (DS §4), et l'étiquette se
      retrouvait à 4px de sa liste quand ses voisines du tableau de bord tiennent
      les 12. */
@@ -124,35 +138,49 @@ export function UpcomingSection() {
            cadre ne se lit pas mieux qu'une liste posée sous son étiquette. */
         <ul className="grid grid-cols-[auto_1fr_auto] content-start gap-x-3">
           {rows.map(({ entry, daysLeft, leadsDay }) => (
-            /* `py-1` à toutes les largeurs : les lignes se serraient à un pixel
-               parce que la `4x2` plafonnait à 188px et que cinq d'entre elles
-               n'y tenaient pas autrement. Hors de la grille, c'est le contenu
-               qui donne la hauteur, et la contrainte tombe. */
-            <li key={entry.id} className="col-span-3 grid grid-cols-subgrid items-center py-1">
-              {/* Vide sur les suivantes du même jour : la cellule tient la
-                  colonne, le délai se lit sur la ligne qui ouvre le jour. */}
-              <span className={cn('t-axis tnum', daysLeft <= SOON_DAYS && 'text-text')}>
-                {leadsDay ? formatRelativeDays(daysLeft) : ''}
-              </span>
-              <span className="flex min-w-0 items-center gap-2">
-                <Dot color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'} outlined />
-                <span className="t-label truncate text-text">{entry.label}</span>
-                {/* Ce que l'œil lit en colonne, l'oreille le lit ligne à ligne :
-                    chacune dit sa date, y compris celles dont la colonne de
-                    délai est vide. */}
-                <span className="sr-only-text">{formatDate(entry.date)}</span>
-              </span>
-              {/* `justify-end` : la troisième colonne de la grille fait la
-                  largeur du plus gros montant, et chaque `Amount` s'y posait à
-                  gauche — les cinq montants partaient donc du même bord et
-                  finissaient chacun où ils voulaient. Une colonne de montants
-                  se lit par la droite (DS §3). */}
-              <Amount
-                value={entry.amount}
-                direction={entry.direction}
-                size="label"
-                className="justify-end"
-              />
+            /* Chaque ligne est un lien : une échéance posée ouvre sa fiche —
+               le montant qu'on lit ici se corrige là-bas —, une projection
+               d'un mois jamais ouvert n'existe nulle part et ouvre la règle
+               qui la projette. `min-h-11` : une ligne devenue cible tactile
+               tient les 44px du DS §8 — la tuile vit hors de la grille bento,
+               sa hauteur vient de son contenu, et elle peut donc les payer. */
+            <li key={entry.id} className="col-span-3 grid grid-cols-subgrid">
+              <Link
+                to={
+                  posed.has(entry.id)
+                    ? entryPath(entry.id)
+                    : recurrencePath(entry.recurrenceId ?? '')
+                }
+                className="col-span-3 grid min-h-11 grid-cols-subgrid items-center gap-x-3 rounded-inner transition-colors hover:bg-surface-2 active:bg-surface-2"
+              >
+                {/* Vide sur les suivantes du même jour : la cellule tient la
+                    colonne, le délai se lit sur la ligne qui ouvre le jour. */}
+                <span className={cn('t-axis tnum', daysLeft <= SOON_DAYS && 'text-text')}>
+                  {leadsDay ? formatRelativeDays(daysLeft) : ''}
+                </span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <Dot
+                    color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
+                    outlined
+                  />
+                  <span className="t-label truncate text-text">{entry.label}</span>
+                  {/* Ce que l'œil lit en colonne, l'oreille le lit ligne à
+                      ligne : chacune dit sa date, y compris celles dont la
+                      colonne de délai est vide. */}
+                  <span className="sr-only-text">{formatDate(entry.date)}</span>
+                </span>
+                {/* `justify-end` : la troisième colonne de la grille fait la
+                    largeur du plus gros montant, et chaque `Amount` s'y posait
+                    à gauche — les cinq montants partaient donc du même bord et
+                    finissaient chacun où ils voulaient. Une colonne de
+                    montants se lit par la droite (DS §3). */}
+                <Amount
+                  value={entry.amount}
+                  direction={entry.direction}
+                  size="label"
+                  className="justify-end"
+                />
+              </Link>
             </li>
           ))}
         </ul>

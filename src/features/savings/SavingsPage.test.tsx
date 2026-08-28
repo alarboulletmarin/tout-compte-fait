@@ -91,6 +91,15 @@ afterEach(() => {
 })
 
 describe('l’épargne se lit au nom d’une personne', () => {
+  /* La tuile « Capacité d'épargne » du mois ouvre cet écran, et la barre
+     d'onglets y allume « Plus » : sans retour, c'était un cul-de-sac. */
+  it('porte un retour', () => {
+    seed()
+    open()
+
+    expect(screen.getByRole('button', { name: t.common.back })).toBeInTheDocument()
+  })
+
   /* « Tout le monde » rendrait une somme, « Commun » rendrait des zéros :
      ni l'une ni l'autre n'est une lecture de l'épargne. */
   it('ne propose que les personnes dans le bandeau', () => {
@@ -104,18 +113,33 @@ describe('l’épargne se lit au nom d’une personne', () => {
   })
 
   /* Une rangée de pilules dont aucune n'est active laisserait croire à une
-     lecture qui n'existe pas — et le total afficherait la somme du foyer. */
-  it('pose une personne quand le filtre n’en portait aucune', () => {
+     lecture qui n'existe pas — et le total afficherait la somme du foyer.
+     La personne se pose **sans écrire le filtre** : c'est une portée de
+     lecture (`IndividualScope`), pas un choix qu'on aurait fait. */
+  it('lit la première personne sans toucher au filtre du mois', () => {
     seed()
     expect(useStore.getState().filter).toEqual(ALL_FILTER)
     open()
 
-    expect(useStore.getState().filter).toEqual({ kind: 'member', memberId: 'm-1' })
+    expect(useStore.getState().filter).toEqual(ALL_FILTER)
     expect(screen.getByText(tpl(t.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
     // Deux fois : le capital, et la rangée du seul support qu'elle porte.
     expect(screen.getAllByText(spoken(1_200_000))).toHaveLength(2)
     // Jamais la somme des deux personnes.
     expect(screen.queryByText(spoken(2_000_000))).not.toBeInTheDocument()
+  })
+
+  /* Le détour qui coûtait la portée : on partait du mois avec « Commun », on
+     passait par la tuile Capacité, et on revenait filtré sur quelqu'un sans
+     avoir rien demandé. */
+  it('laisse « Commun » survivre à un détour par l’épargne', () => {
+    seed()
+    useStore.getState().setFilter({ kind: 'common' })
+    open()
+
+    expect(screen.getByText(tpl(t.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
+    cleanup()
+    expect(useStore.getState().filter).toEqual({ kind: 'common' })
   })
 
   it('garde la personne déjà filtrée en arrivant', () => {
@@ -137,15 +161,19 @@ describe('l’épargne se lit au nom d’une personne', () => {
     expect(screen.getByText(tpl(t.savings.totalHintOf, de('Marie')))).toBeInTheDocument()
     expect(screen.getAllByText(spoken(800_000))).toHaveLength(2)
     expect(screen.queryByText(spoken(1_200_000))).not.toBeInTheDocument()
+    /* La pilule, elle, écrit le filtre : c'est un geste explicite, et c'est le
+       seul qui le change encore depuis l'épargne. */
+    expect(useStore.getState().filter).toEqual({ kind: 'member', memberId: 'm-2' })
   })
 
   /* Seul·e du foyer, il n'y a personne entre qui choisir — mais le total porte
-     quand même son nom : c'est son épargne, pas celle d'un foyer. */
+     quand même son nom : c'est son épargne, pas celle d'un foyer. Et le filtre
+     du mois n'a toujours pas bougé. */
   it('nomme la personne même seule du foyer', () => {
     seed([ANDREA])
     open()
 
-    expect(useStore.getState().filter).toEqual({ kind: 'member', memberId: 'm-1' })
+    expect(useStore.getState().filter).toEqual(ALL_FILTER)
     expect(screen.getByText(tpl(t.savings.totalHintOf, de('Andrea')))).toBeInTheDocument()
   })
 

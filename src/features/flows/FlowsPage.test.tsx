@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
+import { ENTRY_NEW_PATH } from '@/app/routes'
 import { today, ymOf } from '@/domain/date'
 import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '@/domain/fixtures'
 import { money } from '@/domain/money'
@@ -195,5 +197,39 @@ describe('FlowsPage', () => {
     household()
     expect(screen.getByText(`${t.dashboard.remaining} ${t.flows.scopeHousehold}`)).toBeInTheDocument()
     expect(screen.getByText(t.dashboard.forecast)).toBeInTheDocument()
+  })
+
+  /* Un montant qu'on lit ici se corrige sur sa fiche, et le seul écran qui
+     savait l'ouvrir était celui du mois : chaque ligne est désormais une
+     porte. */
+  it('ouvre la fiche de la ligne qu’on touche', async () => {
+    useStore.setState({
+      ym: current,
+      filter: ALL_FILTER,
+      data: makeData({
+        families: FAMILIES,
+        categories: CATEGORIES,
+        entries: [
+          makeEntry({
+            id: 'e-loyer',
+            date: `${current}-05`,
+            label: 'Loyer',
+            categoryId: 'cat-1',
+            amount: eur(90_000),
+          }),
+        ],
+      }),
+    })
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<FlowsPage />} />
+          <Route path={`${ENTRY_NEW_PATH}/:id`} element={<p>fiche-entree</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /Loyer/ }))
+    expect(screen.getByText('fiche-entree')).toBeInTheDocument()
   })
 })

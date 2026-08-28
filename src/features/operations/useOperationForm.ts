@@ -72,6 +72,12 @@ export type OperationDraft = PeriodDraft & {
   memberId: string
   /** `undefined` = la règle de partage tranche ; voir `isSharedEntry`. */
   shared: boolean | undefined
+  /**
+   * Qui a sorti l'argent, quand ce n'est pas la personne de la ligne. Vide, la
+   * ligne se règle elle-même — et l'égal du membre ne s'écrit pas : une
+   * exception, jamais une copie (voir `Entry.paidById`).
+   */
+  paidById: string
   note: string
 }
 
@@ -138,6 +144,7 @@ function draftFrom(
       label: '',
       memberId: '',
       shared: undefined,
+      paidById: '',
       note: '',
     }
   }
@@ -156,6 +163,7 @@ function draftFrom(
       label: entry.label,
       memberId: entry.memberId ?? '',
       shared: entry.shared,
+      paidById: entry.paidById ?? '',
       note: entry.note ?? '',
     }
   }
@@ -191,6 +199,7 @@ function draftFrom(
     label: recurrence.label,
     memberId: recurrence.memberId ?? '',
     shared: recurrence.shared,
+    paidById: recurrence.paidById ?? '',
     note: recurrence.note ?? '',
   }
 }
@@ -440,6 +449,11 @@ export function useOperationForm(operation: Operation | null, defaults: Operatio
         : {}),
       direction: draft.direction,
       ...(draft.shared === undefined ? {} : { shared: draft.shared }),
+      /* Une exception, jamais une copie : égal au membre de la ligne — ou hors
+         d'une dépense, où la question ne se pose pas —, il ne s'écrit pas. */
+      ...(draft.nature === 'expense' && draft.paidById !== '' && draft.paidById !== draft.memberId
+        ? { paidById: draft.paidById }
+        : {}),
       ...(draft.note.trim() === '' ? {} : { note: draft.note.trim() }),
     }
 

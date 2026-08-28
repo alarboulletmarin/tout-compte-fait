@@ -3,7 +3,7 @@ import { SAVINGS_PATH } from '@/app/routes'
 import { t } from '@/i18n/strings'
 import { PageTitle } from '@/ui/PageTitle'
 import { GrowthSection } from './GrowthSection'
-import { useIndividualScope } from './individualScope'
+import { IndividualScope } from './IndividualScope'
 
 /**
  * D'où vient l'épargne d'une personne — un seul bloc, et il conclut.
@@ -20,9 +20,20 @@ import { useIndividualScope } from './individualScope'
  * capital est fait — un départ, des versements, et ce que les comptes ont produit
  * par-dessus.
  */
+/* La portée individuelle se pose par-dessus le filtre du mois, sans
+   l'écrire : « Commun » et « Tout le monde » survivent au détour par
+   l'épargne. Le fournisseur enveloppe le contenu parce qu'un composant ne
+   peut pas consommer le contexte qu'il fournit lui-même. */
 export function AnalysisPage() {
+  return (
+    <IndividualScope>
+      <AnalysisPageContent />
+    </IndividualScope>
+  )
+}
+
+function AnalysisPageContent() {
   const navigate = useNavigate()
-  useIndividualScope()
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">

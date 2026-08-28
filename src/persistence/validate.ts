@@ -428,6 +428,9 @@ function recurrence(raw: unknown, index: number): Read<Recurrence> {
   const memberId = optionalStr(raw['memberId'])
   const savingSupportId = optionalStr(raw['savingSupportId'])
   const shared = optionalBool(raw['shared'])
+  /* Une exception, jamais une copie : égal au membre de la ligne, « réglé
+     par » ne dit rien de plus et ne s'écrit pas — même règle que `shared`. */
+  const paidById = optionalStr(raw['paidById'])
   const note = optionalStr(raw['note'])
   const amount = moneyOrNull(raw['amount'])
   // Un montant habituel n'a de sens que sur un montant variable, et seulement
@@ -446,6 +449,7 @@ function recurrence(raw: unknown, index: number): Read<Recurrence> {
     startedOn,
     ...(endedOn === undefined ? {} : { endedOn }),
     ...(shared === undefined ? {} : { shared }),
+    ...(paidById === undefined || paidById === memberId ? {} : { paidById }),
     ...(note === undefined ? {} : { note }),
   }
 }
@@ -460,6 +464,8 @@ function entry(raw: unknown, index: number): Read<Entry> {
   const memberId = optionalStr(raw['memberId'])
   const savingSupportId = optionalStr(raw['savingSupportId'])
   const shared = optionalBool(raw['shared'])
+  // Une exception, jamais une copie — même règle que sur la récurrence.
+  const paidById = optionalStr(raw['paidById'])
   const note = optionalStr(raw['note'])
   return {
     id: str(raw['id'], `entry-${String(index)}`),
@@ -473,6 +479,7 @@ function entry(raw: unknown, index: number): Read<Entry> {
     date: raw['date'],
     status: raw['status'] === 'confirmed' ? 'confirmed' : 'planned',
     ...(shared === undefined ? {} : { shared }),
+    ...(paidById === undefined || paidById === memberId ? {} : { paidById }),
     ...(note === undefined ? {} : { note }),
   }
 }
@@ -829,11 +836,12 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
     return rest as T
   }
 
-  /** Les trois liens que portent une entrée comme une récurrence. */
+  /** Les liens que portent une entrée comme une récurrence. */
   const relink = <
     T extends {
       categoryId: string
       memberId?: string
+      paidById?: string
       savingSupportId?: string
       direction: Direction
     },
@@ -851,6 +859,14 @@ function repairReferences(data: Data, notices: ImportNotice[]): Data {
     if (next.memberId !== undefined && !memberIds.has(next.memberId)) {
       note(collection, index, 'unknownMember', label)
       const { memberId: _dropped, ...rest } = next
+      next = rest as T
+    }
+    /* « Réglé par » quelqu'un qui n'est plus du foyer ne se déduit du virement
+       de personne : le lien se coupe, la ligne reste — même geste que le
+       membre. */
+    if (next.paidById !== undefined && !memberIds.has(next.paidById)) {
+      note(collection, index, 'unknownMember', label)
+      const { paidById: _cut, ...rest } = next
       next = rest as T
     }
     return unlinkSupport(next, collection, index, label)

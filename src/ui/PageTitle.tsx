@@ -18,7 +18,10 @@ export type PageTitleProps = {
   /**
    * Le retour, à gauche du titre. Les fiches et les écrans de saisie s'ouvrent
    * par-dessus un écran auquel il faut revenir ; les autres vivent dans la
-   * navigation, qui les tient déjà.
+   * navigation, qui les tient déjà — sauf ceux qu'une tuile du mois ouvre
+   * (Épargne, Répartition, Crédits, Flux) : sur téléphone la barre y allume
+   * « Plus », et sans retour l'écran était un cul-de-sac. `useBackTo` donne le
+   * geste : l'écran précédent quand il existe, un repli sinon.
    */
   onBack?: () => void
   /** La zone d'actions, à droite du titre — ou son complément, avec un retour. */

@@ -18,6 +18,7 @@ import { clearDocument, loadDocument, saveDocument, setDbEventHandler } from '@/
 import { emptyData } from '@/persistence/defaults'
 import { askDurability, noteWrite, noteWriteFailure, probeDurability } from '@/persistence/health'
 import { type TabChannel, type TabMessage, openTabChannel } from '@/persistence/tabs'
+import { clearRescue, readRescue, saveRescue } from '@/persistence/rescue'
 import { forgetExportMarks } from '@/persistence/transfer'
 import { WRITE_DELAY_MS, createWriter } from '@/persistence/writer'
 import { readStoredLocale, storeLocale } from '@/i18n/locale'
@@ -211,6 +212,19 @@ export type StoreActions = {
   /** Quitte la revue. Le seul geste qui efface la file. */
   endReview: () => void
   flush: () => Promise<void>
+  /**
+   * La sortie de page — onglet fermé, navigation, app rangée en arrière-plan.
+   *
+   * Le filet d'abord, le vidage ensuite, et l'ordre est tout le sujet : le
+   * filet est synchrone, donc posé quoi qu'il advienne de la page, quand le
+   * vidage ouvre une transaction IndexedDB qui peut mourir avec elle (voir
+   * `rescue.ts`). La révision posée est celle que l'écriture en attente
+   * prendrait — c'est elle qui dit au lancement suivant si la base a fini par
+   * rattraper. Un échec d'écriture pose le filet aussi : la mémoire est en
+   * avance sur un disque qui refuse, et la sortie est la dernière chance d'en
+   * garder une trace.
+   */
+  pageHidden: () => void
   /** Ce qu'un autre onglet vient d'annoncer. Public pour être testable seul. */
   onTabMessage: (message: TabMessage) => Promise<void>
 }
@@ -250,6 +264,10 @@ async function persist(data: Data): Promise<void> {
     throw cause
   }
   noteWrite()
+  /* Toute écriture qui aboutit rend le filet de sortie caduc : ce qu'il porte
+     est de cette révision-ci ou d'avant. L'effacer ici, au seul point
+     d'écriture, garantit qu'en régime normal il n'existe pas. */
+  clearRescue()
   useStore.setState({ rev })
   channel?.post({ type: 'saved', rev })
 
@@ -402,6 +420,27 @@ export const useStore = create<Store>()((set, get) => ({
         set({ status: 'onboarding', error: { kind: 'read', message: t.storage.readTimeout } })
         return
       }
+
+      /* Le filet de sortie d'abord — voir `rescue.ts`. Une copie plus récente
+         que la base est une écriture que la fermeture a tuée : on repart
+         d'elle, et on l'écrit tout de suite pour que la base rattrape — c'est
+         cette écriture-là qui efface le filet, donc il survit à un nouvel
+         échec. Plus vieux ou illisible, il est jeté : la base fait foi. */
+      const rescue = readRescue()
+      if (rescue !== null && rescue.rev > (stored?.rev ?? 0)) {
+        mirrorAppearance(rescue.data.settings)
+        bootSnapshot = stored?.data ?? null
+        set({ status: 'ready', data: rescue.data, rev: stored?.rev ?? 0 })
+        get().ensureMonthOpen()
+        try {
+          await persist(get().data)
+        } catch {
+          reportWriteFailure()
+        }
+        return
+      }
+      clearRescue()
+
       if (stored === null) {
         set({ status: 'onboarding', data: initialData() })
         return
@@ -432,7 +471,7 @@ export const useStore = create<Store>()((set, get) => ({
        un document enregistré : au lancement suivant `loadDocument` le trouvait,
        l'app s'ouvrait « prête » sur un foyer sans membre et un mois vide, et
        les deux questions ne revenaient jamais. C'est `finishOnboarding` qui
-       programme la première écriture — il le faisait déjà explicitement, et cet
+       déclenche la première écriture — il le faisait déjà explicitement, et cet
        appel-là n'a de sens que si rien n'a été écrit avant lui.
        Le thème fait exception sans le savoir : `setTheme` mire déjà sa
        préférence en `localStorage`, d'où `initialData` la relit. */
@@ -503,6 +542,16 @@ export const useStore = create<Store>()((set, get) => ({
     set({ status: 'ready' })
     get().ensureMonthOpen()
     writer.schedule(get().data)
+    /* La première écriture part tout de suite, pas dans 400 ms. C'est la seule
+       dont l'attente coûte le document *entier* : recharger ou fermer l'onglet
+       juste après « Commencer » tombait dans la fenêtre du debounce, et le
+       vidage de `pagehide` n'a pas le temps de commettre sa transaction pendant
+       que la page se démonte — le foyer qu'on venait de créer n'avait jamais
+       existé, et l'app rouvrait sur la présentation. Toute mutation d'après ne
+       risque, elle, que ses 400 ms de saisie : le regroupement garde son sens.
+       L'écriture reste dans le writer — mêmes crochets, donc même bandeau si
+       elle échoue — et `flush` ne rejette jamais, d'où le `void`. */
+    void writer.flush()
   },
 
   ensureMonthOpen(ym = currentYm()) {
@@ -566,6 +615,9 @@ export const useStore = create<Store>()((set, get) => ({
     // l'app repartait de zéro en annonçant la sauvegarde d'un document disparu.
     await clearBackups()
     forgetExportMarks()
+    // Le filet de sortie aussi : le laisser ferait renaître au prochain
+    // lancement ce que la triple confirmation vient de promettre disparu.
+    clearRescue()
     bootSnapshot = null
     const fresh = emptyData()
     mirrorAppearance(fresh.settings)
@@ -589,6 +641,8 @@ export const useStore = create<Store>()((set, get) => ({
     writer.cancel()
     useToasts.getState().clearActions()
     await clearDocument()
+    // Même raison que `resetAll` : effacer, c'est effacer le filet avec.
+    clearRescue()
     set({ data: initialData(), status: 'onboarding', error: null, rev: 0, review: null })
     channel?.post({ type: 'cleared' })
   },
@@ -639,6 +693,13 @@ export const useStore = create<Store>()((set, get) => ({
 
   async flush() {
     await writer.flush()
+  },
+
+  pageHidden() {
+    if (get().status === 'ready' && (writer.dirty() || get().error?.kind === 'write')) {
+      saveRescue(get().data, get().rev + 1)
+    }
+    void writer.flush()
   },
 
   async onTabMessage(message) {

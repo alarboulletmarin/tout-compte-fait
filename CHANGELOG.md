@@ -8,6 +8,62 @@ Une remarque propre à cette app : comme les données vivent dans le navigateur,
 
 ## [Non publié]
 
+### Ajouté — l'audit fonctionnel, rejouable
+
+- **Des parcours complets dans un vrai navigateur**, à côté de l'audit d'interface : l'argent de zéro (onboarding → prorata → balance → mois suivant), tous les écrans sur le jeu d'exemple, la revue, la langue, et un export réimporté sur un profil neuf — 42 vérifications qui recomposent les chiffres au lieu de constater que les écrans s'ouvrent. C'est lui qui a trouvé les deux pertes de données ci-dessous, et ses sondes restent en place pour qu'elles ne reviennent pas. Verdict et fausses pistes dans `audit/fonctionnel.md`.
+
+### Corrigé — fermer l'onglet juste après une saisie ne la perd plus
+
+C'est la famille de pertes qui faisait dire « l'app perd mes saisies », et l'audit en navigateur l'a reproduite au geste près : elle frappait précisément qui range son téléphone juste après avoir noté une dépense.
+
+- **Le foyer qu'on vient de créer s'écrit tout de suite.** La première écriture attendait ses 400 ms de regroupement : recharger ou fermer dans la seconde qui suivait « Commencer » perdait le document *entier*, et l'app rouvrait sur la présentation comme si l'onboarding n'avait jamais eu lieu. Elle part désormais sans délai — seule la première : toute mutation d'après ne risque que sa fenêtre de regroupement, qui garde son sens.
+- **Et cette fenêtre-là a maintenant un filet.** Le vidage de sortie de page ouvrait une transaction IndexedDB qui meurt avec la page : une saisie encore en attente — ou partie mais pas commise — se perdait en silence à la fermeture, à la navigation, au retour sur l'écran d'accueil du téléphone. La sortie pose désormais une copie **synchrone** en `localStorage` (`rescue.ts`), que le lancement suivant adopte si la base est restée en retard, et jette sinon — la base fait foi, à la révision près, exactement comme entre deux onglets. Chaque écriture qui aboutit efface le filet : en régime normal, il n'existe pas. Un échec d'écriture le pose aussi à la sortie — la dernière chance d'une mémoire en avance sur un disque qui refuse.
+- **Effacer, c'est effacer le filet avec.** La réinitialisation et l'abandon d'un document illisible le retirent : rien ne renaît au lancement suivant de ce que la triple confirmation a promis disparu.
+- Pas de migration de schéma : le filet relit par le même chemin que tout document — migrations et validation comprises, il peut avoir été posé par une version précédente de l'app.
+
+### Ajouté — « Réglé par » : la balance entre membres, façon Tricount
+
+*Migration de schéma : version 15.* Rien à convertir, et surtout rien à deviner : le champ est facultatif et n'entre que par le formulaire. L'écriture historique de l'avance — une charge commune attribuée à un membre et cochée « à partager » — reste lisible telle quelle.
+
+- **Je paye, mais c'est pour elle.** La saisie d'une dépense gagne un champ « Réglé par » : qui a sorti l'argent, quand ce n'est pas la personne de la ligne. Alix règle la pharmacie de Camille — la ligne reste à Camille, c'est son coût —, et la répartition inscrit le prêt : « Payé pour quelqu'un d'autre » se déduit du virement d'Alix, « Payé par quelqu'un d'autre » s'ajoute à celui de Camille, et les deux se compensent au centime. Un mois sans charge commune mais où quelqu'un a réglé pour quelqu'un d'autre garde sa carte et sa tuile : le virement n'est plus que ce remboursement-là.
+- **Et sur une ligne du pot, c'est l'avance sans détour.** Une charge commune « réglée par » quelqu'un se déduit de son virement sans qu'il ait à s'attribuer la ligne — c'est la réponse propre à « j'ai payé le loyer commun, et l'écran ne le savait pas ». Sur une récurrence, le champ se pose une fois et ses échéances en héritent, comme du partage.
+- **Rien ne change aux coûts.** Ce qu'une ligne coûte reste à qui la porte ; seul le virement bouge, et la méthode de l'écran le dit. Égal au membre de la ligne, le champ ne s'écrit pas — une exception, jamais une copie, comme « à partager » — et un « réglé par » qui ne désigne plus personne du foyer se coupe à l'import, comme un membre.
+
+### Corrigé — la répartition suit le salaire du mois qu'on corrige
+
+- **L'échéance du mois passe devant la règle.** Le revenu qui pèse dans le prorata se lisait sur la récurrence seule : corriger la paie d'un mois ligne à ligne — un congé, un salaire réduit — ne déplaçait jamais la part de ce mois-là, et la répartition se lisait figée quel que soit le chiffre saisi. Désormais l'échéance chiffrée du mois l'emporte — confirmée, ou prévue à un montant saisi à la main — parce qu'elle est le fait de ce mois-là ; la règle reste ce qu'elle est, et une prime ponctuelle ne déplace toujours rien. La méthode de l'écran Répartition le dit en toutes lettres.
+- **Et changer la règle déplace aussi le mois en cours.** La synchronisation préservait le montant de toute prévue déjà datée, y compris celle restée à l'ancien prix — que personne n'avait tapée : après une hausse, la liste du mois affichait l'ancien montant pendant que le total des récurrences annonçait le nouveau. La synchronisation reçoit maintenant l'ancien prix des appelants qui le connaissent, et ne préserve que les montants réellement saisis. Les échéances confirmées ne bougent jamais, comme toujours.
+
+### Corrigé — « Commun » survit à un détour par l'épargne
+
+- **Le filtre du mois n'est plus écrasé.** Les écrans d'épargne se lisent toujours au nom de quelqu'un — l'épargne n'a pas de lecture au foyer — et ils **écrivaient** pour ça le filtre global : on partait du mois avec « Commun » ou « Tout le monde », on passait par la tuile Capacité, et on revenait filtré sur la première personne du foyer sans avoir rien demandé. La personne se pose désormais **en portée de lecture** (`IndividualScope`, un contexte que `useMonthFilter` sert aux seuls écrans qu'il couvre) : le store n'en sait rien, la pilule active reste juste, et seul un appui explicite sur une pilule change encore le filtre du mois.
+- **Le formulaire d'objectif suit la même portée.** Sa liste de comptes à rattacher se lit au nom de quelqu'un, et elle ne tenait jusqu'ici que parce que l'écran précédent venait d'écraser le filtre.
+
+### Modifié — les écrans qu'une tuile du mois ouvre ont leur retour
+
+- **« Capacité d'épargne » menait à un cul-de-sac.** La tuile ouvre `/epargne`, la barre d'onglets y allume « Plus », et l'écran n'avait pas de bouton retour : le seul chemin de sortie était un onglet, c'est-à-dire repartir de zéro. Même impasse sur la Répartition et les Crédits, atteints eux aussi depuis des tuiles du mois — seul « Revenus & charges » avait son chevron. Les trois le portent désormais.
+- **Le retour revient d'où l'on vient.** L'écran précédent quand il existe, le mois sinon : arrivé par la tuile, on repart sur elle ; arrivé par un signet ou un rechargement, revenir en arrière sortirait du site et le chevron ramène au mois. C'est la garde que six écrans de saisie recopiaient mot pour mot (`location.key === 'default'`), écrite une fois dans `useBackTo` — les six copies passent par elle, et « Revenus & charges » y gagne un vrai retour d'historique au lieu d'un chemin en dur.
+
+### Modifié — chaque ligne qui montre une entrée est une porte vers sa fiche
+
+- **Un montant qu'on lit se corrige là où on le lit.** Le seul écran qui savait ouvrir la fiche d'une ligne était celui du mois ; Revenus & charges, le détail de la Répartition et les avances du mois affichaient les mêmes entrées en lecture seule, et corriger un montant repéré là demandait de repasser par le mois et de retrouver la ligne. Toutes ces lignes ouvrent désormais `/depense/:id` d'un appui — une copie découpée par la portée garde l'identifiant de l'entrée réelle, donc la porte ouvre la ligne entière : on corrige une ligne, jamais une part.
+- **Les prochaines échéances aussi, chacune selon ce qu'elle est.** Une échéance posée dans le document ouvre sa fiche ; une échéance projetée d'un mois jamais ouvert n'existe nulle part, et sa porte honnête est la règle qui la projette. Les lignes passent à 44px — devenues cibles tactiles, elles tiennent le plancher du DS §8, et la tuile vit hors de la grille bento : sa hauteur vient de son contenu.
+- Les totaux et les agrégats restent des lectures : une somme n'a pas de fiche.
+
+### Modifié — ce qu'on a déjà avancé se déduit du virement, tout de suite
+
+- **Qui a réglé la facture ne la paie pas deux fois.** Une charge commune réglée par une seule personne — le loyer parti de son compte, l'assurance qu'elle a avancée — comptait dans sa part sans que l'écran Répartition n'en dise rien : « À verser » lui réclamait sa part pleine le mois même où elle venait de sortir l'argent, et la correction n'arrivait qu'au mois suivant, sous le nom de « Régularisation ». Ce détour disparaît : ce que chacun a déjà avancé sur le pot **du mois affiché** se déduit aussitôt de son virement. `À verser = part du pot − déjà avancé`, et quand l'avance dépasse la part, la ligne devient « À recevoir ».
+- **La régularisation différée disparaît, parce qu'elle ferait la correction deux fois.** Un virement déjà réduit de l'avance n'a plus rien à rattraper le mois suivant. La section « Ce qui a été avancé » reste, mais elle parle du mois qu'on regarde — confirmé seulement : une échéance prévue n'a été payée par personne, et dire d'elle qu'un membre l'a avancée inventerait un fait.
+- **Deux lignes de vérification au lieu d'une.** La somme des parts vaut toujours le pot au centime ; la somme des virements vaut le pot moins ce qui a déjà été avancé, et la seconde ligne le dit — sans elle, un total des virements plus petit que le pot se lirait comme un centime perdu. La tuile « À verser sur le commun » du mois suit le même calcul, ligne « Déjà avancé » comprise, et la page de présentation démontre le nouveau mécanisme comme elle démontrait l'ancien.
+- Pas de migration de schéma : rien de stocké ne change, tout est dérivé — le même document se lit simplement autrement, et un mois passé se relit avec la déduction au lieu du report.
+
+### Ajouté — corriger une échéance seule, ou toute la règle qui la pose
+
+- **La question que le formulaire ne posait pas.** Reprendre une échéance générée par une récurrence ne corrigeait qu'elle : on corrigeait le loyer d'août, et septembre retombait sur l'ancien prix sans que rien à l'écran ne dise lequel des deux gestes on venait de faire. Une bascule de portée le demande désormais — « Cette échéance » ou « Toute la règle » —, à la place exacte où une ligne sans règle propose son rythme : c'est la même question, posée à une ligne qui a déjà répondu.
+- **Ce qui suit la règle, et ce qui reste à l'échéance.** En portée « règle », le libellé, la catégorie, la personne, le partage et le montant passent sur la récurrence, et les échéances à venir sont refaites dans la foulée — même invariant que toute écriture de règle, même coupure que le panneau de montant des récurrences : à partir des échéances à venir, jamais les mois déjà confirmés. La date, le statut et la note restent à l'échéance ; une règle à montant variable garde son montant à saisir, chaque échéance chiffrant la sienne.
+- **La conséquence se lit avant d'enregistrer.** Une phrase sous les bascules dit, pour chaque portée, ce qui va bouger et ce qui ne bougera pas — le pendant de ce que la liste des récurrences écrit déjà sous son panneau de montant.
+- Pas de migration de schéma : rien de stocké ne change de forme, seule l'écriture choisit sa cible.
+
 ### Modifié — la présentation s'ouvre sur le produit, pas sur ses réglages
 
 - **La langue et le thème rétrécissent.** Ils ouvraient la page en cinq pilules à libellé plein — « Français | English » et « Clair | Sombre | Système » —, soit la largeur entière d'un téléphone occupée par deux préférences secondaires, lues avant le nom du produit. Le parcours de cette page est « produit → promesse → explication → action », et il commençait par « réglages ». C'est désormais « FR | EN » et trois glyphes : cinq carrés de 44px, environ 250px en tout, collés au-dessus de l'étiquette du titre plutôt que séparés par la gouttière de section, où ils formaient une bande à eux seuls que l'œil comptait comme une section.

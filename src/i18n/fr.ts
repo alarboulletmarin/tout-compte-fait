@@ -912,12 +912,11 @@ export const fr = {
 
        **Et elle ne parle plus que du virement.** Elle portait sous ce même
        titre « Charges perso » et « Total à payer », c'est-à-dire deux montants
-       qui ne sont pas un virement mais un coût : le report entre dans l'un et
-       pas dans les autres, si bien qu'un « Total à payer » s'affichait plus
-       petit que le « À verser » posé juste au-dessus. Le coût du mois a
+       qui ne sont pas un virement mais un coût. Le coût du mois a
        maintenant sa tuile — voir `memberCharges` —, et celle-ci pose le calcul
        de son propre chiffre, dans les mots de l'écran Répartition : sa part du
-       mois, plus la régularisation, égale ce qu'elle verse. */
+       mois, moins ce qu'elle a déjà avancé, égale ce qu'il lui reste à
+       verser. */
     /* L'eyebrow nomme le chiffre plutôt que la tuile : un nom de tuile puis
        « À verser sur le commun » juste en dessous disaient deux fois la même
        chose, et cette redite valait les trente pixels qui débordaient. */
@@ -1017,7 +1016,7 @@ export const fr = {
            qu'aucun écran ne dise pourquoi. Les deux causes sont nommées, dans
            l'ordre où elles se rencontrent. */
         apart:
-          'Ce n’est pas ce que tu verses sur le commun. Le virement porte en plus la régularisation du mois précédent, et la mensualité d’une avance — quand quelqu’un a réglé une dépense du foyer depuis son épargne et que le foyer la lui rembourse. Ces deux-là se virent sans rien coûter au mois : un coût est arrêté au mois où la dépense a eu lieu.',
+          'Ce n’est pas ce que tu verses sur le commun. Le virement déduit ce que tu as déjà avancé ce mois-ci, et porte en plus la mensualité d’une avance — quand quelqu’un a réglé une dépense du foyer depuis son épargne et que le foyer la lui rembourse. Ces deux-là bougent le virement sans rien changer au coût : un coût est arrêté au mois où la dépense a eu lieu.',
       },
       /* La capacité d'épargne n'a plus sa feuille : elle ouvre son écran, où le
          calcul est posé terme par terme et suivi de ce qu'il reste à placer.
@@ -1478,6 +1477,24 @@ export const fr = {
        choisissait autre chose qu'une mensuelle. */
     firstDatePaid: 'Celle-ci est enregistrée comme payée ; les suivantes arriveront à confirmer.',
     firstDatePlanned: 'Elle arrivera à confirmer, comme les suivantes.',
+
+    /* Jusqu'où porte la correction d'une échéance générée — la question que le
+       formulaire ne posait pas : corriger le loyer d'août laissait septembre
+       sur l'ancien prix, et rien à l'écran ne disait lequel des deux gestes on
+       venait de faire. La coupure est la même que `recurrences.amountAhead`,
+       dite avec les mêmes mots : à partir des échéances à venir, jamais les
+       mois déjà confirmés. */
+    editScope: 'Portée de la modification',
+    scopeOccurrence: 'Cette échéance',
+    scopeRule: 'Toute la règle',
+    scopeOccurrenceHint: 'Seule cette échéance change — la règle et les suivantes ne bougent pas.',
+    scopeRuleHint:
+      'Le libellé, la catégorie, la personne, le partage et le montant passent sur la règle, à partir des échéances à venir — les mois déjà confirmés ne changent pas. La date, le statut et la note restent à cette échéance.',
+    /* Une règle à montant variable laisse chaque échéance chiffrer la sienne :
+       lui écrire le montant du mois la changerait de nature. */
+    scopeRuleHintVariable:
+      'Le libellé, la catégorie, la personne et le partage passent sur la règle, à partir des échéances à venir — les mois déjà confirmés ne changent pas. Le montant, la date, le statut et la note restent à cette échéance.',
+    updatedRule: 'Règle modifiée — les échéances à venir suivent',
     /* Ce que le mois dégage encore, dit **au moment de placer** — c'est là que
        la question se pose, et jusqu'ici elle n'avait de réponse que sur le
        tableau de bord, deux écrans plus loin. Même calcul et même mois que la
@@ -1493,6 +1510,17 @@ export const fr = {
        aucun — mais ce qu'on lui prête en attendant. */
     variableAmountHint:
       'Le montant sera demandé à chaque échéance. Celui-ci sert d’ordre de grandeur en attendant — pour le total des récurrences, et pour la répartition au prorata s’il s’agit d’un revenu. Chaque échéance chiffrée prend aussitôt le dessus.',
+
+    /* Qui a sorti l'argent, quand ce n'est pas la personne de la ligne — le
+       geste Tricount : Alix règle l'abonnement de Camille, la ligne est à
+       Camille, l'argent est sorti de chez Alix, et Camille le lui doit. Sur
+       une ligne commune, il désigne qui a avancé le pot sans avoir à
+       s'attribuer la ligne. Il ne change aucun coût : seul le virement bouge,
+       et l'écran Répartition fait la balance. */
+    paidBy: 'Réglé par',
+    paidByDefault: 'La personne de la ligne — ou le pot, en commun',
+    paidByHint:
+      'Si quelqu’un d’autre a sorti l’argent : sur une ligne commune, c’est une avance qui se déduit de son virement ; sur la ligne de quelqu’un d’autre, l’autre le lui doit — la répartition fait la balance.',
 
     /* Un seul écran de saisie, donc un seul titre : la nature et le rythme s'y
        changent d'un doigt, et un titre qui suivrait les six combinaisons
@@ -1804,13 +1832,19 @@ export const fr = {
     collapseAll: 'Tout replier',
     expandAll: 'Tout déplier',
     advancedBy: 'avancé par %s',
-    /* Le report du mois précédent. Une charge commune réglée par une seule
-       personne lui fait porter plus que sa part : le mois suivant le rattrape,
-       l'un verse un peu plus, l'autre un peu moins. */
-    /* Le « de » vit dans le mois, pas dans le gabarit : « d'octobre » et
-       « de septembre » ne s'écrivent pas pareil — c'est `SplitPage` qui l'élide,
-       comme il le fait déjà pour les prénoms. */
-    settlement: 'Régularisation %s',
+    /* Ce qu'un membre a déjà réglé de sa poche sur le pot du mois. Ça se
+       déduit aussitôt de son virement — il ne va pas payer deux fois, une fois
+       la facture et une fois sa part. Signé négatif à l'écran : c'est le terme
+       qui se retranche. */
+    advancedLine: 'Déjà avancé',
+    /* La balance entre membres — la ligne d'un autre, son argent à lui, et le
+       miroir. Les deux se compensent d'un membre à l'autre au centime : c'est
+       ce qui laisse la somme des virements valoir le pot moins les avances. */
+    lentLine: 'Payé pour quelqu’un d’autre',
+    borrowedLine: 'Payé par quelqu’un d’autre',
+    /* Quand l'avance dépasse la part : le pot lui doit, et « À verser » à qui
+       on doit cette somme serait le contresens exact. */
+    toReceive: 'À recevoir',
     /* « Sa part du mois » nommait la part du pot entier, et la tuile « Perso et
        commun » nommait « Part du commun » la part qui coûte : deux libellés
        presque identiques, deux montants à vingt-cinq euros l'un de l'autre, et
@@ -1823,20 +1857,31 @@ export const fr = {
        presque jamais, ce qui est exactement pourquoi son absence coûtait si
        cher à comprendre. */
     settlementRefund: 'Remboursement d’avance',
-    settlementDetail: 'Ce qui a été avancé en %s',
-    settlementHint:
-      'Ces charges communes ont été réglées par une seule personne. Chacun en portait sa part : le mois se rattrape ici, et la somme des versements vaut toujours le total.',
-    /* Le report ne déplace pas un coût : ce que le mois a coûté à chacun est
-       arrêté au mois où la dépense a eu lieu. Ce qui se rattrape est un
+    /* Sans nom de mois : l'en-tête du mois, juste au-dessus, le porte déjà. */
+    advancedDetail: 'Déjà avancé ce mois-ci',
+    advancedHint:
+      'Ces charges communes ont été réglées par une seule personne. Chacun en portait sa part : ce qui est déjà sorti se déduit du virement, et les versements font le pot moins ce qui a déjà été avancé.',
+    /* L'avance ne déplace pas un coût : ce que le mois a coûté à chacun est
+       arrêté au mois où la dépense a eu lieu. Ce qui se déduit est un
        virement, et c'est pour ça qu'il ne touche à aucun total de charges. */
-    settlementNotACost:
-      'Un report ne change pas ce que le mois a coûté à quelqu’un, seulement ce qu’il verse.',
+    advancedNotACost:
+      'Une avance ne change pas ce que le mois a coûté à quelqu’un, seulement ce qu’il verse.',
+    /* La seconde ligne de vérification, quand une avance mord : sans elle, un
+       total des virements plus petit que le pot se lirait comme un centime
+       perdu. */
+    checkTransfers: 'Total des virements',
+    checkTransfersHint: 'Les virements font le total, moins ce qui a déjà été avancé.',
     method: 'Comment c’est calculé',
     methodFormula: 'Part de chacun = son revenu ÷ la somme des revenus.',
     /* Le revenu est dérivé des récurrences de ressources, jamais déclaré à
        part : une seconde vérité finirait par diverger de la première. */
     methodIncome:
       'Le revenu vient des récurrences de salaire et d’allocation de chacun, ramenées au mois. Une prime ponctuelle ne le déplace pas — elle a lieu, mais elle ne dit rien de ce qu’on gagne.',
+    /* L'échéance du mois est un fait, et un fait passe devant une règle : sans
+       cette phrase, la part qui bouge après une paie corrigée se lirait comme
+       une erreur — et celle qui ne bougeait pas se lisait comme un bug. */
+    methodMonthOverride:
+      'L’échéance du mois l’emporte quand elle est chiffrée : une paie réduite ou corrigée déplace la part du mois où elle tombe, sans toucher à la règle.',
     methodVariable:
       'Un salaire à montant variable vaut sa dernière échéance chiffrée, à défaut son montant habituel. Une récurrence laissée « en commun » ne compte dans le revenu de personne.',
     methodIncluded: 'Les charges et les crédits que personne ne s’est attribués.',
@@ -1853,6 +1898,9 @@ export const fr = {
       'L’épargne n’est pas partagée : elle sort du compte, mais elle reste à qui la met de côté.',
     methodAdvance:
       'Une exception : quand quelqu’un a réglé une dépense du foyer depuis son épargne, la mensualité qui la lui rembourse est partagée. Elle se verse sans rien coûter au mois — c’est pourquoi un virement peut dépasser ce que le mois a coûté.',
+    /* Le champ « Réglé par » de la saisie, lu du côté du calcul. */
+    methodPaidBy:
+      'Une ligne « réglée par » quelqu’un d’autre ne change pas ce qu’elle coûte : elle se déduit du virement de qui a payé, et s’ajoute à celui de qui devait.',
     nothing: 'Aucune charge commune ce mois-ci.',
     /* Ce qui manque est nommé plutôt que remplacé par un zéro : un prorata au
        dénominateur incomplet ne vaut pas zéro, il ne veut rien dire. */

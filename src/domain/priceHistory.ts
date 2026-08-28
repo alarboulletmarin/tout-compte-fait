@@ -11,7 +11,7 @@
  * trois chiffres qui se contredisent d'un écran à l'autre.
  * ==========================================================================*/
 
-import type { ISODate } from './date'
+import { type ISODate, type YearMonth, endOfMonth, ymOf } from './date'
 import { type Money, sub } from './money'
 import type { CategoryKind, Direction, Entry, Recurrence } from './types'
 
@@ -67,6 +67,47 @@ export function knownAmount(
   }
 
   return (past ?? ahead)?.amount ?? null
+}
+
+/**
+ * Le montant qu'une récurrence porte **réellement** sur un mois donné.
+ *
+ * `amountOn` répond « que vaut la règle ? » ; ici la question est « combien ce
+ * mois-ci ? », et l'échéance du mois passe devant la règle dès qu'elle dit
+ * quelque chose d'elle-même : **confirmée** — elle a eu lieu, à ce montant,
+ * quoi que la règle raconte —, ou **prévue à un montant saisi à la main**,
+ * c'est-à-dire différent de celui que la règle aurait posé. La prévue restée au
+ * montant de la règle suit la règle : c'est un emplacement posé par l'ouverture
+ * du mois, pas une saisie, et corriger la règle doit continuer de la déplacer.
+ *
+ * C'est la lecture du prorata : sans elle, le salaire d'un mois corrigé ligne
+ * à ligne — un congé, une paie réduite — ne déplaçait jamais la part de ce
+ * mois-là, et la répartition se lisait figée quel que soit le chiffre saisi.
+ * Le coefficient reste assis sur les récurrences — une prime ponctuelle, sans
+ * `recurrenceId`, ne le déplace toujours pas — mais l'échéance du mois est un
+ * fait, et un fait passe devant une règle.
+ *
+ * Plusieurs échéances chiffrées sur le mois — une règle hebdomadaire — : la
+ * plus récente répond, comme `knownAmount` répond déjà de la plus proche.
+ */
+export function amountInMonth(
+  recurrence: Recurrence,
+  entries: readonly Entry[],
+  month: YearMonth,
+): Money | null {
+  let costed: Entry | null = null
+  for (const entry of entries) {
+    if (entry.recurrenceId !== recurrence.id) continue
+    if (ymOf(entry.date) !== month) continue
+    // La case laissée à zéro par l'ouverture du mois ne dit rien.
+    if (entry.status !== 'confirmed' && entry.amount <= 0) continue
+    // La prévue restée au montant de la règle n'est pas une saisie.
+    if (entry.status !== 'confirmed' && entry.amount === recurrence.amount) continue
+    if (costed === null || entry.date > costed.date) costed = entry
+  }
+
+  if (costed !== null) return costed.amount
+  return amountOn(recurrence, entries, endOfMonth(month))
 }
 
 /**

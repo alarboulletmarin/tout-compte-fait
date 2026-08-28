@@ -46,8 +46,21 @@ import { Tile } from '@/ui/Tile'
 import { toast } from '@/ui/toast'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
 import { type GoalDraft, emptyGoalDraft, goalDraftFrom, useGoalDraft } from './goalDraft'
+import { IndividualScope } from './IndividualScope'
 
+/* Sous la même portée que l'écran d'épargne d'où l'on vient : la liste des
+   comptes à rattacher (`useScopedSavingSupports`) se lit au nom de quelqu'un,
+   et elle ne tenait jusqu'ici que parce que l'écran précédent écrasait le
+   filtre du mois. */
 export function GoalFormPage() {
+  return (
+    <IndividualScope>
+      <GoalFormPageContent />
+    </IndividualScope>
+  )
+}
+
+function GoalFormPageContent() {
   const { id } = useParams()
   const goal = useSavingGoal(id)
   const [params] = useSearchParams()

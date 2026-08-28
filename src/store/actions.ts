@@ -325,9 +325,19 @@ export function addRecurrencePaidOn(input: Omit<Recurrence, 'id'>, on: ISODate):
 }
 
 export function replaceRecurrence(id: string, next: Omit<Recurrence, 'id'>): void {
-  mutate((data) =>
-    updates.syncRecurrenceEntries(updates.replaceRecurrence(data, id, next), id, makeId),
-  )
+  mutate((data) => {
+    /* L'ancien montant fixe, pour que la synchronisation distingue une prévue
+       saisie d'une prévue simplement posée à l'ancien prix — celle-là suit la
+       règle, y compris sur le mois en cours. */
+    const previous = data.recurrences.find((r) => r.id === id)?.amount
+    return updates.syncRecurrenceEntries(
+      updates.replaceRecurrence(data, id, next),
+      id,
+      makeId,
+      undefined,
+      previous,
+    )
+  })
 }
 
 /**
@@ -353,6 +363,9 @@ export function setRecurrenceAmount(id: string, amount: Money): void {
       updates.replaceRecurrence(data, id, { ...current, amount }),
       id,
       makeId,
+      undefined,
+      // L'ancien prix : une prévue restée dessus suit le nouveau, dès ce mois.
+      current.amount,
     )
   })
 }
@@ -392,6 +405,20 @@ export function addEntry(input: Omit<Entry, 'id'>): Entry {
 
 export function replaceEntry(id: string, next: Omit<Entry, 'id' | 'recurrenceId'>): void {
   mutate((data) => updates.replaceEntry(data, id, next))
+}
+
+/**
+ * Reporte la correction d'une échéance sur la règle qui l'a posée.
+ *
+ * Le geste vient du formulaire `/depense/:id`, quand la portée choisie est
+ * « toute la règle » : ce que la règle possède passe sur la règle, les
+ * échéances à venir sont refaites dans la foulée — même invariant que toute
+ * écriture de récurrence —, et l'échéance corrigée garde sa saisie et son
+ * identifiant. Une seule mutation : un rendu, une écriture, et la règle ne
+ * peut pas changer sans que ses échéances suivent.
+ */
+export function applyEntryEditToRule(entryId: string, next: Omit<Entry, 'id' | 'recurrenceId'>): void {
+  mutate((data) => updates.applyEntryEditToRule(data, entryId, next, makeId))
 }
 
 export function removeEntry(id: string): void {

@@ -49,17 +49,19 @@ export function useHasMemberCharges(): boolean {
  * Le format de la part du membre — ou `null` quand elle ne se rend pas.
  *
  * C'est la seule des neuf tuiles dont le format vient de **son contenu** et non
- * de la composition : avec un report, elle porte un calcul sur deux rangées ;
- * sans, un chiffre seul sur une rangée plate. La grille ne peut donc pas le lui
- * imposer — elle doit le lire, et paver autour.
+ * de la composition : avec une avance déduite, elle porte un calcul sur deux
+ * rangées ; sans, un chiffre seul sur une rangée plate. La grille ne peut donc
+ * pas le lui imposer — elle doit le lire, et paver autour.
  */
 export function useMemberShareSpan(): TileSpan | null {
   const charges = useMemberCharges()
   const filter = useMemberFilter()
   if (filter === undefined || charges === null) return null
-  if (charges.commonTotal <= 0 && charges.adjustment === 0) return null
+  if (charges.commonTotal <= 0 && charges.lent === 0 && charges.borrowed === 0) return null
   const refund = sub(charges.common, add(charges.commonCharge, charges.commonDebt))
-  return charges.adjustment !== 0 || refund !== 0 ? '4x2' : '4x1'
+  return charges.advanced !== 0 || refund !== 0 || charges.lent !== 0 || charges.borrowed !== 0
+    ? '4x2'
+    : '4x1'
 }
 
 /** Les formats des quatre tuiles de l'analyse, pour une composition donnée. */

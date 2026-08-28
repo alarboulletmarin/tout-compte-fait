@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { type Money, add, sum } from '@/domain/money'
+import { type Money, add, sub, sum } from '@/domain/money'
 import { SAMPLE } from './sample'
 
 /**
  * La présentation montre désormais le calcul, pas seulement son résultat : le
- * prorata, le report du mois précédent et la cascade de la capacité y sont posés
- * à côté de la grille qu'ils produisent. Des chiffres qui ne se recomposent pas
- * ne s'y verraient donc plus comme une approximation d'exemple, mais comme une
- * erreur de calcul — sur la page dont l'argument est justement que le calcul se
- * vérifie.
+ * prorata, la déduction de ce qui a été avancé et la cascade de la capacité y
+ * sont posés à côté de la grille qu'ils produisent. Des chiffres qui ne se
+ * recomposent pas ne s'y verraient donc plus comme une approximation d'exemple,
+ * mais comme une erreur de calcul — sur la page dont l'argument est justement
+ * que le calcul se vérifie.
  *
  * Personne ne relira ces montants en diagonale le jour où l'un d'eux bougera.
  * Ce fichier-ci le fera.
  */
 describe('Les chiffres du foyer d’exemple', () => {
   const shares = SAMPLE.shares
-  const toPay = (share: (typeof shares)[number]): Money => add(share.due, share.adjustment)
+  const toPay = (share: (typeof shares)[number]): Money => sub(share.due, share.advanced)
 
   it('donne au mois prévu la somme de ses charges et de ses crédits', () => {
     expect(add(SAMPLE.charges, SAMPLE.debtMonthly)).toBe(SAMPLE.monthForecast)
@@ -62,23 +62,20 @@ describe('Les chiffres du foyer d’exemple', () => {
     expect(sum(shares.map((share) => share.due))).toBe(SAMPLE.shared)
   })
 
-  /* L'invariant que la ligne de vérification met à l'écran, et la seule raison
-     pour laquelle elle prouve quelque chose : les reports se compensent d'un
-     membre à l'autre, donc la somme des versements vaut encore le total malgré
-     la régularisation. Un report unilatéral ferait mentir la ligne. */
-  it('laisse la somme des versements égale au total, report compris', () => {
-    expect(sum(shares.map(toPay))).toBe(SAMPLE.shared)
-    expect(sum(shares.map((share) => share.adjustment))).toBe(0)
+  /* L'invariant que la seconde ligne de vérification met à l'écran, et la
+     seule raison pour laquelle elle prouve quelque chose : ce qui est déjà
+     sorti se déduit des virements, donc leur somme vaut le pot moins ce qui a
+     été avancé — qui a réglé la facture ne la paie pas deux fois. */
+  it('laisse la somme des virements valoir le pot moins ce qui est avancé', () => {
+    expect(sum(shares.map(toPay))).toBe(sub(SAMPLE.shared, SAMPLE.advanced))
   })
 
-  /* Ce qui change de poche est la part de l'*autre* : celui qui a avancé
-     portait déjà la sienne. La phrase sous la liste annonce le montant avancé,
-     et le report doit en découler. */
-  it('ne rend que la part de l’autre sur ce qui a été avancé', () => {
-    const advancer = shares.find((share) => share.adjustment < 0)
-    expect(advancer).toBeDefined()
-    const others = shares.filter((share) => share !== advancer)
-    const owed = others.reduce((total, share) => total + SAMPLE.advanced * (share.percent / 100), 0)
-    expect(owed + (advancer?.adjustment ?? 0)).toBe(0)
+  /* La phrase sous la liste annonce le montant avancé : il doit être celui qui
+     se déduit, en entier, du virement de qui l'a réglé — et de lui seul. */
+  it('déduit tout ce qui a été avancé, du seul virement de qui l’a réglé', () => {
+    expect(sum(shares.map((share) => share.advanced))).toBe(SAMPLE.advanced)
+    expect(shares.filter((share) => share.advanced > 0)).toHaveLength(1)
+    const advancer = shares.find((share) => share.advanced > 0)
+    expect(add(toPay(advancer ?? shares[0]), SAMPLE.advanced)).toBe(advancer?.due)
   })
 })

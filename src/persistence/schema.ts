@@ -13,7 +13,7 @@ import type { Data } from '@/domain/types'
 import { defaultCategories, defaultFamilies, fallbackFamilyId, memberColorAt } from './defaults'
 import { type ImportNotice, normalizeDocument } from './validate'
 
-export const CURRENT_SCHEMA_VERSION = 14
+export const CURRENT_SCHEMA_VERSION = 15
 
 /** Un document venu du disque, avant toute validation. */
 export type RawDocument = Record<string, unknown>
@@ -441,6 +441,21 @@ function toVersion14(doc: RawDocument): RawDocument {
   return { ...doc, schemaVersion: 14 }
 }
 
+/**
+ * v15 — « Réglé par » (`paidById`), sur les entrées et les récurrences.
+ *
+ * **Rien à convertir, et surtout rien à deviner.** Aucun document antérieur ne
+ * dit qui a sorti l'argent d'une ligne qui n'est pas à lui : la seule écriture
+ * qui s'en approchait — une charge commune attribuée à un membre et cochée
+ * « à partager » — reste lisible telle quelle, et la déduction la comprend
+ * déjà. Poser un `paidById` à sa place serait réécrire une saisie sous une
+ * autre forme, pour aucun gain. Le champ est facultatif ; il n'entre que par
+ * le formulaire, et `normalizeDocument` coupe celui qui ne désigne personne.
+ */
+function toVersion15(doc: RawDocument): RawDocument {
+  return { ...doc, schemaVersion: 15 }
+}
+
 export const MIGRATIONS: Migration[] = [
   { to: 1, migrate: toVersion1 },
   { to: 2, migrate: toVersion2 },
@@ -456,6 +471,7 @@ export const MIGRATIONS: Migration[] = [
   { to: 12, migrate: toVersion12 },
   { to: 13, migrate: toVersion13 },
   { to: 14, migrate: toVersion14 },
+  { to: 15, migrate: toVersion15 },
 ]
 
 export class ImportError extends Error {

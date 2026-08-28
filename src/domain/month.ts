@@ -192,8 +192,10 @@ export function buildPlannedEntry(
     date,
     status: 'planned',
     // La règle de partage est portée par la récurrence : ses échéances en
-    // héritent, comme elles héritent du membre.
+    // héritent, comme elles héritent du membre — et « réglé par » suit la
+    // même route.
     ...(recurrence.shared === undefined ? {} : { shared: recurrence.shared }),
+    ...(recurrence.paidById === undefined ? {} : { paidById: recurrence.paidById }),
   }
 }
 

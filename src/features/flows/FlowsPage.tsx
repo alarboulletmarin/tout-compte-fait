@@ -1,7 +1,7 @@
 import { type ReactNode, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCE_NEW_PATH } from '@/app/routes'
+import { RECURRENCE_NEW_PATH, entryPath } from '@/app/routes'
 import { type Money, ZERO, add, sub, sum } from '@/domain/money'
 import { isCommon } from '@/domain/split'
 import { entriesOfMonth } from '@/domain/stats'
@@ -28,6 +28,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { ForecastIcon } from '@/ui/Icons'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 
@@ -112,6 +113,7 @@ function HeadTile({ scope }: { scope: string }) {
 /** Le titre d'une section, son total à droite, ses lignes, et sa règle dessous. */
 function FlowSection({ section }: { section: Section }) {
   const categories = useCategoryMap()
+  const navigate = useNavigate()
 
   return (
     <section className="flex flex-col gap-2">
@@ -142,12 +144,21 @@ function FlowSection({ section }: { section: Section }) {
         <ul className="flex flex-col">
           {section.lines.map(({ entry, meta }) => (
             <li key={entry.id}>
+              {/* Chaque ligne est une porte vers sa fiche : un montant qu'on
+                  lit ici se corrige là-bas, et le seul endroit qui savait
+                  l'ouvrir était l'écran du mois. Une copie découpée par la
+                  portée garde l'identifiant de l'entrée réelle — la porte
+                  ouvre la ligne entière, ce qui est juste : on corrige une
+                  ligne, jamais une part. */}
               <ListRow
                 color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
                 label={entry.label}
                 {...(meta === '' ? {} : { meta })}
                 planned={entry.status === 'planned'}
                 trailing={<Amount value={entry.amount} direction={entry.direction} />}
+                onClick={() => {
+                  void navigate(entryPath(entry.id))
+                }}
               />
             </li>
           ))}
@@ -197,6 +208,7 @@ function FlowSection({ section }: { section: Section }) {
  */
 export function FlowsPage() {
   const navigate = useNavigate()
+  const back = useBackTo()
   const currency = useCurrency()
   const ym = useCurrentYm()
   const scoped = useScopedMonthEntries()
@@ -389,12 +401,10 @@ export function FlowsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageTitle
-        title={t.flows.title}
-        onBack={() => {
-          void navigate('/')
-        }}
-      />
+      {/* L'écran précédent quand il existe, le mois sinon : arrivé par la
+          tuile, on repart sur elle ; arrivé par un signet, on ne sort pas du
+          site. */}
+      <PageTitle title={t.flows.title} onBack={back} />
       <MonthHeader prorataNote />
       {content}
     </div>

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { t } from '@/i18n/strings'
 import { memberPatch } from '@/features/split/memberDraft'
 import { SharedField } from '@/features/split/SharedField'
@@ -9,7 +9,7 @@ import { useSupportCreateSheet } from '@/features/savings/supportDraft'
 import { ZERO, abs } from '@/domain/money'
 import { savingLeft } from '@/domain/stats'
 import { formatMoney, tpl } from '@/i18n/format'
-import { useActiveSavingSupports, useKindTotals, useMembers } from '@/store/selectors'
+import { useActiveSavingSupports, useKindTotals, useMembers, useRecurrences } from '@/store/selectors'
 import { useCurrency } from '@/ui/currency'
 import { Button } from '@/ui/Button'
 import { CategorySelect } from '@/ui/CategorySelect'
@@ -20,7 +20,7 @@ import { PageTitle } from '@/ui/PageTitle'
 import { Segmented } from '@/ui/Segmented'
 import { Tile } from '@/ui/Tile'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
-import { saveOperation } from './save'
+import { type EditScope, saveOperation } from './save'
 import { type Operation, type OperationDefaults, useOperationForm } from './useOperationForm'
 
 /**
@@ -51,6 +51,14 @@ const movements = () => [
 const rhythms = () => [
   { value: 'once' as const, label: t.entry.once },
   { value: 'recurring' as const, label: t.entry.recurring },
+]
+
+/* Jusqu'où porte la correction d'une échéance générée. À la place exacte de la
+   bascule de rythme, qu'elle remplace : c'est la question du rythme, posée à
+   une ligne qui en a déjà un. */
+const scopes = () => [
+  { value: 'occurrence' as const, label: t.entry.scopeOccurrence },
+  { value: 'rule' as const, label: t.entry.scopeRule },
 ]
 
 const amountKinds = () => [
@@ -117,6 +125,7 @@ export function OperationForm({
 }: OperationFormProps) {
   const members = useMembers()
   const supports = useActiveSavingSupports()
+  const recurrences = useRecurrences()
   /* Échéances prévues comprises, comme la tuile « Capacité d'épargne » :
      deux chiffres qui se contrediraient d'un écran à l'autre seraient pires
      que le second absent. */
@@ -142,23 +151,32 @@ export function OperationForm({
     patch({ savingSupportId })
   })
 
-  const submit = (): void => {
-    const built = build()
-    if (built === null) return
-    saveOperation(built, operation)
-    onDone()
-  }
-
   /* À la création, et sur une entrée ponctuelle qui n'en tient pas déjà une :
      la reprendre en récurrence lui donne sa date pour première échéance, sans
      rien réécrire de ce qui existe. L'autre sens n'a pas sa place ici — une
      récurrence peut porter plusieurs échéances confirmées, et ce formulaire
      n'en montre qu'une ; le geste vit sur sa fiche (`RecurrenceDetailPage`),
-     qui sait ce qu'il y a à recoller. Une échéance déjà générée ne bouge pas
-     non plus : la détacher une à une changerait ce que la règle raconte des
-     mois suivants, une décision qui dépasse le simple montant qu'on corrige. */
+     qui sait ce qu'il y a à recoller. Une échéance déjà générée ne se détache
+     pas non plus : à sa place, la bascule de portée ci-dessous propose le
+     mouvement inverse — faire suivre la règle qui l'a posée. */
   const canSwitchRhythm =
     operation === null || (operation.kind === 'entry' && operation.entry.recurrenceId === undefined)
+
+  /* La règle derrière l'échéance qu'on reprend — exactement le cas que
+     `canSwitchRhythm` écarte. C'est elle qui dit si le montant peut la suivre :
+     une règle à montant variable laisse chaque échéance chiffrer la sienne. */
+  const linkedRule =
+    operation?.kind === 'entry' && operation.entry.recurrenceId !== undefined
+      ? (recurrences.find((r) => r.id === operation.entry.recurrenceId) ?? null)
+      : null
+  const [scope, setScope] = useState<EditScope>('occurrence')
+
+  const submit = (): void => {
+    const built = build()
+    if (built === null) return
+    saveOperation(built, operation, linkedRule !== null ? scope : 'occurrence')
+    onDone()
+  }
 
   /* Ce qu'il advient de la première échéance, dit avant l'enregistrement — à
      la création comme à la conversion d'une entrée. Les deux ne tranchent pas
@@ -248,6 +266,18 @@ export function OperationForm({
               />
             )}
 
+            {/* Sur une échéance générée, la question n'est plus « à quel
+                rythme » mais « jusqu'où porte la correction » : elle seule,
+                ou la règle qui la pose et les échéances à venir avec elle. */}
+            {linkedRule !== null && (
+              <Segmented
+                options={scopes()}
+                value={scope}
+                onChange={setScope}
+                label={t.entry.editScope}
+              />
+            )}
+
             {/* Une opération ponctuelle a toujours un montant : la question ne
                 se pose qu'à une règle, qui peut laisser chaque échéance le
                 sien. */}
@@ -262,6 +292,19 @@ export function OperationForm({
               />
             )}
           </div>
+
+          {/* La conséquence du choix, dite avant l'enregistrement — le pendant
+              de `recurrences.amountAhead` : ce qui suit la règle, ce qui reste
+              à l'échéance, et où passe la coupure. */}
+          {linkedRule !== null && (
+            <p className="t-label">
+              {scope === 'occurrence'
+                ? t.entry.scopeOccurrenceHint
+                : linkedRule.amount === null
+                  ? t.entry.scopeRuleHintVariable
+                  : t.entry.scopeRuleHint}
+            </p>
+          )}
 
           <Field
             label={t.entry.amount}
@@ -453,6 +496,34 @@ export function OperationForm({
               patch({ shared })
             }}
           />
+
+          {/* Qui a sorti l'argent, quand ce n'est pas la personne de la ligne.
+              Sur une ligne commune : une avance, déduite de son virement. Sur
+              la ligne de quelqu'un d'autre : l'autre le lui doit, et la
+              répartition fait la balance — le geste Tricount. À une personne,
+              la question ne se pose pas : il n'y a personne d'autre pour
+              régler. */}
+          {members.length > 1 && draft.nature === 'expense' && (
+            <Field label={t.entry.paidBy} optional hint={t.entry.paidByHint}>
+              {(id, describedBy) => (
+                <Select
+                  id={id}
+                  aria-describedby={describedBy}
+                  value={draft.paidById}
+                  onChange={(e) => {
+                    patch({ paidById: e.target.value })
+                  }}
+                >
+                  <option value="">{t.entry.paidByDefault}</option>
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+          )}
 
           {/* La note se lit sur la ligne du mois et se cherche depuis
               l'historique. En dernier : c'est le champ dont on se passe. */}

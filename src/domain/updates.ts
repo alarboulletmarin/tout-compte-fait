@@ -7,7 +7,7 @@
  * ==========================================================================*/
 
 import { monthlyInstalment } from './advance'
-import { type ISODate, type YearMonth, endOfMonth, parseISO, startOfMonth, today, ymOf } from './date'
+import { type ISODate, type YearMonth, diffDays, endOfMonth, parseISO, startOfMonth, today, ymOf } from './date'
 import { type Money, ZERO } from './money'
 import { buildPlannedEntry, planMonth } from './month'
 import type { RateKind } from './projection'
@@ -625,8 +625,8 @@ export function replaceRecurrence(data: Data, id: string, next: Omit<Recurrence,
 
 /**
  * Recolle une échéance sur la règle qui l'a posée : sous quel libellé et quelle
- * catégorie elle se lit, dans quel sens, à qui elle est, sur quel support elle
- * tombe et si elle se partage.
+ * catégorie elle se lit, dans quel sens, à qui elle est, qui la règle, sur
+ * quel support elle tombe et si elle se partage.
  *
  * Tout le reste lui appartient — son montant, sa date, son statut, sa note :
  * ce sont les seuls champs qu'une échéance peut porter contre sa règle, et les
@@ -636,6 +636,7 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
   const {
     memberId: _member,
     shared: _shared,
+    paidById: _paidBy,
     savingSupportId: _support,
     ...rest
   } = entry
@@ -649,6 +650,7 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
       ? {}
       : { savingSupportId: recurrence.savingSupportId }),
     ...(recurrence.shared === undefined ? {} : { shared: recurrence.shared }),
+    ...(recurrence.paidById === undefined ? {} : { paidById: recurrence.paidById }),
   }
 }
 
@@ -682,6 +684,14 @@ function requalify(entry: Entry, recurrence: Recurrence): Entry {
  * **à venir**, elles, se refont entièrement : là, c'est bien la règle qui dit
  * ce qui va tomber.
  *
+ * `previousAmount` affine cette survie, quand l'appelant sait ce que la règle
+ * valait avant lui : une prévue restée à l'**ancien montant fixe** n'a jamais
+ * été saisie — c'est l'emplacement que l'ouverture du mois a posé — et la
+ * préserver figeait le mois en cours sur l'ancien prix pendant que le total
+ * des récurrences annonçait le nouveau. Deux chiffres du même produit qui ne
+ * disent pas pareil se lisent comme une erreur. Un montant qui diffère de
+ * l'ancien prix, lui, a été tapé : il survit, comme avant.
+ *
  * Rejouer l'opération ne duplique rien : `planMonth` reconnaît une échéance
  * déjà posée à sa paire récurrence + date.
  */
@@ -690,6 +700,7 @@ export function syncRecurrenceEntries(
   recurrenceId: string,
   makeId: () => string,
   from: ISODate = today(),
+  previousAmount?: Money | null,
 ): Data {
   const fromMonth = ymOf(from)
   const recurrence = data.recurrences.find((r) => r.id === recurrenceId)
@@ -705,10 +716,13 @@ export function syncRecurrenceEntries(
   /* Ce qu'on retient des prévues qu'on vient de jeter : leur montant, à leur
      date, tant qu'elles ne sont pas à venir. Un zéro ne compte pas — c'est
      l'emplacement vide que l'ouverture du mois pose sur un montant variable,
-     pas un montant saisi (même lecture que `knownAmount`). */
+     pas un montant saisi (même lecture que `knownAmount`). Le montant resté à
+     l'ancien prix fixe de la règle ne compte pas non plus : posé, pas saisi. */
   const savedAmounts = new Map<ISODate, Money>()
   for (const entry of dropped) {
     if (entry.date > from || entry.amount === ZERO) continue
+    if (previousAmount !== undefined && previousAmount !== null && entry.amount === previousAmount)
+      continue
     savedAmounts.set(entry.date, entry.amount)
   }
 
@@ -957,6 +971,102 @@ export function replaceEntry(
           }
         : e,
     ),
+  }
+}
+
+/**
+ * Reporte la correction d'une échéance sur la règle qui la pose.
+ *
+ * Le formulaire d'une échéance générée ne touchait jamais sa récurrence : on
+ * corrigeait le loyer d'août, et septembre retombait sur l'ancien prix. Ici,
+ * ce que la règle possède passe sur la règle — libellé, catégorie, sens,
+ * membre, support, partage, et le montant si la règle en fixe un —, puis
+ * `syncRecurrenceEntries` refait les échéances à venir, exactement comme une
+ * reprise depuis la fiche de la règle. Une règle à montant variable garde son
+ * `null` : chaque échéance y chiffre la sienne, et lui écrire un montant la
+ * changerait de nature.
+ *
+ * Ce que l'échéance possède reste à l'échéance : sa date, son statut, sa note
+ * et — sur une règle variable — son montant ne remontent pas. Sa période, sa
+ * première échéance et sa date de fin non plus : le formulaire d'une échéance
+ * ne les montre pas, et écrire ce qu'on n'a pas montré serait pire que de ne
+ * rien écrire.
+ *
+ * L'échéance corrigée, elle, garde son identifiant quoi qu'il arrive : la
+ * synchronisation jette et refait les prévues du mois courant et au-delà, et
+ * l'écran `/depense/:id` resterait sinon ouvert sur une ligne disparue. La
+ * régénérée la plus proche de sa date d'origine lui cède la place — une règle
+ * hebdomadaire peut en poser plusieurs par mois, la plus proche est la seule
+ * réponse déterministe — et s'il n'en repousse aucune (règle arrêtée, période
+ * qui ne couvre plus le mois), la saisie est réinsérée telle quelle : un fait
+ * qu'on vient d'écrire ne s'évapore pas.
+ */
+export function applyEntryEditToRule(
+  data: Data,
+  entryId: string,
+  next: Omit<Entry, 'id' | 'recurrenceId'>,
+  makeId: () => string,
+  from: ISODate = today(),
+): Data {
+  const entry = data.entries.find((e) => e.id === entryId)
+  const recurrence = data.recurrences.find((r) => r.id === entry?.recurrenceId)
+  // Détachée depuis un autre onglet, ou jamais liée : il ne reste qu'elle à corriger.
+  if (entry === undefined || recurrence === undefined) return replaceEntry(data, entryId, next)
+
+  /* Les champs à présence facultative suivent la sémantique de réécriture de
+     `replaceRecurrence` : vidé dans le formulaire, le champ disparaît de la
+     règle — une fusion garderait le membre qu'on vient de rendre au commun. */
+  const {
+    memberId: _member,
+    savingSupportId: _support,
+    shared: _shared,
+    paidById: _paidBy,
+    ...kept
+  } = recurrence
+  const nextRule: Omit<Recurrence, 'id'> = {
+    ...kept,
+    label: next.label,
+    categoryId: next.categoryId,
+    direction: next.direction,
+    amount: recurrence.amount === null ? null : next.amount,
+    ...(next.memberId === undefined ? {} : { memberId: next.memberId }),
+    ...(next.savingSupportId === undefined ? {} : { savingSupportId: next.savingSupportId }),
+    ...(next.shared === undefined ? {} : { shared: next.shared }),
+    ...(next.paidById === undefined ? {} : { paidById: next.paidById }),
+  }
+
+  const synced = syncRecurrenceEntries(
+    replaceRecurrence(data, recurrence.id, nextRule),
+    recurrence.id,
+    makeId,
+    from,
+    // L'ancien prix de la règle : une prévue restée dessus suit le nouveau.
+    recurrence.amount,
+  )
+
+  // Confirmée, ou prévue dans un mois passé : la synchronisation l'a laissée.
+  if (synced.entries.some((e) => e.id === entryId)) return replaceEntry(synced, entryId, next)
+
+  const restored: Entry = { ...next, id: entryId, recurrenceId: recurrence.id }
+  const twins = synced.entries.filter(
+    (e) =>
+      e.recurrenceId === recurrence.id &&
+      e.status === 'planned' &&
+      ymOf(e.date) === ymOf(entry.date),
+  )
+  const twin = twins.reduce<Entry | undefined>((best, candidate) => {
+    if (best === undefined) return candidate
+    const gap = Math.abs(diffDays(entry.date, candidate.date))
+    const bestGap = Math.abs(diffDays(entry.date, best.date))
+    return gap < bestGap || (gap === bestGap && candidate.date < best.date) ? candidate : best
+  }, undefined)
+
+  return {
+    ...synced,
+    entries:
+      twin === undefined
+        ? [...synced.entries, restored]
+        : synced.entries.map((e) => (e.id === twin.id ? restored : e)),
   }
 }
 

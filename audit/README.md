@@ -4,6 +4,12 @@ Ce qui mesure l'interface, par opposition à ce qui la teste. `e2e/` est une
 porte de sortie : il refuse un commit. `audit/` ne refuse rien — il relève, et
 c'est `rapport.md` qui juge.
 
+Il a deux volets : l'interface (ce dossier, ci-dessous) et le **fonctionnel**
+(`fonctionnel/`, jugé par `fonctionnel.md`) — des parcours complets dans un
+Chromium réel, onboarding compris, dont les vérifications recomposent les
+chiffres au lieu de constater que les écrans s'ouvrent. Son mode d'emploi est
+en tête de `fonctionnel.md`.
+
 ## Ce qu'on lance
 
 ```bash

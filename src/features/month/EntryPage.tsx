@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { isValidISO } from '@/domain/date'
 import type { Entry } from '@/domain/types'
 import { DIRECTION_PARAM, NATURE_PARAM, directionFromParam, natureFromParam } from '@/app/routes'
@@ -9,6 +9,7 @@ import { useCurrentYm, useEntry, useKindOf } from '@/store/selectors'
 import { Button } from '@/ui/Button'
 import { ConfirmDialog } from '@/ui/ConfirmDialog'
 import { toast } from '@/ui/toast'
+import { useBackTo } from '@/ui/useBackTo'
 import { OperationForm } from '@/features/operations/OperationForm'
 import { defaultDateFor } from './defaultDate'
 
@@ -96,15 +97,10 @@ export function EntryPage() {
   const entry = useEntry(id)
   const ym = useCurrentYm()
   const [params] = useSearchParams()
-  const navigate = useNavigate()
-  const location = useLocation()
 
-  const goBack = (): void => {
-    // Arrivé ici par un lien direct ou un rechargement, il n'y a pas d'écran
-    // précédent dans l'app : revenir en arrière sortirait du site.
-    if (location.key === 'default') void navigate('/')
-    else void navigate(-1)
-  }
+  /* L'écran précédent quand il existe, le mois sinon : la garde que ce
+     formulaire posait à la main, écrite une fois (`useBackTo`). */
+  const goBack = useBackTo()
 
   // L'entrée a pu être supprimée depuis un autre onglet, ou l'URL être fausse.
   if (id !== undefined && entry === null) return <Navigate to="/" replace />

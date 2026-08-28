@@ -6,7 +6,7 @@
  * le rendu en boucle.
  * ==========================================================================*/
 
-import { useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import {
   type ISODate,
   type YearMonth,
@@ -18,8 +18,8 @@ import {
 } from '@/domain/date'
 import { type MonthPoint, trailingMonths } from '@/domain/history'
 import { type MonthBounds, navigationBounds } from '@/domain/month'
-import { type Money, sum } from '@/domain/money'
-import { type PriceChange, amountOn, detectPriceChange } from '@/domain/priceHistory'
+import { type Money, ZERO, sum } from '@/domain/money'
+import { type PriceChange, amountInMonth, amountOn, detectPriceChange } from '@/domain/priceHistory'
 import { annualCost, monthlyEquivalent, nextOccurrence } from '@/domain/recurrence'
 import {
   type CategorySlice,
@@ -82,26 +82,23 @@ import { rateOn, ratesOf } from '@/domain/savingRate'
 import { convertsToSingleEntry } from '@/domain/updates'
 import { type ProjectionPart, supportParts } from '@/domain/projectionStart'
 import {
+  type MemberBalance,
   type MemberCharges,
   type MemberIncome,
   type MemberShare,
+  advancedEntries,
   cappedIncomes,
   memberCaps,
   memberCharges,
   memberIncomes,
   memberShares,
+  monthBalances,
   isCommon,
+  payerOf,
   scopeToMember,
   sharedEntries,
   unassignedIncomes,
 } from '@/domain/split'
-import {
-  type Settlement,
-  advancedEntries,
-  adjustmentOf,
-  adjustments,
-  settleMonth,
-} from '@/domain/settle'
 import {
   type Advance,
   type Category,
@@ -117,6 +114,7 @@ import {
   type SavingValuation,
   isSpending,
 } from '@/domain/types'
+import { MonthFilterOverrideContext } from './filterOverride'
 import { type MonthFilter, useStore } from './store'
 
 /**
@@ -162,7 +160,18 @@ export const useSavingRates = (): SavingRate[] => useStore((s) => s.data.savingR
 export const useMembers = (): Member[] => useStore((s) => s.data.household.members)
 export const useHouseholdName = (): string => useStore((s) => s.data.household.name)
 export const useCurrentYm = (): YearMonth => useStore((s) => s.ym)
-export const useMonthFilter = (): MonthFilter => useStore((s) => s.filter)
+
+/**
+ * La portée de lecture en cours : le filtre du store, sauf là où un écran en
+ * pose une autre par-dessus (`MonthFilterOverrideContext`) — l'épargne, qui se
+ * lit toujours au nom de quelqu'un, sans plus écrire le filtre du mois pour ça.
+ * Partout ailleurs le contexte est `null` et rien ne change.
+ */
+export function useMonthFilter(): MonthFilter {
+  const override = useContext(MonthFilterOverrideContext)
+  const stored = useStore((s) => s.filter)
+  return override ?? stored
+}
 
 /**
  * Le mois affiché est-il celui qu'on vit ?
@@ -181,13 +190,18 @@ export const useIsCurrentMonth = (): boolean => useStore((s) => s.ym === current
  *
  * `undefined` aussi bien sur « Tout » que sur « Commun » : ces deux lectures
  * n'ont pas de membre, et tout ce qui demande « qui ? » n'a rien à en tirer.
- * Ce qui doit distinguer les deux lit `useMonthFilter`.
+ * Ce qui doit distinguer les deux lit `useMonthFilter` — d'où ces deux-ci
+ * dérivent, portée posée par un écran comprise.
  */
-export const useMemberFilter = (): string | undefined =>
-  useStore((s) => (s.filter.kind === 'member' ? s.filter.memberId : undefined))
+export function useMemberFilter(): string | undefined {
+  const filter = useMonthFilter()
+  return filter.kind === 'member' ? filter.memberId : undefined
+}
 
 /** Le pot commun seul — ni les lignes de personne, ni le prorata. */
-export const useIsCommonFilter = (): boolean => useStore((s) => s.filter.kind === 'common')
+export function useIsCommonFilter(): boolean {
+  return useMonthFilter().kind === 'common'
+}
 export const useCurrencyCode = (): string => useStore((s) => s.data.settings.currency)
 
 /** Les catégories utilisables : les archivées ne sont plus proposées. */
@@ -601,9 +615,7 @@ export type MonthSplit = {
   shares: MemberShare[] | null
   /** Les membres dont le revenu n'est pas connu, pour pouvoir les nommer. */
   unknown: Member[]
-  /** Le mois d'où vient la régularisation, pour la nommer à l'écran. */
-  previousYm: YearMonth
-  /** Les charges avancées le mois précédent, qui produisent le report. */
+  /** Les charges avancées **ce mois-ci**, déjà déduites des versements. */
   advanced: Entry[]
 }
 
@@ -617,11 +629,11 @@ export type MonthSplit = {
  * suivant n'existait pas encore — le foyer qui venait de poser ses deux
  * salaires n'avait aucune répartition, et en aurait eu une le lendemain.
  *
- * Le montant de chaque récurrence passe par `useAmountOf` — le même que celui
- * du total des récurrences et de la liste : le salaire qui pèse dans le prorata
- * est au centime celui qui s'affiche sur sa fiche. Il se lit en fin de mois,
- * comme les charges qu'il sert à répartir : c'est la même question, « combien
- * ce mois-ci », et non « combien à cet instant ».
+ * Le montant de chaque récurrence passe par `amountInMonth` : l'échéance
+ * chiffrée du mois passe devant le montant de la règle, parce qu'elle est le
+ * fait de ce mois-là — le salaire réduit d'un congé réduit la part du mois où
+ * il tombe, sans attendre que la règle bouge. Hors échéance corrigée, c'est la
+ * même lecture que la fiche de la règle, au centime.
  */
 export function useMemberIncomesOf(month: YearMonth): MemberIncome[] {
   const members = useMembers()
@@ -666,11 +678,15 @@ function sharedIncomes(
   const hit = cached.get(month)
   if (hit !== undefined) return hit
 
-  /* Le même résolveur que `useAmountOf`, construit ici plutôt que reçu : c'est
-     lui qui portait l'instabilité, et il ne sert qu'à ce calcul-ci. La règle ne
-     change pas — le montant d'une récurrence se lit en fin de mois. */
+  /* La lecture **du mois**, pas celle de la règle : l'échéance chiffrée du
+     mois passe devant le montant de la récurrence (`amountInMonth`). Sans
+     elle, un salaire corrigé ligne à ligne — un congé, une paie réduite — ne
+     déplaçait jamais la part de ce mois-là, et la répartition se lisait figée
+     quel que soit le chiffre saisi. La fiche de la règle, elle, continue de
+     dire ce que la règle vaut (`useAmountOf`) : les deux peuvent diverger le
+     mois où une échéance a été corrigée, et c'est exactement l'information. */
   const amountOf = (recurrence: Recurrence): Money | null =>
-    amountOn(recurrence, entries, endOfMonth(month))
+    amountInMonth(recurrence, entries, month)
   const computed = memberIncomes(members, recurrences, kindOf, amountOf, month)
   cached.set(month, computed)
   return computed
@@ -761,9 +777,7 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
   const members = useMembers()
   const kindOf = useKindOf()
   const month = ym ?? current
-  const previousYm = addMonthsToYm(month, -1)
   const incomes = useMemberIncomesOf(month)
-  const settlements = usePreviousMonthSettlement(month)
 
   return useMemo(() => {
     const shared = sharedEntries(entries, month, kindOf)
@@ -774,59 +788,39 @@ export function useMonthSplit(ym?: YearMonth): MonthSplit {
        ce qu'on verse et ce qu'on paie, et il n'avait pas de nom. */
     const refunds = shared.filter((e) => !isSpending(kindOf(e.categoryId))).map((e) => e.amount)
     const missing = new Set(incomes.filter((i) => i.income === null).map((i) => i.memberId))
+    /* Le même ensemble des deux côtés — la table qui se déduit des versements
+       et la liste qui se montre : c'est ce qui fait que la somme des versements
+       vaut, au centime, le pot moins le total de la liste. */
+    const knownIds = new Set(incomes.map((i) => i.memberId))
     return {
       total: sum(amounts),
       entries: shared,
       shares: memberShares(
         incomes,
         amounts,
-        adjustments(settlements),
+        monthBalances(entries, month, kindOf, knownIds),
         refunds,
         // Le plafond de chacun — les mêmes parts, au centime, que la portée
         // du mois, qui pèse avec `cappedIncomes` sur le même pot.
         memberCaps(entries, month, incomes),
       ),
       unknown: members.filter((m) => missing.has(m.id)),
-      previousYm,
-      advanced: advancedEntries(entries, previousYm, kindOf),
+      advanced: advancedEntries(entries, month, kindOf).filter((e) =>
+        knownIds.has(payerOf(e) ?? ''),
+      ),
     }
-  }, [entries, month, previousYm, kindOf, members, incomes, settlements])
+  }, [entries, month, kindOf, members, incomes])
 }
 
 /**
- * Ce que le mois précédent reporte sur celui qu'on affiche.
+ * Ce qu'un membre porte du mois, plus sa balance dessus.
  *
- * Les revenus lus sont ceux **du mois précédent** : l'écart s'est creusé sous
- * son prorata à lui, et le rattraper au coefficient d'aujourd'hui rendrait une
- * somme que personne n'a avancée.
- *
- * `null` quand ce mois-là ne se répartissait pas — l'écran n'a alors rien à
- * dire, et un report à zéro laisserait croire que les comptes étaient justes.
- */
-export function usePreviousMonthSettlement(ym?: YearMonth): Settlement[] | null {
-  const entries = useEntries()
-  const current = useCurrentYm()
-  const kindOf = useKindOf()
-  const previous = addMonthsToYm(ym ?? current, -1)
-  const incomes = useMemberIncomesOf(previous)
-
-  return useMemo(
-    () => settleMonth(entries, previous, kindOf, incomes),
-    [entries, previous, kindOf, incomes],
-  )
-}
-
-/**
- * Ce qu'un membre porte du mois, plus le report du mois précédent.
- *
- * Le report est à côté de `own` et `common`, jamais dedans : ces deux-là sont
+ * La balance est à côté de `own` et `common`, jamais dedans : ces deux-là sont
  * des coûts, et leur somme doit continuer de valoir exactement le total des
- * charges du mois filtré. Le report, lui, ne change que le virement.
+ * charges du mois filtré. Ce qu'il a avancé sur le pot, réglé pour les autres
+ * ou fait régler par eux ne change que le virement.
  */
-export type MemberChargesWithSettlement = MemberCharges & {
-  /** Ce que le mois précédent ajoute au virement. Négatif : il verse moins. */
-  adjustment: Money
-}
+export type MemberChargesWithBalance = MemberCharges & MemberBalance
 
 /**
  * Ce que le mois affiché coûte au membre filtré, ses charges d'un côté et sa
@@ -836,20 +830,26 @@ export type MemberChargesWithSettlement = MemberCharges & {
  * et tant que le prorata ne se calcule pas : l'en-tête du mois dit alors ce qui
  * manque, et une tuile de plus le répéterait sans rien ajouter.
  */
-export function useMemberCharges(): MemberChargesWithSettlement | null {
+export function useMemberCharges(): MemberChargesWithBalance | null {
   const entries = useEntries()
   const current = useCurrentYm()
   const member = useMemberFilter()
   const kindOf = useKindOf()
   const incomes = useMemberIncomes()
-  const settlements = usePreviousMonthSettlement()
 
   return useMemo(() => {
     if (member === undefined) return null
     const charges = memberCharges(entries, current, member, kindOf, incomes)
     if (charges === null) return null
-    return { ...charges, adjustment: adjustmentOf(settlements, member) }
-  }, [entries, current, member, kindOf, incomes, settlements])
+    const knownIds = new Set(incomes.map((i) => i.memberId))
+    const balance = monthBalances(entries, current, kindOf, knownIds).get(member)
+    return {
+      ...charges,
+      advanced: balance?.advanced ?? ZERO,
+      lent: balance?.lent ?? ZERO,
+      borrowed: balance?.borrowed ?? ZERO,
+    }
+  }, [entries, current, member, kindOf, incomes])
 }
 
 /* --- Épargne --------------------------------------------------------------*/

@@ -543,7 +543,7 @@ export const en: Strings = {
         calculation:
           'Your costs and loans in your name, plus your share of the shared costs and loans — in proportion to income. It’s the figure on the Costs tile, to the penny: this one doesn’t contradict it, it breaks it apart.',
         apart:
-          'It isn’t what you pay into the pot. The transfer also carries last month’s settlement, and the instalment of an advance — when someone settled a household expense out of their savings and the household pays them back. Those two are transferred without costing the month anything: a cost is settled in the month the spending happened.',
+          'It isn’t what you pay into the pot. The transfer deducts what you’ve already paid up front this month, and also carries the instalment of an advance — when someone settled a household expense out of their savings and the household pays them back. Those two move the transfer without changing the cost: a cost is settled in the month the spending happened.',
       },
     },
     srBreakdown: 'Breakdown of costs and loans: %s',
@@ -789,6 +789,16 @@ export const en: Strings = {
     firstDate: 'First payment',
     firstDatePaid: 'This one is recorded as paid; the next ones will come up to confirm.',
     firstDatePlanned: 'It will come up to confirm, like the next ones.',
+
+    editScope: 'Scope of the change',
+    scopeOccurrence: 'This payment',
+    scopeRule: 'The whole rule',
+    scopeOccurrenceHint: 'Only this payment changes — the rule and the next ones stay put.',
+    scopeRuleHint:
+      'The label, category, person, sharing and amount move onto the rule, from upcoming payments onwards — months already confirmed don’t change. The date, status and note stay with this payment.',
+    scopeRuleHintVariable:
+      'The label, category, person and sharing move onto the rule, from upcoming payments onwards — months already confirmed don’t change. The amount, date, status and note stay with this payment.',
+    updatedRule: 'Rule updated — upcoming payments follow',
     /* See `fr.ts`: what the month still frees up, said where the question is
        asked. Same figure and same month as the “Saving capacity” tile. */
     savingRoom: 'This month, %s left to set aside.',
@@ -799,6 +809,11 @@ export const en: Strings = {
 
     quickFull: 'More details',
     quickPrivacy: 'saved in this browser · nothing goes anywhere else',
+
+    paidBy: 'Settled by',
+    paidByDefault: 'The line’s person — or the pot, when shared',
+    paidByHint:
+      'If someone else put up the money: on a shared line it’s an advance, deducted from their transfer; on someone else’s line, that person owes them — the split balances it out.',
 
     addOperation: 'Add an operation',
     saveOperation: 'Add the operation',
@@ -981,18 +996,25 @@ export const en: Strings = {
     collapseAll: 'Collapse all',
     expandAll: 'Expand all',
     advancedBy: 'paid up front by %s',
-    settlement: 'Settlement %s',
+    advancedLine: 'Already paid up front',
+    lentLine: 'Paid for someone else',
+    borrowedLine: 'Paid by someone else',
+    toReceive: 'To receive',
     settlementShare: 'Share of the pot',
     settlementRefund: 'Advance repayment',
-    settlementDetail: 'What was paid up front in %s',
-    settlementHint:
-      'These shared costs were settled by a single person. Everyone owed their share: the month catches up here, and the payments still add up to the total.',
-    settlementNotACost:
-      'A settlement doesn’t change what the month cost someone, only what they pay.',
+    advancedDetail: 'Already paid up front this month',
+    advancedHint:
+      'These shared costs were settled by a single person. Everyone owed their share: what’s already been paid comes off the transfer, and the transfers add up to the pot minus what was paid up front.',
+    advancedNotACost:
+      'Paying up front doesn’t change what the month cost someone, only what they transfer.',
+    checkTransfers: 'Total of the transfers',
+    checkTransfersHint: 'The transfers make the total, minus what was already paid up front.',
     method: 'How it’s worked out',
     methodFormula: 'Each share = their income ÷ the sum of the incomes.',
     methodIncome:
       'Income comes from everyone’s salary and benefit recurring rules, brought back to the month. A one-off bonus doesn’t move it — it happens, but it says nothing about what you earn.',
+    methodMonthOverride:
+      'The month’s payment wins when it has a figure: a reduced or corrected pay moves the share of the month it lands in, without touching the rule.',
     methodVariable:
       'A salary with a variable amount is worth its last costed payment, failing that its usual amount. A recurring rule left “shared” counts towards nobody’s income.',
     methodIncluded: 'The costs and loans nobody has claimed.',
@@ -1001,6 +1023,8 @@ export const en: Strings = {
       'Savings aren’t shared: the money leaves the account, but it stays with whoever set it aside.',
     methodAdvance:
       'One exception: when someone has settled a household expense out of their savings, the instalment that pays them back is shared. It is transferred without costing the month anything — which is why a transfer can exceed what the month cost.',
+    methodPaidBy:
+      'A line “settled by” someone else doesn’t change what it costs: it comes off the payer’s transfer, and goes onto the transfer of whoever owed it.',
     nothing: 'No shared cost this month.',
     /* Les six phrases qui suivent reçoivent `de(prénoms)`. Voir `format.de`. */
     missingOne: 'Add the income %s to split the costs.',

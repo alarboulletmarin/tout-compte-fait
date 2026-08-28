@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { money } from './money'
 import { eur, makeEntry, makeRecurrence } from './fixtures'
 import {
+  amountInMonth,
   amountOn,
   detectPriceChange,
   isCostly,
@@ -196,5 +197,55 @@ describe('montant en vigueur d’une récurrence', () => {
 
   it('ne dit rien d’un variable sans échéance ni montant habituel', () => {
     expect(amountOn(variable, [], '2026-07-15')).toBeNull()
+  })
+})
+
+/* La lecture du prorata : « combien ce mois-ci ? », et non « que vaut la
+   règle ? ». Sans elle, un salaire corrigé ligne à ligne ne déplaçait jamais
+   la part du mois, et la répartition se lisait figée. */
+describe('le montant qu’un mois porte réellement', () => {
+  const MONTHLY = { unit: 'month' as const, every: 1, anchorDay: 1 }
+  const salaire = makeRecurrence({ id: 'netflix', amount: eur(200_000), period: MONTHLY })
+
+  it('laisse une échéance confirmée l’emporter sur la règle', () => {
+    // La paie du mois est tombée réduite : c'est elle le fait, quoi que la
+    // règle raconte.
+    expect(amountInMonth(salaire, [at('2026-07-01', 120_000)], '2026-07')).toBe(120_000)
+  })
+
+  it('laisse une prévue corrigée à la main l’emporter aussi', () => {
+    expect(amountInMonth(salaire, [at('2026-07-01', 120_000, 'planned')], '2026-07')).toBe(120_000)
+  })
+
+  it('laisse la prévue restée au montant de la règle suivre la règle', () => {
+    // L'emplacement posé par l'ouverture du mois n'est pas une saisie : il dit
+    // ce que la règle dit, et la suit quand elle bouge (voir aussi
+    // `syncRecurrenceEntries`, qui réaligne la prévue restée à l'ancien prix).
+    const raised = { ...salaire, amount: eur(250_000) }
+    expect(amountInMonth(raised, [at('2026-07-01', 250_000, 'planned')], '2026-07')).toBe(250_000)
+    // Une prévue à un autre montant que la règle a été tapée : elle fait foi.
+    expect(amountInMonth(raised, [at('2026-07-01', 200_000, 'planned')], '2026-07')).toBe(200_000)
+  })
+
+  it('retombe sur la règle quand le mois n’a pas d’échéance', () => {
+    expect(amountInMonth(salaire, [at('2026-06-01', 120_000)], '2026-07')).toBe(200_000)
+  })
+
+  it('ignore la case laissée à zéro par l’ouverture du mois', () => {
+    const variable = makeRecurrence({ id: 'netflix', amount: null, period: MONTHLY })
+    // La case vide ne dit rien ; la dernière échéance chiffrée fait foi.
+    expect(
+      amountInMonth(variable, [at('2026-07-01', 0, 'planned'), at('2026-06-01', 87_000)], '2026-07'),
+    ).toBe(87_000)
+  })
+
+  it('répond de la plus récente quand le mois en chiffre plusieurs', () => {
+    const weekly = makeRecurrence({
+      id: 'netflix',
+      amount: null,
+      period: { unit: 'week', every: 1, anchorDay: 5 },
+    })
+    const entries = [at('2026-07-03', 40_000), at('2026-07-10', 45_000)]
+    expect(amountInMonth(weekly, entries, '2026-07')).toBe(45_000)
   })
 })

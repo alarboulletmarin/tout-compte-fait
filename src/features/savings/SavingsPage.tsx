@@ -22,12 +22,14 @@ import { EmptyState } from '@/ui/EmptyState'
 import { Eyebrow } from '@/ui/Eyebrow'
 import { NavCalendar, YearsIcon } from '@/ui/Icons'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Row, RowGroup } from '@/ui/RowGroup'
 import { Tile } from '@/ui/Tile'
 import { CapitalTile } from './CapitalTile'
 import { CoverageTile } from './CoverageTile'
 import { GoalsSection } from './GoalsSection'
 import { SupportsOverview } from './SupportsSection'
+import { IndividualScope } from './IndividualScope'
 import { useIndividualScope } from './individualScope'
 
 /**
@@ -123,7 +125,19 @@ function MonthPreview() {
  * valeur n'est pas un contrôle** : la rangée de pilules s'efface en solo, où
  * elle n'était qu'un bruit permanent.
  */
+/* La portée individuelle se pose par-dessus le filtre du mois, sans
+   l'écrire : « Commun » et « Tout le monde » survivent au détour par
+   l'épargne. Le fournisseur enveloppe le contenu parce qu'un composant ne
+   peut pas consommer le contexte qu'il fournit lui-même. */
 export function SavingsPage() {
+  return (
+    <IndividualScope>
+      <SavingsPageContent />
+    </IndividualScope>
+  )
+}
+
+function SavingsPageContent() {
   const navigate = useNavigate()
   const totals = useKindTotals(true)
   const members = useMembers()
@@ -133,25 +147,28 @@ export function SavingsPage() {
      lui-même (`total.valued === 0`), et la rangée qui l'accueille doit alors
      cesser d'être une grille à deux colonnes. */
   const covered = useSavingTotal().valued > 0
-  /* Pose une personne quand aucune ne l'est. Le filtre est posé même quand la
-     rangée ne s'affiche pas : sans lui, l'écran lirait le foyer entier en solo,
-     c'est-à-dire la somme que cet écran existe pour ne pas montrer. */
+  /* La personne au nom de qui l'écran se lit — posée par `IndividualScope`,
+     même quand la rangée de pilules ne s'affiche pas : sans elle, l'écran
+     lirait le foyer entier, c'est-à-dire la somme qu'il existe pour ne pas
+     montrer. */
   const owner = useIndividualScope()
+  /* La tuile « Capacité d'épargne » du mois ouvre cet écran, et la barre
+     d'onglets y allume « Plus » : sans retour, c'était un cul-de-sac — le
+     seul chemin de sortie était un onglet. */
+  const back = useBackTo()
 
   const noFlow = add(totals.resource, add(totals.charge, add(totals.debt, totals.saving))) === ZERO
   const nothing = noFlow && supports.length === 0
 
   return (
-    <>
-      <PageTitle title={t.savings.title} />
+    /* La colonne à gouttière des écrans à retour : la variante à chevron de
+       `PageTitle` ne pose pas de marge basse, c'est la gouttière qui espace. */
+    <div className="flex flex-col gap-5">
+      <PageTitle title={t.savings.title} onBack={back} />
 
       {/* Un contrôle à une seule valeur n'est pas un contrôle : la rangée ne
           s'affiche qu'à partir de deux personnes. */}
-      {members.length > 1 && (
-        <div className="mb-5">
-          <MonthFilterChips personsOnly />
-        </div>
-      )}
+      {members.length > 1 && <MonthFilterChips personsOnly />}
 
       {nothing ? (
         /* Deux vides, deux causes, deux gestes — et le premier avait perdu le
@@ -244,6 +261,6 @@ export function SavingsPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

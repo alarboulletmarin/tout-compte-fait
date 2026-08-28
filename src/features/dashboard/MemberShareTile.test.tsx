@@ -5,7 +5,7 @@ import { eur, makeCategory, makeData, makeEntry, makeFamily, makeMember } from '
 import { type Money, money } from '@/domain/money'
 import type { Entry, Recurrence } from '@/domain/types'
 import { t } from '@/i18n/strings'
-import { de, formatMonthName, formatMoney, formatSignedMoney, tpl } from '@/i18n/format'
+import { formatMoney, formatSignedMoney } from '@/i18n/format'
 import { ALL_FILTER, useStore } from '@/store/store'
 import { MemberShareTile } from './MemberShareTile'
 
@@ -47,7 +47,7 @@ function salary(memberId: string, amount: Money): Recurrence {
   }
 }
 
-/** Le loyer commun d'août, et les 300 € qu'Alix a avancés seule en juillet. */
+/** Le loyer commun d'août, et les 300 € qu'Alix a avancés seule le même mois. */
 const RENT = makeEntry({
   date: '2026-08-05',
   label: 'Loyer',
@@ -55,8 +55,8 @@ const RENT = makeEntry({
   amount: eur(90_000),
 })
 const ADVANCED = makeEntry({
-  date: '2026-07-05',
-  label: 'Loyer',
+  date: '2026-08-12',
+  label: 'Assurance',
   categoryId: 'loyer',
   amount: eur(30_000),
   memberId: 'm-1',
@@ -65,8 +65,9 @@ const ADVANCED = makeEntry({
 
 /**
  * Deux revenus au double l'un de l'autre — parts 66,7 / 33,3 —, 900 € de loyer
- * commun en août et 300 € avancés par Alix en juillet. Sa part vaut donc 600 €,
- * son report −100 €, et elle verse 500 €. Chaque chiffre se vérifie de tête.
+ * commun en août et 300 € de plus avancés par Alix le même mois. Sa part du pot
+ * de 1 200 € vaut donc 800 €, son avance s'en déduit, et elle verse 500 €.
+ * Chaque chiffre se vérifie de tête.
  */
 function mount(over: { filterOn?: string; entries?: Entry[] } = {}): void {
   useStore.setState({
@@ -89,8 +90,6 @@ function mount(over: { filterOn?: string; entries?: Entry[] } = {}): void {
   )
 }
 
-const july = de(formatMonthName('2026-07'))
-
 describe('« À verser sur le commun », qui ne parle que du virement', () => {
   afterEach(() => {
     useStore.setState({ data: initial })
@@ -104,20 +103,20 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
   })
 
   /* L'objet même du changement : le montant du virement, et le calcul qui le
-     produit — sa part, plus le report. Rien de ce qu'elle paie pour elle. */
-  it('pose sa part et son report, et leur somme en tête', () => {
+     produit — sa part, moins ce qu'elle a déjà avancé. Rien de ce qu'elle paie
+     pour elle. */
+  it('pose sa part et son avance, et leur différence en tête', () => {
     mount({ filterOn: 'm-1' })
 
     expect(screen.getByText(out(eur(50_000)))).toBeInTheDocument()
     expect(screen.getByText(t.split.settlementShare)).toBeInTheDocument()
-    expect(screen.getByText(eurs(eur(60_000)))).toBeInTheDocument()
-    expect(screen.getByText(tpl(t.split.settlement, july))).toBeInTheDocument()
-    expect(screen.getByText(said(formatSignedMoney(eur(-10_000), 'EUR')))).toBeInTheDocument()
+    expect(screen.getByText(eurs(eur(80_000)))).toBeInTheDocument()
+    expect(screen.getByText(t.split.advancedLine)).toBeInTheDocument()
+    expect(screen.getByText(said(formatSignedMoney(eur(-30_000), 'EUR')))).toBeInTheDocument()
   })
 
-  /* Ces deux montants n'étaient pas des virements : le report entrait dans le
-     chiffre de tête et pas dans eux, si bien qu'un « Total à payer » s'affichait
-     plus petit que le « À verser » posé juste au-dessus. */
+  /* Ces deux montants n'étaient pas des virements : la tuile ne parle que de
+     ce qu'il reste à verser, et le coût du mois a sa propre tuile. */
   it('ne dit plus un mot des charges perso ni du coût du mois', () => {
     mount({
       filterOn: 'm-1',
@@ -125,7 +124,7 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
         RENT,
         ADVANCED,
         makeEntry({
-          date: '2026-08-12',
+          date: '2026-08-14',
           label: 'Courses',
           categoryId: 'courses',
           amount: eur(5_000),
@@ -137,31 +136,52 @@ describe('« À verser sur le commun », qui ne parle que du virement', () => {
     expect(screen.queryByText(t.dashboard.memberChargesOwn)).not.toBeInTheDocument()
     // Ses 50 € de courses, et le coût de son mois : ni l'un ni l'autre ici.
     expect(screen.queryByText(out(eur(5_000)))).not.toBeInTheDocument()
-    expect(screen.queryByText(out(eur(65_000)))).not.toBeInTheDocument()
+    expect(screen.queryByText(out(eur(85_000)))).not.toBeInTheDocument()
   })
 
-  /* Sans report, « Sa part du mois » recopierait à l'identique le chiffre de
-     tête, et une régularisation à zéro laisserait croire à un rattrapage là où
+  /* Sans avance, « Part du commun » recopierait à l'identique le chiffre de
+     tête, et un « Déjà avancé 0,00 € » laisserait croire à une avance là où
      les comptes tombaient justes. */
-  it('tait le calcul du mois où il n’y a rien à rattraper', () => {
+  it('tait le calcul du mois où rien n’a été avancé', () => {
     mount({ filterOn: 'm-1', entries: [RENT] })
 
     expect(screen.getByText(out(eur(60_000)))).toBeInTheDocument()
     expect(screen.queryByText(t.split.settlementShare)).not.toBeInTheDocument()
   })
 
-  /* Le cas que la tuile Régularisation couvrait seule, et qui serait tombé avec
-     elle : plus aucune charge commune ce mois-ci, mais un report qui attend. Le
-     virement n'est plus que lui, et c'est précisément le mois où il faut le
-     lire. Alix a trop avancé : le commun lui rend 100 €, et le montant garde
-     donc son signe au lieu de s'annoncer comme une sortie. */
-  it('reste debout le mois où le report est le seul virement', () => {
+  /* Le geste Tricount, lu de la tuile : la ligne de Camille, l'argent
+     d'Alix. Sa part du pot (600 €) se réduit de ce qu'elle a prêté (60 €),
+     et la ligne le dit dans les mots de l'écran Répartition. */
+  it('déduit ce qu’elle a réglé pour quelqu’un d’autre', () => {
+    mount({
+      filterOn: 'm-1',
+      entries: [
+        RENT,
+        makeEntry({
+          date: '2026-08-14',
+          label: 'Pharmacie',
+          categoryId: 'courses',
+          amount: eur(6_000),
+          memberId: 'm-2',
+          paidById: 'm-1',
+        }),
+      ],
+    })
+
+    expect(screen.getByText(t.split.lentLine)).toBeInTheDocument()
+    expect(screen.getByText(out(eur(54_000)))).toBeInTheDocument()
+  })
+
+  /* Qui a avancé plus que sa part reçoit au lieu de verser : le pot d'Alix ne
+     vaut que son assurance de 300 €, sa part 200 €, et le commun lui doit
+     100 €. Le montant garde son signe au lieu de s'annoncer comme une
+     sortie — « 100 € à verser » à qui on doit cette somme serait le
+     contresens exact. */
+  it('rend un solde à qui a avancé plus que sa part', () => {
     mount({ filterOn: 'm-1', entries: [ADVANCED] })
 
     expect(screen.getByText(t.dashboard.memberShare)).toBeInTheDocument()
-    /* Deux fois : en tête, et sur la ligne du report — le virement *est* le
-       report ce mois-ci, et les deux lectures doivent donc coïncider. */
-    expect(screen.getAllByText(eurs(money(-10_000)))).toHaveLength(2)
+    expect(screen.getByText(eurs(money(-10_000)))).toBeInTheDocument()
     expect(screen.queryByText(out(money(10_000)))).not.toBeInTheDocument()
   })
 })

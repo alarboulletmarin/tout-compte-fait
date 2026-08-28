@@ -109,7 +109,7 @@ const fr = {
   monthBody:
     'Le mois s’ouvre seul avec tout ce qui revient. Tu coches ce qui est tombé ; le reste continue de s’afficher comme prévu, sans disparaître de la prévision.',
   splitBody:
-    'Les charges communes se répartissent entre les membres au prorata de leurs revenus, et la somme des parts vaut exactement le total, au centime près. Ce qu’une seule personne a avancé se régularise le mois suivant.',
+    'Les charges communes se répartissent entre les membres au prorata de leurs revenus, et la somme des parts vaut exactement le total, au centime près. Ce qu’une seule personne a avancé se déduit aussitôt de ce qu’elle verse.',
   privacyBody:
     'Pas de compte, pas de serveur, pas de mesure d’audience. Tes données vivent dans ce navigateur, et l’export est la seule porte de sortie — c’est toi qui l’ouvres.',
 
@@ -139,10 +139,10 @@ const fr = {
 
   /* ---- Le calcul, montré ------------------------------------------------ */
 
-  /* La page ne démontrait qu'un écran. Le prorata, la régularisation du mois
-     suivant et la cascade de la capacité d'épargne — c'est-à-dire le meilleur
-     argument du produit — n'y existaient qu'en prose, juste au-dessus, dans
-     `splitBody` et `kindsBody`. Ces deux tuiles-là les montrent, avec les
+  /* La page ne démontrait qu'un écran. Le prorata, la déduction de ce qui a
+     été avancé et la cascade de la capacité d'épargne — c'est-à-dire le
+     meilleur argument du produit — n'y existaient qu'en prose, juste au-dessus,
+     dans `splitBody` et `kindsBody`. Ces deux tuiles-là les montrent, avec les
      composants et le vocabulaire des vrais écrans : la revendication et sa
      démonstration se touchent.
      Le placement est celui-là et pas plus haut : la grille bento dit de quoi
@@ -152,17 +152,12 @@ const fr = {
   proofBody:
     'Le même exemple, du côté du calcul. Un partage entre deux personnes ne se croit pas sur parole : il se vérifie ligne à ligne, et c’est l’écran qui doit le permettre.',
 
-  /* Le libellé de la ligne de report. `t.split.settlement` attend un nom de
-     mois — la vraie tuile le tire du mois affiché —, et cette page n'en a
-     aucun : inventer « juillet 2026 » sur une démonstration daterait la page au
-     premier visiteur d'août. Le mot reste celui du produit. */
-  settlement: 'Régularisation du mois dernier',
-  /* Pourquoi il y a un report à lire. Sans cette phrase, les deux lignes qui
-     s'annulent passent pour une correction inexpliquée. « Avancé » est le mot
+  /* Pourquoi il y a une déduction à lire. Sans cette phrase, la ligne qui se
+     retranche passe pour une correction inexpliquée. « Avancé » est le mot
      du produit (`t.split.advancedBy`), et il évite d'accorder un participe sur
      un prénom dont on ne sait rien. */
   advanced:
-    '%s a avancé %s de charges communes le mois dernier. Chacun en portait sa part : le mois suivant rattrape l’écart, sans changer ce que le mois a coûté à qui que ce soit.',
+    '%s a avancé %s de charges communes ce mois-ci. Chacun en portait sa part : ce qui est déjà réglé se déduit aussitôt du virement, sans changer ce que le mois a coûté à qui que ce soit.',
 
   /* Ce que la cascade démontre, et que le solde du mois ne sait pas dire.
      C'est `kindsBody` rendu vérifiable : la nature décide de ce que devient

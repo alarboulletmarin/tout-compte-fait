@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MonthHeader } from '@/app/MonthHeader'
-import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH } from '@/app/routes'
-import type { YearMonth } from '@/domain/date'
-import { sub, sum } from '@/domain/money'
-import { totalToPay } from '@/domain/split'
+import { RECURRENCES_PATH, RECURRENCE_NEW_PATH, PEOPLE_PATH, entryPath } from '@/app/routes'
+import { abs, neg, sub, sum } from '@/domain/money'
+import { payerOf, totalDue, totalToPay } from '@/domain/split'
 import type { MemberShare } from '@/domain/split'
 import type { Entry, Member } from '@/domain/types'
 import { t } from '@/i18n/strings'
@@ -13,7 +12,6 @@ import {
   formatMoney,
   formatPercent,
   formatSignedMoney,
-  formatYearMonth,
   de,
   enumerate,
   tpl,
@@ -35,6 +33,7 @@ import { Eyebrow } from '@/ui/Eyebrow'
 import { SplitIcon } from '@/ui/Icons'
 import { ListRow } from '@/ui/ListRow'
 import { PageTitle } from '@/ui/PageTitle'
+import { useBackTo } from '@/ui/useBackTo'
 import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
@@ -42,7 +41,7 @@ import { useDisclosureGroup } from '@/ui/useDisclosureGroup'
 /* Les deux sections repliables de l'écran. Nommées, parce qu'elles servent à
    la fois de clé de groupe et de repère de lecture entre leur déclaration et
    leur rendu, à deux cents lignes d'écart. */
-const SETTLEMENT_KEY = 'settlement'
+const ADVANCED_KEY = 'advanced'
 const DETAIL_KEY = 'detail'
 
 
@@ -108,7 +107,7 @@ function missingIncomes(unknown: readonly Member[], unpriced: number, zero: numb
  * d'abord, « À verser » se croit sur parole, et les lignes en dessous ne sont
  * plus qu'une justification qu'on ne lit pas.
  */
-function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearMonth }) {
+function ShareRow({ share }: { share: MemberShare }) {
   const members = useMemberMap()
   const currency = useCurrency()
   const member = members.get(share.memberId)
@@ -134,18 +133,21 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
         </div>
       )}
 
-      {/* Sans report ni remboursement, ces lignes ne disent rien : la part
-          recopierait à l'identique le « À verser » juste dessous, et une
-          régularisation à zéro laisserait croire à un rattrapage là où les
+      {/* Sans avance, prêt ni remboursement, ces lignes ne disent rien : la
+          part recopierait à l'identique le « À verser » juste dessous, et un
+          « Déjà avancé 0,00 € » laisserait croire à une avance là où les
           comptes tombaient justes. */}
-      {(share.adjustment !== 0 || share.refund !== 0) && (
+      {(share.advanced !== 0 ||
+        share.refund !== 0 ||
+        share.lent !== 0 ||
+        share.borrowed !== 0) && (
         <>
           {/* Avec ses centimes, contrairement au revenu : c'est le premier
               terme de la soustraction qu'on lit juste en dessous, et arrondi il
               ne tombe plus juste — « 521 € − 45,60 € » ne fait pas 475,20 €.
               Ces lignes n'existent que pour être vérifiables.
 
-              La part **qui coûte**, report et remboursement d'avance exclus :
+              La part **qui coûte**, avance et remboursement d'avance exclus :
               c'est le montant que la tuile « Perso et commun » du mois annonce,
               au centime, et l'annoncer ici sous un autre nom faisait lire deux
               nombres sans rapport là où il n'y en a qu'un. */}
@@ -164,26 +166,37 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
               <span className="t-axis tnum shrink-0">{formatMoney(share.refund, currency)}</span>
             </div>
           )}
-          {/* À zéro elle laisserait croire à un rattrapage là où les comptes
-              tombaient justes : un remboursement d'avance seul ouvre bien le
-              calcul, mais il ne fait pas apparaître un report qui n'existe
-              pas. */}
-          {share.adjustment !== 0 && (
+          {/* Ce qu'il a déjà réglé de sa poche sur le pot de ce mois : c'est
+              déjà sorti, il ne va pas le payer deux fois — la ligne qui manquait
+              à l'écran, et la raison pour laquelle « À verser » se lisait comme
+              une erreur chez qui venait de régler la facture. */}
+          {share.advanced !== 0 && (
             <div className="flex items-baseline justify-between gap-3">
-              {/* Le libellé passe à la ligne, il ne se tronque pas : c'est lui
-                  qui porte l'argument de la carte, et « Régularisation de
-                  sep… » ne porte plus rien. Le DS §5 tranche le cas — c'est au
-                  format d'être choisi pour le libellé, jamais au libellé d'être
-                  raboté. */}
-              <span className="t-axis min-w-0">
-                {tpl(t.split.settlement, de(formatYearMonth(previousYm)))}
-              </span>
-              {/* Signé, et sans `direction` : ce n'est pas un flux dont on
-                  lirait la valeur absolue, c'est un écart dont le signe est
-                  toute la lecture — la règle qu'applique déjà
+              <span className="t-axis min-w-0">{t.split.advancedLine}</span>
+              {/* Signé, et sans `direction` : c'est le terme qui se retranche,
+                  et le signe est toute la lecture — la règle qu'applique déjà
                   `MemberShareTile`. */}
               <span className="t-axis tnum shrink-0">
-                {formatSignedMoney(share.adjustment, currency)}
+                {formatSignedMoney(neg(share.advanced), currency)}
+              </span>
+            </div>
+          )}
+          {/* La balance entre membres — le geste Tricount : la ligne d'un
+              autre, son argent à lui. L'autre le lui doit, et les deux lignes
+              se compensent d'un membre à l'autre au centime. */}
+          {share.lent !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="t-axis min-w-0">{t.split.lentLine}</span>
+              <span className="t-axis tnum shrink-0">
+                {formatSignedMoney(neg(share.lent), currency)}
+              </span>
+            </div>
+          )}
+          {share.borrowed !== 0 && (
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="t-axis min-w-0">{t.split.borrowedLine}</span>
+              <span className="t-axis tnum shrink-0">
+                {formatSignedMoney(share.borrowed, currency)}
               </span>
             </div>
           )}
@@ -191,15 +204,14 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
       )}
 
       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
-        <span className="t-label">{t.split.due}</span>
-        {/* Une sortie tant que c'en est une, et un solde sinon : un mois sans
-            charge commune ne laisse que le report, et celui qui a tout avancé
-            le mois d'avant reçoit alors au lieu de verser. `direction`
-            afficherait la valeur absolue et la ferait annoncer « sortie » —
-            donc « 282,56 € à verser » à qui on doit cette somme. Le cas
-            ordinaire ne bouge pas d'un pixel ni d'un mot. */}
+        {/* « À recevoir » quand l'avance dépasse la part : le pot lui doit, et
+            annoncer « 282,56 € à verser » à qui on doit cette somme serait le
+            contresens exact. La valeur passe en absolu — le libellé porte déjà
+            le sens, et un montant négatif sous « À recevoir » ferait une double
+            négation. Le cas ordinaire ne bouge pas d'un pixel ni d'un mot. */}
+        <span className="t-label">{share.toPay < 0 ? t.split.toReceive : t.split.due}</span>
         <Amount
-          value={share.toPay}
+          value={abs(share.toPay)}
           size="body"
           {...(share.toPay < 0 ? {} : { direction: 'out' as const })}
         />
@@ -218,7 +230,7 @@ function ShareRow({ share, previousYm }: { share: MemberShare; previousYm: YearM
  * de l'affirmer.
  */
 export function SplitPage() {
-  const { total, entries, shares, unknown, previousYm, advanced } = useMonthSplit()
+  const { total, entries, shares, unknown, advanced } = useMonthSplit()
   const incomes = useMemberIncomes()
   const unassigned = useUnassignedIncomes()
   const members = useMembers()
@@ -226,7 +238,20 @@ export function SplitPage() {
   const categories = useCategoryMap()
   const currency = useCurrency()
   const navigate = useNavigate()
-  const settlement = shares?.some((share) => share.adjustment !== 0) ?? false
+  /* Les tuiles Répartition et « À verser sur le commun » du mois ouvrent cet
+     écran, et la barre d'onglets y allume « Plus » : sans retour, c'était un
+     cul-de-sac. */
+  const back = useBackTo()
+  const fronted = shares?.some((share) => share.advanced !== 0) ?? false
+  /* Un mois sans pot peut quand même porter une balance : Alix a réglé
+     l'abonnement de Camille, et le virement du mois n'est plus que ce
+     remboursement-là. Le taire ferait disparaître de l'écran la seule chose
+     qu'il reste à faire. */
+  const hasBalance =
+    shares?.some(
+      (share) =>
+        share.toPay !== 0 || share.advanced !== 0 || share.lent !== 0 || share.borrowed !== 0,
+    ) ?? false
 
   /* Nommé une fois, rendu à deux endroits : il ouvre la carte des parts quand
      il y en a, et tient seul le mois sans charge commune — où il n'y a pas de
@@ -234,21 +259,22 @@ export function SplitPage() {
   const subtitle = members.length === 1 ? t.split.subtitleSolo : t.split.subtitle
 
   /* Les clés disent ce qui est **rendu**, pas ce que l'écran sait faire : la
-     section du report n'existe que sur un mois qui en porte un. Figées à deux,
-     « tout replier » se serait proposé sur un mois sans report pour refermer
+     section des avances n'existe que sur un mois qui en porte. Figées à deux,
+     « tout replier » se serait proposé sur un mois sans avance pour refermer
      une section absente du DOM — un geste sans effet, ce qui est la seule
      chose qu'un bouton ne doit jamais être. */
-  const showSettlement = settlement && advanced.length > 0
+  const showAdvanced = fronted && advanced.length > 0
   const keys = useMemo(
-    () => (showSettlement ? [SETTLEMENT_KEY, DETAIL_KEY] : [DETAIL_KEY]),
-    [showSettlement],
+    () => (showAdvanced ? [ADVANCED_KEY, DETAIL_KEY] : [DETAIL_KEY]),
+    [showAdvanced],
   )
   const disclosure = useDisclosureGroup(keys, false)
 
-  /** La date, et le nom de qui a avancé la dépense quand il y en a un. */
+  /** La date, et le nom de qui a sorti l'argent quand quelqu'un l'a fait. */
   const metaOf = (entry: Entry): string => {
     const day = formatDayMonthShort(entry.date)
-    const name = entry.memberId === undefined ? undefined : memberMap.get(entry.memberId)?.name
+    const payer = payerOf(entry)
+    const name = payer === undefined ? undefined : memberMap.get(payer)?.name
     return name === undefined ? day : `${day} · ${tpl(t.split.advancedBy, name)}`
   }
 
@@ -264,8 +290,8 @@ export function SplitPage() {
   // où le pot se vérifie ligne à ligne — la tuile « Part du foyer » y mène.
   if (members.length === 0) {
     return (
-      <>
-        <PageTitle title={t.split.title} />
+      <div className="flex flex-col gap-4">
+        <PageTitle title={t.split.title} onBack={back} />
         <EmptyState
           message={t.split.soloTitle}
           actionLabel={t.split.goToSettings}
@@ -273,7 +299,7 @@ export function SplitPage() {
         >
           <p className="t-label max-w-xs">{t.split.soloHint}</p>
         </EmptyState>
-      </>
+      </div>
     )
   }
 
@@ -284,8 +310,8 @@ export function SplitPage() {
       incomes.filter((income) => income.gap === 'zero').length,
     )
     return (
-      <>
-        <PageTitle title={t.split.title} />
+      <div className="flex flex-col gap-4">
+        <PageTitle title={t.split.title} onBack={back} />
         {/* Le mois compte jusque dans cette impasse : les revenus se lisent sur
             le mois affiché, et une récurrence qui démarre le mois prochain
             laisse celui-ci sans répartition. Sans navigation, il fallait
@@ -310,16 +336,19 @@ export function SplitPage() {
             </p>
           )}
         </EmptyState>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <PageTitle title={t.split.title} />
-      {/* L'écran lit `ym` du store — les charges communes, les revenus et le
-          report du mois précédent en dépendent tous — et n'offrait aucun moyen
-          d'en changer : vérifier la répartition de juillet imposait de repasser
+    /* La colonne à gouttière des écrans à retour : la variante à chevron de
+       `PageTitle` ne pose pas de marge basse, c'est la gouttière qui espace —
+       le gabarit de `FlowsPage`. */
+    <div className="flex flex-col gap-4">
+      <PageTitle title={t.split.title} onBack={back} />
+      {/* L'écran lit `ym` du store — les charges communes, les revenus et les
+          avances du mois en dépendent tous — et n'offrait aucun moyen d'en
+          changer : vérifier la répartition de juillet imposait de repasser
           par l'écran du mois. Sans filtre par membre : cet écran montre les
           parts de tout le monde, et n'en garder qu'une le viderait de ce qu'il
           existe pour dire. */}
@@ -345,7 +374,7 @@ export function SplitPage() {
           <span className="t-label mt-1">{t.split.totalHint}</span>
         </Tile>
 
-        {total <= 0 ? (
+        {total <= 0 && !hasBalance ? (
           <>
             <p className="t-label">{subtitle}</p>
             <p className="t-label">{t.split.nothing}</p>
@@ -373,18 +402,31 @@ export function SplitPage() {
 
               <ul className="flex flex-col">
                 {shares.map((share) => (
-                  <ShareRow key={share.memberId} share={share} previousYm={previousYm} />
+                  <ShareRow key={share.memberId} share={share} />
                 ))}
               </ul>
 
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
                 <span className="t-body">{t.split.checkTotal}</span>
-                {/* Ce que chacun verse, report compris : les régularisations
-                    s'annulent d'un membre à l'autre, et la vérification reste
-                    donc vraie au centime — c'est ce qu'elle sert à montrer. */}
-                <Amount value={totalToPay(shares)} size="body" direction="out" />
+                {/* La somme des parts, avances non déduites : c'est elle qui
+                    vaut le pot au centime, et c'est ce que la ligne existe
+                    pour montrer. */}
+                <Amount value={totalDue(shares)} size="body" direction="out" />
               </div>
               <p className="t-label">{t.split.checkHint}</p>
+              {/* La seconde vérification, quand une avance mord : ce qu'il
+                  reste à verser fait le pot moins ce qui est déjà sorti —
+                  sans elle, un total des virements plus petit que le pot se
+                  lirait comme un centime perdu. */}
+              {fronted && (
+                <>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-border pt-3">
+                    <span className="t-body">{t.split.checkTransfers}</span>
+                    <Amount value={totalToPay(shares)} size="body" direction="out" />
+                  </div>
+                  <p className="t-label">{t.split.checkTransfersHint}</p>
+                </>
+              )}
             </Tile>
 
             {/* Le geste des trois autres écrans à listes repliables, au même
@@ -402,21 +444,19 @@ export function SplitPage() {
               </Button>
             </div>
 
-            {/* Le report s'ouvre comme le pot lui-même : une régularisation
-                qu'on ne peut pas vérifier ne se vérifie pas, et c'est celle
-                qu'on discute le plus. */}
-            {showSettlement && (
+            {/* Ce qui a été avancé s'ouvre comme le pot lui-même : une
+                déduction qu'on ne peut pas vérifier ne se vérifie pas, et
+                c'est celle qu'on discute le plus. */}
+            {showAdvanced && (
               <Tile className="p-2! md:p-2!">
                 <Disclosure
-                  open={disclosure.isOpen(SETTLEMENT_KEY)}
+                  open={disclosure.isOpen(ADVANCED_KEY)}
                   onOpenChange={(open) => {
-                    disclosure.setOpen(SETTLEMENT_KEY, open)
+                    disclosure.setOpen(ADVANCED_KEY, open)
                   }}
                   title={
                     <span className="flex min-w-0 items-baseline gap-2">
-                      <span className="t-body truncate">
-                        {tpl(t.split.settlementDetail, formatYearMonth(previousYm))}
-                      </span>
+                      <span className="t-body truncate">{t.split.advancedDetail}</span>
                       <span className="t-axis shrink-0">
                         {tpl(
                           advanced.length > 1 ? t.split.detailCount : t.split.detailCountOne,
@@ -436,11 +476,17 @@ export function SplitPage() {
                   <ul className="flex flex-col">
                     {advanced.map((entry) => (
                       <li key={entry.id}>
+                        {/* La porte vers la fiche, comme sur toute ligne qui
+                            montre une entrée : une avance mal saisie se
+                            corrige là où elle s'est écrite. */}
                         <ListRow
                           color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
                           label={entry.label}
                           meta={metaOf(entry)}
                           trailing={<Amount value={entry.amount} direction="out" />}
+                          onClick={() => {
+                            void navigate(entryPath(entry.id))
+                          }}
                         />
                       </li>
                     ))}
@@ -449,8 +495,8 @@ export function SplitPage() {
                       sans quoi ces deux phrases se posent 12px à gauche des
                       rangées qu'elles commentent. Même geste que
                       `MonthCompare.tsx:271`. */}
-                  <p className="t-label mt-2 px-3">{t.split.settlementHint}</p>
-                  <p className="t-label px-3">{t.split.settlementNotACost}</p>
+                  <p className="t-label mt-2 px-3">{t.split.advancedHint}</p>
+                  <p className="t-label px-3">{t.split.advancedNotACost}</p>
                 </Disclosure>
               </Tile>
             )}
@@ -479,12 +525,18 @@ export function SplitPage() {
                 <ul className="flex flex-col">
                   {entries.map((entry) => (
                     <li key={entry.id}>
+                      {/* Une dépense qui n'a rien à faire dans le pot se
+                          repère en la voyant — et se corrige d'un appui, sans
+                          repasser par l'écran du mois. */}
                       <ListRow
                         color={categories.get(entry.categoryId)?.color ?? 'var(--cat-rest)'}
                         label={entry.label}
                         meta={metaOf(entry)}
                         planned={entry.status === 'planned'}
                         trailing={<Amount value={entry.amount} direction="out" />}
+                        onClick={() => {
+                          void navigate(entryPath(entry.id))
+                        }}
                       />
                     </li>
                   ))}
@@ -499,6 +551,7 @@ export function SplitPage() {
           <Eyebrow>{t.split.method}</Eyebrow>
           <p className="t-body mt-1">{t.split.methodFormula}</p>
           <p className="t-label">{t.split.methodIncome}</p>
+          <p className="t-label">{t.split.methodMonthOverride}</p>
           <p className="t-label">{t.split.methodVariable}</p>
           <ul className="flex list-disc flex-col gap-1 pl-5">
             <li className="t-label">{t.split.methodIncluded}</li>
@@ -510,10 +563,11 @@ export function SplitPage() {
               peut pas déduire des deux puces au-dessus, et la seule qui
               explique qu'un virement dépasse ce que le mois a coûté. */}
           <p className="t-label">{t.split.methodAdvance}</p>
+          <p className="t-label">{t.split.methodPaidBy}</p>
         </Tile>
 
         <p className="sr-only-text">{formatMoney(total, currency)}</p>
       </div>
-    </>
+    </div>
   )
 }

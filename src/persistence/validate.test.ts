@@ -129,6 +129,42 @@ describe('les liens qui ne mènent nulle part', () => {
     expect(reasons(notices)).toEqual(['unknownMember'])
   })
 
+  it('coupe le « réglé par » qui ne désigne personne, et garde l’autre', () => {
+    const document = raw(
+      makeData({
+        household: { name: '', members: [{ id: 'm-1', name: 'Alix', color: 'c' }, { id: 'm-2', name: 'Camille', color: 'c' }] },
+        categories: [makeCategory({ id: 'courses' })],
+        entries: [
+          makeEntry({ id: 'e1', categoryId: 'courses', memberId: 'm-2', paidById: 'fantôme', date: '2026-07-05' }),
+          makeEntry({ id: 'e2', categoryId: 'courses', memberId: 'm-2', paidById: 'm-1', date: '2026-07-06' }),
+        ],
+      }),
+    )
+    const { data, notices } = normalizeDocument(document)
+
+    // Réglée par quelqu'un qui n'est plus du foyer : le lien se coupe, la
+    // ligne reste — même geste que le membre.
+    expect(data.entries[0]).not.toHaveProperty('paidById')
+    expect(data.entries[1]?.paidById).toBe('m-1')
+    expect(reasons(notices)).toEqual(['unknownMember'])
+  })
+
+  it('ne garde pas un « réglé par » égal au membre : une exception, jamais une copie', () => {
+    const document = raw(
+      makeData({
+        household: { name: '', members: [{ id: 'm-1', name: 'Alix', color: 'c' }] },
+        categories: [makeCategory({ id: 'courses' })],
+        entries: [
+          makeEntry({ id: 'e1', categoryId: 'courses', memberId: 'm-1', paidById: 'm-1', date: '2026-07-05' }),
+        ],
+      }),
+    )
+    const { data, notices } = normalizeDocument(document)
+
+    expect(data.entries[0]).not.toHaveProperty('paidById')
+    expect(notices).toEqual([])
+  })
+
   it('coupe le lien d’une entrée vers une récurrence absente', () => {
     const document = raw(
       makeData({

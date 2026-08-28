@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ADVANCES_PATH } from '@/app/routes'
 import { monthlyInstalment, monthsCovered } from '@/domain/advance'
 import { type ISODate, type YearMonth, currentYm, today, ymOf } from '@/domain/date'
@@ -19,6 +19,7 @@ import { Tile } from '@/ui/Tile'
 import { useCurrency } from '@/ui/currency'
 import { toast } from '@/ui/toast'
 import { useLeaveGuard } from '@/ui/useLeaveGuard'
+import { useBackTo } from '@/ui/useBackTo'
 
 type Draft = {
   label: string
@@ -67,7 +68,6 @@ export function AdvanceFormPage() {
   const supports = useActiveSavingSupports()
   const currency = useCurrency()
   const navigate = useNavigate()
-  const location = useLocation()
   const [draft, setDraft] = useState<Draft>(defaultDraft)
   const [showErrors, setShowErrors] = useState(false)
 
@@ -95,10 +95,7 @@ export function AdvanceFormPage() {
     })
   }
 
-  const back = (): void => {
-    if (location.key === 'default') void navigate(ADVANCES_PATH)
-    else void navigate(-1)
-  }
+  const back = useBackTo(ADVANCES_PATH)
 
   const guard = useLeaveGuard(draft, back)
 

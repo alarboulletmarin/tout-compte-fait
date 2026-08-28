@@ -211,7 +211,10 @@ describe('les repères', () => {
   it('en donne un aussi à la rangée qui ne mène nulle part', () => {
     open()
 
-    const row = screen.getByText(t.settings.currency).closest('div')
+    /* Le contrôle vit *sous* la ligne du libellé depuis que la rangée l'y a
+       descendu (`Row`, branche `control`) : le `div` le plus proche du libellé
+       n'est que cette ligne-là, et la rangée entière est son parent. */
+    const row = screen.getByText(t.settings.currency).closest('div')?.parentElement
     const control = row?.querySelector('select')?.parentElement
     expect(control?.querySelectorAll('svg')).toHaveLength(1)
     // Le repère et ce chevron-là, et rien d'autre : la rangée n'est pas un lien.
