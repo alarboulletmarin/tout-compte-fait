@@ -50,6 +50,16 @@ export function Detail() {
               <span className="detail__result">{t.detail.toJoint}</span>
               <span className="num detail__result-amount">{euros(split.toJoint[i])}</span>
             </div>
+            {split.reimbursement?.from === i && (
+              <div className="between between--baseline">
+                <span className="detail__result">
+                  {t.detail.directly(names[split.reimbursement.to])}
+                </span>
+                <span className="num detail__result-amount">
+                  {euros(split.reimbursement.amount)}
+                </span>
+              </div>
+            )}
           </section>
         )
       })}

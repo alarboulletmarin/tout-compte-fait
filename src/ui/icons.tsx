@@ -97,3 +97,17 @@ export const SettingsIcon = () => (
     <circle cx="8" cy="17" r="2" />
   </Svg>
 )
+
+export const WarningIcon = () => (
+  <Svg size={16} stroke={1.8}>
+    <path d="M12 3l10 18H2z" />
+    <path d="M12 10v4M12 17h.01" />
+  </Svg>
+)
+
+export const InfoIcon = () => (
+  <Svg size={18} stroke={1.6}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 8h.01" />
+  </Svg>
+)

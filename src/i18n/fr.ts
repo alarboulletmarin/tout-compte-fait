@@ -10,6 +10,27 @@ export const fr = {
   saveError: 'Enregistrement impossible sur cet appareil',
   loadError: 'Les données de cet appareil sont illisibles.',
   undo: 'Annuler',
+  equalFallback: {
+    zero: 'Un revenu est à',
+    missing: "Un revenu n'est pas renseigné",
+    rest: ' : la répartition passe à ',
+    end: ' en attendant.',
+  },
+  // Charges courantes proposées à l'onboarding et dans la liste vide
+  examples: [
+    { label: 'Loyer', categoryId: 'housing' },
+    { label: 'Électricité', categoryId: 'energy' },
+    { label: 'Gaz', categoryId: 'energy' },
+    { label: 'Eau', categoryId: 'water' },
+    { label: 'Internet', categoryId: 'telecom' },
+    { label: 'Assurance habitation', categoryId: 'insurance' },
+  ],
+  errors: {
+    amount: 'Indiquez un montant supérieur à 0 €',
+    label: 'Donnez un nom à cette charge',
+    income: 'Indiquez un montant valide, par exemple 2 300,00 €',
+    importFailed: "Ce fichier n'est pas un export Tout Compte Fait, ou il est endommagé.",
+  },
 
   nav: {
     label: 'Navigation principale',
@@ -28,6 +49,18 @@ export const fr = {
     paidDirect: 'Payé en direct',
     fromPersonal: 'depuis les comptes perso',
     seeDetail: 'Voir le détail du calcul',
+    titleNegative: "Ce qu'il faut virer",
+    nothing: 'Rien à virer',
+    alreadyMore: (name: string) => `${name} paie déjà plus que sa part depuis son compte.`,
+    onJoint: 'sur le joint',
+    directly: (name: string) => `à ${name}, directement`,
+    explainPays: (name: string) => `${name} paie `,
+    explainShare: ' depuis son compte. Sa part est de ',
+    explainEnd: (other: string) => ` : ${other} lui rembourse la différence.`,
+    emptyTitle: "Rien à virer pour l'instant",
+    emptyText:
+      'Ajoutez vos charges fixes : loyer, énergie, abonnements. Vous saurez aussitôt combien chacun vire sur le compte joint.',
+    emptyAdd: 'Ajouter une charge',
   },
 
   detail: {
@@ -40,6 +73,30 @@ export const fr = {
     toJoint: 'À virer sur le joint',
     together: 'Ensemble',
     togetherEnd: ', soit les charges payées par le joint',
+    directly: (name: string) => `À ${name}, directement`,
+  },
+
+  onboarding: {
+    step: (n: number) => `${n} / 2`,
+    title1: 'Qui vit dans ce foyer ?',
+    intro1: 'Deux prénoms et vos revenus nets. Les parts au prorata se calculent tout de suite.',
+    person: (n: number) => `Personne ${n}`,
+    firstName: 'Prénom',
+    income: 'Revenu net mensuel',
+    placeholders: ['Ex. Alex', 'Ex. Sam'],
+    local: 'Tout reste sur cet appareil. Aucun compte à créer.',
+    next: 'Continuer',
+    import: "J'ai déjà un fichier : importer",
+    title2: 'Vos premières charges',
+    intro2: 'Cochez, indiquez le montant mensuel et le compte qui paie. Tout reste modifiable.',
+    paidFrom: 'Payé depuis :',
+    jointAccount: 'Compte joint',
+    amountOf: (label: string) => `Montant ${label}`,
+    paidFromJoint: 'Payé depuis le joint',
+    paidFromMember: (name: string) => `Payé depuis ${name}`,
+    onJoint: 'sur le joint',
+    finish: 'Voir les virements',
+    skip: 'Passer cette étape',
   },
 
   charges: {
@@ -59,6 +116,10 @@ export const fr = {
       string
     >,
     deleted: (label: string) => `${label} supprimée`,
+    examples: 'Exemples courants',
+    addExample: (label: string) => `Ajouter ${label}`,
+    empty:
+      'Aucune charge. Touchez un exemple ou « Ajouter », puis précisez depuis quel compte elle est payée.',
   },
 
   form: {

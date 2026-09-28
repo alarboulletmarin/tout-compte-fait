@@ -1,11 +1,12 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
-import { Redirect, useLocation } from 'wouter'
+import { Redirect, useLocation, useSearch } from 'wouter'
 import { computeSplit, MONTHS } from '../domain/split'
 import { memberAccount, type AccountRef, type Charge, type Frequency } from '../domain/types'
 import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { TrashIcon } from '../ui/icons'
+import { FieldError } from '../ui/Notes'
 import { FormHeader } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { Sheet } from '../ui/Sheet'
@@ -23,7 +24,12 @@ export function ChargeForm({ id }: { id?: string }) {
 
 function Form({ existing }: { existing?: Charge }) {
   const { t, euros } = useI18n()
-  const { update } = useStore()
+  const { data, update } = useStore()
+  // Exemple choisi dans la liste vide : libellé et catégorie pré-remplis
+  const example = t.examples[Number(new URLSearchParams(useSearch()).get('example') ?? -1)]
+  const exampleCategory = data.categories.some((c) => c.id === example?.categoryId)
+    ? (example?.categoryId ?? null)
+    : null
   const names = useNames()
   const [, navigate] = useLocation()
   const ids = useId()
@@ -31,18 +37,22 @@ function Form({ existing }: { existing?: Charge }) {
   const labelRef = useRef<HTMLInputElement>(null)
 
   const [amountText, setAmountText] = useState(existing ? euros(existing.amount) : '')
-  const [label, setLabel] = useState(existing?.label ?? '')
+  const [label, setLabel] = useState(existing?.label ?? example?.label ?? '')
   const [frequency, setFrequency] = useState<Frequency>(existing?.frequency ?? 'monthly')
   const [paidFrom, setPaidFrom] = useState<AccountRef>(existing?.paidFrom ?? 'joint')
-  const [categoryId, setCategoryId] = useState(existing?.categoryId ?? null)
+  const [categoryId, setCategoryId] = useState(existing ? existing.categoryId : exampleCategory)
   const [deleting, setDeleting] = useState(false)
+  // Les erreurs n'apparaissent qu'après une première tentative, puis suivent la saisie
+  const [submitted, setSubmitted] = useState(false)
 
   const amount = parseEuros(amountText)
   const valid = amount !== null && amount > 0
+  const amountError = submitted && !valid
+  const labelError = submitted && !label.trim()
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    // ponytail: on se contente de placer le focus ; les messages d'erreur arrivent en phase 4
+    setSubmitted(true)
     if (!valid) return amountRef.current?.focus()
     if (!label.trim()) return labelRef.current?.focus()
     const charge: Charge = {
@@ -69,7 +79,7 @@ function Form({ existing }: { existing?: Charge }) {
     <form className="screen charge-form" onSubmit={submit} noValidate>
       <FormHeader title={existing ? t.form.editTitle : t.form.newTitle} close="/charges" />
 
-      <div className="charge-form__fields">
+      <div className={`charge-form__fields${submitted ? ' charge-form__fields--checked' : ''}`}>
         <div className="field">
           <label htmlFor={`${ids}-amount`} className="field__label">
             {t.form.amount}
@@ -84,7 +94,10 @@ function Form({ existing }: { existing?: Charge }) {
             value={amountText}
             onChange={(e) => setAmountText(e.target.value)}
             onBlur={() => amount !== null && setAmountText(euros(amount))}
+            aria-invalid={amountError}
+            aria-describedby={amountError ? `${ids}-amount-error` : undefined}
           />
+          {amountError && <FieldError id={`${ids}-amount-error`}>{t.errors.amount}</FieldError>}
         </div>
 
         <div className="field">
@@ -99,7 +112,10 @@ function Form({ existing }: { existing?: Charge }) {
             placeholder={t.form.labelPlaceholder}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
+            aria-invalid={labelError}
+            aria-describedby={labelError ? `${ids}-label-error` : undefined}
           />
+          {labelError && <FieldError id={`${ids}-label-error`}>{t.errors.label}</FieldError>}
         </div>
 
         <fieldset className="fieldset">

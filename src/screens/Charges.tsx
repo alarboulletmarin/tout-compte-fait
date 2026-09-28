@@ -23,8 +23,12 @@ export function Charges() {
     <TabScreen kicker={t.charges.kicker} className="charges">
       <div className="stack stack--6">
         <h1 className="lead">{t.charges.total}</h1>
-        <div className="num amount-xl">{euros(split.total)}</div>
+        <div className={`num amount-xl${data.charges.length === 0 ? ' amount-xl--muted' : ''}`}>
+          {euros(split.total)}
+        </div>
       </div>
+
+      {data.charges.length === 0 && <Empty />}
 
       {accounts.map(([account, title, subtotal]) => {
         const charges = data.charges.filter((c) => c.paidFrom === account)
@@ -54,6 +58,40 @@ export function Charges() {
         {t.charges.add}
       </Link>
     </TabScreen>
+  )
+}
+
+function Empty() {
+  const { t } = useI18n()
+  return (
+    <>
+      <section className="stack stack--10" aria-labelledby="examples-title">
+        <h2 id="examples-title" className="caption-13 examples__title">
+          {t.charges.examples}
+        </h2>
+        <div className="chips chips--8">
+          {t.examples.map((example, index) => (
+            <Link
+              key={example.label}
+              href={`/charges/new?example=${index}`}
+              className="chip chip--new chip--example"
+              aria-label={t.charges.addExample(example.label)}
+            >
+              <span aria-hidden="true">+</span>
+              {example.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+      <div className="charges__empty">
+        <div className="ghosts ghosts--small" aria-hidden="true">
+          <span className="ghost ghost--member1" />
+          <span className="ghost ghost--joint" />
+          <span className="ghost ghost--member2" />
+        </div>
+        <p>{t.charges.empty}</p>
+      </div>
+    </>
   )
 }
 

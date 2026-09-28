@@ -1,11 +1,13 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import { memberAccount, type Member, type MemberIndex } from '../domain/types'
-import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
+import { FieldError } from '../ui/Notes'
 import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
+import { useMoneyInput } from '../ui/useMoneyInput'
 import { MEMBERS } from './common'
+import { EqualFallbackNote } from './EqualFallbackNote'
 
 export function Household() {
   const { t, euros } = useI18n()
@@ -21,6 +23,7 @@ export function Household() {
       {MEMBERS.map((i) => (
         <MemberCard key={i} index={i} />
       ))}
+      <EqualFallbackNote />
       <div className="between between--baseline household__total">
         <span>{t.household.total}</span>
         <span className="num">{euros(total)}</span>
@@ -30,11 +33,10 @@ export function Household() {
 }
 
 function MemberCard({ index }: { index: MemberIndex }) {
-  const { t, euros, share } = useI18n()
+  const { t, share } = useI18n()
   const { data, split, update } = useStore()
   const member = data.household.members[index]
   const ids = useId()
-  const [incomeText, setIncomeText] = useState(member.income === null ? '' : euros(member.income))
 
   const setMember = (patch: Partial<Member>) =>
     update((d) => {
@@ -43,15 +45,7 @@ function MemberCard({ index }: { index: MemberIndex }) {
       return { ...d, household: { members } }
     })
 
-  function changeIncome(text: string) {
-    setIncomeText(text)
-    // ponytail: une saisie illisible est ignorée en silence ; les messages arrivent en phase 4
-    if (text.trim() === '') setMember({ income: null })
-    else {
-      const cents = parseEuros(text)
-      if (cents !== null) setMember({ income: cents })
-    }
-  }
+  const income = useMoneyInput(member.income, (cents) => setMember({ income: cents }))
 
   return (
     <section className="card member-card" aria-label={member.name || t.memberFallback(index)}>
@@ -81,10 +75,13 @@ function MemberCard({ index }: { index: MemberIndex }) {
           className="input num"
           inputMode="decimal"
           autoComplete="off"
-          value={incomeText}
-          onChange={(e) => changeIncome(e.target.value)}
-          onBlur={() => member.income !== null && setIncomeText(euros(member.income))}
+          value={income.text}
+          onChange={(e) => income.onChange(e.target.value)}
+          onBlur={income.onBlur}
+          aria-invalid={income.invalid}
+          aria-describedby={income.invalid ? `${ids}-income-error` : undefined}
         />
+        {income.invalid && <FieldError id={`${ids}-income-error`}>{t.errors.income}</FieldError>}
       </div>
     </section>
   )

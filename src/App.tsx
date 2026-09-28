@@ -6,9 +6,10 @@ import { ChargeForm } from './screens/ChargeForm'
 import { Charges } from './screens/Charges'
 import { Detail } from './screens/Detail'
 import { Household } from './screens/Household'
+import { Onboarding } from './screens/Onboarding'
 import { Settings } from './screens/Settings'
 import { Transfers } from './screens/Transfers'
-import { StoreProvider } from './storage/store'
+import { StoreProvider, useStore } from './storage/store'
 import { ToastProvider, useToast } from './ui/Toast'
 
 export function App() {
@@ -36,9 +37,11 @@ function Store() {
 
 function Routes() {
   const [location] = useLocation()
+  const { fresh } = useStore()
   // Chaque écran s'ouvre en haut de page
   useEffect(() => window.scrollTo(0, 0), [location])
 
+  if (fresh) return <Onboarding />
   return (
     <Switch>
       <Route path="/" component={Transfers} />
