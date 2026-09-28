@@ -1,22 +1,28 @@
 import { useCallback, useEffect } from 'react'
 import { Redirect, Route, Switch, useLocation } from 'wouter'
-import { useI18n } from './i18n/i18n'
+import { I18nProvider, useI18n } from './i18n/i18n'
 import { Categories } from './screens/Categories'
 import { ChargeForm } from './screens/ChargeForm'
 import { Charges } from './screens/Charges'
 import { Detail } from './screens/Detail'
 import { Household } from './screens/Household'
+import { InstallHint } from './screens/InstallHint'
+import { News } from './screens/News'
 import { Onboarding } from './screens/Onboarding'
 import { Settings } from './screens/Settings'
 import { Transfers } from './screens/Transfers'
 import { StoreProvider, useStore } from './storage/store'
 import { ToastProvider, useToast } from './ui/Toast'
+import { UpdatePrompt } from './ui/UpdatePrompt'
 
 export function App() {
   return (
-    <ToastProvider>
-      <Store />
-    </ToastProvider>
+    <I18nProvider>
+      <ToastProvider>
+        <UpdatePrompt />
+        <Store />
+      </ToastProvider>
+    </I18nProvider>
   )
 }
 
@@ -43,6 +49,15 @@ function Routes() {
 
   if (fresh) return <Onboarding />
   return (
+    <>
+      <InstallHint />
+      <Screens />
+    </>
+  )
+}
+
+function Screens() {
+  return (
     <Switch>
       <Route path="/" component={Transfers} />
       <Route path="/detail" component={Detail} />
@@ -52,6 +67,7 @@ function Routes() {
       <Route path="/household" component={Household} />
       <Route path="/settings" component={Settings} />
       <Route path="/settings/categories" component={Categories} />
+      <Route path="/settings/news" component={News} />
       <Route>
         <Redirect to="/" replace />
       </Route>

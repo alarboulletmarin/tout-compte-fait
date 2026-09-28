@@ -255,6 +255,7 @@ p {
   align-items: center;
   justify-content: center;
   height: 52px;
+  padding-block: 0; /* marge des boutons du navigateur, comptée en content-box */
   border: 0;
   border-radius: 12px;
   font-size: 15px;
@@ -482,6 +483,10 @@ p {
 }
 .sheet::backdrop {
   background: var(--overlay);
+}
+/* La page ne défile pas sous une feuille ouverte */
+html:has(.sheet[open]) {
+  overflow: hidden;
 }
 .sheet__body {
   display: flex;
@@ -1247,4 +1252,184 @@ p {
 }
 .onboarding__foot .button-plain {
   min-height: 44px;
+}
+
+/* ---------- Réglages ---------- */
+
+.segmented--padded {
+  padding: 10px;
+}
+button.group__row {
+  /* Étirée par la colonne flex du groupe, comme un lien : 52 px plus la bordure */
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+/* border: 0 du bouton efface le séparateur : on le rétablit */
+.group > * + button.group__row {
+  border-top: 1px solid var(--line);
+}
+.group__row--danger {
+  color: var(--danger);
+}
+.settings__promise {
+  margin: 0 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------- Boutons des feuilles ---------- */
+
+.button--secondary {
+  box-sizing: content-box; /* liens dans les maquettes : la bordure s'ajoute aux 52 px */
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.button--icon {
+  gap: 8px;
+}
+.button-plain--44,
+.sheet .button-plain {
+  min-height: 44px;
+}
+
+/* ---------- Import ---------- */
+
+.file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.file-card svg {
+  flex-shrink: 0;
+}
+.file-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.file-card__name {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-card__meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.sheet__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.sheet__error svg {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+.sheet__error p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---------- Récap ---------- */
+
+.transfers__recap {
+  margin-top: -16px;
+}
+.recap {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ---------- Nouveautés ---------- */
+
+.news {
+  padding: 8px 24px 0;
+}
+.release {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 0;
+}
+.release__version {
+  font-size: 16px;
+  font-weight: 500;
+}
+.release__date {
+  font-size: 13px;
+  color: var(--muted);
+}
+.release__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.release__items li {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.release__bullet {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  margin-top: 8px;
+  background: var(--ink);
+  transform: rotate(45deg);
+}
+
+/* ---------- Installation sur iPhone ---------- */
+
+.install__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.install__steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.install__number {
+  width: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.install__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.install__ok {
+  font-size: 13px;
+  font-weight: 600;
 }

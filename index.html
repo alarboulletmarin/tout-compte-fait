@@ -8,6 +8,13 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Tout compte fait</title>
+    <script>
+      // Thème forcé appliqué avant le premier rendu, sans flash
+      try {
+        var theme = localStorage.getItem('tcf-theme')
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

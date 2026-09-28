@@ -13,13 +13,12 @@ import {
 import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
-import { parseExport } from '../storage/transfer'
 import { CheckIcon } from '../ui/icons'
 import { FieldError } from '../ui/Notes'
 import { Shape } from '../ui/Shape'
-import { useToast } from '../ui/Toast'
 import { useMoneyInput } from '../ui/useMoneyInput'
 import { MEMBERS } from './common'
+import { useImportFlow } from './DataSheets'
 
 const ACCOUNTS: AccountRef[] = ['joint', 'member1', 'member2']
 
@@ -82,6 +81,8 @@ function People(props: {
   onNext: () => void
 }) {
   const { t } = useI18n()
+  // Rien à remplacer au premier lancement : pas de confirmation
+  const importFlow = useImportFlow({ confirm: false })
   const [invalid, setInvalid] = useState<[boolean, boolean]>([false, false])
 
   const setMember = (index: MemberIndex, patch: Partial<Member>) => {
@@ -121,7 +122,10 @@ function People(props: {
         <button type="button" className="button button--primary" onClick={next}>
           {t.onboarding.next}
         </button>
-        <ImportLink />
+        <button type="button" className="button-link onboarding__import" onClick={importFlow.pick}>
+          {t.onboarding.import}
+        </button>
+        {importFlow.element}
       </div>
     </div>
   )
@@ -335,42 +339,5 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
         </button>
       </div>
     </div>
-  )
-}
-
-/** Importer un export : rien à remplacer au premier lancement, donc pas de confirmation. */
-function ImportLink() {
-  const { t } = useI18n()
-  const { update } = useStore()
-  const toast = useToast()
-  const [, navigate] = useLocation()
-  const input = useRef<HTMLInputElement>(null)
-
-  async function load(file: File | undefined) {
-    if (!file) return
-    // ponytail: message dans un toast ; l'écran « Import impossible » arrive en phase 5
-    const result = parseExport(await file.text())
-    if (!result.ok) return toast({ message: t.errors.importFailed })
-    update(() => result.file.data)
-    navigate('/', { replace: true })
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        className="button-link onboarding__import"
-        onClick={() => input.current?.click()}
-      >
-        {t.onboarding.import}
-      </button>
-      <input
-        ref={input}
-        type="file"
-        accept="application/json,.json"
-        hidden
-        onChange={(e) => load(e.target.files?.[0])}
-      />
-    </>
   )
 }

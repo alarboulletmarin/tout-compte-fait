@@ -111,3 +111,23 @@ export const InfoIcon = () => (
     <path d="M12 11v5M12 8h.01" />
   </Svg>
 )
+
+export const FileIcon = () => (
+  <Svg size={22} stroke={1.5}>
+    <path d="M14 3H6v18h12V7z" />
+    <path d="M14 3v4h4" />
+  </Svg>
+)
+
+export const ShareIcon = () => (
+  <Svg size={18} stroke={1.6}>
+    <path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6" />
+  </Svg>
+)
+
+export const AddToHomeIcon = () => (
+  <Svg size={18} stroke={1.6}>
+    <rect x="4" y="4" width="16" height="16" rx="3" />
+    <path d="M12 8v8M8 12h8" />
+  </Svg>
+)

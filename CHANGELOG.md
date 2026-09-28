@@ -1,5 +1,9 @@
 # Changelog
 
-## Non publié
+## 1.0.0 — à paraître
 
-- Refonte complète : l'app ne fait plus qu'une chose, répartir les charges fixes du foyer et dire à chacun combien virer sur le compte joint.
+- Répartition des charges fixes au prorata des revenus nets
+- Montant exact à virer sur le compte joint, et le détail du calcul
+- Remboursement direct quand l'un paie déjà plus que sa part
+- Envoi du récap par message
+- Export et import de vos données, sans compte ni cloud

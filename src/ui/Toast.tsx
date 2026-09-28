@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 interface Toast {
   message: string
   action?: { label: string; run: () => void }
+  /** Reste affiché jusqu'à l'action (mise à jour disponible). */
+  persistent?: boolean
 }
 
 const DURATION = 8000
@@ -16,7 +18,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((next: Toast) => setToast({ ...next, id: Date.now() }), [])
 
   useEffect(() => {
-    if (!toast || held) return
+    if (!toast || held || toast.persistent) return
     const timer = setTimeout(() => setToast(null), DURATION)
     return () => clearTimeout(timer)
   }, [toast, held])

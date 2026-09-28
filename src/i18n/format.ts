@@ -2,6 +2,8 @@
 
 export type Locale = 'fr-FR' | 'en-GB'
 
+export const LOCALES: readonly Locale[] = ['fr-FR', 'en-GB']
+
 export function formatEuros(cents: number, locale: Locale): string {
   // Espace fine insécable → insécable : Geist n'a pas de glyphe pour U+202F
   return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })

@@ -169,8 +169,87 @@ export const fr = {
 
   settings: {
     kicker: 'Réglages',
+    theme: 'Thème',
+    themes: { system: 'Système', light: 'Clair', dark: 'Sombre' },
+    language: 'Langue',
     organisation: 'Organisation',
     categories: 'Catégories',
+    data: 'Données',
+    export: 'Exporter',
+    exportHint: 'fichier .json',
+    import: 'Importer',
+    sendTo: 'Envoyer vers…',
+    erase: 'Tout effacer',
+    about: 'À propos',
+    news: 'Nouveautés',
+    source: 'Code source',
+    licence: 'Licence',
+    newTab: '(nouvel onglet)',
+    promise: 'Gratuit, sans compte, sans pistage. Vos données restent sur cet appareil.',
+    exported: 'Export enregistré',
+  },
+
+  importSheet: {
+    title: 'Remplacer vos données ?',
+    summary: (date: string, charges: string, names: string) =>
+      `Exporté le ${date} · ${charges} · ${names}`,
+    names: (a: string, b: string) => `${a} et ${b}`,
+    warning:
+      "Vos revenus, prénoms et charges actuels seront remplacés par ceux du fichier. C'est définitif.",
+    replace: 'Remplacer',
+    exportFirst: "Exporter d'abord mes données",
+    cancel: 'Annuler',
+    replaced: 'Données importées',
+    errorTitle: 'Import impossible',
+    errorKept: "Vos données actuelles n'ont pas été modifiées.",
+    another: 'Choisir un autre fichier',
+    close: 'Fermer',
+  },
+
+  eraseSheet: {
+    title: 'Tout effacer ?',
+    text: (charges: string) =>
+      `Les revenus, les prénoms et ${charges} seront supprimés de cet appareil. Rien n'est gardé ailleurs : c'est définitif.`,
+    charges: (n: number) =>
+      n === 0 ? 'les catégories' : n === 1 ? 'la charge' : `les ${n} charges`,
+    confirm: 'Tout effacer',
+  },
+
+  recap: {
+    open: 'Envoyer le récap',
+    title: 'Envoyer le récap',
+    heading: 'Tout Compte Fait · chaque mois',
+    toJoint: (name: string, amount: string) => `${name} : ${amount} sur le joint`,
+    nothing: (name: string) => `${name} : rien à virer`,
+    both: (name: string, joint: string, other: string, amount: string) =>
+      `${name} : ${joint} sur le joint + ${amount} à ${other}`,
+    direct: (name: string, other: string, amount: string) => `${name} : ${amount} à ${other}`,
+    total: (amount: string) => `Total : ${amount} (charges du joint)`,
+    hint: "S'ouvre avec vos applis habituelles : Messages, WhatsApp, e-mail…",
+    share: 'Partager…',
+    copy: 'Copier le texte',
+    copied: 'Texte copié',
+    copyFailed: 'Copie impossible : sélectionnez le texte à la main',
+  },
+
+  news: {
+    title: 'Nouveautés',
+    back: 'Retour aux réglages',
+  },
+
+  update: {
+    available: 'Nouvelle version disponible',
+    reload: 'Recharger',
+  },
+
+  install: {
+    title: "Installer sur l'iPhone",
+    intro: 'Hors ligne, en plein écran, comme une vraie app.',
+    step1: ['Touchez ', 'Partager', ' dans la barre de Safari'],
+    step2: ['Choisissez ', "Sur l'écran d'accueil", ''],
+    step3: ['Touchez ', 'Ajouter', ''],
+    ok: "J'ai compris",
+    never: 'Ne plus afficher',
   },
 
   categories: {

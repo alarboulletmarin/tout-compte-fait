@@ -1,20 +1,23 @@
+import { useState } from 'react'
 import { Link } from 'wouter'
 import type { Split } from '../domain/split'
 import { memberAccount } from '../domain/types'
 import { sharePercents } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
-import { ArrowRightIcon, CheckIcon, PlusIcon } from '../ui/icons'
+import { ArrowRightIcon, CheckIcon, PlusIcon, ShareIcon } from '../ui/icons'
 import { InfoNote } from '../ui/Notes'
 import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
 import { MEMBERS, useNames } from './common'
 import { EqualFallbackNote } from './EqualFallbackNote'
+import { RecapSheet } from './RecapSheet'
 
 export function Transfers() {
   const { t } = useI18n()
   const { data, split } = useStore()
+  const [recap, setRecap] = useState(false)
 
   if (data.charges.length === 0) {
     return (
@@ -35,6 +38,15 @@ export function Transfers() {
         <span>{t.transfers.seeDetail}</span>
         <ArrowRightIcon />
       </Link>
+      <button
+        type="button"
+        className="button button--primary button--icon transfers__recap"
+        onClick={() => setRecap(true)}
+      >
+        <ShareIcon />
+        {t.recap.open}
+      </button>
+      <RecapSheet open={recap} onClose={() => setRecap(false)} />
     </TabScreen>
   )
 }
