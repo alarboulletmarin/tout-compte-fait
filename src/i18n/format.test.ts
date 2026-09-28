@@ -54,6 +54,29 @@ describe('parseEuros', () => {
     },
   )
 
+  it.each([
+    ['€1,431.29', 143129],
+    ['1,431.29', 143129],
+    ['1,431', 143100],
+    ['1,234,567.89', 123456789],
+    ['45.50', 4550],
+    ['45,50', 4550],
+    ['45,5', 4550],
+    ['€0.07', 7],
+  ])('en anglais, lit « %s » → %i', (text, cents) => {
+    expect(parseEuros(text, 'en-GB')).toBe(cents)
+  })
+
+  it.each(['1,23,456', '1.431,29', '€', '12,345,6'])('en anglais, refuse « %s »', (text) => {
+    expect(parseEuros(text, 'en-GB')).toBeNull()
+  })
+
+  it('relit ce que formatEuros écrit, dans les deux langues', () => {
+    for (const cents of [0, 1, 99, 4500, 143129, 123456789]) {
+      expect(parseEuros(formatEuros(cents, 'en-GB'), 'en-GB')).toBe(cents)
+    }
+  })
+
   it('relit ce que formatEuros écrit', () => {
     for (const cents of [0, 1, 99, 4500, 143129, 123456789]) {
       expect(parseEuros(formatEuros(cents, 'fr-FR'))).toBe(cents)

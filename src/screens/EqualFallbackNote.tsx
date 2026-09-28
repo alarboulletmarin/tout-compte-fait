@@ -13,7 +13,7 @@ export function EqualFallbackNote() {
     <InfoNote strong status>
       {zero ? (
         <>
-          {t.equalFallback.zero} <span className="num">0 €</span>
+          {t.equalFallback.zero} <span className="num">{t.equalFallback.zeroAmount}</span>
         </>
       ) : (
         t.equalFallback.missing

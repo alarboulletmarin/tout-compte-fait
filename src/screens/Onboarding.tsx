@@ -10,7 +10,6 @@ import {
   type Member,
   type MemberIndex,
 } from '../domain/types'
-import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { CheckIcon } from '../ui/icons'
@@ -32,6 +31,7 @@ interface Row {
 
 /** Premier lancement en deux étapes ; rien n'est écrit avant la fin. */
 export function Onboarding() {
+  const { t } = useI18n()
   const { update } = useStore()
   const [, navigate] = useLocation()
   const [step, setStep] = useState<1 | 2>(1)
@@ -47,7 +47,7 @@ export function Onboarding() {
         { ...members[1], name: members[1].name.trim() },
       ],
     }
-    update(() => ({ ...initialData(), household, charges }))
+    update(() => ({ ...initialData(t.defaultCategories), household, charges }))
     navigate('/', { replace: true })
   }
 
@@ -100,33 +100,39 @@ function People(props: {
   return (
     <div className="screen onboarding">
       <Header step={1} />
-      <main className="onboarding__main onboarding__main--people">
-        <div className="stack stack--10">
-          <h1 className="onboarding__title">{t.onboarding.title1}</h1>
-          <p className="onboarding__intro">{t.onboarding.intro1}</p>
+      <main className="onboarding__body">
+        <div className="onboarding__main onboarding__main--people">
+          <div className="stack stack--10">
+            <h1 className="onboarding__title">{t.onboarding.title1}</h1>
+            <p className="onboarding__intro">{t.onboarding.intro1}</p>
+          </div>
+          {MEMBERS.map((i) => (
+            <Person
+              key={i}
+              index={i}
+              member={props.members[i]}
+              onChange={(patch) => setMember(i, patch)}
+              onValidity={(bad) =>
+                setInvalid((v) => (i === 0 ? [bad, v[1]] : [v[0], bad]) as [boolean, boolean])
+              }
+            />
+          ))}
         </div>
-        {MEMBERS.map((i) => (
-          <Person
-            key={i}
-            index={i}
-            member={props.members[i]}
-            onChange={(patch) => setMember(i, patch)}
-            onValidity={(bad) =>
-              setInvalid((v) => (i === 0 ? [bad, v[1]] : [v[0], bad]) as [boolean, boolean])
-            }
-          />
-        ))}
+        <div className="onboarding__foot onboarding__foot--people">
+          <p className="onboarding__local">{t.onboarding.local}</p>
+          <button type="button" className="button button--primary" onClick={next}>
+            {t.onboarding.next}
+          </button>
+          <button
+            type="button"
+            className="button-link onboarding__import"
+            onClick={importFlow.pick}
+          >
+            {t.onboarding.import}
+          </button>
+          {importFlow.element}
+        </div>
       </main>
-      <div className="onboarding__foot onboarding__foot--people">
-        <p className="onboarding__local">{t.onboarding.local}</p>
-        <button type="button" className="button button--primary" onClick={next}>
-          {t.onboarding.next}
-        </button>
-        <button type="button" className="button-link onboarding__import" onClick={importFlow.pick}>
-          {t.onboarding.import}
-        </button>
-        {importFlow.element}
-      </div>
     </div>
   )
 }
@@ -137,7 +143,7 @@ function Person(props: {
   onChange: (patch: Partial<Member>) => void
   onValidity: (invalid: boolean) => void
 }) {
-  const { t } = useI18n()
+  const { t, parse } = useI18n()
   const ids = useId()
   const { index, onChange, onValidity } = props
   const income = useMoneyInput(props.member.income, (cents) => onChange({ income: cents }))
@@ -170,12 +176,12 @@ function Person(props: {
           className="input num"
           inputMode="decimal"
           autoComplete="off"
-          placeholder="0,00 €"
+          placeholder={t.form.amountPlaceholder}
           value={income.text}
           onChange={(e) => {
             income.onChange(e.target.value)
             const text = e.target.value.trim()
-            onValidity(text !== '' && parseEuros(text) === null)
+            onValidity(text !== '' && parse(text) === null)
           }}
           onBlur={income.onBlur}
           aria-invalid={income.invalid}
@@ -188,7 +194,7 @@ function Person(props: {
 }
 
 function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Charge[]) => void }) {
-  const { t, euros } = useI18n()
+  const { t, euros, parse } = useI18n()
   const [rows, setRows] = useState<Row[]>(() =>
     t.examples.map((e) => ({ ...e, checked: false, text: '', paidFrom: 'joint' })),
   )
@@ -206,7 +212,7 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
 
   // Montant lu de chaque ligne cochée ; une ligne cochée sans montant positif est en erreur
   const items = rows.map((row) => {
-    const amount = parseEuros(row.text)
+    const amount = parse(row.text)
     const ok = amount !== null && amount > 0
     return { row, amount, error: row.checked && !ok, counted: row.checked && ok }
   })
@@ -242,102 +248,104 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
   return (
     <div className="screen onboarding">
       <Header step={2} />
-      <main className="onboarding__main onboarding__main--charges">
-        <div className="stack stack--8">
-          <h1 ref={title} tabIndex={-1} className="onboarding__title">
-            {t.onboarding.title2}
-          </h1>
-          <p className="onboarding__intro">{t.onboarding.intro2}</p>
-        </div>
-        <div className="onboarding__legend-row">
-          <span>{t.onboarding.paidFrom}</span>
-          <span className="onboarding__legend-item">
-            <Shape account="joint" />
-            {t.onboarding.jointAccount}
-          </span>
-          {MEMBERS.map((i) => (
-            <span key={i} className="onboarding__legend-item">
-              <Shape account={memberAccount(i)} />
-              {names[i]}
+      <main className="onboarding__body">
+        <div className="onboarding__main onboarding__main--charges">
+          <div className="stack stack--8">
+            <h1 ref={title} tabIndex={-1} className="onboarding__title">
+              {t.onboarding.title2}
+            </h1>
+            <p className="onboarding__intro">{t.onboarding.intro2}</p>
+          </div>
+          <div className="onboarding__legend-row">
+            <span>{t.onboarding.paidFrom}</span>
+            <span className="onboarding__legend-item">
+              <Shape account="joint" />
+              {t.onboarding.jointAccount}
             </span>
-          ))}
-        </div>
-        <ul className="group">
-          {items.map(({ row, amount, error: invalid }, i) => {
-            const errorId = `example-${i}-error`
-            const error = submitted && invalid
-            return (
-              <li key={row.label} className={`example${row.checked ? ' example--checked' : ''}`}>
-                <button
-                  type="button"
-                  className="example__toggle"
-                  aria-pressed={row.checked}
-                  onClick={() => setRow(i, { checked: !row.checked })}
-                >
-                  <span className="checkbox" aria-hidden="true">
-                    {row.checked && <CheckIcon />}
-                  </span>
-                  {row.label}
-                </button>
-                {row.checked && (
-                  <>
-                    <div className="example__controls">
-                      <input
-                        id={`example-${i}`}
-                        className="input input--compact num"
-                        inputMode="decimal"
-                        autoComplete="off"
-                        placeholder="0,00 €"
-                        aria-label={t.onboarding.amountOf(row.label)}
-                        value={row.text}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          setRow(i, { text: e.target.value })
-                        }
-                        onBlur={() => amount !== null && setRow(i, { text: euros(amount) })}
-                        aria-invalid={error}
-                        aria-describedby={error ? errorId : undefined}
-                      />
-                      <div className="account-picker">
-                        {ACCOUNTS.map((a) => (
-                          <button
-                            key={a}
-                            type="button"
-                            className="account-picker__button"
-                            aria-pressed={row.paidFrom === a}
-                            aria-label={accountLabel(a)}
-                            onClick={() => setRow(i, { paidFrom: a })}
-                          >
-                            <Shape account={a} />
-                          </button>
-                        ))}
+            {MEMBERS.map((i) => (
+              <span key={i} className="onboarding__legend-item">
+                <Shape account={memberAccount(i)} />
+                {names[i]}
+              </span>
+            ))}
+          </div>
+          <ul className="group">
+            {items.map(({ row, amount, error: invalid }, i) => {
+              const errorId = `example-${i}-error`
+              const error = submitted && invalid
+              return (
+                <li key={row.label} className={`example${row.checked ? ' example--checked' : ''}`}>
+                  <button
+                    type="button"
+                    className="example__toggle"
+                    aria-pressed={row.checked}
+                    onClick={() => setRow(i, { checked: !row.checked })}
+                  >
+                    <span className="checkbox" aria-hidden="true">
+                      {row.checked && <CheckIcon />}
+                    </span>
+                    {row.label}
+                  </button>
+                  {row.checked && (
+                    <>
+                      <div className="example__controls">
+                        <input
+                          id={`example-${i}`}
+                          className="input input--compact num"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          placeholder={t.form.amountPlaceholder}
+                          aria-label={t.onboarding.amountOf(row.label)}
+                          value={row.text}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setRow(i, { text: e.target.value })
+                          }
+                          onBlur={() => amount !== null && setRow(i, { text: euros(amount) })}
+                          aria-invalid={error}
+                          aria-describedby={error ? errorId : undefined}
+                        />
+                        <div className="account-picker">
+                          {ACCOUNTS.map((a) => (
+                            <button
+                              key={a}
+                              type="button"
+                              className="account-picker__button"
+                              aria-pressed={row.paidFrom === a}
+                              aria-label={accountLabel(a)}
+                              onClick={() => setRow(i, { paidFrom: a })}
+                            >
+                              <Shape account={a} />
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    {error && <FieldError id={errorId}>{t.errors.amount}</FieldError>}
-                  </>
-                )}
-              </li>
-            )
-          })}
-        </ul>
-      </main>
-      <div className="onboarding__foot onboarding__foot--charges">
-        <div className="onboarding__preview" aria-live="polite">
-          {MEMBERS.map((i) => (
-            <span key={i} className="onboarding__legend-item">
-              <Shape account={memberAccount(i)} />
-              <span className="visually-hidden">{names[i]}</span>
-              <span className="num onboarding__preview-amount">{euros(preview.toJoint[i])}</span>
-            </span>
-          ))}
-          <span>{t.onboarding.onJoint}</span>
+                      {error && <FieldError id={errorId}>{t.errors.amount}</FieldError>}
+                    </>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
         </div>
-        <button type="button" className="button button--primary" onClick={finish}>
-          {t.onboarding.finish}
-        </button>
-        <button type="button" className="button-plain" onClick={() => props.onFinish([])}>
-          {t.onboarding.skip}
-        </button>
-      </div>
+        <div className="onboarding__foot onboarding__foot--charges">
+          <div className="onboarding__preview" aria-live="polite">
+            {MEMBERS.map((i) => (
+              <span key={i} className="onboarding__legend-item">
+                <Shape account={memberAccount(i)} />
+                <span className="visually-hidden">{names[i]}</span>
+                <span className="num onboarding__preview-amount">{euros(preview.toJoint[i])}</span>
+              </span>
+            ))}
+            <span>{t.onboarding.onJoint}</span>
+          </div>
+          <button type="button" className="button button--primary" onClick={finish}>
+            {t.onboarding.finish}
+          </button>
+          <button type="button" className="button-plain" onClick={() => props.onFinish([])}>
+            {t.onboarding.skip}
+          </button>
+        </div>
+      </main>
     </div>
   )
 }

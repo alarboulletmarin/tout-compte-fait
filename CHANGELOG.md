@@ -7,3 +7,5 @@
 - Remboursement direct quand l'un paie déjà plus que sa part
 - Envoi du récap par message
 - Export et import de vos données, sans compte ni cloud
+- Tableau de bord sur tablette et ordinateur
+- Version anglaise

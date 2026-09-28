@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 
 /**
@@ -7,10 +6,10 @@ import { useI18n } from '../i18n/i18n'
  * (null s'il est vide), le reformate en quittant le champ, et signale un texte illisible.
  */
 export function useMoneyInput(initial: number | null, onCents: (cents: number | null) => void) {
-  const { euros } = useI18n()
+  const { euros, parse } = useI18n()
   const [text, setText] = useState(initial === null ? '' : euros(initial))
   const empty = text.trim() === ''
-  const cents = empty ? null : parseEuros(text)
+  const cents = empty ? null : parse(text)
   const invalid = !empty && cents === null
 
   return {
@@ -20,7 +19,7 @@ export function useMoneyInput(initial: number | null, onCents: (cents: number | 
     invalid,
     onChange(next: string) {
       setText(next)
-      const nextCents = next.trim() === '' ? null : parseEuros(next)
+      const nextCents = next.trim() === '' ? null : parse(next)
       if (next.trim() === '' || nextCents !== null) onCents(nextCents)
     },
     onBlur() {

@@ -11,10 +11,22 @@ export const fr = {
   loadError: 'Les données de cet appareil sont illisibles.',
   undo: 'Annuler',
   equalFallback: {
+    zeroAmount: '0 €',
     zero: 'Un revenu est à',
     missing: "Un revenu n'est pas renseigné",
     rest: ' : la répartition passe à ',
     end: ' en attendant.',
+  },
+  // Noms des catégories créées au premier lancement
+  defaultCategories: {
+    housing: 'Logement',
+    energy: 'Énergie',
+    water: 'Eau',
+    telecom: 'Internet & téléphone',
+    insurance: 'Assurances',
+    subscriptions: 'Abonnements',
+    transport: 'Transport',
+    misc: 'Divers',
   },
   // Charges courantes proposées à l'onboarding et dans la liste vide
   examples: [
@@ -38,6 +50,12 @@ export const fr = {
     charges: 'Charges',
     household: 'Foyer',
     settings: 'Réglages',
+    local: 'Données sur cet appareil',
+  },
+
+  dashboard: {
+    total: (joint: string) => `${joint} au total, soit les charges du joint`,
+    toJoint: 'À virer',
   },
 
   transfers: {

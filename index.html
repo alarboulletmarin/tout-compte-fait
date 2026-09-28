@@ -2,22 +2,126 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Première visite seulement : ensuite, redirection vers l'app -->
+    <script src="/boot/landing.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tout Compte Fait · qui vire combien sur le compte joint</title>
+    <meta
+      name="description"
+      content="Partagez les charges du foyer au prorata de vos revenus. Gratuit, sans compte, sans pistage, hors ligne : vos données restent sur votre téléphone."
+    />
+    <link rel="canonical" href="https://toutcomptefait.xyz/" />
+    <meta property="og:title" content="Tout Compte Fait" />
+    <meta
+      property="og:description"
+      content="Qui vire combien sur le compte joint, au prorata des revenus."
+    />
+    <meta property="og:url" content="https://toutcomptefait.xyz/" />
+    <meta property="og:type" content="website" />
     <meta name="theme-color" content="#F5F4F1" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Tout compte fait</title>
-    <script>
-      // Thème forcé appliqué avant le premier rendu, sans flash
-      try {
-        var theme = localStorage.getItem('tcf-theme')
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
-      } catch (e) {}
-    </script>
+    <link rel="stylesheet" href="/src/landing/landing.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <header class="top">
+      <div class="top__brand">Tout Compte Fait</div>
+      <nav class="top__links" aria-label="Liens">
+        <a class="desk" href="#comment">Comment ça marche</a>
+        <a class="desk" href="https://github.com/alarboulletmarin/tout-compte-fait">Code source</a>
+        <a class="button button--small" href="/app/">Ouvrir l'app</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero__text">
+          <h1>Qui vire combien sur le compte joint.</h1>
+          <p class="hero__lead">
+            Partagez les charges du foyer au prorata de vos revenus, pas moitié-moitié.
+            <span class="desk">Chaque euro est justifié, et vos</span>
+            <span class="mobile">Vos</span> données ne quittent jamais votre téléphone.
+          </p>
+          <div class="hero__cta">
+            <a class="button" href="/app/">Ouvrir l'app</a>
+            <span class="desk hero__hint">puis « Ajouter à l'écran d'accueil »</span>
+          </div>
+          <ul class="hero__promises" aria-label="Engagements">
+            <li>Gratuit</li>
+            <li>Sans compte</li>
+            <li>Sans pistage</li>
+            <li>Hors ligne</li>
+          </ul>
+        </div>
+        <div class="phone">
+          <picture>
+            <source srcset="/landing/app-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img
+              src="/landing/app-light.webp"
+              width="390"
+              height="844"
+              alt="L'écran Virements : Lui vire 765,62 € et Elle 665,67 € sur le compte joint, répartis à 54,1 et 45,9 %."
+            />
+          </picture>
+        </div>
+      </section>
+
+      <section class="features" aria-label="Pourquoi Tout Compte Fait">
+        <div class="feature">
+          <span class="mark mark--member1" aria-hidden="true"></span>
+          <h2>Au prorata, pas moitié-moitié</h2>
+          <p>
+            Chacun participe selon ses revenus nets. Les parts se recalculent dès qu'un salaire
+            change.
+          </p>
+        </div>
+        <div class="feature">
+          <span class="mark mark--member2" aria-hidden="true"></span>
+          <h2>Chaque euro justifié</h2>
+          <p>
+            Le détail montre ce que chacun paie déjà depuis son compte, et pourquoi son virement est
+            celui-là.
+          </p>
+        </div>
+        <div class="feature">
+          <span class="mark mark--joint" aria-hidden="true"></span>
+          <h2>Vos données, chez vous</h2>
+          <p>Pas de compte, pas de serveur, pas de cloud. Export et import d'un simple fichier.</p>
+        </div>
+      </section>
+
+      <section id="comment" class="how" aria-labelledby="how-title">
+        <h2 id="how-title">Comment ça marche</h2>
+        <ol class="how__steps">
+          <li>
+            <div class="how__number" aria-hidden="true">01</div>
+            <h3>Vos revenus</h3>
+            <p>Deux prénoms, deux revenus nets. Les parts au prorata apparaissent aussitôt.</p>
+          </li>
+          <li>
+            <div class="how__number" aria-hidden="true">02</div>
+            <h3>Vos charges fixes</h3>
+            <p>Loyer, énergie, assurances, abonnements, avec le compte qui paie chacune.</p>
+          </li>
+          <li>
+            <div class="how__number" aria-hidden="true">03</div>
+            <h3>Vos virements</h3>
+            <p class="desk">
+              Tout Compte Fait déduit ce que chacun paie déjà et donne le montant exact à virer sur
+              le joint.
+            </p>
+            <p class="mobile">
+              Le montant exact que chacun vire sur le joint, et le récap à envoyer.
+            </p>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span><span class="desk">Tout Compte Fait · </span>toutcomptefait.xyz</span>
+      <span>Libre sous licence AGPL-3.0</span>
+    </footer>
   </body>
 </html>

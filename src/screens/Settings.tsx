@@ -39,7 +39,8 @@ export function Settings() {
   }
 
   return (
-    <TabScreen kicker={t.settings.kicker} className="settings">
+    <TabScreen title={t.nav.settings} kicker={t.settings.kicker} className="settings">
+      <h1 className="visually-hidden">{t.nav.settings}</h1>
       <Section id="theme" title={t.settings.theme}>
         <div className="segmented segmented--padded">
           {THEMES.map((value) => (

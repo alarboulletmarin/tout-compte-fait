@@ -14,6 +14,8 @@ export function Nav() {
   ]
   return (
     <nav className="nav" aria-label={t.nav.label}>
+      {/* Barre latérale sur grand écran seulement */}
+      <div className="nav__brand">{t.brand}</div>
       {tabs.map(([href, label, icon]) => {
         const current = href === '/' ? location === '/' : location.startsWith(href)
         return (
@@ -29,6 +31,7 @@ export function Nav() {
           </Link>
         )
       })}
+      <div className="nav__local">{t.nav.local}</div>
     </nav>
   )
 }

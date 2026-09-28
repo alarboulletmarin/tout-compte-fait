@@ -15,7 +15,7 @@ export function Household() {
   const total = (members[0].income ?? 0) + (members[1].income ?? 0)
 
   return (
-    <TabScreen kicker={t.household.kicker} className="household">
+    <TabScreen title={t.nav.household} kicker={t.household.kicker} className="household">
       <div className="stack stack--6">
         <h1 className="lead">{t.household.title}</h1>
         <p className="caption-13">{t.household.hint}</p>

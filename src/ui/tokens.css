@@ -17,6 +17,11 @@
 
   --column: 480px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Éléments flottants (bouton Ajouter, toast) : au-dessus de la navigation du bas,
+     calés sur la colonne de contenu, barre latérale comprise */
+  --sidebar: 0px;
+  --float-bottom: calc(104px + var(--safe-bottom));
+  --float-gap: max(0px, calc((100vw - var(--sidebar) - var(--column)) / 2));
 }
 
 :root[data-theme='light'] {

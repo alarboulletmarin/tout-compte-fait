@@ -1,17 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tout compte fait">
-  <rect width="64" height="64" rx="14" fill="#0E1F1A" />
-  <!-- L'anneau signature : départ à midi, sens horaire, extrémités arrondies. -->
-  <g transform="rotate(-90 32 32)">
-    <circle cx="32" cy="32" r="19" fill="none" stroke="#1B3B31" stroke-width="8" />
-    <circle
-      cx="32"
-      cy="32"
-      r="19"
-      fill="none"
-      stroke="#D8F84E"
-      stroke-width="8"
-      stroke-linecap="round"
-      stroke-dasharray="83.6 119.4"
-    />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tout Compte Fait">
+  <defs>
+    <!-- Hachures de la part du membre 2, comme dans la barre de répartition -->
+    <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="1.5" height="4" fill="#F5F4F1" />
+    </pattern>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#111110" />
+  <rect x="10" y="25" width="23.5" height="14" rx="3" fill="#F5F4F1" />
+  <rect x="36.25" y="25.75" width="17" height="12.5" rx="2.5" fill="url(#hatch)" stroke="#F5F4F1" stroke-width="1.5" />
 </svg>

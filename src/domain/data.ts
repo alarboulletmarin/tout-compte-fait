@@ -7,7 +7,7 @@ export interface AppData {
   categories: Category[]
 }
 
-// ponytail: noms en français ; la traduction des catégories par défaut viendra avec l'anglais (phase 6)
+/** Catégories par défaut ; les noms affichés viennent de la langue au premier lancement. */
 export const DEFAULT_CATEGORIES: readonly Category[] = [
   { id: 'housing', name: 'Logement' },
   { id: 'energy', name: 'Énergie' },
@@ -19,7 +19,7 @@ export const DEFAULT_CATEGORIES: readonly Category[] = [
   { id: 'misc', name: 'Divers' },
 ]
 
-export function initialData(): AppData {
+export function initialData(names?: Record<string, string>): AppData {
   return {
     household: {
       members: [
@@ -28,7 +28,7 @@ export function initialData(): AppData {
       ],
     },
     charges: [],
-    categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+    categories: DEFAULT_CATEGORIES.map((c) => ({ id: c.id, name: names?.[c.id] ?? c.name })),
   }
 }
 

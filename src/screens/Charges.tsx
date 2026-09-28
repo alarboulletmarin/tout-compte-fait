@@ -20,7 +20,7 @@ export function Charges() {
   ]
 
   return (
-    <TabScreen kicker={t.charges.kicker} className="charges">
+    <TabScreen title={t.nav.charges} kicker={t.charges.kicker} className="charges">
       <div className="stack stack--6">
         <h1 className="lead">{t.charges.total}</h1>
         <div className={`num amount-xl${data.charges.length === 0 ? ' amount-xl--muted' : ''}`}>

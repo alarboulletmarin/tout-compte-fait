@@ -4,14 +4,26 @@ import { useI18n } from '../i18n/i18n'
 import { BackIcon, CloseIcon } from './icons'
 import { Nav } from './Nav'
 
-/** Écran d'un onglet : marque, sous-titre, contenu, navigation. */
-export function TabScreen(props: { kicker: string; className?: string; children: ReactNode }) {
+/**
+ * Écran d'un onglet : marque, sous-titre, contenu, navigation.
+ * Sur grand écran, la marque passe dans la barre latérale et `title` nomme la page.
+ */
+export function TabScreen(props: {
+  title: string
+  kicker: string
+  className?: string
+  children: ReactNode
+}) {
   const { t } = useI18n()
   return (
-    <div className="screen">
+    <div className="screen screen--tab">
       <header className="topbar">
         <div className="topbar__brand">{t.brand}</div>
         <div className="topbar__kicker">{props.kicker}</div>
+      </header>
+      <header className="deskbar">
+        <div className="deskbar__title">{props.title}</div>
+        <div className="deskbar__kicker">{props.kicker}</div>
       </header>
       <main className={props.className}>{props.children}</main>
       <Nav />

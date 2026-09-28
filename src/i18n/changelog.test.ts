@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import changelogEn from '../../CHANGELOG.en.md?raw'
 import changelog from '../../CHANGELOG.md?raw'
 import { parseChangelog } from './changelog'
 
@@ -31,5 +32,13 @@ describe('parseChangelog', () => {
     const releases = parseChangelog(changelog)
     expect(releases[0]?.version).toBe(version)
     expect(releases[0]?.items.length).toBeGreaterThan(0)
+  })
+
+  it('tient le changelog anglais au même niveau que le français', () => {
+    const fr = parseChangelog(changelog)
+    const en = parseChangelog(changelogEn)
+    expect(en.map((r) => [r.version, r.items.length])).toEqual(
+      fr.map((r) => [r.version, r.items.length]),
+    )
   })
 })

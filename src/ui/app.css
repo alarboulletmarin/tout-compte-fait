@@ -32,6 +32,7 @@ a {
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -340,8 +341,8 @@ p {
 
 .fab {
   position: fixed;
-  right: max(20px, calc((100vw - var(--column)) / 2 + 20px));
-  bottom: calc(104px + var(--safe-bottom));
+  right: calc(var(--float-gap) + 20px);
+  bottom: var(--float-bottom);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -543,9 +544,9 @@ html:has(.sheet[open]) {
 
 .toast-region {
   position: fixed;
-  left: max(16px, calc((100vw - var(--column)) / 2 + 16px));
-  right: max(16px, calc((100vw - var(--column)) / 2 + 16px));
-  bottom: calc(104px + var(--safe-bottom));
+  left: calc(var(--sidebar) + var(--float-gap) + 16px);
+  right: calc(var(--float-gap) + 16px);
+  bottom: var(--float-bottom);
   z-index: 10;
 }
 .toast {
@@ -777,6 +778,18 @@ html:has(.sheet[open]) {
 }
 
 /* ---------- Formulaire de charge ---------- */
+
+.charge-form__body,
+.onboarding__body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+/* Leurs boutons ont déjà leur marge basse : pas celle des autres écrans */
+.screen > .charge-form__body,
+.screen > .onboarding__body {
+  padding-bottom: 0;
+}
 
 .charge-form__fields {
   display: flex;
@@ -1342,7 +1355,9 @@ button.group__row {
 /* ---------- Récap ---------- */
 
 .transfers__recap {
+  height: 48px;
   margin-top: -16px;
+  font-size: 14px;
 }
 .recap {
   padding: 16px;
@@ -1432,4 +1447,271 @@ button.group__row {
 .install__ok {
   font-size: 13px;
   font-weight: 600;
+}
+
+/* ---------- Tableau de bord (tablette et desktop) ---------- */
+
+.card--dash {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 16px;
+}
+.card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.button-compact {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 500;
+}
+.button-outline {
+  box-sizing: content-box; /* liens dans les maquettes : la bordure s'ajoute */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.dashboard__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dashboard__amount {
+  font-size: 36px;
+  letter-spacing: -0.02em;
+}
+.dashboard__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.dashboard__member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.dashboard__line {
+  align-items: stretch;
+  font-size: 14px;
+}
+.dashboard__line--muted {
+  color: var(--muted);
+}
+.dashboard__line--total {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}
+.dashboard__line--total + .dashboard__line--total {
+  padding-top: 0;
+  border-top: 0;
+}
+.dashboard__total {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+.stack--4 {
+  gap: 4px;
+}
+.dashboard__account {
+  font-size: 13px;
+}
+.dashboard__account-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dashboard__subtotal {
+  color: var(--muted);
+}
+.dashboard__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dashboard__row {
+  box-sizing: content-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 44px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.deskbar,
+.nav__brand,
+.nav__local {
+  display: none;
+}
+
+/* ---------- Tablette ---------- */
+
+@media (min-width: 768px) {
+  :root {
+    --column: 560px;
+  }
+  .screen--tab {
+    max-width: none;
+  }
+  .screen--tab > .topbar {
+    padding: 32px 40px 0;
+  }
+  .screen--tab .topbar__brand {
+    font-size: 15px;
+    letter-spacing: 0;
+  }
+  .screen--tab .topbar__kicker {
+    font-size: 14px;
+  }
+  /* Écrans d'onglet sans maquette large : colonne centrée */
+  .screen--tab > main {
+    width: 100%;
+    max-width: var(--column);
+    margin: 0 auto;
+  }
+  .screen--tab > main.dashboard-screen {
+    max-width: none;
+    padding: 32px 40px 32px;
+  }
+  .screen--tab > .nav {
+    padding: 8px 160px calc(24px + var(--safe-bottom));
+  }
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 1024px) {
+  :root {
+    /* 240 px de contenu, plus marges et bordure comme dans la maquette */
+    --sidebar: calc(240px + 2 * 16px + 1px);
+    /* Plus de navigation en bas */
+    --float-bottom: 32px;
+  }
+  .screen--tab {
+    padding-left: var(--sidebar);
+  }
+  .screen--tab > .topbar {
+    display: none;
+  }
+  .screen--tab > .deskbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+    max-width: var(--column);
+    margin: 0 auto;
+    padding: 40px 24px 0;
+  }
+  .screen--tab:has(.dashboard-screen) > .deskbar {
+    max-width: none;
+    padding: 40px 48px 0;
+  }
+  .deskbar__title {
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .deskbar__kicker {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .screen--tab > main.dashboard-screen {
+    padding: 20px 48px 40px;
+  }
+
+  /* Barre latérale */
+  .screen--tab > .nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar);
+    margin: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 28px 16px;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+  }
+  .nav__brand {
+    display: block;
+    padding: 0 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .nav__local {
+    display: block;
+    margin-top: auto;
+    padding: 0 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .screen--tab .nav__tab {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 10px;
+  }
+  .screen--tab .nav__label {
+    font-size: 14px;
+  }
+  .screen--tab .nav__dot {
+    display: none;
+  }
+  .screen--tab .nav__tab[aria-current='page'] {
+    background: var(--soft);
+  }
+  .screen--tab .nav__tab svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .dashboard {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .dashboard__main {
+    grid-column: span 2;
+  }
+  .dashboard__amount {
+    font-size: 44px;
+  }
+  .dashboard__detail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
 }

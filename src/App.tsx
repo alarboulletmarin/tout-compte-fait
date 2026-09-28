@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { Redirect, Route, Switch, useLocation } from 'wouter'
+import { Redirect, Route, Router, Switch, useLocation } from 'wouter'
 import { I18nProvider, useI18n } from './i18n/i18n'
 import { Categories } from './screens/Categories'
 import { ChargeForm } from './screens/ChargeForm'
@@ -36,7 +36,9 @@ function Store() {
       onSaveError={onSaveError}
       fallback={(status) => (status === 'error' ? <p className="fatal">{t.loadError}</p> : null)}
     >
-      <Routes />
+      <Router base="/app">
+        <Routes />
+      </Router>
     </StoreProvider>
   )
 }

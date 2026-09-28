@@ -36,11 +36,16 @@ export function formatDecimal(value: number, locale: Locale): string {
 }
 
 /**
- * Lit un montant saisi : « 1 431,29 € », « 1431.29 », « 45 ». Renvoie des centimes,
- * ou null si le texte n'est pas un montant. Sans passer par les flottants.
+ * Lit un montant saisi : « 1 431,29 € », « 1431.29 », « 45 », et en anglais « €1,431.29 ».
+ * Renvoie des centimes, ou null si le texte n'est pas un montant. Sans passer par les flottants.
  */
-export function parseEuros(text: string): number | null {
-  const compact = text.replace(/[\s\u00a0\u202f€]/g, '').replace(',', '.')
+export function parseEuros(text: string, locale: Locale = 'fr-FR'): number | null {
+  let compact = text.replace(/[\s\u00a0\u202f€]/g, '')
+  // En anglais, la virgule sépare les milliers (1,431.29) ; ailleurs, « 45,50 » reste une décimale
+  compact =
+    locale === 'en-GB' && /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(compact)
+      ? compact.replace(/,/g, '')
+      : compact.replace(',', '.')
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(compact)
   if (!match) return null
   const cents = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'))

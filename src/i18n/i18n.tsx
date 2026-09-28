@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { readPref, writePref } from '../storage/prefs'
-import { formatDecimal, formatEuros, formatShare, LOCALES, type Locale } from './format'
+import { formatDecimal, formatEuros, formatShare, LOCALES, parseEuros, type Locale } from './format'
+import { en } from './en'
 import { fr, type Messages } from './fr'
 
-// ponytail: l'anglais reprend le français en attendant la traduction (phase 6)
-const messages: Record<Locale, Messages> = { 'fr-FR': fr, 'en-GB': fr }
+const messages: Record<Locale, Messages> = { 'fr-FR': fr, 'en-GB': en }
 
 function make(locale: Locale, setLocale: (locale: Locale) => void) {
   return {
@@ -13,6 +13,7 @@ function make(locale: Locale, setLocale: (locale: Locale) => void) {
     locale,
     setLocale,
     euros: (cents: number) => formatEuros(cents, locale),
+    parse: (text: string) => parseEuros(text, locale),
     share: (share: number) => formatShare(share, locale),
     decimal: (value: number) => formatDecimal(value, locale),
   }

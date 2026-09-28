@@ -10,7 +10,9 @@ import { InfoNote } from '../ui/Notes'
 import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
+import { useMediaQuery, WIDE } from '../ui/useMediaQuery'
 import { MEMBERS, useNames } from './common'
+import { Dashboard } from './Dashboard'
 import { EqualFallbackNote } from './EqualFallbackNote'
 import { RecapSheet } from './RecapSheet'
 
@@ -18,16 +20,24 @@ export function Transfers() {
   const { t } = useI18n()
   const { data, split } = useStore()
   const [recap, setRecap] = useState(false)
+  const wide = useMediaQuery(WIDE)
 
   if (data.charges.length === 0) {
     return (
-      <TabScreen kicker={t.transfers.kicker} className="empty-state">
+      <TabScreen title={t.nav.transfers} kicker={t.transfers.kicker} className="empty-state">
         <Empty />
       </TabScreen>
     )
   }
+  if (wide) {
+    return (
+      <TabScreen title={t.nav.transfers} kicker={t.transfers.kicker} className="dashboard-screen">
+        <Dashboard />
+      </TabScreen>
+    )
+  }
   return (
-    <TabScreen kicker={t.transfers.kicker} className="transfers">
+    <TabScreen title={t.nav.transfers} kicker={t.transfers.kicker} className="transfers">
       {split.reimbursement ? (
         <Reimbursement split={split} reimbursement={split.reimbursement} />
       ) : (

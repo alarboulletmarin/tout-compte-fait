@@ -2,7 +2,6 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { Redirect, useLocation, useSearch } from 'wouter'
 import { computeSplit, MONTHS } from '../domain/split'
 import { memberAccount, type AccountRef, type Charge, type Frequency } from '../domain/types'
-import { parseEuros } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { TrashIcon } from '../ui/icons'
@@ -23,7 +22,7 @@ export function ChargeForm({ id }: { id?: string }) {
 }
 
 function Form({ existing }: { existing?: Charge }) {
-  const { t, euros } = useI18n()
+  const { t, euros, parse } = useI18n()
   const { data, update } = useStore()
   // Exemple choisi dans la liste vide : libellé et catégorie pré-remplis
   const example = t.examples[Number(new URLSearchParams(useSearch()).get('example') ?? -1)]
@@ -45,7 +44,7 @@ function Form({ existing }: { existing?: Charge }) {
   // Les erreurs n'apparaissent qu'après une première tentative, puis suivent la saisie
   const [submitted, setSubmitted] = useState(false)
 
-  const amount = parseEuros(amountText)
+  const amount = parse(amountText)
   const valid = amount !== null && amount > 0
   const amountError = submitted && !valid
   const labelError = submitted && !label.trim()
@@ -79,105 +78,109 @@ function Form({ existing }: { existing?: Charge }) {
     <form className="screen charge-form" onSubmit={submit} noValidate>
       <FormHeader title={existing ? t.form.editTitle : t.form.newTitle} close="/charges" />
 
-      <div className={`charge-form__fields${submitted ? ' charge-form__fields--checked' : ''}`}>
-        <div className="field">
-          <label htmlFor={`${ids}-amount`} className="field__label">
-            {t.form.amount}
-          </label>
-          <input
-            id={`${ids}-amount`}
-            ref={amountRef}
-            className="num input-amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder={t.form.amountPlaceholder}
-            value={amountText}
-            onChange={(e) => setAmountText(e.target.value)}
-            onBlur={() => amount !== null && setAmountText(euros(amount))}
-            aria-invalid={amountError}
-            aria-describedby={amountError ? `${ids}-amount-error` : undefined}
-          />
-          {amountError && <FieldError id={`${ids}-amount-error`}>{t.errors.amount}</FieldError>}
-        </div>
-
-        <div className="field">
-          <label htmlFor={`${ids}-label`} className="field__label">
-            {t.form.label}
-          </label>
-          <input
-            id={`${ids}-label`}
-            ref={labelRef}
-            className="input"
-            autoComplete="off"
-            placeholder={t.form.labelPlaceholder}
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            aria-invalid={labelError}
-            aria-describedby={labelError ? `${ids}-label-error` : undefined}
-          />
-          {labelError && <FieldError id={`${ids}-label-error`}>{t.errors.label}</FieldError>}
-        </div>
-
-        <fieldset className="fieldset">
-          <legend className="field__label legend">{t.form.frequency}</legend>
-          <div className="segmented">
-            {FREQUENCIES.map((f) => (
-              <button
-                key={f}
-                type="button"
-                className="segment"
-                aria-pressed={frequency === f}
-                onClick={() => setFrequency(f)}
-              >
-                {t.form.frequencies[f]}
-              </button>
-            ))}
+      <main className="charge-form__body">
+        <div className={`charge-form__fields${submitted ? ' charge-form__fields--checked' : ''}`}>
+          <div className="field">
+            <label htmlFor={`${ids}-amount`} className="field__label">
+              {t.form.amount}
+            </label>
+            <input
+              id={`${ids}-amount`}
+              ref={amountRef}
+              className="num input-amount"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder={t.form.amountPlaceholder}
+              value={amountText}
+              onChange={(e) => setAmountText(e.target.value)}
+              onBlur={() => amount !== null && setAmountText(euros(amount))}
+              aria-invalid={amountError}
+              aria-describedby={amountError ? `${ids}-amount-error` : undefined}
+            />
+            {amountError && <FieldError id={`${ids}-amount-error`}>{t.errors.amount}</FieldError>}
           </div>
-        </fieldset>
 
-        <fieldset className="fieldset">
-          <legend className="field__label legend">{t.form.paidFrom}</legend>
-          <div className="segmented">
-            {ACCOUNTS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                className="segment"
-                aria-pressed={paidFrom === a}
-                onClick={() => setPaidFrom(a)}
-              >
-                <Shape account={a} />
-                {accountLabel(a)}
-              </button>
-            ))}
+          <div className="field">
+            <label htmlFor={`${ids}-label`} className="field__label">
+              {t.form.label}
+            </label>
+            <input
+              id={`${ids}-label`}
+              ref={labelRef}
+              className="input"
+              autoComplete="off"
+              placeholder={t.form.labelPlaceholder}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              aria-invalid={labelError}
+              aria-describedby={labelError ? `${ids}-label-error` : undefined}
+            />
+            {labelError && <FieldError id={`${ids}-label-error`}>{t.errors.label}</FieldError>}
           </div>
-        </fieldset>
 
-        <fieldset className="fieldset">
-          <legend className="field__label legend">{t.form.category}</legend>
-          <CategoryChips value={categoryId} onChange={setCategoryId} />
-        </fieldset>
-      </div>
+          <fieldset className="fieldset">
+            <legend className="field__label legend">{t.form.frequency}</legend>
+            <div className="segmented">
+              {FREQUENCIES.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className="segment"
+                  aria-pressed={frequency === f}
+                  onClick={() => setFrequency(f)}
+                >
+                  {t.form.frequencies[f]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
-      <div className={`charge-form__foot${existing ? ' charge-form__foot--edit' : ''}`}>
-        <div className="between caption-13">
-          <span>{t.form.monthlyEquivalent}</span>
-          <span className="num">{valid ? euros(Math.round(amount / MONTHS[frequency])) : '–'}</span>
+          <fieldset className="fieldset">
+            <legend className="field__label legend">{t.form.paidFrom}</legend>
+            <div className="segmented">
+              {ACCOUNTS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  className="segment"
+                  aria-pressed={paidFrom === a}
+                  onClick={() => setPaidFrom(a)}
+                >
+                  <Shape account={a} />
+                  {accountLabel(a)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="fieldset">
+            <legend className="field__label legend">{t.form.category}</legend>
+            <CategoryChips value={categoryId} onChange={setCategoryId} />
+          </fieldset>
         </div>
-        <button type="submit" className="button button--primary">
-          {existing ? t.form.save : t.form.add}
-        </button>
-        {existing && (
-          <button
-            type="button"
-            className="button-link button-link--danger"
-            onClick={() => setDeleting(true)}
-          >
-            <TrashIcon />
-            {t.form.delete}
+
+        <div className={`charge-form__foot${existing ? ' charge-form__foot--edit' : ''}`}>
+          <div className="between caption-13">
+            <span>{t.form.monthlyEquivalent}</span>
+            <span className="num">
+              {valid ? euros(Math.round(amount / MONTHS[frequency])) : '–'}
+            </span>
+          </div>
+          <button type="submit" className="button button--primary">
+            {existing ? t.form.save : t.form.add}
           </button>
-        )}
-      </div>
+          {existing && (
+            <button
+              type="button"
+              className="button-link button-link--danger"
+              onClick={() => setDeleting(true)}
+            >
+              <TrashIcon />
+              {t.form.delete}
+            </button>
+          )}
+        </div>
+      </main>
 
       {existing && (
         <DeleteSheet charge={existing} open={deleting} onClose={() => setDeleting(false)} />

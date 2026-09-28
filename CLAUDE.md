@@ -25,6 +25,10 @@ pnpm dev | pnpm build | pnpm lint | pnpm typecheck | pnpm test | pnpm format
 
 ## Structure
 
+- `index.html` : landing statique, montrée à la première visite seulement (`public/boot/landing.js`).
+- `app/index.html` : l'app, servie sous `/app` (routeur, service worker et manifeste limités à `/app/`).
+- `vercel.json` : réécriture `/app/*` et en-têtes de sécurité, repris par `vite preview`.
+
 - `src/domain` : calcul pur. Aucun import React, navigateur ni `idb` (règle ESLint).
 - `src/storage` : IndexedDB, export/import.
 - `src/ui` : composants du design system.
