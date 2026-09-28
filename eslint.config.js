@@ -19,6 +19,10 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
+    files: ['**/*.test.ts'],
+    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+  },
+  {
     // Le domaine reste pur : aucun import React ni navigateur
     files: ['src/domain/**'],
     rules: {
