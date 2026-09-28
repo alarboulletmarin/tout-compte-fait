@@ -42,7 +42,7 @@ describe('IndexedDB', () => {
   })
 
   it('signale une base corrompue plutôt que de la lire de travers', async () => {
-    const db = await openDB('tout-compte-fait', 1)
+    const db = await openDB('tout-compte-fait')
     await db.put('app', { schemaVersion: 1, data: { charges: 'x' } }, 'data')
     db.close()
     await expect(loadData()).rejects.toThrow(InvalidDataError)
@@ -51,7 +51,7 @@ describe('IndexedDB', () => {
 
 describe('migration à la lecture', () => {
   it('une base en version 1 est migrée puis réécrite en version courante', async () => {
-    const db = await openDB('tout-compte-fait', 1)
+    const db = await openDB('tout-compte-fait')
     const v1 = {
       household: {
         members: [
@@ -82,7 +82,7 @@ describe('migration à la lecture', () => {
 
 describe('migration 2 → 3 à la lecture', () => {
   it('une base en version 2 reçoit un historique vide et est réécrite en version courante', async () => {
-    const db = await openDB('tout-compte-fait', 1)
+    const db = await openDB('tout-compte-fait')
     const { household, charges, categories } = sample()
     const v2 = { household, charges, categories }
     await db.put('app', { schemaVersion: 2, data: v2 }, 'data')

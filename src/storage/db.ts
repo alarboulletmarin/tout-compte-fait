@@ -6,8 +6,11 @@ import { parseExport, type ParseResult } from './transfer'
 // Un seul document : les données tiennent en quelques Ko, et un import les remplace d'un bloc.
 // La version de la base ne change que si la structure des magasins change ;
 // l'évolution des données passe par schemaVersion et les migrations de schema.ts.
+// Le nom est celui de l'ancienne app, restée en version 2 (magasins « document » et « backups ») :
+// ouvrir une version plus basse échoue (VersionError), donc on passe à 3 et on ne crée que « app ».
+// Ses données restent intactes, on n'y touche pas.
 const DB_NAME = 'tout-compte-fait'
-const DB_VERSION = 1
+const DB_VERSION = 3
 const KEY = 'data'
 
 interface Stored {
@@ -24,7 +27,7 @@ let db: Promise<IDBPDatabase<Schema>> | undefined
 function open() {
   db ??= openDB<Schema>(DB_NAME, DB_VERSION, {
     upgrade(database) {
-      database.createObjectStore('app')
+      if (!database.objectStoreNames.contains('app')) database.createObjectStore('app')
     },
   })
   return db
