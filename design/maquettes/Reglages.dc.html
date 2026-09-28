@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — réglages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1">
+<header style="display: flex; justify-content: space-between; align-items: baseline; padding: 24px 24px 0">
+<div style="font-size: 13px; font-weight: 600; letter-spacing: 0.02em">Tout Compte Fait</div>
+<div style="font-size: 13px; color: #5F5D59">Réglages</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; padding: 24px 20px 0">
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #5F5D59">Thème</h2>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column"><div style="display: flex; gap: 6px; padding: 10px"><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Système</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Clair</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Sombre</button></div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #5F5D59">Langue</h2>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column"><div style="display: flex; gap: 6px; padding: 10px"><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Français</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">English</button></div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #5F5D59">Organisation</h2>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column"><a href="Categories.dc.html" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 0"><span style="font-size: 15px; color: #111110">Catégories</span><span style="font-size: 14px; color: #5F5D59">8</span></a></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #5F5D59">Données</h2>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column"><div style="display: flex; flex-direction: column"><button type="button" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 0; width: 100%; background: transparent; border-left: 0; border-right: 0; border-bottom: 0; font-family: inherit; text-align: left"><span style="font-size: 15px; color: #111110">Exporter</span><span style="font-size: 14px; color: #5F5D59">fichier .json</span></button><a href="ImportConfirm.dc.html" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 1px solid #E4E2DD"><span style="font-size: 15px; color: #111110">Importer</span><span style="font-size: 14px; color: #5F5D59"></span></a><button type="button" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 1px solid #E4E2DD; width: 100%; background: transparent; border-left: 0; border-right: 0; border-bottom: 0; font-family: inherit; text-align: left"><span style="font-size: 15px; color: #111110">Envoyer vers…</span><span style="font-size: 14px; color: #5F5D59"></span></button><a href="Effacer.dc.html" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 1px solid #E4E2DD"><span style="font-size: 15px; color: #A1260D">Tout effacer</span><span style="font-size: 14px; color: #5F5D59"></span></a></div></div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #5F5D59">À propos</h2>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column"><div style="display: flex; flex-direction: column"><a href="Nouveautes.dc.html" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 0"><span style="font-size: 15px; color: #111110">Nouveautés</span><span style="font-size: 14px; color: #5F5D59">v1.0.0</span></a><a href="#" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 1px solid #E4E2DD"><span style="font-size: 15px; color: #111110">Code source</span><span style="font-size: 14px; color: #5F5D59">GitHub</span></a><a href="#" style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 16px; text-decoration: none; border-top: 1px solid #E4E2DD"><span style="font-size: 15px; color: #111110">Licence</span><span style="font-size: 14px; color: #5F5D59">AGPL-3.0</span></a></div></div>
+</section>
+<p style="margin: 0 4px; font-size: 12px; line-height: 1.5; color: #5F5D59">Gratuit, sans compte, sans pistage. Vos données restent sur cet appareil.</p>
+</main>
+<nav aria-label="Navigation principale" style="margin-top: auto; display: flex; justify-content: space-around; padding: 8px 12px 20px; border-top: 1px solid #E4E2DD; background: #F5F4F1">
+<a href="Main.dc.html" aria-label="Virements" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>
+<span style="font-size: 11px; font-weight: 400">Virements</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Charges.dc.html" aria-label="Charges" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12"></path><circle cx="4.5" cy="7" r="0.6"></circle><circle cx="4.5" cy="12" r="0.6"></circle><circle cx="4.5" cy="17" r="0.6"></circle></svg>
+<span style="font-size: 11px; font-weight: 400">Charges</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Foyer.dc.html" aria-label="Foyer" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6 8 6v9H4z"></path><path d="M10 20v-5h4v5"></path></svg>
+<span style="font-size: 11px; font-weight: 400">Foyer</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Reglages.dc.html" aria-label="Réglages" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #111110">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+<span style="font-size: 11px; font-weight: 600">Réglages</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: #111110"></span>
+</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

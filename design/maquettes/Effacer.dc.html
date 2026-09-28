@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — tout effacer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden">
+<dc-import name="Reglages" hint-size="390px,844px"></dc-import>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(17,17,16,0.45)"></div>
+<div role="dialog" aria-modal="true" aria-labelledby="sheet-title" style="position: absolute; left: 0; right: 0; bottom: 0; background: #F5F4F1; border-radius: 22px 22px 0 0; padding: 12px 24px 32px; display: flex; flex-direction: column; gap: 18px">
+<div aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E4E2DD"></div>
+<h2 id="sheet-title" style="margin: 0; font-size: 20px; font-weight: 600">Tout effacer ?</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #5F5D59">Les revenus, les prénoms et les 6 charges seront supprimés de cet appareil. Rien n'est gardé ailleurs : c'est définitif.</p>
+<div style="display: flex; flex-direction: column; gap: 8px"><a href="Reglages.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 12px; background: #FFFFFF; color: #111110; border: 1px solid #E4E2DD; text-decoration: none; font-size: 15px; font-weight: 500">Exporter d'abord mes données</a><a href="Onboarding.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 12px; background: #A1260D; color: #FFFFFF; border: 0; text-decoration: none; font-size: 15px; font-weight: 500">Tout effacer</a><a href="Reglages.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 12px; background: transparent; color: #111110; border: 0; text-decoration: none; font-size: 15px; font-weight: 400">Annuler</a></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

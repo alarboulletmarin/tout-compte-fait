@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — this month (English)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: {{t.bg}}; color: {{t.ink}}; font-family: 'Geist', system-ui, sans-serif">
+<header style="display: flex; justify-content: space-between; align-items: baseline; padding: 24px 24px 0">
+<div style="font-size: 13px; font-weight: 600; letter-spacing: 0.02em">Tout Compte Fait</div>
+<div style="font-size: 13px; color: {{t.mu}}">Every month</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 26px; padding: 30px 24px 0">
+<section style="display: flex; flex-direction: column; gap: 20px">
+<h1 style="margin: 0; font-size: 15px; font-weight: 500; color: {{t.mu}}">To transfer to the joint account</h1>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{t.ink}}"></span>Alex</div>
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 36px; letter-spacing: -0.02em">€765.62</div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 16px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: {{t.ink}}"></span>Sam</div>
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 36px; letter-spacing: -0.02em">€665.67</div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: {{t.mu}}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7"></path></svg>
+<span>€1,431.29 in total, covering the joint account's bills</span>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: {{t.mu}}"><span>Split by income</span><span style="font-family: 'Martian Mono', ui-monospace, monospace">54.1 / 45.9</span></div>
+<div role="img" aria-label="Alex 54.1%, Sam 45.9%" style="display: flex; height: 14px; gap: 3px">
+<div style="width: 54.1%; background: {{t.ink}}; border-radius: 3px"></div>
+<div style="flex-grow: 1; background: {{t.hatch}}; border: 1px solid {{t.ink}}; border-radius: 3px; box-sizing: border-box"></div>
+</div>
+</section>
+<section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="background: {{t.sf}}; border: 1px solid {{t.ln}}; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; color: {{t.mu}}">Fixed bills / month</div>
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 20px">€1,628.27</div>
+<div style="font-size: 12px; color: {{t.mu}}">6 bills</div>
+</div>
+<div style="background: {{t.sf}}; border: 1px solid {{t.ln}}; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; color: {{t.mu}}">Paid directly</div>
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 20px">€196.98</div>
+<div style="font-size: 12px; color: {{t.mu}}">from personal accounts</div>
+</div>
+</section>
+<a href="Detail.dc.html" style="display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 16px; border: 1px solid {{t.ln}}; border-radius: 12px; text-decoration: none; color: {{t.ink}}; font-size: 14px">
+<span>See how it's calculated</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</a>
+<a href="Recap.dc.html" style="display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 48px; margin-top: -16px; border-radius: 12px; background: {{t.ink}}; color: {{t.bg}}; text-decoration: none; font-size: 14px; font-weight: 500">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"></path></svg>
+<span>Send the summary</span></a>
+</main>
+<nav aria-label="Main navigation" style="margin-top: auto; display: flex; justify-content: space-around; padding: 8px 12px 20px; border-top: 1px solid {{t.ln}}; background: {{t.bg}}">
+<a href="Main.dc.html" aria-label="Transfers" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: {{t.ink}}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>
+<span style="font-size: 11px; font-weight: 600">Transfers</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: {{t.ink}}"></span>
+</a><a href="Charges.dc.html" aria-label="Bills" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: {{t.mu}}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12"></path><circle cx="4.5" cy="7" r="0.6"></circle><circle cx="4.5" cy="12" r="0.6"></circle><circle cx="4.5" cy="17" r="0.6"></circle></svg>
+<span style="font-size: 11px; font-weight: 400">Bills</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Foyer.dc.html" aria-label="Household" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: {{t.mu}}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6 8 6v9H4z"></path><path d="M10 20v-5h4v5"></path></svg>
+<span style="font-size: 11px; font-weight: 400">Household</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Reglages.dc.html" aria-label="Settings" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: {{t.mu}}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+<span style="font-size: 11px; font-weight: 400">Settings</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const dark = (this.props.theme ?? 'light') === 'dark';
+const t = dark
+? { bg: '#0F0F0F', sf: '#181818', ink: '#EDECE8', mu: '#A09E99', ln: '#2A2A2A' }
+: { bg: '#F5F4F1', sf: '#FFFFFF', ink: '#111110', mu: '#5F5D59', ln: '#E4E2DD' };
+t.hatch = 'repeating-linear-gradient(45deg, ' + t.ink + ' 0 1.5px, transparent 1.5px 6px)';
+return { t };
+}
+}
+</script>
+</body>
+</html>

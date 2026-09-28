@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — catégories</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1">
+<header style="display: flex; align-items: center; gap: 8px; padding: 16px 12px 0">
+<a href="Reglages.dc.html" aria-label="Retour aux réglages" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #111110"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 17px; font-weight: 600">Catégories</h1>
+</header>
+<main style="display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 0">
+<ul style="list-style: none; margin: 0; padding: 0; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; overflow: hidden">
+<li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Logement</span><span style="font-size: 12px; color: #5F5D59">1 charge</span></div>
+<button type="button" aria-label="Renommer Logement" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li><li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px; border-top: 1px solid #E4E2DD">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Énergie</span><span style="font-size: 12px; color: #5F5D59">2 charges</span></div>
+<button type="button" aria-label="Renommer Énergie" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li><li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px; border-top: 1px solid #E4E2DD">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Eau</span><span style="font-size: 12px; color: #5F5D59">Aucune charge</span></div>
+<button type="button" aria-label="Renommer Eau" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li><li style="display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; border-top: 1px solid #E4E2DD; background: #F5F4F1">
+<label for="cat-edit" style="font-size: 12px; color: #5F5D59">Renommer · 1 charge</label>
+<input id="cat-edit" value="Internet &amp; téléphone" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110; border-color: #111110">
+<div style="display: flex; gap: 8px">
+<button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #A1260D"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>Supprimer</button>
+<button type="button" style="margin-left: auto; min-height: 44px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111110">Annuler</button>
+<button type="button" style="min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: #111110; font-family: inherit; font-size: 13px; font-weight: 500; color: #F5F4F1">Enregistrer</button>
+</div></li><li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px; border-top: 1px solid #E4E2DD">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Assurances</span><span style="font-size: 12px; color: #5F5D59">1 charge</span></div>
+<button type="button" aria-label="Renommer Assurances" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li><li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px; border-top: 1px solid #E4E2DD">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Abonnements</span><span style="font-size: 12px; color: #5F5D59">1 charge</span></div>
+<button type="button" aria-label="Renommer Abonnements" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li><li style="display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 4px 0 16px; border-top: 1px solid #E4E2DD">
+<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">Transport</span><span style="font-size: 12px; color: #5F5D59">Aucune charge</span></div>
+<button type="button" aria-label="Renommer Transport" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #5F5D59"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</li>
+</ul>
+<button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 1px dashed #5F5D59; border-radius: 12px; background: transparent; font-family: inherit; font-size: 14px; color: #111110"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nouvelle catégorie</button>
+<p style="margin: 0 4px; font-size: 12px; line-height: 1.5; color: #5F5D59">Supprimer une catégorie ne supprime pas ses charges : elles passent en « Sans catégorie ».</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

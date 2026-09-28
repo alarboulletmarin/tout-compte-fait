@@ -1,12 +1,2 @@
-# Tout compte fait — https://toutcomptefait.xyz
-#
-# Tout est ouvert à l'indexation, et il n'y a rien à cacher : le site ne sert
-# que l'app elle-même. Les données ne sont jamais ici — elles vivent
-# dans le navigateur de qui l'utilise, et aucune URL ne les expose.
-#
-# Ce fichier existe pour que la réponse soit un 200 et non la coquille de l'app :
-# le rewrite de `vercel.json` épargne déjà tout chemin contenant un point, et le
-# service worker ne lui sert pas `index.html` (`navigateFallbackDenylist`).
-
 User-agent: *
 Allow: /

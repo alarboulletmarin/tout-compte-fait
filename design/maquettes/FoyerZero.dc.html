@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — revenu à zéro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1">
+<header style="display: flex; justify-content: space-between; align-items: baseline; padding: 24px 24px 0">
+<div style="font-size: 13px; font-weight: 600; letter-spacing: 0.02em">Tout Compte Fait</div>
+<div style="font-size: 13px; color: #5F5D59">Foyer</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 14px; padding: 24px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 15px; font-weight: 500; color: #5F5D59">Qui compose le foyer</h1>
+<p style="margin: 0; font-size: 13px; color: #5F5D59">Revenus nets après impôt, hors primes et 13e mois.</p>
+</div>
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #111110; flex-shrink: 0"></span><span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 20px">50,0 %</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rev-lui-nom" style="font-size: 12px; color: #5F5D59">Prénom</label>
+<input id="rev-lui-nom" value="Lui" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rev-lui" style="font-size: 12px; color: #5F5D59">Revenu net mensuel</label>
+<input id="rev-lui" inputmode="decimal" value="2 300,00 €" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">
+</div></section>
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: #111110; flex-shrink: 0"></span><span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 20px">50,0 %</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rev-elle-nom" style="font-size: 12px; color: #5F5D59">Prénom</label>
+<input id="rev-elle-nom" value="Elle" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="rev-elle" style="font-size: 12px; color: #5F5D59">Revenu net mensuel</label>
+<input id="rev-elle" inputmode="decimal" value="0,00 €" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">
+</div></section>
+<div role="status" style="display: flex; gap: 12px; padding: 14px 16px; background: #FFFFFF; border: 1px solid #111110; border-radius: 14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111110" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><p style="margin: 0; font-size: 13px; line-height: 1.5">Un revenu est à <span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">0 €</span> : la répartition passe à <span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">50 / 50</span> en attendant.</p></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 0">
+<span style="font-size: 14px">Total du foyer</span><span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 16px">2 300,00 €</span></div>
+</main>
+<nav aria-label="Navigation principale" style="margin-top: auto; display: flex; justify-content: space-around; padding: 8px 12px 20px; border-top: 1px solid #E4E2DD; background: #F5F4F1">
+<a href="Main.dc.html" aria-label="Virements" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg>
+<span style="font-size: 11px; font-weight: 400">Virements</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Charges.dc.html" aria-label="Charges" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12"></path><circle cx="4.5" cy="7" r="0.6"></circle><circle cx="4.5" cy="12" r="0.6"></circle><circle cx="4.5" cy="17" r="0.6"></circle></svg>
+<span style="font-size: 11px; font-weight: 400">Charges</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a><a href="Foyer.dc.html" aria-label="Foyer" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #111110">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6 8 6v9H4z"></path><path d="M10 20v-5h4v5"></path></svg>
+<span style="font-size: 11px; font-weight: 600">Foyer</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: #111110"></span>
+</a><a href="Reglages.dc.html" aria-label="Réglages" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; min-height: 48px; justify-content: center; text-decoration: none; color: #5F5D59">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+<span style="font-size: 11px; font-weight: 400">Réglages</span>
+<span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: transparent"></span>
+</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

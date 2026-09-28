@@ -1,143 +1,14 @@
 <!doctype html>
-<html lang="fr" data-theme="light" data-palette="classique">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="Suivi de tes finances. Tout reste sur ton appareil." />
-    <!--
-      Une seule balise, sans `media`, et c'est un changement de fond : les deux
-      balises conditionnelles qui vivaient ici figeaient les deux fonds de la
-      palette Classique, alors qu'il y en a six. C'est désormais `theme.ts` qui
-      la tient à jour en lisant `--bg` sur la feuille — donc la couleur juste,
-      thème *et* palette compris. La valeur écrite ici est celle du premier
-      rendu, avant que React ne prenne la main.
-    -->
-    <meta name="theme-color" content="#F0F5F2" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Tout compte fait</title>
-
-    <!--
-      Ce que voit un lien partagé. Sans ces balises, une adresse collée dans une
-      conversation ne montre que son domaine : pour une app dont l'argument est
-      un écran, c'est l'écran qu'il faut donner à voir. L'image est la capture du
-      README, servie depuis `public/captures` — un seul exemplaire, celui-là
-      (voir `docs/CAPTURES.md`).
-      Les URL sont absolues, et elles doivent l'être : les réseaux sociaux ne
-      résolvent pas un chemin relatif.
-    -->
-    <link rel="canonical" href="https://toutcomptefait.xyz/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Tout compte fait" />
-    <meta property="og:locale" content="fr_FR" />
-    <meta property="og:url" content="https://toutcomptefait.xyz/" />
-    <meta property="og:title" content="Tout compte fait — tes finances, sur ton appareil" />
-    <meta
-      property="og:description"
-      content="Récurrences, prévision du mois, répartition des charges au prorata des revenus. Pas de compte, pas de serveur : les données vivent dans le navigateur."
-    />
-    <meta property="og:image" content="https://toutcomptefait.xyz/captures/mois-clair.png" />
-    <meta property="og:image:alt" content="L’écran du mois : la grille des tuiles, en thème clair." />
-    <meta name="twitter:card" content="summary_large_image" />
-
-    <!--
-      Ce que comprend un moteur de recherche. Sans ces données, une app gratuite
-      et installable se présente comme n'importe quelle page : le prix à zéro et
-      la licence sont précisément ce qui la distingue, et ce sont les deux
-      choses qu'un lien nu ne peut pas dire.
-      Recopiées du manifeste et non dérivées de lui : le manifeste est du JSON
-      construit par Vite, cette balise est de l'HTML servi tel quel, et les faire
-      se lire l'un l'autre demanderait plus de machinerie que les six lignes
-      qu'elle économiserait. Elles changent aussi rarement l'une que l'autre.
-    -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Tout compte fait",
-        "url": "https://toutcomptefait.xyz/",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Tout navigateur moderne",
-        "inLanguage": "fr-FR",
-        "description": "Suivi de tes finances, sans compte ni serveur : récurrences, prévision du mois, répartition des charges au prorata des revenus. Les données vivent dans le navigateur et rien ne sort de l’appareil.",
-        "screenshot": "https://toutcomptefait.xyz/captures/mois-clair.png",
-        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
-        "isAccessibleForFree": true,
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "author": { "@type": "Person", "name": "Andréa Larboullet Marin" },
-        "codeRepository": "https://github.com/alarboulletmarin/tout-compte-fait"
-      }
-    </script>
-    <script>
-      // Applique l'apparence avant le premier rendu — le thème et la palette,
-      // qui décident ensemble des couleurs, et la langue, que `lang` porte.
-      // Le document de données vit en IndexedDB (asynchrone) : sans ces trois
-      // miroirs localStorage, l'app s'afficherait une frame dans les couleurs
-      // de quelqu'un d'autre.
-      // La liste des palettes est recopiée ici, et c'est le seul endroit où :
-      // ce script tourne avant tout module, il ne peut rien importer. Une valeur
-      // inconnue retombe sur « classique », comme à la lecture du document.
-      // La langue, elle, n'est pas devinée sur le navigateur : le document fait
-      // foi, et `main.tsx` corrigera si le miroir est absent. Ce qui se joue ici
-      // est l'attribut que lisent la synthèse vocale et la coupure des mots,
-      // pas le catalogue — celui-là, seul un module peut le charger.
-      ;(function () {
-        var root = document.documentElement
-        try {
-          var pref = localStorage.getItem('tout-compte-fait.theme') || 'system'
-          var dark =
-            pref === 'dark' ||
-            (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-          root.dataset.theme = dark ? 'dark' : 'light'
-          var palette = localStorage.getItem('tout-compte-fait.palette')
-          var known = ['classique', 'monochrome', 'douce', 'vive', 'neutre', 'contrastee']
-          root.dataset.palette = known.indexOf(palette) === -1 ? 'classique' : palette
-          var locale = localStorage.getItem('tout-compte-fait.locale')
-          if (locale === 'fr' || locale === 'en') root.lang = locale
-        } catch (e) {
-          root.dataset.theme = 'light'
-          root.dataset.palette = 'classique'
-        }
-      })()
-    </script>
   </head>
   <body>
     <div id="root"></div>
-    <!--
-      Sans JavaScript, `#root` reste vide et la page est blanche — y compris
-      pour un robot d'indexation qui n'en exécute pas. Le style est en ligne :
-      la feuille est chargée par le module ci-dessous, c'est-à-dire par ce qui
-      justement ne tourne pas ici.
-      Aucune promesse de repli : l'app est un calcul local sur une base
-      IndexedDB, il n'y a pas de version dégradée à proposer. Elle dit ce qu'elle
-      est, ce qu'il manque, et où lire le reste.
-    -->
-    <noscript>
-      <div
-        style="
-          max-width: 34rem;
-          margin: 0 auto;
-          padding: 3rem 1.5rem;
-          font-family: system-ui, sans-serif;
-          line-height: 1.6;
-          color: #11201a;
-        "
-      >
-        <h1 style="font-size: 1.5rem; margin: 0 0 1rem">Tout compte fait</h1>
-        <p style="margin: 0 0 1rem">
-          Suivi de tes finances, sans compte ni serveur : récurrences, prévision du mois,
-          répartition des charges au prorata des revenus. Les données vivent dans le navigateur et
-          rien ne sort de l’appareil.
-        </p>
-        <p style="margin: 0">
-          L’app est entièrement calculée sur ton appareil : elle a besoin de JavaScript pour
-          s’afficher. Le code est lisible sur
-          <a href="https://github.com/alarboulletmarin/tout-compte-fait"
-            >github.com/alarboulletmarin/tout-compte-fait</a
-          >.
-        </p>
-      </div>
-    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — erreurs du formulaire</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1; position: relative">
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px 0 24px">
+<h1 style="margin: 0; font-size: 17px; font-weight: 600">Nouvelle charge</h1>
+<a href="Charges.dc.html" aria-label="Fermer" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #111110"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+</header>
+<form style="display: flex; flex-direction: column; gap: 16px; padding: 16px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="montant" style="font-size: 13px; color: #5F5D59">Montant</label>
+<input id="montant" inputmode="decimal" placeholder="0,00 €" aria-invalid="true" aria-describedby="err-montant" style="height: 60px; box-sizing: border-box; padding: 0; border: 0; border-bottom: 2px solid #A1260D; background: transparent; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 34px; color: #111110">
+<p id="err-montant" style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #A1260D"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A1260D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 3l10 18H2z"></path><path d="M12 10v4M12 17h.01"></path></svg>Indiquez un montant supérieur à 0 €</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="libelle" style="font-size: 13px; color: #5F5D59">Libellé</label>
+<input id="libelle" placeholder="Ex. Eau" aria-invalid="true" aria-describedby="err-libelle" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110; border: 2px solid #A1260D">
+<p id="err-libelle" style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #A1260D"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A1260D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 3l10 18H2z"></path><path d="M12 10v4M12 17h.01"></path></svg>Donnez un nom à cette charge</p>
+</div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Fréquence</legend>
+<div style="display: flex; gap: 6px"><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Mensuelle</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Trimestrielle</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Annuelle</button></div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Payé depuis</legend>
+<div style="display: flex; gap: 6px"><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 9px; height: 9px; border: 1.5px solid #111110; transform: rotate(45deg); box-sizing: border-box; flex-shrink: 0; margin: 0 1px"></span>Joint</button><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #F5F4F1; flex-shrink: 0"></span>Lui</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: #111110; flex-shrink: 0"></span>Elle</button></div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Catégorie</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Logement</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Énergie</button><button type="button" aria-pressed="true" style="min-height: 40px; padding: 0 14px; border: 1px solid #111110; border-radius: 20px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Eau</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Internet &amp; téléphone</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Assurances</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Abonnements</button><a href="Categories.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px dashed #5F5D59; border-radius: 20px; text-decoration: none; font-size: 13px; color: #111110">+ Nouvelle</a></div></fieldset>
+</form>
+<div style="margin-top: auto; padding: 0 24px 32px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: #5F5D59"><span>Équivalent mensuel</span><span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">–</span></div>
+<button type="submit" style="height: 52px; border: 0; border-radius: 12px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 15px; font-weight: 500">Ajouter la charge</button>
+
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

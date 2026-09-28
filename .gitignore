@@ -1,50 +1,20 @@
-# Dépendances et sorties de build
 node_modules
 dist
 dev-dist
 coverage
 .vite
-
-# Hébergement
 .vercel
-
-# Environnement local — aucune variable n'est nécessaire au projet, mais un
-# fichier créé par erreur ne doit pas partir dans un commit.
 .env
 .env.*
-
-# Journaux
 *.log
-npm-debug.log*
-
-# Éditeurs et systèmes de fichiers
 *.local
 .DS_Store
 .idea
 .vscode
 
-# Bout en bout — sorties de Playwright, jamais commitées : une trace pèse
-# quelques mébioctets et ne décrit qu'un échec déjà corrigé.
-test-results
-playwright-report
-.playwright
-
-# Assistants en ligne de commande — caches de session, propres à une machine et
-# à un instant. Le dossier n'est pas ignoré en bloc : une configuration
-# partagée y aurait sa place et devrait, elle, être commitée.
+# Propre à la machine
 .claude/tsc-cache
 .playwright-mcp
-audit/screenshots/
-audit/mesures/
-audit/axe/
-audit/bords/
-audit/zoom/
-audit/doublons/
-audit/*-avant/
-audit/focus/
-audit/lighthouse/
-
-# Références de design (hors dépôt)
-design_handoff_le_passage/
 thoughts/
-shot.tmp.mjs
+tout-compte-fait-v1/
+*.zip

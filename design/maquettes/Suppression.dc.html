@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — confirmer la suppression</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1; position: relative">
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px 0 24px">
+<h1 style="margin: 0; font-size: 17px; font-weight: 600">Modifier la charge</h1>
+<a href="Charges.dc.html" aria-label="Fermer" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #111110"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+</header>
+<form style="display: flex; flex-direction: column; gap: 20px; padding: 20px 24px 0">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="montant" style="font-size: 13px; color: #5F5D59">Montant</label>
+<input id="montant" inputmode="decimal" placeholder="0,00 €" value="45,00 €" style="height: 60px; box-sizing: border-box; padding: 0; border: 0; border-bottom: 1px solid #111110; background: transparent; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 34px; color: #111110">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="libelle" style="font-size: 13px; color: #5F5D59">Libellé</label>
+<input id="libelle" placeholder="Ex. Eau" value="Électricité" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; color: #111110">
+</div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Fréquence</legend>
+<div style="display: flex; gap: 6px"><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Mensuelle</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Trimestrielle</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Annuelle</button></div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Payé depuis</legend>
+<div style="display: flex; gap: 6px"><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 9px; height: 9px; border: 1.5px solid #111110; transform: rotate(45deg); box-sizing: border-box; flex-shrink: 0; margin: 0 1px"></span>Joint</button><button type="button" aria-pressed="true" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #111110; border-radius: 10px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #F5F4F1; flex-shrink: 0"></span>Lui</button><button type="button" aria-pressed="false" style="flex-grow: 1; flex-basis: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #E4E2DD; border-radius: 10px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: #111110; flex-shrink: 0"></span>Elle</button></div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0 0 8px; font-size: 13px; color: #5F5D59">Catégorie</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Logement</button><button type="button" aria-pressed="true" style="min-height: 40px; padding: 0 14px; border: 1px solid #111110; border-radius: 20px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 13px">Énergie</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Eau</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Internet &amp; téléphone</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Assurances</button><button type="button" aria-pressed="false" style="min-height: 40px; padding: 0 14px; border: 1px solid #E4E2DD; border-radius: 20px; background: #FFFFFF; color: #111110; font-family: inherit; font-size: 13px">Abonnements</button><a href="Categories.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px dashed #5F5D59; border-radius: 20px; text-decoration: none; font-size: 13px; color: #111110">+ Nouvelle</a></div></fieldset>
+</form>
+<div style="margin-top: auto; padding: 0 24px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: #5F5D59"><span>Équivalent mensuel</span><span style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">45,00 €</span></div>
+<button type="submit" style="height: 52px; border: 0; border-radius: 12px; background: #111110; color: #F5F4F1; font-family: inherit; font-size: 15px; font-weight: 500">Enregistrer</button>
+<a href="Suppression.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 14px; color: #A1260D; text-decoration: none">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>Supprimer la charge</a>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(17,17,16,0.45)"></div>
+<div role="dialog" aria-modal="true" aria-labelledby="del-title" style="position: absolute; left: 0; right: 0; bottom: 0; background: #F5F4F1; border-radius: 22px 22px 0 0; padding: 12px 24px 32px; display: flex; flex-direction: column; gap: 18px">
+<div aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E4E2DD"></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 id="del-title" style="margin: 0; font-size: 20px; font-weight: 600">Supprimer « Électricité » ?</h2>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #5F5D59">45,00 € par mois, payé depuis le compte de Lui.</p>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; color: #5F5D59">Nouveaux virements vers le joint</div>
+<div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px">
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #111110; flex-shrink: 0"></span>Lui</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums"><span style="color: #5F5D59; text-decoration: line-through">765,62 €</span><span aria-hidden="true" style="color: #5F5D59">→</span><span>786,25 €</span></span></div>
+<div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px">
+<span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="display: inline-block; width: 10px; height: 10px; background: #111110; flex-shrink: 0"></span>Elle</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums"><span style="color: #5F5D59; text-decoration: line-through">665,67 €</span><span aria-hidden="true" style="color: #5F5D59">→</span><span>645,04 €</span></span></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<a href="ChargesApres.dc.html" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 12px; background: #A1260D; color: #FFFFFF; text-decoration: none; font-size: 15px; font-weight: 500">Supprimer</a>
+<a href="Modifier.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; font-size: 15px; color: #111110; text-decoration: none">Annuler</a>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>
