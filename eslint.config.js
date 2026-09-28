@@ -20,7 +20,10 @@ export default tseslint.config(
   },
   {
     files: ['**/*.test.ts'],
-    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
   {
     // Le domaine reste pur : aucun import React ni navigateur
