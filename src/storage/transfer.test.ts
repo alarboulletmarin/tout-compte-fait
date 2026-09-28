@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { initialData } from '../domain/data'
+import { initialData, type AppData } from '../domain/data'
+import { carryForward, recordMonth } from '../domain/history'
 import { sample } from './fixtures'
 import { migrate, SCHEMA_VERSION, validateData } from './schema'
 import { exportFileName, parseExport, serializeExport } from './transfer'
@@ -211,5 +212,152 @@ describe('schéma', () => {
   it('laisse passer la version courante sans migration', () => {
     const data = sample()
     expect(migrate(data, SCHEMA_VERSION)).toBe(data)
+  })
+})
+
+describe('migration 2 → 3', () => {
+  const v2 = () => {
+    const { household, charges, categories } = sample()
+    const data = { household, charges, categories }
+    return { app: 'tout-compte-fait', schemaVersion: 2, exportedAt: exportedAt.toISOString(), data }
+  }
+
+  it('un export v2 reste importable : historique vide, le reste intact', () => {
+    const result = parseExport(JSON.stringify(v2()))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.file.schemaVersion).toBe(SCHEMA_VERSION)
+    expect(result.file.data).toEqual({ ...v2().data, history: {} })
+  })
+
+  it('un export v1 traverse les deux migrations', () => {
+    const v1 = {
+      app: 'tout-compte-fait',
+      schemaVersion: 1,
+      exportedAt: exportedAt.toISOString(),
+      data: {
+        household: {
+          members: [
+            { name: 'Lui', income: 1000 },
+            { name: 'Elle', income: null },
+          ],
+        },
+        categories: [],
+        charges: [],
+      },
+    }
+    const result = parseExport(JSON.stringify(v1))
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.file.data.history).toEqual({})
+  })
+
+  it('migrate ne modifie pas l’entrée', () => {
+    const file = v2()
+    const frozen = JSON.stringify(file.data)
+    migrate(file.data, 2)
+    expect(JSON.stringify(file.data)).toBe(frozen)
+  })
+
+  it('refuse un export v2 avec une clé inconnue', () => {
+    const file = v2()
+    ;(file.data as Record<string, unknown>).extra = true
+    expect(parseExport(JSON.stringify(file)).ok).toBe(false)
+  })
+
+  it('refuse un export v3 sans historique', () => {
+    expect(parseExport(fileWith((f) => delete f.data.history)).ok).toBe(false)
+  })
+})
+
+describe('historique — export et import', () => {
+  /** Août réel, septembre et octobre reconduits, novembre réel avec une charge en plus. */
+  const withHistory = (): AppData => {
+    const august = recordMonth(sample(), '2026-08')
+    const carried = carryForward(august, '2026-10')
+    return recordMonth(
+      {
+        ...carried,
+        charges: [
+          ...carried.charges,
+          {
+            id: 'z',
+            label: 'Netflix',
+            amount: 1299,
+            frequency: 'monthly',
+            paidFrom: 'joint',
+            categoryId: null,
+          },
+        ],
+      },
+      '2026-11',
+    )
+  }
+  const withHistoryFile = (edit: (file: Record<string, any>) => void) => {
+    const file = JSON.parse(serializeExport(withHistory(), exportedAt))
+    edit(file)
+    return JSON.stringify(file)
+  }
+
+  it('fait l’aller-retour, drapeaux « reconduit » compris', () => {
+    const data = withHistory()
+    expect(data.history['2026-09']!.carried).toBe(true)
+    const result = parseExport(serializeExport(data, exportedAt))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.file.data).toEqual(data)
+    expect(result.file.data.history['2026-08']).not.toHaveProperty('carried')
+    expect(result.file.data.history['2026-10']!.carried).toBe(true)
+    expect(result.file.data.history['2026-11']).not.toHaveProperty('carried')
+  })
+
+  it('valide chaque instantané avec les règles des données courantes', () => {
+    const result = parseExport(
+      withHistoryFile((f) => (f.data.history['2026-08'].charges[1].amount = -5)),
+    )
+    expect(result).toEqual({
+      ok: false,
+      reason: 'history[2026-08].charges[1].amount : centimes entiers ≥ 1 attendus',
+    })
+  })
+
+  it('un instantané est jugé avec son propre foyer', () => {
+    // Un compte de membre qui n'existe pas dans CET instantané, même s'il existe aujourd'hui
+    const result = parseExport(
+      withHistoryFile((f) => {
+        f.data.history['2026-08'].household.members.pop()
+      }),
+    )
+    expect(result.ok).toBe(false)
+  })
+
+  it.each<[string, (f: Record<string, any>) => void]>([
+    ['une clé de mois sans zéro', (f) => (f.data.history['2026-8'] = f.data.history['2026-08'])],
+    ['un mois 13', (f) => (f.data.history['2026-13'] = f.data.history['2026-08'])],
+    ['une clé qui n’est pas un mois', (f) => (f.data.history['août'] = f.data.history['2026-08'])],
+    ['une année absurde', (f) => (f.data.history['0001-01'] = f.data.history['2026-08'])],
+    ['un jour dans la clé', (f) => (f.data.history['2026-08-15'] = f.data.history['2026-08'])],
+    ['un instantané qui n’est pas un objet', (f) => (f.data.history['2026-08'] = 'x')],
+    ['un instantané nul', (f) => (f.data.history['2026-08'] = null)],
+    ['un instantané sans charges', (f) => delete f.data.history['2026-08'].charges],
+    ['une clé en trop dans un instantané', (f) => (f.data.history['2026-08'].expenses = [])],
+    ['un historique imbriqué', (f) => (f.data.history['2026-08'].history = {})],
+    ['un drapeau carried à false', (f) => (f.data.history['2026-09'].carried = false)],
+    ['un drapeau carried en texte', (f) => (f.data.history['2026-09'].carried = 'oui')],
+    ['un historique en liste', (f) => (f.data.history = [])],
+    ['un historique nul', (f) => (f.data.history = null)],
+    ['un instantané au foyer invalide', (f) => (f.data.history['2026-08'].household.members = [])],
+    [
+      'une charge sur un compte inconnu',
+      (f) => (f.data.history['2026-08'].charges[0].paidFrom = 'm:zzz'),
+    ],
+    ['une catégorie inconnue', (f) => (f.data.history['2026-08'].charges[0].categoryId = 'nope')],
+  ])('refuse %s', (_, edit) => {
+    const result = parseExport(withHistoryFile(edit))
+    expect(result.ok).toBe(false)
+  })
+
+  it('le nom de clé « __proto__ » est refusé, pas interprété', () => {
+    const text = withHistoryFile(() => {}).replace('"2026-08":', '"__proto__":')
+    expect(parseExport(text).ok).toBe(false)
   })
 })

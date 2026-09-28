@@ -100,6 +100,7 @@ describe('removeMember / restoreMember', () => {
     household: { members: [member('a'), member('b'), member('c')] },
     categories: [],
     charges: [charge('1', 'm:b'), charge('2', 'joint'), charge('3', 'm:b'), charge('4', 'm:a')],
+    history: {},
   }
 
   it('retire le membre et passe ses charges au joint', () => {

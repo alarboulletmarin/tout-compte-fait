@@ -1,4 +1,5 @@
-import type { AppData } from '../domain/data'
+import type { AppData, History, Snapshot } from '../domain/data'
+import { MONTH_KEY } from '../domain/history'
 import {
   MAX_MEMBERS,
   MIN_MEMBERS,
@@ -10,14 +11,17 @@ import {
   type Member,
 } from '../domain/types'
 
+/** Les clés du contenu d'un mois ; les données courantes y ajoutent `history`. */
+const CONTENT_KEYS = ['household', 'charges', 'categories'] as const
+
 /** Version du format des données, stockées comme exportées. */
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 /**
  * Migrations des données : MIGRATIONS[n] passe de la version n à n + 1.
  * S'appliquent aussi bien à la base locale qu'aux fichiers importés.
  */
-const MIGRATIONS: Record<number, (data: unknown) => unknown> = { 1: v1ToV2 }
+const MIGRATIONS: Record<number, (data: unknown) => unknown> = { 1: v1ToV2, 2: v2ToV3 }
 
 /**
  * v1 : exactement 2 membres sans id, comptes « member1 » / « member2 ».
@@ -25,7 +29,7 @@ const MIGRATIONS: Record<number, (data: unknown) => unknown> = { 1: v1ToV2 }
  * validateData rejette le reste.
  */
 function v1ToV2(input: unknown): unknown {
-  const data = record(input, 'data', ['household', 'charges', 'categories'])
+  const data = record(input, 'data', CONTENT_KEYS)
   const household = record(data.household, 'household', ['members'])
   const members = list(household.members, 'household.members')
   if (members.length !== 2) fail('household.members', 'exactement 2 membres attendus')
@@ -54,6 +58,11 @@ function v1ToV2(input: unknown): unknown {
   }
 }
 
+/** v3 : l'historique mois par mois, vide au départ. */
+function v2ToV3(input: unknown): unknown {
+  return { ...record(input, 'data', CONTENT_KEYS), history: {} }
+}
+
 export class InvalidDataError extends Error {}
 
 export function migrate(data: unknown, fromVersion: number): unknown {
@@ -71,25 +80,48 @@ export function migrate(data: unknown, fromVersion: number): unknown {
 const FREQUENCIES: readonly Frequency[] = ['monthly', 'quarterly', 'yearly']
 /** Validation stricte : la moindre anomalie rejette tout. */
 export function validateData(input: unknown): AppData {
-  const data = record(input, 'data', ['household', 'charges', 'categories'])
+  const data = record(input, 'data', [...CONTENT_KEYS, 'history'])
+  return { ...validateContent(data, ''), history: validateHistory(data.history) }
+}
 
-  const household = record(data.household, 'household', ['members'])
-  const rawMembers = list(household.members, 'household.members')
-  if (rawMembers.length < MIN_MEMBERS || rawMembers.length > MAX_MEMBERS) {
-    fail('household.members', `${MIN_MEMBERS} à ${MAX_MEMBERS} membres attendus`)
+/** Chaque instantané suit les mêmes règles que les données courantes, avec son propre foyer. */
+function validateHistory(input: unknown): History {
+  if (!isObject(input)) fail('history', 'objet attendu')
+  const history: History = {}
+  for (const [key, value] of Object.entries(input)) {
+    if (!MONTH_KEY.test(key)) fail('history', `clé de mois invalide « ${key} »`)
+    history[key] = validateSnapshot(value, `history[${key}]`)
   }
-  const members = rawMembers.map((m, i) => member(m, `household.members[${i}]`))
-  unique(members, 'household.members')
+  return history
+}
+
+function validateSnapshot(input: unknown, where: string): Snapshot {
+  if (!isObject(input)) fail(where, 'objet attendu')
+  const { carried, ...rest } = input
+  if (carried !== undefined && carried !== true) fail(`${where}.carried`, 'true attendu')
+  const content = validateContent(record(rest, where, CONTENT_KEYS), `${where}.`)
+  return carried ? { ...content, carried } : content
+}
+
+/** Foyer, charges et catégories : le contenu d'un mois, courant ou figé. `at` préfixe les chemins d'erreur. */
+function validateContent(data: Record<string, unknown>, at: string) {
+  const household = record(data.household, `${at}household`, ['members'])
+  const rawMembers = list(household.members, `${at}household.members`)
+  if (rawMembers.length < MIN_MEMBERS || rawMembers.length > MAX_MEMBERS) {
+    fail(`${at}household.members`, `${MIN_MEMBERS} à ${MAX_MEMBERS} membres attendus`)
+  }
+  const members = rawMembers.map((m, i) => member(m, `${at}household.members[${i}]`))
+  unique(members, `${at}household.members`)
   const accounts = new Set<string>(['joint', ...members.map((m) => memberAccount(m.id))])
 
-  const categories = list(data.categories, 'categories').map((c, i) =>
-    category(c, `categories[${i}]`),
+  const categories = list(data.categories, `${at}categories`).map((c, i) =>
+    category(c, `${at}categories[${i}]`),
   )
-  unique(categories, 'categories')
+  unique(categories, `${at}categories`)
   const categoryIds = new Set(categories.map((c) => c.id))
 
-  const charges = list(data.charges, 'charges').map((c, i) => {
-    const where = `charges[${i}]`
+  const charges = list(data.charges, `${at}charges`).map((c, i) => {
+    const where = `${at}charges[${i}]`
     const ch = charge(c, where)
     if (!accounts.has(ch.paidFrom)) fail(`${where}.paidFrom`, `compte inconnu « ${ch.paidFrom} »`)
     if (ch.categoryId !== null && !categoryIds.has(ch.categoryId)) {
@@ -97,7 +129,7 @@ export function validateData(input: unknown): AppData {
     }
     return ch
   })
-  unique(charges, 'charges')
+  unique(charges, `${at}charges`)
 
   return { household: { members }, charges, categories }
 }

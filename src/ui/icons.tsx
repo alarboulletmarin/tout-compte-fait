@@ -90,6 +90,13 @@ export const HouseholdIcon = () => (
   </Svg>
 )
 
+export const HistoryIcon = () => (
+  <Svg size={22} stroke={1.5}>
+    <rect x="4" y="9" width="16" height="11" rx="2" />
+    <path d="M7 6h10M9.5 3h5M4 13h16M8 16.5h4" />
+  </Svg>
+)
+
 export const SettingsIcon = () => (
   <Svg size={22} stroke={1.5}>
     <path d="M5 7h9M18 7h1M5 17h1M10 17h9" />

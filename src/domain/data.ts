@@ -1,11 +1,24 @@
 import { MAX_MEMBERS, MIN_MEMBERS, memberAccount } from './types'
 import type { Category, Charge, Household, Member } from './types'
 
+/** Ce qui définit un mois : le foyer, les charges et les catégories tels qu'ils étaient. */
+export interface Snapshot {
+  household: Household
+  charges: Charge[]
+  categories: Category[]
+  /** Mois reconduit du précédent : l'app n'a pas été ouverte ce mois-là. */
+  carried?: true
+}
+
+/** Un instantané par mois, clé « AAAA-MM ». */
+export type History = Record<string, Snapshot>
+
 /** Tout ce que l'app garde sur l'appareil. */
 export interface AppData {
   household: Household
   charges: Charge[]
   categories: Category[]
+  history: History
 }
 
 /** Catégories par défaut ; les noms affichés viennent de la langue au premier lancement. */
@@ -27,6 +40,7 @@ export function initialData(names?: Record<string, string>): AppData {
     household: { members: [newMember(), newMember()] },
     charges: [],
     categories: DEFAULT_CATEGORIES.map((c) => ({ id: c.id, name: names?.[c.id] ?? c.name })),
+    history: {},
   }
 }
 

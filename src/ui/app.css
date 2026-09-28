@@ -206,7 +206,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 64px;
+  min-width: 56px; /* cinq onglets tiennent sur 320 px */
   min-height: 48px;
   color: var(--muted);
 }
@@ -1614,6 +1614,73 @@ button.group__row {
   border-top: 1px solid var(--line);
   font-size: 14px;
 }
+/* ---------- Historique ---------- */
+
+.history {
+  gap: 20px;
+  padding: 28px 24px 0;
+}
+.month {
+  gap: 26px;
+  padding: 24px 24px 0;
+}
+.month-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 44px;
+  padding: 14px 16px;
+}
+/* Le groupe rogne le contour : on le rentre */
+.month-row:focus-visible {
+  outline-offset: -2px;
+}
+.month-row__month {
+  font-size: 15px;
+  font-weight: 600;
+}
+.month-row__total {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.month-row__total svg {
+  color: var(--muted);
+}
+.month-row__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag {
+  padding: 2px 8px;
+  border: 1px solid var(--muted);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.month-row__who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.history__empty-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.compare__delta {
+  font-size: 16px;
+  font-weight: 500;
+}
+.compare__amounts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .deskbar,
 .nav__brand,
 .nav__local {

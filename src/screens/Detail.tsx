@@ -8,12 +8,22 @@ import { useNames } from './common'
 import { at } from '../domain/at'
 
 export function Detail() {
+  const { t } = useI18n()
+  return (
+    <SubScreen title={t.detail.title} back="/" backLabel={t.detail.back} className="detail">
+      <DetailBody />
+    </SubScreen>
+  )
+}
+
+/** Le détail du calcul du mois affiché : une carte par membre, puis le joint. */
+export function DetailBody() {
   const { t, euros, share } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
 
   return (
-    <SubScreen title={t.detail.title} back="/" backLabel={t.detail.back} className="detail">
+    <>
       <p className="detail__intro">{t.detail.intro(euros(split.total))}</p>
 
       {data.household.members.map((member, i) => {
@@ -70,6 +80,6 @@ export function Detail() {
           {t.detail.togetherEnd}
         </span>
       </p>
-    </SubScreen>
+    </>
   )
 }

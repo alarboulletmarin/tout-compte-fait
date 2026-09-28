@@ -59,3 +59,10 @@ export function parseEuros(text: string, locale: Locale = 'fr-FR'): number | nul
   const cents = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'))
   return Number.isSafeInteger(cents) ? cents : null
 }
+
+/** « 2026-09 » → « septembre 2026 » / « September 2026 », à la date locale. */
+export function formatMonth(key: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
+    new Date(Number(key.slice(0, 4)), Number(key.slice(5)) - 1, 1),
+  )
+}

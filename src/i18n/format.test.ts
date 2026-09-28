@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatEuros, formatShare, parseEuros, sharePercents } from './format'
+import { formatEuros, formatMonth, formatShare, parseEuros, sharePercents } from './format'
 
 // Intl sépare les milliers par une espace fine insécable
 const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, ' ')
@@ -88,5 +88,15 @@ describe('parseEuros', () => {
     for (const cents of [0, 1, 99, 4500, 143129, 123456789]) {
       expect(parseEuros(formatEuros(cents, 'fr-FR'))).toBe(cents)
     }
+  })
+})
+
+describe('formatMonth', () => {
+  it.each([
+    ['2026-09', 'fr-FR', 'septembre 2026'],
+    ['2027-01', 'fr-FR', 'janvier 2027'],
+    ['2026-12', 'en-GB', 'December 2026'],
+  ] as const)('%s en %s → %s', (key, locale, text) => {
+    expect(formatMonth(key, locale)).toBe(text)
   })
 })

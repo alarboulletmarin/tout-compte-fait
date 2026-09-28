@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { initialData, type AppData } from '../domain/data'
+import { initialData, type AppData, type Snapshot } from '../domain/data'
+import { carryForward, monthOf, recordMonth } from '../domain/history'
 import { computeSplit, type Split } from '../domain/split'
 import { clearAll, loadData, saveData } from './db'
 
@@ -9,7 +10,7 @@ interface Store {
   split: Split
   /** Premier lancement : rien n'a encore été enregistré sur l'appareil. */
   fresh: boolean
-  /** Applique une modification et l'enregistre sur l'appareil. */
+  /** Applique une modification et l'enregistre sur l'appareil, avec le mois courant de l'historique. */
   update: (change: (data: AppData) => AppData) => void
   /** Efface tout de l'appareil et revient au premier lancement. */
   reset: () => Promise<void>
@@ -38,7 +39,8 @@ export function StoreProvider(props: {
         if (!active) return
         setState({
           status: 'ready',
-          data: data ?? initialData(),
+          // Mois sans ouverture de l'app : reconduits en mémoire, écrits à la prochaine sauvegarde
+          data: data ? carryForward(data, monthOf()) : initialData(),
           fresh: data === null,
           dirty: false,
         })
@@ -67,7 +69,12 @@ export function StoreProvider(props: {
   const update = useCallback((change: (data: AppData) => AppData) => {
     setState((s) =>
       s.status === 'ready'
-        ? { status: 'ready', data: change(s.data), fresh: false, dirty: true }
+        ? {
+            status: 'ready',
+            data: recordMonth(change(s.data), monthOf()),
+            fresh: false,
+            dirty: true,
+          }
         : s,
     )
   }, [])
@@ -85,6 +92,25 @@ export function StoreProvider(props: {
 
   if (!store) return props.fallback(state.status === 'error' ? 'error' : 'loading')
   return <StoreContext.Provider value={store}>{props.children}</StoreContext.Provider>
+}
+
+/**
+ * Montre un mois figé aux écrans de lecture (virements, détail) : ils lisent l'instantané
+ * comme les données courantes. Lecture seule : aucun contrôle qui modifie n'y a sa place.
+ */
+export function MonthView(props: { snapshot: Snapshot; children: ReactNode }) {
+  const store = useStore()
+  const { snapshot } = props
+  const view = useMemo<Store>(() => {
+    const { household, charges, categories } = snapshot
+    return {
+      ...store,
+      data: { household, charges, categories, history: {} },
+      split: computeSplit(household, charges),
+      fresh: false,
+    }
+  }, [snapshot, store])
+  return <StoreContext.Provider value={view}>{props.children}</StoreContext.Provider>
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

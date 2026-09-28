@@ -12,3 +12,4 @@
 - Up to six people in the household, each with their own shape and hatching
 - Repayments between several people, worked out to the cent
 - Remove a person from the household, with the impact on transfers and an Undo button
+- Month-by-month history: every month is kept as it was, with its transfers, and compared with the previous month (bills added, removed, changed)

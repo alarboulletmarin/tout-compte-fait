@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'wouter'
 import { useI18n } from '../i18n/i18n'
-import { ChargesIcon, HouseholdIcon, SettingsIcon, TransfersIcon } from './icons'
+import { ChargesIcon, HistoryIcon, HouseholdIcon, SettingsIcon, TransfersIcon } from './icons'
 
 export function Nav() {
   const { t } = useI18n()
@@ -10,6 +10,7 @@ export function Nav() {
     ['/', t.nav.transfers, <TransfersIcon key="i" />],
     ['/charges', t.nav.charges, <ChargesIcon key="i" />],
     ['/household', t.nav.household, <HouseholdIcon key="i" />],
+    ['/history', t.nav.history, <HistoryIcon key="i" />],
     ['/settings', t.nav.settings, <SettingsIcon key="i" />],
   ]
   return (

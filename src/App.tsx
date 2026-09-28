@@ -5,6 +5,8 @@ import { Categories } from './screens/Categories'
 import { ChargeForm } from './screens/ChargeForm'
 import { Charges } from './screens/Charges'
 import { Detail } from './screens/Detail'
+import { History } from './screens/History'
+import { HistoryMonth } from './screens/HistoryMonth'
 import { Household } from './screens/Household'
 import { InstallHint } from './screens/InstallHint'
 import { News } from './screens/News'
@@ -47,7 +49,10 @@ function Routes() {
   const [location] = useLocation()
   const { fresh } = useStore()
   // Chaque écran s'ouvre en haut de page
-  useEffect(() => window.scrollTo(0, 0), [location])
+  // Bloc et non flèche : scrollTo renvoie une promesse sur les navigateurs récents, et un effet ne doit rien renvoyer
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location])
 
   if (fresh) return <Onboarding />
   return (
@@ -67,6 +72,8 @@ function Screens() {
       <Route path="/charges/new">{() => <ChargeForm />}</Route>
       <Route path="/charges/:id">{(p) => <ChargeForm key={p.id} id={p.id} />}</Route>
       <Route path="/household" component={Household} />
+      <Route path="/history" component={History} />
+      <Route path="/history/:month">{(p) => <HistoryMonth month={p.month} />}</Route>
       <Route path="/settings" component={Settings} />
       <Route path="/settings/categories" component={Categories} />
       <Route path="/settings/news" component={News} />

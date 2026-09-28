@@ -53,6 +53,7 @@ export const fr = {
     transfers: 'Virements',
     charges: 'Charges',
     household: 'Foyer',
+    history: 'Historique',
     settings: 'Réglages',
     local: 'Données sur cet appareil',
   },
@@ -97,6 +98,39 @@ export const fr = {
     together: 'Ensemble',
     togetherEnd: ', soit les charges payées par le joint',
     directly: (name: string) => `À ${name}, directement`,
+  },
+
+  history: {
+    kicker: 'Mois par mois',
+    lead: "Chaque mois est gardé tel qu'il était.",
+    current: 'Ce mois-ci',
+    carried: 'Reconduit',
+    totalLabel: 'Charges fixes par mois : ',
+    emptyTitle: "Un seul mois pour l'instant",
+    emptyText:
+      "L'historique se remplit tout seul : chaque mois où vous ouvrez l'app est gardé tel quel, et un mois sans ouverture reprend les charges du précédent. Le mois prochain, vous verrez ce qui a changé.",
+    back: "Retour à l'historique",
+    carriedNote: (month: string) =>
+      `Mois reconduit : l'app n'a pas été ouverte en ${month}. Les charges du mois précédent sont reprises telles quelles.`,
+    compare: {
+      title: (previous: string) => `Par rapport à ${previous}`,
+      first: "Premier mois de l'historique : rien à comparer.",
+      total: 'Charges fixes par mois',
+      same: 'Inchangé',
+      nothing: 'Aucune charge ajoutée, retirée ni modifiée.',
+      added: 'Ajoutées',
+      removed: 'Retirées',
+      changed: 'Modifiées',
+      fields: {
+        label: 'libellé',
+        amount: 'montant',
+        frequency: 'fréquence',
+        account: 'compte',
+        category: 'catégorie',
+      },
+      changedFields: (fields: readonly string[]) => `Modifié : ${list.format(fields)}`,
+      becomes: 'devient',
+    },
   },
 
   onboarding: {
@@ -234,7 +268,7 @@ export const fr = {
     summary: (date: string, charges: string, names: readonly string[]) =>
       `Exporté le ${date} · ${charges} · ${list.format(names)}`,
     warning:
-      "Vos revenus, prénoms et charges actuels seront remplacés par ceux du fichier. C'est définitif.",
+      "Vos revenus, prénoms, charges et historique actuels seront remplacés par ceux du fichier. C'est définitif.",
     replace: 'Remplacer',
     exportFirst: "Exporter d'abord mes données",
     cancel: 'Annuler',
@@ -248,7 +282,7 @@ export const fr = {
   eraseSheet: {
     title: 'Tout effacer ?',
     text: (charges: string) =>
-      `Les revenus, les prénoms et ${charges} seront supprimés de cet appareil. Rien n'est gardé ailleurs : c'est définitif.`,
+      `Les revenus, les prénoms, l'historique et ${charges} seront supprimés de cet appareil. Rien n'est gardé ailleurs : c'est définitif.`,
     charges: (n: number) =>
       n === 0 ? 'les catégories' : n === 1 ? 'la charge' : `les ${n} charges`,
     confirm: 'Tout effacer',

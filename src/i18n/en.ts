@@ -50,6 +50,7 @@ export const en: Messages = {
     transfers: 'Transfers',
     charges: 'Bills',
     household: 'Household',
+    history: 'History',
     settings: 'Settings',
     local: 'Data on this device',
   },
@@ -93,6 +94,39 @@ export const en: Messages = {
     together: 'Together',
     togetherEnd: ', covering the bills paid from the joint account',
     directly: (name: string) => `To ${name}, directly`,
+  },
+
+  history: {
+    kicker: 'Month by month',
+    lead: 'Every month is kept as it was.',
+    current: 'This month',
+    carried: 'Carried over',
+    totalLabel: 'Fixed bills per month: ',
+    emptyTitle: 'Only one month so far',
+    emptyText:
+      "History fills itself: every month you open the app is kept as it was, and a month you skipped reuses the bills of the one before. Next month, you'll see what changed.",
+    back: 'Back to history',
+    carriedNote: (month: string) =>
+      `Carried-over month: the app wasn't opened in ${month}. The previous month's bills are reused as they were.`,
+    compare: {
+      title: (previous: string) => `Compared with ${previous}`,
+      first: 'First month in the history: nothing to compare.',
+      total: 'Fixed bills per month',
+      same: 'Unchanged',
+      nothing: 'No bill added, removed or changed.',
+      added: 'Added',
+      removed: 'Removed',
+      changed: 'Changed',
+      fields: {
+        label: 'name',
+        amount: 'amount',
+        frequency: 'frequency',
+        account: 'account',
+        category: 'category',
+      },
+      changedFields: (fields: readonly string[]) => `Changed: ${list.format(fields)}`,
+      becomes: 'becomes',
+    },
   },
 
   onboarding: {
@@ -220,7 +254,7 @@ export const en: Messages = {
     summary: (date: string, charges: string, names: readonly string[]) =>
       `Exported on ${date} · ${charges} · ${list.format(names)}`,
     warning:
-      'Your current incomes, names and bills will be replaced by those in the file. This cannot be undone.',
+      'Your current incomes, names, bills and history will be replaced by those in the file. This cannot be undone.',
     replace: 'Replace',
     exportFirst: 'Export my data first',
     cancel: 'Cancel',
@@ -234,7 +268,7 @@ export const en: Messages = {
   eraseSheet: {
     title: 'Erase everything?',
     text: (charges: string) =>
-      `The incomes, the names and ${charges} will be deleted from this device. Nothing is kept anywhere else: this cannot be undone.`,
+      `The incomes, the names, the history and ${charges} will be deleted from this device. Nothing is kept anywhere else: this cannot be undone.`,
     charges: (n: number) => (n === 0 ? 'the categories' : n === 1 ? 'the bill' : `the ${n} bills`),
     confirm: 'Erase everything',
   },

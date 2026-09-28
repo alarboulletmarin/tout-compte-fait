@@ -17,7 +17,7 @@ import { at } from '../domain/at'
 
 export function Transfers() {
   const { t } = useI18n()
-  const { data, split } = useStore()
+  const { data } = useStore()
   const [recap, setRecap] = useState(false)
   const wide = useMediaQuery(WIDE)
 
@@ -37,8 +37,7 @@ export function Transfers() {
   }
   return (
     <TabScreen title={t.nav.transfers} kicker={t.transfers.kicker} className="transfers">
-      {split.reimbursements.length > 0 ? <Reimbursement split={split} /> : <Regular />}
-      <EqualFallbackNote />
+      <TransferBody />
       <Link href="/detail" className="link-row">
         <span>{t.transfers.seeDetail}</span>
         <ArrowRightIcon />
@@ -56,7 +55,22 @@ export function Transfers() {
   )
 }
 
-function Regular() {
+/** Les virements du mois affiché, avec la note de répartition égale ; `level` : le niveau du titre. */
+export function TransferBody({ level = 'h1' }: { level?: 'h1' | 'h2' }) {
+  const { split } = useStore()
+  return (
+    <>
+      {split.reimbursements.length > 0 ? (
+        <Reimbursement split={split} level={level} />
+      ) : (
+        <Regular level={level} />
+      )}
+      <EqualFallbackNote />
+    </>
+  )
+}
+
+function Regular({ level: Heading }: { level: 'h1' | 'h2' }) {
   const { t, euros } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
@@ -64,7 +78,7 @@ function Regular() {
   return (
     <>
       <section className="stack stack--20">
-        <h1 className="lead">{t.transfers.title}</h1>
+        <Heading className="lead">{t.transfers.title}</Heading>
         <div className="stack stack--14">
           {names.map((name, i) => (
             <div className="transfer" key={i}>
@@ -103,13 +117,13 @@ function Regular() {
 }
 
 /** Des membres paient déjà plus que leur part : ils ne virent rien, les autres les remboursent. */
-function Reimbursement({ split }: { split: Split }) {
+function Reimbursement({ split, level: Heading }: { split: Split; level: 'h1' | 'h2' }) {
   const { t, euros } = useI18n()
   const names = useNames()
 
   return (
     <>
-      <h1 className="lead">{t.transfers.titleNegative}</h1>
+      <Heading className="lead">{t.transfers.titleNegative}</Heading>
       {creditors(split).map((to) => (
         <section key={to} className="stack stack--6">
           <div className="transfer">

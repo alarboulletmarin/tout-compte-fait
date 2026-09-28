@@ -30,4 +30,5 @@ export const sample = (): AppData => ({
       categoryId: null,
     },
   ],
+  history: {},
 })

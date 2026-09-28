@@ -12,3 +12,4 @@
 - Jusqu'à six personnes dans le foyer, chacune avec sa forme et sa hachure
 - Remboursements entre plusieurs personnes, calculés au centime près
 - Retirer une personne du foyer, avec l'impact sur les virements et un bouton Annuler
+- Historique mois par mois : chaque mois est gardé tel qu'il était, avec ses virements, et comparé au mois précédent (charges ajoutées, retirées, modifiées)
