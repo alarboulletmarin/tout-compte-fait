@@ -1,143 +1,135 @@
 <!doctype html>
-<html lang="fr" data-theme="light" data-palette="classique">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="Suivi de tes finances. Tout reste sur ton appareil." />
-    <!--
-      Une seule balise, sans `media`, et c'est un changement de fond : les deux
-      balises conditionnelles qui vivaient ici figeaient les deux fonds de la
-      palette Classique, alors qu'il y en a six. C'est désormais `theme.ts` qui
-      la tient à jour en lisant `--bg` sur la feuille — donc la couleur juste,
-      thème *et* palette compris. La valeur écrite ici est celle du premier
-      rendu, avant que React ne prenne la main.
-    -->
-    <meta name="theme-color" content="#F0F5F2" />
-    <title>Tout compte fait</title>
-
-    <!--
-      Ce que voit un lien partagé. Sans ces balises, une adresse collée dans une
-      conversation ne montre que son domaine : pour une app dont l'argument est
-      un écran, c'est l'écran qu'il faut donner à voir. L'image est la capture du
-      README, servie depuis `public/captures` — un seul exemplaire, celui-là
-      (voir `docs/CAPTURES.md`).
-      Les URL sont absolues, et elles doivent l'être : les réseaux sociaux ne
-      résolvent pas un chemin relatif.
-    -->
+    <!-- Première visite seulement : ensuite, redirection vers l'app -->
+    <script src="/boot/landing.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tout Compte Fait · qui vire combien sur le compte joint</title>
+    <meta
+      name="description"
+      content="Partagez les charges du foyer au prorata de vos revenus. Gratuit, sans compte, sans pistage, hors ligne : vos données restent sur votre téléphone."
+    />
     <link rel="canonical" href="https://toutcomptefait.xyz/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Tout compte fait" />
-    <meta property="og:locale" content="fr_FR" />
-    <meta property="og:url" content="https://toutcomptefait.xyz/" />
-    <meta property="og:title" content="Tout compte fait — tes finances, sur ton appareil" />
+    <meta property="og:title" content="Tout Compte Fait" />
     <meta
       property="og:description"
-      content="Récurrences, prévision du mois, répartition des charges au prorata des revenus. Pas de compte, pas de serveur : les données vivent dans le navigateur."
+      content="Qui vire combien sur le compte joint, au prorata des revenus."
     />
-    <meta property="og:image" content="https://toutcomptefait.xyz/captures/mois-clair.png" />
-    <meta property="og:image:alt" content="L’écran du mois : la grille des tuiles, en thème clair." />
+    <meta property="og:url" content="https://toutcomptefait.xyz/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://toutcomptefait.xyz/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Tout Compte Fait : qui vire combien sur le compte joint, au prorata des revenus."
+    />
     <meta name="twitter:card" content="summary_large_image" />
-
-    <!--
-      Ce que comprend un moteur de recherche. Sans ces données, une app gratuite
-      et installable se présente comme n'importe quelle page : le prix à zéro et
-      la licence sont précisément ce qui la distingue, et ce sont les deux
-      choses qu'un lien nu ne peut pas dire.
-      Recopiées du manifeste et non dérivées de lui : le manifeste est du JSON
-      construit par Vite, cette balise est de l'HTML servi tel quel, et les faire
-      se lire l'un l'autre demanderait plus de machinerie que les six lignes
-      qu'elle économiserait. Elles changent aussi rarement l'une que l'autre.
-    -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Tout compte fait",
-        "url": "https://toutcomptefait.xyz/",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Tout navigateur moderne",
-        "inLanguage": "fr-FR",
-        "description": "Suivi de tes finances, sans compte ni serveur : récurrences, prévision du mois, répartition des charges au prorata des revenus. Les données vivent dans le navigateur et rien ne sort de l’appareil.",
-        "screenshot": "https://toutcomptefait.xyz/captures/mois-clair.png",
-        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
-        "isAccessibleForFree": true,
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "author": { "@type": "Person", "name": "Andréa Larboullet Marin" },
-        "codeRepository": "https://github.com/alarboulletmarin/tout-compte-fait"
-      }
-    </script>
-    <script>
-      // Applique l'apparence avant le premier rendu — le thème et la palette,
-      // qui décident ensemble des couleurs, et la langue, que `lang` porte.
-      // Le document de données vit en IndexedDB (asynchrone) : sans ces trois
-      // miroirs localStorage, l'app s'afficherait une frame dans les couleurs
-      // de quelqu'un d'autre.
-      // La liste des palettes est recopiée ici, et c'est le seul endroit où :
-      // ce script tourne avant tout module, il ne peut rien importer. Une valeur
-      // inconnue retombe sur « classique », comme à la lecture du document.
-      // La langue, elle, n'est pas devinée sur le navigateur : le document fait
-      // foi, et `main.tsx` corrigera si le miroir est absent. Ce qui se joue ici
-      // est l'attribut que lisent la synthèse vocale et la coupure des mots,
-      // pas le catalogue — celui-là, seul un module peut le charger.
-      ;(function () {
-        var root = document.documentElement
-        try {
-          var pref = localStorage.getItem('tout-compte-fait.theme') || 'system'
-          var dark =
-            pref === 'dark' ||
-            (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-          root.dataset.theme = dark ? 'dark' : 'light'
-          var palette = localStorage.getItem('tout-compte-fait.palette')
-          var known = ['classique', 'monochrome', 'douce', 'vive', 'neutre', 'contrastee']
-          root.dataset.palette = known.indexOf(palette) === -1 ? 'classique' : palette
-          var locale = localStorage.getItem('tout-compte-fait.locale')
-          if (locale === 'fr' || locale === 'en') root.lang = locale
-        } catch (e) {
-          root.dataset.theme = 'light'
-          root.dataset.palette = 'classique'
-        }
-      })()
-    </script>
+    <meta name="theme-color" content="#F5F4F1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/src/landing/landing.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <!--
-      Sans JavaScript, `#root` reste vide et la page est blanche — y compris
-      pour un robot d'indexation qui n'en exécute pas. Le style est en ligne :
-      la feuille est chargée par le module ci-dessous, c'est-à-dire par ce qui
-      justement ne tourne pas ici.
-      Aucune promesse de repli : l'app est un calcul local sur une base
-      IndexedDB, il n'y a pas de version dégradée à proposer. Elle dit ce qu'elle
-      est, ce qu'il manque, et où lire le reste.
-    -->
-    <noscript>
-      <div
-        style="
-          max-width: 34rem;
-          margin: 0 auto;
-          padding: 3rem 1.5rem;
-          font-family: system-ui, sans-serif;
-          line-height: 1.6;
-          color: #11201a;
-        "
-      >
-        <h1 style="font-size: 1.5rem; margin: 0 0 1rem">Tout compte fait</h1>
-        <p style="margin: 0 0 1rem">
-          Suivi de tes finances, sans compte ni serveur : récurrences, prévision du mois,
-          répartition des charges au prorata des revenus. Les données vivent dans le navigateur et
-          rien ne sort de l’appareil.
-        </p>
-        <p style="margin: 0">
-          L’app est entièrement calculée sur ton appareil : elle a besoin de JavaScript pour
-          s’afficher. Le code est lisible sur
-          <a href="https://github.com/alarboulletmarin/tout-compte-fait"
-            >github.com/alarboulletmarin/tout-compte-fait</a
-          >.
-        </p>
-      </div>
-    </noscript>
-    <script type="module" src="/src/main.tsx"></script>
+    <header class="top">
+      <div class="top__brand">Tout Compte Fait</div>
+      <nav class="top__links" aria-label="Liens">
+        <a class="desk" href="#comment">Comment ça marche</a>
+        <a class="desk" href="https://github.com/alarboulletmarin/tout-compte-fait">Code source</a>
+        <a class="button button--small" href="/app/">Ouvrir l'app</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero__text">
+          <h1>Qui vire combien sur le compte joint.</h1>
+          <p class="hero__lead">
+            Partagez les charges du foyer au prorata de vos revenus, pas moitié-moitié.
+            <span class="desk">Chaque euro est justifié, et vos</span>
+            <span class="mobile">Vos</span> données ne quittent jamais votre téléphone.
+          </p>
+          <div class="hero__cta">
+            <a class="button" href="/app/">Ouvrir l'app</a>
+            <span class="desk hero__hint">puis « Ajouter à l'écran d'accueil »</span>
+          </div>
+          <ul class="hero__promises" aria-label="Engagements">
+            <li>Gratuit</li>
+            <li>Sans compte</li>
+            <li>Sans pistage</li>
+            <li>Hors ligne</li>
+          </ul>
+        </div>
+        <div class="phone">
+          <picture>
+            <source srcset="/landing/app-dark.webp" media="(prefers-color-scheme: dark)" />
+            <img
+              src="/landing/app-light.webp"
+              width="390"
+              height="844"
+              alt="L'écran Virements : Lui vire 765,62 € et Elle 665,67 € sur le compte joint, répartis à 54,1 et 45,9 %."
+            />
+          </picture>
+        </div>
+      </section>
+
+      <section class="features" aria-label="Pourquoi Tout Compte Fait">
+        <div class="feature">
+          <span class="mark mark--member1" aria-hidden="true"></span>
+          <h2>Au prorata, pas moitié-moitié</h2>
+          <p>
+            Chacun participe selon ses revenus nets. Les parts se recalculent dès qu'un salaire
+            change.
+          </p>
+        </div>
+        <div class="feature">
+          <span class="mark mark--member2" aria-hidden="true"></span>
+          <h2>Chaque euro justifié</h2>
+          <p>
+            Le détail montre ce que chacun paie déjà depuis son compte, et pourquoi son virement est
+            celui-là.
+          </p>
+        </div>
+        <div class="feature">
+          <span class="mark mark--joint" aria-hidden="true"></span>
+          <h2>Vos données, chez vous</h2>
+          <p>Pas de compte, pas de serveur, pas de cloud. Export et import d'un simple fichier.</p>
+        </div>
+      </section>
+
+      <section id="comment" class="how" aria-labelledby="how-title">
+        <h2 id="how-title">Comment ça marche</h2>
+        <ol class="how__steps">
+          <li>
+            <div class="how__number" aria-hidden="true">01</div>
+            <h3>Vos revenus</h3>
+            <p>Deux prénoms, deux revenus nets. Les parts au prorata apparaissent aussitôt.</p>
+          </li>
+          <li>
+            <div class="how__number" aria-hidden="true">02</div>
+            <h3>Vos charges fixes</h3>
+            <p>Loyer, énergie, assurances, abonnements, avec le compte qui paie chacune.</p>
+          </li>
+          <li>
+            <div class="how__number" aria-hidden="true">03</div>
+            <h3>Vos virements</h3>
+            <p class="desk">
+              Tout Compte Fait déduit ce que chacun paie déjà et donne le montant exact à virer sur
+              le joint.
+            </p>
+            <p class="mobile">
+              Le montant exact que chacun vire sur le joint, et le récap à envoyer.
+            </p>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span><span class="desk">Tout Compte Fait · </span>toutcomptefait.xyz</span>
+      <span>Libre sous licence AGPL-3.0</span>
+    </footer>
   </body>
 </html>

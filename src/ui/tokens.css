@@ -1,0 +1,33 @@
+/* Tokens clair / sombre. Le thème suit le système ; data-theme le force. */
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(#f5f4f1, #0f0f0f);
+  --surface: light-dark(#ffffff, #181818);
+  --ink: light-dark(#111110, #edece8);
+  --muted: light-dark(#5f5d59, #a09e99);
+  --line: light-dark(#e4e2dd, #2a2a2a);
+  --soft: light-dark(#eceae5, #222222);
+  --danger: light-dark(#a1260d, #ff8a70);
+  --on-danger: light-dark(#ffffff, #0f0f0f);
+  --overlay: light-dark(rgba(17, 17, 16, 0.45), rgba(0, 0, 0, 0.6));
+  --hatch: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 6px);
+
+  --font-ui: 'Geist Variable', system-ui, sans-serif;
+  --font-num: 'Martian Mono Variable', ui-monospace, monospace;
+
+  --column: 480px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Éléments flottants (bouton Ajouter, toast) : au-dessus de la navigation du bas,
+     calés sur la colonne de contenu, barre latérale comprise */
+  --sidebar: 0px;
+  --float-bottom: calc(104px + var(--safe-bottom));
+  --float-gap: max(0px, calc((100vw - var(--sidebar) - var(--column)) / 2));
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

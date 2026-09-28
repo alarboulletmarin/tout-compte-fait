@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — accueil mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 2380px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1">
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px"><div style="font-size: 15px; font-weight: 600">Tout Compte Fait</div>
+<a href="Onboarding.dc.html" style="display: flex; align-items: center; height: 40px; padding: 0 14px; border-radius: 10px; background: #111110; color: #F5F4F1; text-decoration: none; font-size: 13px; font-weight: 500">Ouvrir l'app</a></header>
+<section style="display: flex; flex-direction: column; gap: 20px; padding: 32px 24px 40px">
+<h1 style="margin: 0; font-size: 40px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.05">Qui vire combien sur le compte joint.</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; color: #5F5D59">Partagez les charges du foyer au prorata de vos revenus, pas moitié-moitié. Vos données ne quittent jamais votre téléphone.</p>
+<a href="Onboarding.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 12px; background: #111110; color: #F5F4F1; border: 0; text-decoration: none; font-size: 15px; font-weight: 500">Ouvrir l'app</a>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: #5F5D59"><span>Gratuit</span><span>Sans compte</span><span>Sans pistage</span><span>Hors ligne</span></div></section>
+<div style="display: flex; justify-content: center; padding: 0 0 48px">
+<div style="width: 293px; height: 633px; border: 1px solid #E4E2DD; border-radius: 30px; overflow: hidden; box-shadow: 0 24px 48px -28px rgba(17,17,16,0.3)">
+<div style="width: 390px; height: 844px; transform: scale(0.75); transform-origin: 0 0"><dc-import name="Main" hint-size="390px,844px"></dc-import></div></div></div>
+<section style="display: flex; flex-direction: column; gap: 12px; padding: 0 24px 56px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 22px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 16px"><span aria-hidden="true" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #111110; flex-shrink: 0"></span><h3 style="margin: 0; font-size: 17px; font-weight: 600">Au prorata, pas moitié-moitié</h3><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #5F5D59">Chacun participe selon ses revenus nets. Les parts se recalculent dès qu'un salaire change.</p></div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 22px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 16px"><span aria-hidden="true" style="display: inline-block; width: 14px; height: 14px; background: #111110; flex-shrink: 0"></span><h3 style="margin: 0; font-size: 17px; font-weight: 600">Chaque euro justifié</h3><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #5F5D59">Le détail montre ce que chacun paie déjà depuis son compte, et pourquoi son virement est celui-là.</p></div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 22px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 16px"><span aria-hidden="true" style="display: inline-block; width: 13px; height: 13px; border: 1.5px solid #111110; transform: rotate(45deg); box-sizing: border-box; flex-shrink: 0; margin: 0 1px"></span><h3 style="margin: 0; font-size: 17px; font-weight: 600">Vos données, chez vous</h3><p style="margin: 0; font-size: 14px; line-height: 1.55; color: #5F5D59">Pas de compte, pas de serveur, pas de cloud. Export et import d'un simple fichier.</p></div></section>
+<section style="display: flex; flex-direction: column; gap: 28px; padding: 48px 24px; border-top: 1px solid #E4E2DD">
+<h2 style="margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -0.02em">Comment ça marche</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">01</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos revenus</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Deux prénoms, deux revenus nets. Les parts au prorata apparaissent aussitôt.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">02</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos charges fixes</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Loyer, énergie, assurances, abonnements, avec le compte qui paie chacune.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">03</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos virements</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Le montant exact que chacun vire sur le joint, et le récap à envoyer.</p>
+</div></section>
+<footer style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding: 24px; border-top: 1px solid #E4E2DD; font-size: 13px; color: #5F5D59"><span>toutcomptefait.xyz</span><span>Libre sous licence AGPL-3.0</span></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 2380}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

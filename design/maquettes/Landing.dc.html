@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tout Compte Fait — accueil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Martian+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#F5F4F1;color:#111110}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1640px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F4F1; color: #111110">
+<header style="display: flex; justify-content: space-between; align-items: center; padding: 28px 80px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.01em">Tout Compte Fait</div>
+<nav aria-label="Liens" style="display: flex; align-items: center; gap: 28px; font-size: 14px">
+<a href="#comment" style="text-decoration: none; color: #5F5D59">Comment ça marche</a>
+<a href="#" style="text-decoration: none; color: #5F5D59">Code source</a>
+<a href="Onboarding.dc.html" style="display: flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 10px; background: #111110; color: #F5F4F1; text-decoration: none; font-weight: 500">Ouvrir l'app</a>
+</nav>
+</header>
+<section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; align-items: center; padding: 56px 80px 88px">
+<div style="display: flex; flex-direction: column; gap: 28px">
+<h1 style="margin: 0; font-size: 60px; font-weight: 500; letter-spacing: -0.035em; line-height: 1.02">Qui vire combien sur le compte joint.</h1>
+<p style="margin: 0; font-size: 19px; line-height: 1.55; color: #5F5D59; max-width: 480px">Partagez les charges du foyer au prorata de vos revenus, pas moitié-moitié. Chaque euro est justifié, et vos données ne quittent jamais votre téléphone.</p>
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="Onboarding.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 22px; border-radius: 12px; background: #111110; color: #F5F4F1; text-decoration: none; font-size: 15px; font-weight: 500">Ouvrir l'app</a>
+<span style="font-size: 14px; color: #5F5D59">puis « Ajouter à l'écran d'accueil »</span>
+</div>
+<div style="display: flex; gap: 20px; font-size: 13px; color: #5F5D59">
+<span>Gratuit</span><span>Sans compte</span><span>Sans pistage</span><span>Hors ligne</span>
+</div>
+</div>
+<div style="display: flex; justify-content: center">
+<div style="width: 390px; height: 844px; border: 1px solid #E4E2DD; border-radius: 36px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(17,17,16,0.25)">
+<dc-import name="Main" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+</section>
+<section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 0 80px 96px">
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 28px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 18px">
+<span aria-hidden="true" style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #111110; flex-shrink: 0"></span>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Au prorata, pas moitié-moitié</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Chacun participe selon ses revenus nets. Les parts se recalculent dès qu'un salaire change.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 28px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 18px">
+<span aria-hidden="true" style="display: inline-block; width: 14px; height: 14px; background: #111110; flex-shrink: 0"></span>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Chaque euro justifié</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Le détail montre ce que chacun paie déjà depuis son compte, et pourquoi son virement est celui-là.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 28px; background: #FFFFFF; border: 1px solid #E4E2DD; border-radius: 18px">
+<span aria-hidden="true" style="display: inline-block; width: 13px; height: 13px; border: 1.5px solid #111110; transform: rotate(45deg); box-sizing: border-box; flex-shrink: 0; margin: 0 1px"></span>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos données, chez vous</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Pas de compte, pas de serveur, pas de cloud. Export et import d'un simple fichier.</p>
+</div>
+</section>
+<section id="comment" style="display: flex; flex-direction: column; gap: 40px; padding: 72px 80px; border-top: 1px solid #E4E2DD">
+<h2 style="margin: 0; font-size: 32px; font-weight: 500; letter-spacing: -0.02em">Comment ça marche</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">01</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos revenus</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Deux prénoms, deux revenus nets. Les parts au prorata apparaissent aussitôt.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">02</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos charges fixes</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Loyer, énergie, assurances, abonnements, avec le compte qui paie chacune.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'Martian Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 13px; color: #5F5D59">03</div>
+<h3 style="margin: 0; font-size: 18px; font-weight: 600">Vos virements</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #5F5D59">Tout Compte Fait déduit ce que chacun paie déjà et donne le montant exact à virer sur le joint.</p>
+</div>
+</div>
+</section>
+<footer style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 28px 80px; border-top: 1px solid #E4E2DD; font-size: 13px; color: #5F5D59">
+<span>Tout Compte Fait · toutcomptefait.xyz</span>
+<span>Libre sous licence AGPL-3.0</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 1640}}'>
+class Component extends DCLogic {
+renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

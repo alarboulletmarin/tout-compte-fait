@@ -1,0 +1,30 @@
+Main.dc.html	Virements
+Detail.dc.html	Détail du calcul
+Charges.dc.html	Charges fixes
+Ajout.dc.html	Nouvelle charge
+Foyer.dc.html	Foyer
+Reglages.dc.html	Réglages
+Onboarding.dc.html	Premier lancement 1/2
+Onboarding2.dc.html	Premier lancement 2/2
+MainEmpty.dc.html	Virements — vide
+ChargesEmpty.dc.html	Charges — vide
+Modifier.dc.html	Modifier une charge
+Suppression.dc.html	Confirmer la suppression
+ChargesApres.dc.html	Après suppression
+Categories.dc.html	Catégories
+Negatif.dc.html	Virement négatif
+Recap.dc.html	Envoyer le récap
+AjoutErreurs.dc.html	Erreurs du formulaire
+FoyerZero.dc.html	Revenu à 0
+ChargesAnnuelle.dc.html	Charge annuelle
+ImportConfirm.dc.html	Confirmer l'import
+ImportErreur.dc.html	Import impossible
+Effacer.dc.html	Tout effacer
+MiseAJour.dc.html	Mise à jour disponible
+Nouveautes.dc.html	Nouveautés
+InstallIOS.dc.html	Installer sur iPhone
+Tablette.dc.html	Tablette
+Desktop.dc.html	Desktop
+Landing.dc.html	Landing — desktop
+LandingMobile.dc.html	Landing — mobile
+MainEN.dc.html	Virements — English

@@ -1,121 +1,66 @@
-<div align="center">
+# Tout Compte Fait
 
-# Tout compte fait
+**Qui vire combien sur le compte joint.** Tout Compte Fait répartit les charges fixes d'un foyer de deux personnes au prorata de leurs revenus, et dit à chacun le montant exact à virer sur le compte joint.
 
-**Le suivi de tes finances, sans compte et sans serveur.** Les données vivent dans le navigateur. Rien ne sort de l'appareil.
+Gratuit, sans compte, sans serveur, sans pistage. Les données restent sur l'appareil.
 
-[![CI](https://github.com/alarboulletmarin/tout-compte-fait/actions/workflows/ci.yml/badge.svg)](https://github.com/alarboulletmarin/tout-compte-fait/actions/workflows/ci.yml) [![Licence AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-2F5D4C)](LICENSE) [![PWA](https://img.shields.io/badge/PWA-installable-2F5D4C)](#installation-sur-le-t%C3%A9l%C3%A9phone)
+→ [toutcomptefait.xyz](https://toutcomptefait.xyz)
 
-[**Ouvrir l'app**](https://toutcomptefait.xyz) · [Documentation](docs/) · [Contribuer](CONTRIBUTING.md)
+<p>
+  <img src="docs/captures/mobile-clair.webp" width="260" alt="Écran Virements en thème clair : Lui vire 765,62 € et Elle 665,67 € sur le compte joint.">
+  <img src="docs/captures/charges-clair.webp" width="260" alt="Écran Charges fixes : les charges regroupées par compte payeur, total 1 628,27 € par mois.">
+  <img src="docs/captures/mobile-sombre.webp" width="260" alt="Écran Virements en thème sombre.">
+</p>
 
-![L'écran du mois, en thème sombre](public/captures/mois-sombre.png)
+<img src="docs/captures/desktop-clair.webp" alt="Tableau de bord sur ordinateur : virements, répartition, détail du calcul et liste des charges.">
 
-</div>
+## Ce que fait l'app
 
----
+- **Au prorata, pas moitié-moitié.** Chacun participe selon son revenu net ; si un revenu manque ou vaut 0, la répartition passe à 50 / 50 et l'app le dit.
+- **Chaque euro justifié.** Le détail montre la part de chacun, ce qu'il paie déjà depuis son compte, et ce qu'il lui reste à virer.
+- **Charges mensuelles, trimestrielles ou annuelles**, payées depuis le joint ou depuis le compte de l'un des deux.
+- **Remboursement direct** quand l'un paie déjà plus que sa part : il ne vire rien, l'autre vire le joint et le rembourse.
+- **Récap à envoyer** par message, export et import d'un simple fichier JSON.
+- **Hors ligne et installable** (PWA), en français et en anglais, thèmes clair et sombre, du téléphone à l'ordinateur.
 
-## Ce que c'est
+## Le calcul
 
-Une app de budget familial qui tient dans un onglet. On y déclare ses récurrences — salaires, loyer, abonnements, mensualités de crédit — et chaque mois s'ouvre tout seul en prévision, qu'on confirme au fil de l'eau. Le reste suit : capacité d'épargne, capital restant dû, répartition des charges communes au prorata des revenus.
+Tout est calculé en centimes entiers, sans virgule flottante :
 
-- **Récurrences** à montant fixe ou variable, dépenses et recettes ponctuelles.
-- **Prévu puis confirmé** : le mois est une prévision qu'on valide, pas un formulaire à remplir.
-- **Répartition au prorata des revenus**, avec régularisation du mois suivant quand une charge commune a été avancée par une seule personne.
-- **Crédits** avec capital restant dû calculé, jamais stocké.
-- **Épargne** : capacité, ventilation par support, reste à placer.
-- **Historique** et comparatifs mois/mois et année/année.
-- **Export / import** du fichier de données, thème clair et sombre, hors ligne.
+1. chaque charge est ramenée à son équivalent mensuel, et leur somme donne le total **T** ;
+2. la part de chacun vaut son revenu divisé par la somme des deux ;
+3. le dû de chacun vaut `T × part`, arrondi au centime par la méthode du plus fort reste, pour que les deux dûs fassent exactement T ;
+4. le virement vaut le dû moins ce que chacun paie déjà depuis son compte.
 
-<table>
-<tr>
-<td width="62%"><img src="public/captures/mois-clair.png" alt="L'écran du mois en thème clair"></td>
-<td width="38%"><img src="public/captures/mois-mobile.png" alt="L'écran du mois sur téléphone"></td>
-</tr>
-<tr>
-<td align="center"><em>Le même écran en thème clair</em></td>
-<td align="center"><em>Sur téléphone</em></td>
-</tr>
-</table>
+La somme des virements est toujours égale aux charges payées par le joint. Cet invariant est vérifié par des tests de propriété sur des milliers de foyers aléatoires (`src/domain/split.test.ts`).
 
-## Où vont les données
+## Vie privée
 
-Nulle part. Il n'y a ni compte, ni serveur, ni analytics, ni cookie tiers : le document vit en IndexedDB dans le navigateur, et l'app fonctionne en mode avion. Personne — auteur compris — ne peut lire ces données.
+Aucun compte, aucun serveur, aucune mesure d'audience. Les données vivent dans IndexedDB, sur l'appareil ; elles n'en sortent que si vous exportez un fichier ou envoyez le récap.
 
-La contrepartie est réelle et il faut la connaître : **vider les données du navigateur efface tout**, et rien ne se synchronise entre deux appareils. D'où l'export, un fichier JSON qu'on range où l'on veut, et le rappel qui le propose tous les trente jours.
+## Développement
 
-## Démarrer
-
-Node 22.12 ou plus récent.
-
-```sh
-git clone https://github.com/alarboulletmarin/tout-compte-fait.git
-cd tout-compte-fait
-npm install
-npm run dev
+```bash
+pnpm install
+pnpm dev          # http://localhost:5173 (landing) et /app (l'app)
+pnpm test         # Vitest
+pnpm lint && pnpm typecheck
+pnpm build && pnpm preview   # build de production, servi avec les en-têtes de vercel.json
 ```
 
-| Commande | Effet |
-|---|---|
-| `npm run dev` | serveur de développement |
-| `npm run build` | build de production |
-| `npm run preview` | sert le build |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint |
-| `npm test` | Vitest |
-| `npm run size` | ce que pèse le premier chargement, et son budget |
-| `npm run licences` | régénère les notices des paquets qui voyagent dans le build |
-| `npm run verify` | les six d'un coup, c'est la porte de sortie |
-| `npm run e2e:install` | télécharge Chromium, une fois (~150 Mio) |
-| `npm run e2e` | les scénarios de bout en bout, sur l'app construite |
+Vite, React et TypeScript strict ; CSS pur ; IndexedDB via `idb` ; `vite-plugin-pwa`. Polices Geist et Martian Mono, auto-hébergées.
 
-`verify` ne demande que Node ; `e2e` demande en plus un navigateur, et reste donc à côté plutôt que dedans. La CI joue les deux, en parallèle, avec ces commandes-là et pas d'autres.
+| Dossier                         | Rôle                                                 |
+| ------------------------------- | ---------------------------------------------------- |
+| `src/domain`                    | Calcul pur, sans React ni navigateur                 |
+| `src/storage`                   | IndexedDB, export et import validés, préférences     |
+| `src/i18n`                      | Français, anglais, formatage et lecture des montants |
+| `src/ui`                        | Design system : tokens, composants, icônes           |
+| `src/screens`                   | Écrans de l'app                                      |
+| `index.html` · `app/index.html` | Landing (première visite) · app sous `/app`          |
 
-Rien à configurer : aucune variable d'environnement, aucune clé d'API. Pour voir l'app pleine plutôt que vide, **Plus → Exporter / importer → Jeu d'exemple → Charger l'exemple** monte **cinq ans** de données à partir d'aujourd'hui. C'est ce qu'on voit sur les captures ci-dessus. Cinq ans, parce qu'une durée n'est pas une quantité : c'est ce qu'il faut pour qu'un crédit aille à son terme et qu'un autre le remplace, pour qu'un foyer locataire achète, pour qu'un alternant devienne salarié et fasse basculer le partage des charges communes.
-
-### Installation sur le téléphone
-
-C'est une PWA : ouvrir [toutcomptefait.xyz](https://toutcomptefait.xyz), puis « Ajouter à l'écran d'accueil ». Sur Chrome et Edge, la page de présentation le propose d'elle-même. Elle s'ouvre ensuite en plein écran et fonctionne hors ligne.
-
-**Sur iPhone, ce n'est pas un confort.** Safari efface les données d'un site non installé après environ sept jours sans visite, et les données de cette app-ci sont dans le navigateur. Installée, elle les garde. Le geste est « Partager → Sur l'écran d'accueil ».
-
-## Pile technique
-
-React 19 · TypeScript · Vite · CSS pur · zustand · IndexedDB (`idb`) · Vitest · vite-plugin-pwa.
-
-Aucune librairie de graphiques : l'anneau, les barres et les courbes sont des composants SVG maison. Aucun backend, donc aucun coût de fonctionnement.
-
-Douze paquets voyagent dans la version publiée : six sous MIT, un sous ISC, et les deux fontes — Archivo et Geist Mono — sous **SIL Open Font License 1.1**, qui demande d'être distribuée avec elles. Leurs notices intégrales sont dans [`public/licences-tierces.txt`](public/licences-tierces.txt), produit par `npm run licences` depuis `node_modules` et servi avec l'app. `npm run verify` échoue s'il a pris du retard : une liste de licences recopiée à la main diverge au premier `npm update`, et c'est celle qu'on ne relit jamais qui reste fausse.
-
-## Accessibilité
-
-Le projet vise le niveau **AA** : contraste sur tout texte, focus clavier visible, `prefers-reduced-motion` respecté, graphiques doublés d'une lecture textuelle. Les écarts sont mesurés, tabulés et justifiés dans [l'architecture](docs/ARCHITECTURE.md#écarts-au-design-system) : un contraste annoncé et non tenu vaut moins qu'un écart assumé.
-
-Aucune obligation réglementaire ne s'applique ici : le RGAA vise le secteur public et les très grandes entreprises, et l'European Accessibility Act les services fournis aux consommateurs. C'est une exigence du projet, pas une conformité subie.
-
-## Documentation
-
-| Document | Répond à |
-|---|---|
-| [Design system](docs/DESIGN-SYSTEM.md) | De quoi elle a l'air |
-| [Architecture](docs/ARCHITECTURE.md) | Comment le code est rangé, et pourquoi |
-| [Déploiement](docs/DEPLOIEMENT.md) | Comment la mettre en ligne |
-
-Le design system est la **source de vérité** de l'apparence : le code lui obéit, et un écart est un bug. Les écarts assumés sont listés, mesurés et justifiés dans [l'architecture](docs/ARCHITECTURE.md#écarts-au-design-system).
-
-## Contribuer
-
-C'est un projet personnel dont le code est ouvert : les rapports de bug sont lus et bienvenus, les propositions de fonctionnalité passent par une issue avant tout code. Tout est dit dans [CONTRIBUTING.md](CONTRIBUTING.md), et la marche à suivre pour signaler une faille dans [SECURITY.md](SECURITY.md).
-
-Le code, les commits et les issues sont **en français**. C'est un choix, pas un oubli, et il vaut aussi pour les commentaires du catalogue anglais.
-
-L'interface, elle, se dit **en français et en anglais**, et se règle dans « Plus ». Le français reste la langue de référence : c'est [`src/i18n/fr.ts`](src/i18n/fr.ts) qui décrit la forme d'un catalogue et qui porte, clé par clé, pourquoi telle formule a été choisie plutôt qu'une autre.
+Le cahier des charges de la v1 est dans [`REFONTE-V1.md`](REFONTE-V1.md), les maquettes dans `design/maquettes/`.
 
 ## Licence
 
-[AGPL-3.0-or-later](LICENSE) : reprends, modifie, redistribue, héberge, y compris pour un usage commercial. Une seule condition, mais elle est ferme : **ce qui part d'ici reste ouvert.** Toute version modifiée doit être publiée sous la même licence, et l'article 13 étend l'obligation à la simple mise en ligne, sans qu'il soit besoin de distribuer quoi que ce soit. Mettre une version modifiée de cette app sur un domaine, c'est en devoir la source.
-
-C'est un choix, et il remplace la licence MIT qui couvrait le projet jusqu'ici : le code est ouvert pour se laisser lire et reprendre, pas pour être refermé ailleurs. Les versions publiées sous MIT le restent, l'AGPL ne vaut que pour la suite.
-
-Cela ne vaut que pour ce dépôt : les composants tiers gardent la leur, et les deux fontes sont sous une licence qui pose une condition de plus, voir [`public/licences-tierces.txt`](public/licences-tierces.txt).
-
-Le service rendu à [toutcomptefait.xyz](https://toutcomptefait.xyz), lui, n'est pas couvert par l'AGPL : il a ses propres [mentions légales](https://toutcomptefait.xyz/mentions-legales), [politique de confidentialité](https://toutcomptefait.xyz/confidentialite) et [conditions d'utilisation](https://toutcomptefait.xyz/conditions), dont les textes vivent dans [`src/i18n/legal.ts`](src/i18n/legal.ts).
+[AGPL-3.0](LICENSE). L'ancienne version de l'app est archivée sur la branche `legacy`.
