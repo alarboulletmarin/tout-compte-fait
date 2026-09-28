@@ -1,17 +1,17 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link } from 'wouter'
-import { monthlyAmount } from '../domain/split'
-import { memberAccount, type AccountRef } from '../domain/types'
-import { sharePercents } from '../i18n/format'
+import { creditors, debtors, monthlyAmount } from '../domain/split'
+import { memberAccount } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { ShareIcon } from '../ui/icons'
-import { InfoNote } from '../ui/Notes'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
-import { MEMBERS, useNames } from './common'
+import { useAccountTotals, useNames } from './common'
+import { CreditorNote } from './CreditorNote'
 import { EqualFallbackNote } from './EqualFallbackNote'
 import { RecapSheet } from './RecapSheet'
+import { at } from '../domain/at'
 
 /** Virements sur tablette et desktop : virements, répartition, détail et charges d'un coup d'œil. */
 export function Dashboard() {
@@ -34,52 +34,58 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
   const { t, euros } = useI18n()
   const { split } = useStore()
   const names = useNames()
-  const r = split.reimbursement
+  const negative = split.reimbursements.length > 0
 
   return (
     <section className="card card--dash" aria-labelledby="dash-transfers">
       <h1 id="dash-transfers" className="card__title">
-        {r ? t.transfers.titleNegative : t.transfers.title}
+        {negative ? t.transfers.titleNegative : t.transfers.title}
       </h1>
-      {r ? (
+      {negative ? (
         <>
-          <div className="transfer">
-            <span className="transfer__who">
-              <Shape account={memberAccount(r.to)} />
-              {names[r.to]}
-            </span>
-            <span className="transfer__nothing">{t.transfers.nothing}</span>
-          </div>
-          <div className="transfer">
-            <span className="transfer__who">
-              <Shape account={memberAccount(r.from)} />
-              {names[r.from]}
-            </span>
-            <span className="num dashboard__amount">{euros(split.joint)}</span>
-          </div>
-          <div className="transfer transfer--sub">
-            <span className="transfer__to">
-              <Shape account={memberAccount(r.to)} />
-              {t.transfers.directly(names[r.to])}
-            </span>
-            <span className="num transfer__amount--sub">{euros(r.amount)}</span>
-          </div>
-          <InfoNote>
-            {t.transfers.explainPays(names[r.to])}
-            <span className="num info__ink">{euros(split.paid[r.to])}</span>
-            {t.transfers.explainShare}
-            <span className="num info__ink">{euros(split.due[r.to])}</span>
-            {t.transfers.explainEnd(names[r.from])}
-          </InfoNote>
+          {creditors(split).map((to) => (
+            <div key={to} className="transfer">
+              <span className="transfer__who">
+                <Shape of={to} />
+                {names[to]}
+              </span>
+              <span className="transfer__nothing">{t.transfers.nothing}</span>
+            </div>
+          ))}
+          {debtors(split).map((from) => (
+            <Fragment key={from}>
+              <div className="transfer">
+                <span className="transfer__who">
+                  <Shape of={from} />
+                  {names[from]}
+                </span>
+                <span className="num dashboard__amount">{euros(at(split.toJoint, from))}</span>
+              </div>
+              {split.reimbursements
+                .filter((r) => r.from === from)
+                .map((r) => (
+                  <div key={r.to} className="transfer transfer--sub">
+                    <span className="transfer__to">
+                      <Shape of={r.to} />
+                      {t.transfers.directly(at(names, r.to))}
+                    </span>
+                    <span className="num transfer__amount--sub">{euros(r.amount)}</span>
+                  </div>
+                ))}
+            </Fragment>
+          ))}
+          {creditors(split).map((to) => (
+            <CreditorNote key={to} index={to} />
+          ))}
         </>
       ) : (
-        MEMBERS.map((i) => (
+        names.map((name, i) => (
           <div key={i} className="transfer">
             <span className="transfer__who">
-              <Shape account={memberAccount(i)} />
-              {names[i]}
+              <Shape of={i} />
+              {name}
             </span>
-            <span className="num dashboard__amount">{euros(split.toJoint[i])}</span>
+            <span className="num dashboard__amount">{euros(at(split.toJoint, i))}</span>
           </div>
         ))
       )}
@@ -95,19 +101,12 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
 }
 
 function SplitCard() {
-  const { t, decimal } = useI18n()
+  const { t } = useI18n()
   const { split } = useStore()
   const names = useNames()
-  const [p1, p2] = sharePercents(split.shares[0])
   return (
     <section className="card card--dash" aria-label={t.transfers.split}>
-      <div className="split-head">
-        <span>{t.transfers.split}</span>
-        <span className="num">
-          {decimal(p1)} / {decimal(p2)}
-        </span>
-      </div>
-      <SplitBar share1={split.shares[0]} names={names} />
+      <SplitBar shares={split.shares} names={names} />
     </section>
   )
 }
@@ -122,18 +121,18 @@ function DetailCard() {
         {t.detail.title}
       </h2>
       <div className="dashboard__detail">
-        {MEMBERS.map((i) => (
-          <div key={i} className="stack stack--10">
+        {data.household.members.map((member, i) => (
+          <div key={member.id} className="stack stack--10">
             <h3 className="dashboard__member">
-              <Shape account={memberAccount(i)} />
+              <Shape of={i} />
               {names[i]}
             </h3>
             <div className="between dashboard__line">
               <span>{t.detail.share}</span>
-              <span className="num">{euros(split.due[i])}</span>
+              <span className="num">{euros(at(split.due, i))}</span>
             </div>
             {data.charges
-              .filter((c) => c.paidFrom === memberAccount(i))
+              .filter((c) => c.paidFrom === memberAccount(member.id))
               .map((c) => (
                 <div key={c.id} className="between dashboard__line dashboard__line--muted">
                   <span>− {c.label}</span>
@@ -142,14 +141,16 @@ function DetailCard() {
               ))}
             <div className="between dashboard__line dashboard__line--total">
               <span>{t.dashboard.toJoint}</span>
-              <span className="num">{euros(split.toJoint[i])}</span>
+              <span className="num">{euros(at(split.toJoint, i))}</span>
             </div>
-            {split.reimbursement?.from === i && (
-              <div className="between dashboard__line dashboard__line--total">
-                <span>{t.detail.directly(names[split.reimbursement.to])}</span>
-                <span className="num">{euros(split.reimbursement.amount)}</span>
-              </div>
-            )}
+            {split.reimbursements
+              .filter((r) => r.from === i)
+              .map((r) => (
+                <div key={r.to} className="between dashboard__line dashboard__line--total">
+                  <span>{t.detail.directly(at(names, r.to))}</span>
+                  <span className="num">{euros(r.amount)}</span>
+                </div>
+              ))}
           </div>
         ))}
       </div>
@@ -160,12 +161,7 @@ function DetailCard() {
 function ChargesCard() {
   const { t, euros } = useI18n()
   const { data, split } = useStore()
-  const names = useNames()
-  const accounts: [AccountRef, string, number][] = [
-    ['joint', t.charges.joint, split.joint],
-    ['member1', t.charges.accountOf(names[0]), split.paid[0]],
-    ['member2', t.charges.accountOf(names[1]), split.paid[1]],
-  ]
+  const accounts = useAccountTotals()
 
   return (
     <section className="card card--dash" aria-labelledby="dash-charges">
@@ -179,14 +175,14 @@ function ChargesCard() {
         </Link>
       </div>
       <div className="num dashboard__total">{euros(split.total)}</div>
-      {accounts.map(([account, title, subtotal]) => {
-        const charges = data.charges.filter((c) => c.paidFrom === account)
+      {accounts.map(({ ref, who, title, subtotal }) => {
+        const charges = data.charges.filter((c) => c.paidFrom === ref)
         if (charges.length === 0) return null
         return (
-          <div key={account} className="stack stack--4">
+          <div key={ref} className="stack stack--4">
             <div className="between dashboard__account">
               <span className="dashboard__account-name">
-                <Shape account={account} />
+                <Shape of={who} />
                 {title}
               </span>
               <span className="num dashboard__subtotal">{euros(subtotal)}</span>

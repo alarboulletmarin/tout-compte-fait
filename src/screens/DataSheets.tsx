@@ -80,7 +80,7 @@ function ConfirmSheet(props: {
   const { t, locale } = useI18n()
   const { data } = useStore()
   const { household, charges } = props.file.data
-  const [n1, n2] = household.members.map((m, i) => m.name.trim() || t.memberFallback(i))
+  const names = household.members.map((m, i) => m.name.trim() || t.memberFallback(i))
   const date = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit' }).format(
     new Date(props.file.exportedAt),
   )
@@ -95,11 +95,7 @@ function ConfirmSheet(props: {
         <div className="file-card__text">
           <span className="num file-card__name">{props.name}</span>
           <span className="file-card__meta">
-            {t.importSheet.summary(
-              date,
-              t.chargesCount(charges.length),
-              t.importSheet.names(n1 ?? '', n2 ?? ''),
-            )}
+            {t.importSheet.summary(date, t.chargesCount(charges.length), names)}
           </span>
         </div>
       </div>

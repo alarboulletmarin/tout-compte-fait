@@ -1,25 +1,24 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 import { useLocation } from 'wouter'
-import { initialData } from '../domain/data'
+import { initialData, newMember } from '../domain/data'
 import { computeSplit } from '../domain/split'
 import {
+  MAX_MEMBERS,
+  MIN_MEMBERS,
   memberAccount,
   type AccountRef,
   type Charge,
   type Household,
   type Member,
-  type MemberIndex,
 } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
-import { CheckIcon } from '../ui/icons'
+import { CheckIcon, PlusIcon, TrashIcon } from '../ui/icons'
 import { FieldError } from '../ui/Notes'
 import { Shape } from '../ui/Shape'
 import { useMoneyInput } from '../ui/useMoneyInput'
-import { MEMBERS } from './common'
 import { useImportFlow } from './DataSheets'
-
-const ACCOUNTS: AccountRef[] = ['joint', 'member1', 'member2']
+import { at } from '../domain/at'
 
 interface Row {
   label: string
@@ -35,17 +34,11 @@ export function Onboarding() {
   const { update } = useStore()
   const [, navigate] = useLocation()
   const [step, setStep] = useState<1 | 2>(1)
-  const [members, setMembers] = useState<[Member, Member]>([
-    { name: '', income: null },
-    { name: '', income: null },
-  ])
+  const [members, setMembers] = useState<Member[]>(() => [newMember(), newMember()])
 
   function finish(charges: Charge[]) {
     const household: Household = {
-      members: [
-        { ...members[0], name: members[0].name.trim() },
-        { ...members[1], name: members[1].name.trim() },
-      ],
+      members: members.map((m) => ({ ...m, name: m.name.trim() })),
     }
     update(() => ({ ...initialData(t.defaultCategories), household, charges }))
     navigate('/', { replace: true })
@@ -76,24 +69,30 @@ function Header({ step }: { step: 1 | 2 }) {
 }
 
 function People(props: {
-  members: [Member, Member]
-  onChange: (members: [Member, Member]) => void
+  members: Member[]
+  onChange: (members: Member[]) => void
   onNext: () => void
 }) {
   const { t } = useI18n()
   // Rien à remplacer au premier lancement : pas de confirmation
   const importFlow = useImportFlow({ confirm: false })
-  const [invalid, setInvalid] = useState<[boolean, boolean]>([false, false])
+  // Revenu illisible, par id de membre ; une personne retirée n'y compte plus
+  const [invalid, setInvalid] = useState<Record<string, boolean>>({})
+  // Personne ajoutée : son champ prénom prend le focus
+  const [added, setAdded] = useState<string | null>(null)
 
-  const setMember = (index: MemberIndex, patch: Partial<Member>) => {
-    const next = [...props.members] as [Member, Member]
-    next[index] = { ...next[index], ...patch }
-    props.onChange(next)
+  const setMember = (id: string, patch: Partial<Member>) =>
+    props.onChange(props.members.map((m) => (m.id === id ? { ...m, ...patch } : m)))
+
+  function add() {
+    const member = newMember()
+    setAdded(member.id)
+    props.onChange([...props.members, member])
   }
 
   function next() {
-    const first = invalid.indexOf(true)
-    if (first >= 0) return document.getElementById(`income-${first}`)?.focus()
+    const first = props.members.find((m) => invalid[m.id])
+    if (first) return document.getElementById(`income-${first.id}`)?.focus()
     props.onNext()
   }
 
@@ -106,17 +105,27 @@ function People(props: {
             <h1 className="onboarding__title">{t.onboarding.title1}</h1>
             <p className="onboarding__intro">{t.onboarding.intro1}</p>
           </div>
-          {MEMBERS.map((i) => (
+          {props.members.map((member, i) => (
             <Person
-              key={i}
+              key={member.id}
               index={i}
-              member={props.members[i]}
-              onChange={(patch) => setMember(i, patch)}
-              onValidity={(bad) =>
-                setInvalid((v) => (i === 0 ? [bad, v[1]] : [v[0], bad]) as [boolean, boolean])
+              member={member}
+              autoFocus={member.id === added}
+              onChange={(patch) => setMember(member.id, patch)}
+              onValidity={(bad) => setInvalid((v) => ({ ...v, [member.id]: bad }))}
+              onRemove={
+                props.members.length > MIN_MEMBERS
+                  ? () => props.onChange(props.members.filter((m) => m.id !== member.id))
+                  : undefined
               }
             />
           ))}
+          {props.members.length < MAX_MEMBERS && (
+            <button type="button" className="button-dashed" onClick={add}>
+              <PlusIcon />
+              {t.onboarding.addPerson}
+            </button>
+          )}
         </div>
         <div className="onboarding__foot onboarding__foot--people">
           <p className="onboarding__local">{t.onboarding.local}</p>
@@ -138,16 +147,18 @@ function People(props: {
 }
 
 function Person(props: {
-  index: MemberIndex
+  index: number
   member: Member
+  autoFocus: boolean
   onChange: (patch: Partial<Member>) => void
   onValidity: (invalid: boolean) => void
+  onRemove?: () => void
 }) {
   const { t, parse } = useI18n()
   const ids = useId()
   const { index, onChange, onValidity } = props
   const income = useMoneyInput(props.member.income, (cents) => onChange({ income: cents }))
-  const shape = <Shape account={memberAccount(index)} />
+  const shape = <Shape of={index} />
 
   return (
     <fieldset className="fieldset onboarding__person">
@@ -161,18 +172,19 @@ function Person(props: {
           id={`${ids}-name`}
           className="input"
           autoComplete="off"
+          autoFocus={props.autoFocus}
           placeholder={t.onboarding.placeholders[index]}
           value={props.member.name}
           onChange={(e) => onChange({ name: e.target.value })}
         />
       </div>
       <div className="field">
-        <label htmlFor={`income-${index}`} className="field__label field__label--shape">
+        <label htmlFor={`income-${props.member.id}`} className="field__label field__label--shape">
           {shape}
           <span>{t.onboarding.income}</span>
         </label>
         <input
-          id={`income-${index}`}
+          id={`income-${props.member.id}`}
           className="input num"
           inputMode="decimal"
           autoComplete="off"
@@ -189,11 +201,17 @@ function Person(props: {
         />
         {income.invalid && <FieldError id={`${ids}-income-error`}>{t.errors.income}</FieldError>}
       </div>
+      {props.onRemove && (
+        <button type="button" className="button-link button-link--danger" onClick={props.onRemove}>
+          <TrashIcon />
+          {t.onboarding.removePerson(props.member.name.trim() || t.memberFallback(index))}
+        </button>
+      )}
     </fieldset>
   )
 }
 
-function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Charge[]) => void }) {
+function FirstCharges(props: { members: Member[]; onFinish: (charges: Charge[]) => void }) {
   const { t, euros, parse } = useI18n()
   const [rows, setRows] = useState<Row[]>(() =>
     t.examples.map((e) => ({ ...e, checked: false, text: '', paidFrom: 'joint' })),
@@ -202,9 +220,10 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
   const title = useRef<HTMLHeadingElement>(null)
   // Nouvelle étape : le focus suit, sinon il retombe sur <body>
   useEffect(() => title.current?.focus(), [])
-  const names = props.members.map((m, i) => m.name.trim() || t.memberFallback(i)) as [
-    string,
-    string,
+  const names = props.members.map((m, i) => m.name.trim() || t.memberFallback(i))
+  const accounts = [
+    { ref: 'joint' as AccountRef, who: 'joint' as 'joint' | number },
+    ...props.members.map((m, who) => ({ ref: memberAccount(m.id), who })),
   ]
 
   const setRow = (index: number, patch: Partial<Row>) =>
@@ -240,10 +259,8 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
     props.onFinish(charges)
   }
 
-  const accountLabel = (a: AccountRef) =>
-    a === 'joint'
-      ? t.onboarding.paidFromJoint
-      : t.onboarding.paidFromMember(names[a === 'member1' ? 0 : 1])
+  const accountLabel = (who: 'joint' | number) =>
+    who === 'joint' ? t.onboarding.paidFromJoint : t.onboarding.paidFromMember(at(names, who))
 
   return (
     <div className="screen onboarding">
@@ -259,13 +276,13 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
           <div className="onboarding__legend-row">
             <span>{t.onboarding.paidFrom}</span>
             <span className="onboarding__legend-item">
-              <Shape account="joint" />
+              <Shape of="joint" />
               {t.onboarding.jointAccount}
             </span>
-            {MEMBERS.map((i) => (
+            {names.map((name, i) => (
               <span key={i} className="onboarding__legend-item">
-                <Shape account={memberAccount(i)} />
-                {names[i]}
+                <Shape of={i} />
+                {name}
               </span>
             ))}
           </div>
@@ -305,16 +322,16 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
                           aria-describedby={error ? errorId : undefined}
                         />
                         <div className="account-picker">
-                          {ACCOUNTS.map((a) => (
+                          {accounts.map((a) => (
                             <button
-                              key={a}
+                              key={a.ref}
                               type="button"
                               className="account-picker__button"
-                              aria-pressed={row.paidFrom === a}
-                              aria-label={accountLabel(a)}
-                              onClick={() => setRow(i, { paidFrom: a })}
+                              aria-pressed={row.paidFrom === a.ref}
+                              aria-label={accountLabel(a.who)}
+                              onClick={() => setRow(i, { paidFrom: a.ref })}
                             >
-                              <Shape account={a} />
+                              <Shape of={a.who} />
                             </button>
                           ))}
                         </div>
@@ -329,11 +346,13 @@ function FirstCharges(props: { members: [Member, Member]; onFinish: (charges: Ch
         </div>
         <div className="onboarding__foot onboarding__foot--charges">
           <div className="onboarding__preview" aria-live="polite">
-            {MEMBERS.map((i) => (
+            {names.map((name, i) => (
               <span key={i} className="onboarding__legend-item">
-                <Shape account={memberAccount(i)} />
-                <span className="visually-hidden">{names[i]}</span>
-                <span className="num onboarding__preview-amount">{euros(preview.toJoint[i])}</span>
+                <Shape of={i} />
+                <span className="visually-hidden">{name}</span>
+                <span className="num onboarding__preview-amount">
+                  {euros(at(preview.toJoint, i))}
+                </span>
               </span>
             ))}
             <span>{t.onboarding.onJoint}</span>

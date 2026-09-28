@@ -25,10 +25,17 @@ describe('parts', () => {
     expect(plain(formatShare(230000 / 424800, 'fr-FR'))).toBe('54,1 %')
   })
 
-  it('les deux pourcentages font 100 pile', () => {
-    expect(sharePercents(230000 / 424800)).toEqual([54.1, 45.9])
-    expect(sharePercents(1 / 3)).toEqual([33.3, 66.7])
-    expect(sharePercents(0.5)).toEqual([50, 50])
+  it('les pourcentages font 100 pile', () => {
+    expect(sharePercents([230000 / 424800, 194800 / 424800])).toEqual([54.1, 45.9])
+    expect(sharePercents([1 / 3, 2 / 3])).toEqual([33.3, 66.7])
+    expect(sharePercents([0.5, 0.5])).toEqual([50, 50])
+  })
+
+  it('à trois ou plus, le dixième restant va au plus fort reste', () => {
+    expect(sharePercents([1 / 3, 1 / 3, 1 / 3])).toEqual([33.4, 33.3, 33.3])
+    expect(sharePercents([0.5, 0.25, 0.25])).toEqual([50, 25, 25])
+    const six = sharePercents([1, 2, 3, 4, 5, 6].map((n) => n / 21))
+    expect(Math.round(six.reduce((a, b) => a + b) * 10)).toBe(1000)
   })
 })
 

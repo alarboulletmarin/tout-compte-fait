@@ -4,8 +4,8 @@ import type { AppData } from '../domain/data'
 export const sample = (): AppData => ({
   household: {
     members: [
-      { name: 'Lui', income: 230000 },
-      { name: 'Elle', income: 194800 },
+      { id: 'lui', name: 'Lui', income: 230000 },
+      { id: 'elle', name: 'Elle', income: 194800 },
     ],
   },
   categories: [
@@ -26,7 +26,7 @@ export const sample = (): AppData => ({
       label: 'Assurance habitation',
       amount: 24000,
       frequency: 'yearly',
-      paidFrom: 'member2',
+      paidFrom: 'm:elle',
       categoryId: null,
     },
   ],

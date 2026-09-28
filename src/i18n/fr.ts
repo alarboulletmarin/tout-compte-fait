@@ -3,8 +3,12 @@ import type { Frequency } from '../domain/types'
 const chargesCount = (n: number) =>
   n === 0 ? 'Aucune charge' : n === 1 ? '1 charge' : `${n} charges`
 
+const list = new Intl.ListFormat('fr', { style: 'long', type: 'conjunction' })
+
 export const fr = {
   brand: 'Tout Compte Fait',
+  /** « Alex, Sam et Robin » */
+  list: (items: readonly string[]) => list.format(items),
   memberFallback: (index: number) => `Membre ${index + 1}`,
   chargesCount,
   saveError: 'Enregistrement impossible sur cet appareil',
@@ -74,7 +78,8 @@ export const fr = {
     directly: (name: string) => `à ${name}, directement`,
     explainPays: (name: string) => `${name} paie `,
     explainShare: ' depuis son compte. Sa part est de ',
-    explainEnd: (other: string) => ` : ${other} lui rembourse la différence.`,
+    explainEnd: (others: readonly string[]) =>
+      ` : ${list.format(others)} ${others.length > 1 ? 'lui remboursent' : 'lui rembourse'} la différence.`,
     emptyTitle: "Rien à virer pour l'instant",
     emptyText:
       'Ajoutez vos charges fixes : loyer, énergie, abonnements. Vous saurez aussitôt combien chacun vire sur le compte joint.',
@@ -97,11 +102,14 @@ export const fr = {
   onboarding: {
     step: (n: number) => `${n} / 2`,
     title1: 'Qui vit dans ce foyer ?',
-    intro1: 'Deux prénoms et vos revenus nets. Les parts au prorata se calculent tout de suite.',
+    intro1:
+      'Les prénoms et les revenus nets de chacun. Les parts au prorata se calculent tout de suite.',
+    addPerson: 'Ajouter une personne',
+    removePerson: (name: string) => `Retirer ${name}`,
     person: (n: number) => `Personne ${n}`,
     firstName: 'Prénom',
     income: 'Revenu net mensuel',
-    placeholders: ['Ex. Alex', 'Ex. Sam'],
+    placeholders: ['Ex. Alex', 'Ex. Sam', 'Ex. Camille', 'Ex. Louis', 'Ex. Robin', 'Ex. Lou'],
     local: 'Tout reste sur cet appareil. Aucun compte à créer.',
     next: 'Continuer',
     import: "J'ai déjà un fichier : importer",
@@ -183,6 +191,20 @@ export const fr = {
     firstName: 'Prénom',
     income: 'Revenu net mensuel',
     total: 'Total du foyer',
+    add: 'Ajouter une personne',
+    full: 'Six personnes au maximum.',
+    remove: (name: string) => `Retirer ${name}`,
+    removed: (name: string) => `${name} n’est plus dans le foyer`,
+    removal: {
+      title: (name: string) => `Retirer ${name} du foyer ?`,
+      noCharges: 'Aucune charge n’est payée depuis son compte.',
+      charges: (n: number) =>
+        n === 1
+          ? 'La charge payée depuis son compte passe au compte joint.'
+          : `Les ${n} charges payées depuis son compte passent au compte joint.`,
+      confirm: 'Retirer',
+      cancel: 'Annuler',
+    },
   },
 
   settings: {
@@ -209,9 +231,8 @@ export const fr = {
 
   importSheet: {
     title: 'Remplacer vos données ?',
-    summary: (date: string, charges: string, names: string) =>
-      `Exporté le ${date} · ${charges} · ${names}`,
-    names: (a: string, b: string) => `${a} et ${b}`,
+    summary: (date: string, charges: string, names: readonly string[]) =>
+      `Exporté le ${date} · ${charges} · ${list.format(names)}`,
     warning:
       "Vos revenus, prénoms et charges actuels seront remplacés par ceux du fichier. C'est définitif.",
     replace: 'Remplacer',
@@ -237,11 +258,10 @@ export const fr = {
     open: 'Envoyer le récap',
     title: 'Envoyer le récap',
     heading: 'Tout Compte Fait · chaque mois',
-    toJoint: (name: string, amount: string) => `${name} : ${amount} sur le joint`,
-    nothing: (name: string) => `${name} : rien à virer`,
-    both: (name: string, joint: string, other: string, amount: string) =>
-      `${name} : ${joint} sur le joint + ${amount} à ${other}`,
-    direct: (name: string, other: string, amount: string) => `${name} : ${amount} à ${other}`,
+    line: (name: string, what: string) => `${name} : ${what}`,
+    nothing: 'rien à virer',
+    onJoint: (amount: string) => `${amount} sur le joint`,
+    toPerson: (amount: string, name: string) => `${amount} à ${name}`,
     total: (amount: string) => `Total : ${amount} (charges du joint)`,
     hint: "S'ouvre avec vos applis habituelles : Messages, WhatsApp, e-mail…",
     share: 'Partager…',

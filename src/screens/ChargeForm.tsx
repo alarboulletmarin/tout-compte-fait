@@ -1,19 +1,20 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { Redirect, useLocation, useSearch } from 'wouter'
 import { computeSplit, MONTHS } from '../domain/split'
-import { memberAccount, type AccountRef, type Charge, type Frequency } from '../domain/types'
+import type { AccountRef, Charge, Frequency } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { TrashIcon } from '../ui/icons'
+import { Impact } from '../ui/Impact'
 import { FieldError } from '../ui/Notes'
 import { FormHeader } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { Sheet } from '../ui/Sheet'
 import { useToast } from '../ui/Toast'
-import { insertAt, MEMBERS, useNames } from './common'
+import { insertAt, useAccounts, useNames } from './common'
+import { at } from '../domain/at'
 
 const FREQUENCIES: Frequency[] = ['monthly', 'quarterly', 'yearly']
-const ACCOUNTS: AccountRef[] = ['joint', 'member1', 'member2']
 
 export function ChargeForm({ id }: { id?: string }) {
   const existing = useStore().data.charges.find((c) => c.id === id)
@@ -29,7 +30,7 @@ function Form({ existing }: { existing?: Charge }) {
   const exampleCategory = data.categories.some((c) => c.id === example?.categoryId)
     ? (example?.categoryId ?? null)
     : null
-  const names = useNames()
+  const accounts = useAccounts()
   const [, navigate] = useLocation()
   const ids = useId()
   const amountRef = useRef<HTMLInputElement>(null)
@@ -70,9 +71,6 @@ function Form({ existing }: { existing?: Charge }) {
     }))
     navigate('/charges', { replace: true })
   }
-
-  const accountLabel = (account: AccountRef) =>
-    account === 'joint' ? t.form.joint : names[account === 'member1' ? 0 : 1]
 
   return (
     <form className="screen charge-form" onSubmit={submit} noValidate>
@@ -137,17 +135,17 @@ function Form({ existing }: { existing?: Charge }) {
 
           <fieldset className="fieldset">
             <legend className="field__label legend">{t.form.paidFrom}</legend>
-            <div className="segmented">
-              {ACCOUNTS.map((a) => (
+            <div className={`segmented${accounts.length > 3 ? ' segmented--wrap' : ''}`}>
+              {accounts.map((a) => (
                 <button
-                  key={a}
+                  key={a.ref}
                   type="button"
                   className="segment"
-                  aria-pressed={paidFrom === a}
-                  onClick={() => setPaidFrom(a)}
+                  aria-pressed={paidFrom === a.ref}
+                  onClick={() => setPaidFrom(a.ref)}
                 >
-                  <Shape account={a} />
-                  {accountLabel(a)}
+                  <Shape of={a.who} />
+                  {a.who === 'joint' ? t.form.joint : a.name}
                 </button>
               ))}
             </div>
@@ -251,10 +249,9 @@ function DeleteSheet(props: { charge: Charge; open: boolean; onClose: () => void
 
   const remaining = data.charges.filter((c) => c.id !== charge.id)
   const after = computeSplit(data.household, remaining)
+  const payer = useAccounts().find((a) => a.ref === charge.paidFrom)
   const account =
-    charge.paidFrom === 'joint'
-      ? t.deletion.jointAccount
-      : t.deletion.memberAccount(names[charge.paidFrom === 'member1' ? 0 : 1])
+    payer?.who === 'joint' ? t.deletion.jointAccount : t.deletion.memberAccount(payer?.name ?? '')
 
   function confirm() {
     const index = data.charges.findIndex((c) => c.id === charge.id)
@@ -279,24 +276,14 @@ function DeleteSheet(props: { charge: Charge; open: boolean; onClose: () => void
           {t.deletion.summary(euros(charge.amount), t.charges.per[charge.frequency], account)}
         </p>
       </div>
-      <div className="impact">
-        <div className="caption">{t.deletion.impact}</div>
-        {MEMBERS.map((i) => (
-          <div key={i} className="between impact__row">
-            <span className="impact__who">
-              <Shape account={memberAccount(i)} />
-              {names[i]}
-            </span>
-            <span className="num impact__values">
-              <del className="impact__old">{euros(split.toJoint[i])}</del>
-              <span className="impact__arrow" aria-hidden="true">
-                →
-              </span>
-              <ins className="impact__new">{euros(after.toJoint[i])}</ins>
-            </span>
-          </div>
-        ))}
-      </div>
+      <Impact
+        rows={names.map((name, who) => ({
+          who,
+          name,
+          before: at(split.toJoint, who),
+          after: at(after.toJoint, who),
+        }))}
+      />
       <div className="stack stack--8">
         <button type="button" className="button button--danger" onClick={confirm}>
           {t.deletion.confirm}

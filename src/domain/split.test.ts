@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { computeSplit, MONTHS } from './split'
-import type { AccountRef, Charge, Frequency, Household } from './types'
+import { computeSplit, creditors, MONTHS } from './split'
+import {
+  memberAccount,
+  type AccountRef,
+  type Charge,
+  type Frequency,
+  type Household,
+} from './types'
 
-const household = (income1: number | null, income2: number | null): Household => ({
-  members: [
-    { name: 'Lui', income: income1 },
-    { name: 'Elle', income: income2 },
-  ],
+const IDS = ['a', 'b', 'c', 'd', 'e', 'f']
+const [A, B] = IDS.map(memberAccount) as [AccountRef, AccountRef]
+
+/** Foyer de N membres (ids a, b, c…), un revenu par membre. */
+const household = (...incomes: (number | null)[]): Household => ({
+  members: incomes.map((income, i) => ({ id: IDS[i]!, name: `M${i + 1}`, income })),
 })
 
 let seq = 0
@@ -22,11 +29,11 @@ const reference = household(230000, 194800)
 describe('computeSplit — jeu de référence', () => {
   const split = computeSplit(reference, [
     charge('Loyer', 143129, 'joint'),
-    charge('Électricité', 4500, 'member1'),
-    charge('Gaz', 2800, 'member1'),
-    charge('Freebox', 3499, 'member1'),
-    charge('Netflix', 799, 'member1'),
-    charge('Assurance auto', 8100, 'member2'),
+    charge('Électricité', 4500, A),
+    charge('Gaz', 2800, A),
+    charge('Freebox', 3499, A),
+    charge('Netflix', 799, A),
+    charge('Assurance auto', 8100, B),
   ])
 
   it('donne les valeurs attendues', () => {
@@ -36,29 +43,29 @@ describe('computeSplit — jeu de référence', () => {
     expect(split.paid).toEqual([11598, 8100])
     expect(split.balance).toEqual([76562, 66567])
     expect(split.toJoint).toEqual([76562, 66567])
-    expect(split.reimbursement).toBeNull()
+    expect(split.reimbursements).toEqual([])
     expect(split.equalFallback).toBe(false)
   })
 
   it('arrondit les parts à 54,1 % et 45,9 %', () => {
-    expect((split.shares[0] * 100).toFixed(1)).toBe('54.1')
-    expect((split.shares[1] * 100).toFixed(1)).toBe('45.9')
+    expect((split.shares[0]! * 100).toFixed(1)).toBe('54.1')
+    expect((split.shares[1]! * 100).toFixed(1)).toBe('45.9')
   })
 
   it('fait tomber la somme des virements sur le loyer', () => {
-    expect(split.toJoint[0] + split.toJoint[1]).toBe(143129)
+    expect(split.toJoint[0]! + split.toJoint[1]!).toBe(143129)
   })
 })
 
 describe('computeSplit — virement négatif', () => {
   // Maquette Negatif : Lui paie le loyer de son compte
   const split = computeSplit(reference, [
-    charge('Loyer', 143129, 'member1'),
-    charge('Électricité', 4500, 'member1'),
-    charge('Gaz', 2800, 'member1'),
+    charge('Loyer', 143129, A),
+    charge('Électricité', 4500, A),
+    charge('Gaz', 2800, A),
     charge('Freebox', 3499, 'joint'),
     charge('Netflix', 799, 'joint'),
-    charge('Assurance auto', 8100, 'member2'),
+    charge('Assurance auto', 8100, B),
   ])
 
   it('Lui ne vire rien, Elle vire J sur le joint et rembourse Lui', () => {
@@ -66,34 +73,28 @@ describe('computeSplit — virement négatif', () => {
     expect(split.due[0]).toBe(88160)
     expect(split.balance).toEqual([-62269, 66567])
     expect(split.toJoint).toEqual([0, 4298])
-    expect(split.reimbursement).toEqual({ from: 1, to: 0, amount: 62269 })
+    expect(split.reimbursements).toEqual([{ from: 1, to: 0, amount: 62269 }])
   })
 
   it('fonctionne dans l’autre sens', () => {
-    const s = computeSplit(reference, [
-      charge('Loyer', 100000, 'member2'),
-      charge('Box', 3000, 'joint'),
-    ])
+    const s = computeSplit(reference, [charge('Loyer', 100000, B), charge('Box', 3000, 'joint')])
     expect(s.balance[1]).toBeLessThan(0)
     expect(s.toJoint).toEqual([3000, 0])
-    expect(s.reimbursement).toEqual({ from: 0, to: 1, amount: -s.balance[1] })
-    expect(s.due[1] + s.reimbursement!.amount).toBe(s.paid[1])
+    expect(s.reimbursements).toEqual([{ from: 0, to: 1, amount: -s.balance[1]! }])
+    expect(s.due[1]! + s.reimbursements[0]!.amount).toBe(s.paid[1])
   })
 
   it('un solde à zéro pile ne déclenche aucun remboursement', () => {
-    const s = computeSplit(household(100000, 100000), [
-      charge('A', 5000, 'member1'),
-      charge('B', 5000, 'member2'),
-    ])
+    const s = computeSplit(household(100000, 100000), [charge('A', 5000, A), charge('B', 5000, B)])
     expect(s.balance).toEqual([0, 0])
-    expect(s.reimbursement).toBeNull()
+    expect(s.reimbursements).toEqual([])
   })
 
   it('tout payé en perso sans joint : J = 0, un seul remboursement', () => {
-    const s = computeSplit(household(100000, 100000), [charge('Loyer', 80000, 'member1')])
+    const s = computeSplit(household(100000, 100000), [charge('Loyer', 80000, A)])
     expect(s.joint).toBe(0)
     expect(s.toJoint).toEqual([0, 0])
-    expect(s.reimbursement).toEqual({ from: 1, to: 0, amount: 40000 })
+    expect(s.reimbursements).toEqual([{ from: 1, to: 0, amount: 40000 }])
   })
 })
 
@@ -129,12 +130,12 @@ describe('computeSplit — fréquences', () => {
   it('annuelle : 240 € → 20 € par mois (maquette ChargesAnnuelle)', () => {
     const s = computeSplit(reference, [
       charge('Loyer', 143129, 'joint'),
-      charge('Électricité', 4500, 'member1'),
-      charge('Gaz', 2800, 'member1'),
-      charge('Freebox', 3499, 'member1'),
-      charge('Netflix', 799, 'member1'),
-      charge('Assurance auto', 8100, 'member2'),
-      charge('Assurance habitation', 24000, 'member2', 'yearly'),
+      charge('Électricité', 4500, A),
+      charge('Gaz', 2800, A),
+      charge('Freebox', 3499, A),
+      charge('Netflix', 799, A),
+      charge('Assurance auto', 8100, B),
+      charge('Assurance habitation', 24000, B, 'yearly'),
     ])
     expect(s.total).toBe(164827)
     expect(s.paid).toEqual([11598, 10100])
@@ -159,11 +160,11 @@ describe('computeSplit — fréquences', () => {
   it('fractions réparties sur trois comptes : Σ = T, le joint prend le centime', () => {
     const s = computeSplit(reference, [
       charge('A', 10000, 'joint', 'quarterly'),
-      charge('B', 10000, 'member1', 'quarterly'),
-      charge('C', 10000, 'member2', 'quarterly'),
+      charge('B', 10000, A, 'quarterly'),
+      charge('C', 10000, B, 'quarterly'),
     ])
     expect(s.total).toBe(10000)
-    expect([s.joint, s.paid[0], s.paid[1]]).toEqual([3334, 3333, 3333])
+    expect([s.joint, ...s.paid]).toEqual([3334, 3333, 3333])
   })
 
   it('arrondit T au centime le plus proche', () => {
@@ -182,8 +183,8 @@ describe('computeSplit — liste vide', () => {
     expect(s.paid).toEqual([0, 0])
     expect(s.balance).toEqual([0, 0])
     expect(s.toJoint).toEqual([0, 0])
-    expect(s.reimbursement).toBeNull()
-    expect(s.shares[0]).toBeCloseTo(230000 / 424800)
+    expect(s.reimbursements).toEqual([])
+    expect(s.shares[0]!).toBeCloseTo(230000 / 424800)
   })
 })
 
@@ -194,6 +195,96 @@ describe('computeSplit — entrées invalides', () => {
 
   it.each([-1, 0.5, NaN])('refuse un revenu de %s', (income) => {
     expect(() => computeSplit(household(income, 100), [])).toThrow(RangeError)
+  })
+})
+
+describe('computeSplit — 3 membres', () => {
+  const three = household(200000, 100000, 100000)
+
+  it('parts 50 / 25 / 25, virements au prorata', () => {
+    const s = computeSplit(three, [charge('Loyer', 100000, 'joint')])
+    expect(s.shares).toEqual([0.5, 0.25, 0.25])
+    expect(s.due).toEqual([50000, 25000, 25000])
+    expect(s.toJoint).toEqual([50000, 25000, 25000])
+    expect(s.reimbursements).toEqual([])
+  })
+
+  it('le reste d’un centime va au plus petit indice à reste égal', () => {
+    const s = computeSplit(household(1, 1, 1), [charge('X', 1000, 'joint')])
+    expect(s.due).toEqual([334, 333, 333])
+    const t = computeSplit(household(1, 1, 1), [charge('X', 1001, 'joint')])
+    expect(t.due).toEqual([334, 334, 333])
+  })
+
+  it('un créditeur, deux débiteurs : le remboursement se partage au prorata des dettes', () => {
+    // T = 900 €, dû 300 € chacun ; a paie 600 € de son compte, le joint 300 €
+    const s = computeSplit(household(1000, 1000, 1000), [
+      charge('Loyer', 60000, A),
+      charge('Box', 30000, 'joint'),
+    ])
+    expect(s.balance).toEqual([-30000, 30000, 30000])
+    expect(s.toJoint).toEqual([0, 15000, 15000])
+    expect(s.reimbursements).toEqual([
+      { from: 1, to: 0, amount: 15000 },
+      { from: 2, to: 0, amount: 15000 },
+    ])
+    expect(creditors(s)).toEqual([0])
+  })
+
+  it('deux créditeurs, un débiteur : il vire J sur le joint et rembourse chacun', () => {
+    const s = computeSplit(household(1000, 1000, 1000), [
+      charge('Loyer', 40000, A),
+      charge('Courses', 40000, B),
+      charge('Box', 10000, 'joint'),
+    ])
+    expect(s.due).toEqual([30000, 30000, 30000])
+    expect(s.balance).toEqual([-10000, -10000, 30000])
+    expect(s.toJoint).toEqual([0, 0, 10000])
+    expect(s.reimbursements).toEqual([
+      { from: 2, to: 0, amount: 10000 },
+      { from: 2, to: 1, amount: 10000 },
+    ])
+    expect(creditors(s)).toEqual([0, 1])
+  })
+
+  it('tout payé en perso par un seul : J = 0, chaque autre le rembourse de sa part', () => {
+    const s = computeSplit(household(1000, 1000, 1000), [charge('Loyer', 90000, A)])
+    expect(s.joint).toBe(0)
+    expect(s.toJoint).toEqual([0, 0, 0])
+    expect(s.reimbursements).toEqual([
+      { from: 1, to: 0, amount: 30000 },
+      { from: 2, to: 0, amount: 30000 },
+    ])
+  })
+
+  it('un revenu à 0 ou absent : parts égales signalées', () => {
+    for (const h of [household(100000, 0, 50000), household(null, 100000, 50000)]) {
+      const s = computeSplit(h, [charge('X', 1000, 'joint')])
+      expect(s.equalFallback).toBe(true)
+      expect(s.shares).toEqual([1 / 3, 1 / 3, 1 / 3])
+      expect(s.due).toEqual([334, 333, 333])
+    }
+  })
+
+  it('six membres : la somme des dûs tombe juste', () => {
+    const s = computeSplit(household(1, 2, 3, 4, 5, 6), [charge('X', 10001, 'joint')])
+    expect(s.due.reduce((a, b) => a + b)).toBe(10001)
+    expect(s.due).toHaveLength(6)
+  })
+
+  it('refuse une charge payée depuis un membre absent du foyer', () => {
+    expect(() => computeSplit(three, [charge('X', 100, memberAccount('zzz'))])).toThrow(RangeError)
+  })
+
+  it('l’ordre des membres n’a pas d’influence sur les montants de chacun', () => {
+    const charges = [charge('Loyer', 60000, A), charge('Box', 30000, 'joint')]
+    const s = computeSplit(household(3000, 1000, 2000), charges)
+    const rev = computeSplit(
+      { members: [...household(3000, 1000, 2000).members].reverse() },
+      charges,
+    )
+    expect(rev.due).toEqual([...s.due].reverse())
+    expect(rev.paid).toEqual([...s.paid].reverse())
   })
 })
 
@@ -208,21 +299,24 @@ describe('computeSplit — propriétés sur montants aléatoires', () => {
     }
   }
   const FREQS: Frequency[] = ['monthly', 'quarterly', 'yearly']
-  const ACCOUNTS: AccountRef[] = ['joint', 'member1', 'member2']
 
-  it('respecte tous les invariants sur 5 000 foyers', () => {
+  it('respecte tous les invariants sur 8 000 foyers de 2 à 6 membres', () => {
     const rand = rng(20260928)
     const int = (max: number) => Math.floor(rand() * (max + 1))
     const pick = <T>(xs: readonly T[]) => xs[int(xs.length - 1)]!
 
-    for (let run = 0; run < 5000; run++) {
-      const incomes = [int(4) === 0 ? pick([0, null]) : int(2_000_000), int(2_000_000)] as const
-      const h = household(...(run % 2 ? incomes : ([incomes[1], incomes[0]] as const)))
+    for (let run = 0; run < 8000; run++) {
+      const n = run < 3000 ? 2 : 2 + int(4)
+      const incomes = Array.from({ length: n }, () =>
+        int(6) === 0 ? pick([0, null]) : int(2_000_000),
+      )
+      const h = household(...incomes)
+      const accounts: AccountRef[] = ['joint', ...h.members.map((m) => memberAccount(m.id))]
       const charges = Array.from({ length: int(15) }, (_, k) =>
-        charge(`c${k}`, int(4) === 0 ? int(99) : int(500_000), pick(ACCOUNTS), pick(FREQS)),
+        charge(`c${k}`, int(4) === 0 ? int(99) : int(500_000), pick(accounts), pick(FREQS)),
       )
       const s = computeSplit(h, charges)
-      const ctx = JSON.stringify({ run, h, charges })
+      const ctx = JSON.stringify({ run, incomes, charges })
 
       // Totaux exacts en douzièmes de centime
       const exact = (acc?: AccountRef) =>
@@ -232,31 +326,63 @@ describe('computeSplit — propriétés sur montants aléatoires', () => {
 
       expect(Math.abs(s.total * 12 - exact()), ctx).toBeLessThanOrEqual(6)
       expect(Math.abs(s.joint * 12 - exact('joint')), ctx).toBeLessThan(12)
-      expect(Math.abs(s.paid[0] * 12 - exact('member1')), ctx).toBeLessThan(12)
-      expect(Math.abs(s.paid[1] * 12 - exact('member2')), ctx).toBeLessThan(12)
+      h.members.forEach((m, i) => {
+        expect(Math.abs(s.paid[i]! * 12 - exact(memberAccount(m.id))), ctx).toBeLessThan(12)
+      })
 
       // Tout tombe juste au centime
-      expect(s.joint + s.paid[0] + s.paid[1], ctx).toBe(s.total)
-      expect(s.due[0] + s.due[1], ctx).toBe(s.total)
-      expect(s.balance[0] + s.balance[1], ctx).toBe(s.joint)
-      expect(s.toJoint[0] + s.toJoint[1], ctx).toBe(s.joint)
+      const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0)
+      expect(s.joint + sum(s.paid), ctx).toBe(s.total)
+      expect(sum(s.due), ctx).toBe(s.total)
+      expect(sum(s.balance), ctx).toBe(s.joint)
+      expect(sum(s.toJoint), ctx).toBe(s.joint)
+      expect(sum(s.shares), ctx).toBeCloseTo(1, 9)
       for (const v of [s.total, s.joint, ...s.due, ...s.paid, ...s.balance, ...s.toJoint]) {
         expect(Number.isInteger(v), ctx).toBe(true)
       }
 
       // Dû à moins d'un centime de T × part
-      for (const i of [0, 1] as const) {
-        expect(Math.abs(s.due[i] - s.total * s.shares[i]), ctx).toBeLessThan(1)
+      for (let i = 0; i < n; i++) {
+        expect(Math.abs(s.due[i]! - s.total * s.shares[i]!), ctx).toBeLessThan(1)
       }
 
       // Virements positifs ; chacun finit par avoir payé exactement son dû
       expect(Math.min(...s.toJoint), ctx).toBeGreaterThanOrEqual(0)
-      const r = s.reimbursement
-      for (const i of [0, 1] as const) {
-        const net = r ? (r.from === i ? r.amount : r.to === i ? -r.amount : 0) : 0
-        expect(s.paid[i] + s.toJoint[i] + net, ctx).toBe(s.due[i])
+      const out = Array<number>(n).fill(0)
+      const inn = Array<number>(n).fill(0)
+      for (const r of s.reimbursements) {
+        expect(r.amount, ctx).toBeGreaterThan(0)
+        expect(s.balance[r.from]!, ctx).toBeGreaterThanOrEqual(0) // le payeur est débiteur
+        expect(s.balance[r.to]!, ctx).toBeLessThan(0) // le bénéficiaire est créditeur
+        out[r.from]! += r.amount
+        inn[r.to]! += r.amount
       }
-      expect(r === null, ctx).toBe(s.balance[0] >= 0 && s.balance[1] >= 0)
+      for (let i = 0; i < n; i++) {
+        expect(s.paid[i]! + s.toJoint[i]! + out[i]! - inn[i]!, ctx).toBe(s.due[i])
+        // Un créditeur reçoit exactement ce qu'il a avancé en trop, et ne vire rien
+        if (s.balance[i]! < 0) {
+          expect(inn[i], ctx).toBe(-s.balance[i]!)
+          expect(s.toJoint[i], ctx).toBe(0)
+          expect(out[i], ctx).toBe(0)
+        } else {
+          expect(inn[i], ctx).toBe(0)
+        }
+      }
+      expect(s.reimbursements.length === 0, ctx).toBe(s.balance.every((v) => v >= 0))
+
+      // Pour 2 membres : la règle d'origine, à l'identique
+      if (n === 2) {
+        const [b0, b1] = s.balance as [number, number]
+        if (b0 < 0) {
+          expect(s.toJoint, ctx).toEqual([0, s.joint])
+          expect(s.reimbursements, ctx).toEqual([{ from: 1, to: 0, amount: -b0 }])
+        } else if (b1 < 0) {
+          expect(s.toJoint, ctx).toEqual([s.joint, 0])
+          expect(s.reimbursements, ctx).toEqual([{ from: 0, to: 1, amount: -b1 }])
+        } else {
+          expect(s.toJoint, ctx).toEqual(s.balance)
+        }
+      }
     }
   })
 })

@@ -9,3 +9,6 @@
 - Export et import de vos données, sans compte ni cloud
 - Tableau de bord sur tablette et ordinateur
 - Version anglaise
+- Jusqu'à six personnes dans le foyer, chacune avec sa forme et sa hachure
+- Remboursements entre plusieurs personnes, calculés au centime près
+- Retirer une personne du foyer, avec l'impact sur les virements et un bouton Annuler

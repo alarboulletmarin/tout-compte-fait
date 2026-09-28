@@ -22,10 +22,18 @@ export function formatShare(share: number, locale: Locale): string {
     .replace(/\u202f/g, '\u00a0')
 }
 
-/** Les deux parts en pourcentage à une décimale, qui font 100 pile : [54,1 ; 45,9]. */
-export function sharePercents(share1: number): [number, number] {
-  const tenths = Math.round(share1 * 1000)
-  return [tenths / 10, (1000 - tenths) / 10]
+/** Les parts en pourcentage à une décimale, qui font 100 pile : [54,1 ; 45,9]. Plus fort reste. */
+export function sharePercents(shares: readonly number[]): number[] {
+  const raw = shares.map((s) => s * 1000)
+  const leftover = 1000 - raw.reduce((sum, r) => sum + Math.floor(r), 0)
+  const bumped = new Set(
+    raw
+      .map((r, i) => ({ i, frac: r - Math.floor(r) }))
+      .sort((a, b) => b.frac - a.frac || a.i - b.i)
+      .slice(0, leftover)
+      .map(({ i }) => i),
+  )
+  return raw.map((r, i) => (Math.floor(r) + (bumped.has(i) ? 1 : 0)) / 10)
 }
 
 export function formatDecimal(value: number, locale: Locale): string {

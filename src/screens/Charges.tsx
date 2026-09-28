@@ -1,23 +1,17 @@
 import { Link } from 'wouter'
 import { monthlyAmount } from '../domain/split'
-import type { AccountRef, Charge } from '../domain/types'
+import type { Charge } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { ChevronIcon, PlusIcon } from '../ui/icons'
 import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
-import { useNames } from './common'
+import { useAccountTotals } from './common'
 
 export function Charges() {
   const { t, euros } = useI18n()
   const { data, split } = useStore()
-  const names = useNames()
-
-  const accounts: [AccountRef, string, number][] = [
-    ['joint', t.charges.joint, split.joint],
-    ['member1', t.charges.accountOf(names[0]), split.paid[0]],
-    ['member2', t.charges.accountOf(names[1]), split.paid[1]],
-  ]
+  const accounts = useAccountTotals()
 
   return (
     <TabScreen title={t.nav.charges} kicker={t.charges.kicker} className="charges">
@@ -30,14 +24,14 @@ export function Charges() {
 
       {data.charges.length === 0 && <Empty />}
 
-      {accounts.map(([account, title, subtotal]) => {
-        const charges = data.charges.filter((c) => c.paidFrom === account)
+      {accounts.map(({ ref, who, title, subtotal }) => {
+        const charges = data.charges.filter((c) => c.paidFrom === ref)
         if (charges.length === 0) return null
         return (
-          <section key={account} className="stack stack--6" aria-labelledby={`account-${account}`}>
+          <section key={ref} className="stack stack--6" aria-labelledby={`account-${ref}`}>
             <div className="account-head">
-              <h2 id={`account-${account}`} className="account-head__title">
-                <Shape account={account} />
+              <h2 id={`account-${ref}`} className="account-head__title">
+                <Shape of={who} />
                 {title}
               </h2>
               <span className="num">{euros(subtotal)}</span>

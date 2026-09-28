@@ -6,6 +6,9 @@ import { exportFileName, parseExport, serializeExport } from './transfer'
 
 const exportedAt = new Date('2026-09-28T10:00:00.000Z')
 
+const sevenMembers = () =>
+  Array.from({ length: 5 }, (_, i) => ({ id: `x${i}`, name: 'X', income: 1 }))
+
 /** Fichier exporté valide, modifié par `edit` pour fabriquer un cas invalide. */
 function fileWith(edit: (file: Record<string, any>) => void): string {
   const file = JSON.parse(serializeExport(sample(), exportedAt))
@@ -60,7 +63,10 @@ describe('import — rejets', () => {
     ['une clé en trop à la racine', fileWith((f) => (f.extra = true))],
     ['sans données', fileWith((f) => delete f.data)],
     ['un seul membre', fileWith((f) => f.data.household.members.pop())],
-    ['trois membres', fileWith((f) => f.data.household.members.push({ name: 'X', income: 1 }))],
+    ['sept membres', fileWith((f) => f.data.household.members.push(...sevenMembers()))],
+    ['des membres aux ids en double', fileWith((f) => (f.data.household.members[1].id = 'lui'))],
+    ['un membre sans id', fileWith((f) => delete f.data.household.members[0].id)],
+    ['un membre à l’id vide', fileWith((f) => (f.data.household.members[0].id = ''))],
     ['un revenu négatif', fileWith((f) => (f.data.household.members[0].income = -1))],
     ['un revenu en euros décimaux', fileWith((f) => (f.data.household.members[0].income = 2300.5))],
     ['un revenu en texte', fileWith((f) => (f.data.household.members[0].income = '2300'))],
@@ -71,6 +77,8 @@ describe('import — rejets', () => {
     ['un libellé vide', fileWith((f) => (f.data.charges[0].label = '  '))],
     ['une fréquence inconnue', fileWith((f) => (f.data.charges[0].frequency = 'weekly'))],
     ['un compte inconnu', fileWith((f) => (f.data.charges[0].paidFrom = 'member3'))],
+    ['un compte de membre absent', fileWith((f) => (f.data.charges[0].paidFrom = 'm:zzz'))],
+    ['un compte au format v1', fileWith((f) => (f.data.charges[0].paidFrom = 'member1'))],
     ['une catégorie inconnue', fileWith((f) => (f.data.charges[0].categoryId = 'nope'))],
     [
       'une charge sans catégorie (clé absente)',
@@ -93,6 +101,102 @@ describe('import — rejets', () => {
       ok: false,
       reason: 'charges[1].amount : centimes entiers ≥ 1 attendus',
     })
+  })
+})
+
+describe('import — membres de 2 à 6', () => {
+  const withMembers = (n: number) =>
+    fileWith((f) => {
+      f.data.household.members = Array.from({ length: n }, (_, i) => ({
+        id: i === 0 ? 'lui' : i === 1 ? 'elle' : `x${i}`,
+        name: `M${i}`,
+        income: 1000,
+      }))
+    })
+
+  it.each([2, 3, 6])('accepte %i membres', (n) => {
+    expect(parseExport(withMembers(n)).ok).toBe(true)
+  })
+
+  it.each([1, 7])('refuse %i membre(s)', (n) => {
+    expect(parseExport(withMembers(n)).ok).toBe(false)
+  })
+
+  it('une charge peut être payée depuis le compte de n’importe quel membre', () => {
+    const text = fileWith((f) => {
+      f.data.household.members.push({ id: 'tiers', name: 'T', income: null })
+      f.data.charges[0].paidFrom = 'm:tiers'
+    })
+    expect(parseExport(text).ok).toBe(true)
+  })
+})
+
+describe('migration 1 → 2', () => {
+  const v1 = () => ({
+    app: 'tout-compte-fait',
+    schemaVersion: 1,
+    exportedAt: '2026-09-28T10:00:00.000Z',
+    data: {
+      household: {
+        members: [
+          { name: 'Lui', income: 230000 },
+          { name: 'Elle', income: null },
+        ],
+      },
+      categories: [{ id: 'housing', name: 'Logement' }],
+      charges: ['joint', 'member1', 'member2'].map((paidFrom, i) => ({
+        id: `c${i}`,
+        label: `Charge ${i}`,
+        amount: 1000,
+        frequency: 'monthly',
+        paidFrom,
+        categoryId: i === 0 ? 'housing' : null,
+      })),
+    },
+  })
+
+  it('un export v1 reste importable : ids donnés aux membres, comptes réécrits', () => {
+    const result = parseExport(JSON.stringify(v1()))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.file.schemaVersion).toBe(SCHEMA_VERSION)
+    const { members } = result.file.data.household
+    expect(members).toEqual([
+      { id: 'member1', name: 'Lui', income: 230000 },
+      { id: 'member2', name: 'Elle', income: null },
+    ])
+    expect(result.file.data.charges.map((c) => c.paidFrom)).toEqual([
+      'joint',
+      'm:member1',
+      'm:member2',
+    ])
+    expect(result.file.data.charges[0]!.categoryId).toBe('housing')
+  })
+
+  it('migrate ne modifie pas l’entrée', () => {
+    const file = v1()
+    migrate(file.data, 1)
+    expect(file.data.charges[1]!.paidFrom).toBe('member1')
+  })
+
+  it.each<[string, (f: ReturnType<typeof v1>) => void]>([
+    ['trois membres', (f) => f.data.household.members.push({ name: 'X', income: 1 })],
+    ['un compte inconnu', (f) => (f.data.charges[0]!.paidFrom = 'member3')],
+    ['des charges illisibles', (f) => ((f.data as any).charges = 'x')],
+    ['une charge qui n’est pas un objet', (f) => ((f.data.charges as any)[0] = 'x')],
+    ['un membre qui n’est pas un objet', (f) => ((f.data.household.members as any)[0] = null)],
+    ['un foyer absent', (f) => delete (f.data as any).household],
+  ])('refuse un export v1 avec %s', (_, edit) => {
+    const file = v1()
+    edit(file)
+    const result = parseExport(JSON.stringify(file))
+    expect(result.ok).toBe(false)
+  })
+
+  it('un compte « constructor » n’est pas pris pour un compte connu', () => {
+    const file = v1()
+    file.data.charges[0]!.paidFrom = 'constructor'
+    expect(parseExport(JSON.stringify(file)).ok).toBe(false)
   })
 })
 

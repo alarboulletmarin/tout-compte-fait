@@ -3,7 +3,7 @@ import { openDB } from 'idb'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { initialData } from '../domain/data'
 import { clearAll, importFromText, loadData, saveData } from './db'
-import { InvalidDataError } from './schema'
+import { InvalidDataError, SCHEMA_VERSION } from './schema'
 import { serializeExport } from './transfer'
 import { sample } from './fixtures'
 
@@ -20,9 +20,10 @@ describe('IndexedDB', () => {
   })
 
   it('remplace l’enregistrement précédent', async () => {
+    const initial = initialData()
     await saveData(sample())
-    await saveData(initialData())
-    expect(await loadData()).toEqual(initialData())
+    await saveData(initial)
+    expect(await loadData()).toEqual(initial)
   })
 
   it('refuse d’enregistrer des données invalides, sans toucher aux existantes', async () => {
@@ -44,6 +45,37 @@ describe('IndexedDB', () => {
     await db.put('app', { schemaVersion: 1, data: { charges: 'x' } }, 'data')
     db.close()
     await expect(loadData()).rejects.toThrow(InvalidDataError)
+  })
+})
+
+describe('migration à la lecture', () => {
+  it('une base en version 1 est migrée puis réécrite en version courante', async () => {
+    const db = await openDB('tout-compte-fait', 1)
+    const v1 = {
+      household: {
+        members: [
+          { name: 'Lui', income: 1000 },
+          { name: 'Elle', income: 2000 },
+        ],
+      },
+      categories: [],
+      charges: [
+        {
+          id: 'a',
+          label: 'Loyer',
+          amount: 500,
+          frequency: 'monthly',
+          paidFrom: 'member2',
+          categoryId: null,
+        },
+      ],
+    }
+    await db.put('app', { schemaVersion: 1, data: v1 }, 'data')
+    const data = await loadData()
+    expect(data?.household.members.map((m) => m.id)).toEqual(['member1', 'member2'])
+    expect(data?.charges[0]?.paidFrom).toBe('m:member2')
+    expect((await db.get('app', 'data'))?.schemaVersion).toBe(SCHEMA_VERSION)
+    db.close()
   })
 })
 

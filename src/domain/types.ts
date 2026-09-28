@@ -2,21 +2,25 @@
 
 export type Frequency = 'monthly' | 'quarterly' | 'yearly'
 
-export type MemberIndex = 0 | 1
+export const MIN_MEMBERS = 2
+export const MAX_MEMBERS = 6
 
-export type AccountRef = 'joint' | 'member1' | 'member2'
+/** « joint » ou « m:<id du membre> » : le compte perso d'un membre. */
+export type AccountRef = 'joint' | `m:${string}`
 
-export const memberAccount = (index: MemberIndex): AccountRef =>
-  index === 0 ? 'member1' : 'member2'
+export const memberAccount = (memberId: string): AccountRef => `m:${memberId}`
 
 export interface Member {
+  /** Stable : les charges y font référence. */
+  id: string
   name: string
   /** Revenu net mensuel ; null tant qu'il n'est pas renseigné. */
   income: number | null
 }
 
 export interface Household {
-  members: readonly [Member, Member]
+  /** De MIN_MEMBERS à MAX_MEMBERS. */
+  members: readonly Member[]
 }
 
 export interface Category {

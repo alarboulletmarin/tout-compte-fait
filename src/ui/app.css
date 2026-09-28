@@ -235,16 +235,12 @@ p {
   flex-shrink: 0;
   width: 10px;
   height: 10px;
-  background: currentColor;
-}
-.shape--member1 {
-  border-radius: 50%;
+  fill: currentColor;
 }
 .shape--joint {
   width: 9px;
   height: 9px;
   margin: 0 1px;
-  background: none;
   border: 1.5px solid currentColor;
   transform: rotate(45deg);
 }
@@ -438,6 +434,14 @@ p {
   font-size: 13px;
 }
 
+.segmented--wrap {
+  flex-wrap: wrap;
+}
+.segmented--wrap .segment {
+  flex: 1 1 auto;
+  padding: 0 14px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -616,15 +620,50 @@ html:has(.sheet[open]) {
   height: 14px;
   gap: 3px;
 }
-.split-bar__member1 {
-  background: var(--ink);
-  border-radius: 3px;
-}
-.split-bar__member2 {
-  flex-grow: 1;
-  background: var(--hatch);
+.split-bar__part {
+  flex-basis: 0;
+  min-width: 3px;
   border: 1px solid var(--ink);
   border-radius: 3px;
+}
+/* Une trame par membre : l'information ne passe jamais par la couleur seule */
+.split-bar__part--0 {
+  background: var(--ink);
+}
+.split-bar__part--1 {
+  background: var(--hatch);
+}
+.split-bar__part--2 {
+  background: repeating-linear-gradient(-45deg, var(--ink) 0 1.5px, transparent 1.5px 6px);
+}
+.split-bar__part--3 {
+  background:
+    repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 7px),
+    repeating-linear-gradient(-45deg, var(--ink) 0 1.5px, transparent 1.5px 7px);
+}
+.split-bar__part--4 {
+  background: repeating-linear-gradient(0deg, var(--ink) 0 1.5px, transparent 1.5px 5px);
+}
+.split-bar__part--5 {
+  background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.8px) 0 0 / 6px 6px;
+}
+.split-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+.split-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.split-legend .shape {
+  color: var(--ink);
 }
 
 .stats {
@@ -822,6 +861,9 @@ html:has(.sheet[open]) {
 }
 .member-card__share {
   font-size: 20px;
+}
+.household__full {
+  text-align: center;
 }
 .household__total {
   padding: 4px 4px 0;
@@ -1228,11 +1270,12 @@ html:has(.sheet[open]) {
 }
 .example__controls {
   display: flex;
+  flex-wrap: wrap; /* à 4 personnes ou plus, les comptes passent sous le montant */
   align-items: center;
   gap: 8px;
 }
 .input--compact {
-  flex-grow: 1;
+  flex: 1 1 120px;
   min-width: 0;
   height: 44px;
 }

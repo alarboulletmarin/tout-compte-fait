@@ -1,20 +1,19 @@
 import { useState } from 'react'
 import { Link } from 'wouter'
-import type { Split } from '../domain/split'
-import { memberAccount } from '../domain/types'
-import { sharePercents } from '../i18n/format'
+import { creditors, debtors, type Split } from '../domain/split'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { ArrowRightIcon, CheckIcon, PlusIcon, ShareIcon } from '../ui/icons'
-import { InfoNote } from '../ui/Notes'
 import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
 import { useMediaQuery, WIDE } from '../ui/useMediaQuery'
-import { MEMBERS, useNames } from './common'
+import { useNames } from './common'
+import { CreditorNote } from './CreditorNote'
 import { Dashboard } from './Dashboard'
 import { EqualFallbackNote } from './EqualFallbackNote'
 import { RecapSheet } from './RecapSheet'
+import { at } from '../domain/at'
 
 export function Transfers() {
   const { t } = useI18n()
@@ -38,11 +37,7 @@ export function Transfers() {
   }
   return (
     <TabScreen title={t.nav.transfers} kicker={t.transfers.kicker} className="transfers">
-      {split.reimbursement ? (
-        <Reimbursement split={split} reimbursement={split.reimbursement} />
-      ) : (
-        <Regular />
-      )}
+      {split.reimbursements.length > 0 ? <Reimbursement split={split} /> : <Regular />}
       <EqualFallbackNote />
       <Link href="/detail" className="link-row">
         <span>{t.transfers.seeDetail}</span>
@@ -62,23 +57,22 @@ export function Transfers() {
 }
 
 function Regular() {
-  const { t, euros, decimal } = useI18n()
+  const { t, euros } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
-  const [p1, p2] = sharePercents(split.shares[0])
 
   return (
     <>
       <section className="stack stack--20">
         <h1 className="lead">{t.transfers.title}</h1>
         <div className="stack stack--14">
-          {MEMBERS.map((i) => (
+          {names.map((name, i) => (
             <div className="transfer" key={i}>
               <div className="transfer__who">
-                <Shape account={memberAccount(i)} />
-                {names[i]}
+                <Shape of={i} />
+                {name}
               </div>
-              <div className="num transfer__amount">{euros(split.toJoint[i])}</div>
+              <div className="num transfer__amount">{euros(at(split.toJoint, i))}</div>
             </div>
           ))}
         </div>
@@ -89,13 +83,7 @@ function Regular() {
       </section>
 
       <section className="stack stack--10">
-        <div className="split-head">
-          <span>{t.transfers.split}</span>
-          <span className="num">
-            {decimal(p1)} / {decimal(p2)}
-          </span>
-        </div>
-        <SplitBar share1={split.shares[0]} names={names} />
+        <SplitBar shares={split.shares} names={names} />
       </section>
 
       <section className="stats">
@@ -106,7 +94,7 @@ function Regular() {
         </div>
         <div className="card stat">
           <div className="stat__label">{t.transfers.paidDirect}</div>
-          <div className="num stat__value">{euros(split.paid[0] + split.paid[1])}</div>
+          <div className="num stat__value">{euros(split.paid.reduce((a, b) => a + b, 0))}</div>
           <div className="stat__label">{t.transfers.fromPersonal}</div>
         </div>
       </section>
@@ -114,60 +102,72 @@ function Regular() {
   )
 }
 
-/** Un membre paie déjà plus que sa part : il ne vire rien, l'autre le rembourse. */
-function Reimbursement(props: {
-  split: Split
-  reimbursement: NonNullable<Split['reimbursement']>
-}) {
+/** Des membres paient déjà plus que leur part : ils ne virent rien, les autres les remboursent. */
+function Reimbursement({ split }: { split: Split }) {
   const { t, euros } = useI18n()
   const names = useNames()
-  const { from, to, amount } = props.reimbursement
-  const { split } = props
 
   return (
     <>
       <h1 className="lead">{t.transfers.titleNegative}</h1>
-      <section className="stack stack--6">
-        <div className="transfer">
+      {creditors(split).map((to) => (
+        <section key={to} className="stack stack--6">
+          <div className="transfer">
+            <div className="transfer__who">
+              <Shape of={to} />
+              {names[to]}
+            </div>
+            <div className="transfer__nothing">{t.transfers.nothing}</div>
+          </div>
+          <p className="transfer__why">{t.transfers.alreadyMore(at(names, to))}</p>
+        </section>
+      ))}
+
+      {debtors(split).map((from) => {
+        const payments = split.reimbursements.filter((r) => r.from === from)
+        const onJoint = at(split.toJoint, from)
+        const who = (
           <div className="transfer__who">
-            <Shape account={memberAccount(to)} />
-            {names[to]}
+            <Shape of={from} />
+            {names[from]}
           </div>
-          <div className="transfer__nothing">{t.transfers.nothing}</div>
-        </div>
-        <p className="transfer__why">{t.transfers.alreadyMore(names[to])}</p>
-      </section>
+        )
+        if (onJoint === 0 && payments.length === 0) {
+          return (
+            <section key={from} className="transfer">
+              {who}
+              <div className="transfer__nothing">{t.transfers.nothing}</div>
+            </section>
+          )
+        }
+        return (
+          <section key={from} className="stack stack--12">
+            {who}
+            {onJoint > 0 && (
+              <div className="transfer transfer--sub">
+                <span className="transfer__to">
+                  <Shape of="joint" />
+                  {t.transfers.onJoint}
+                </span>
+                <span className="num transfer__amount--sub">{euros(onJoint)}</span>
+              </div>
+            )}
+            {payments.map((r) => (
+              <div key={r.to} className="transfer transfer--sub">
+                <span className="transfer__to">
+                  <Shape of={r.to} />
+                  {t.transfers.directly(at(names, r.to))}
+                </span>
+                <span className="num transfer__amount--sub">{euros(r.amount)}</span>
+              </div>
+            ))}
+          </section>
+        )
+      })}
 
-      <section className="stack stack--12">
-        <div className="transfer__who">
-          <Shape account={memberAccount(from)} />
-          {names[from]}
-        </div>
-        {split.joint > 0 && (
-          <div className="transfer transfer--sub">
-            <span className="transfer__to">
-              <Shape account="joint" />
-              {t.transfers.onJoint}
-            </span>
-            <span className="num transfer__amount--sub">{euros(split.joint)}</span>
-          </div>
-        )}
-        <div className="transfer transfer--sub">
-          <span className="transfer__to">
-            <Shape account={memberAccount(to)} />
-            {t.transfers.directly(names[to])}
-          </span>
-          <span className="num transfer__amount--sub">{euros(amount)}</span>
-        </div>
-      </section>
-
-      <InfoNote>
-        {t.transfers.explainPays(names[to])}
-        <span className="num info__ink">{euros(split.paid[to])}</span>
-        {t.transfers.explainShare}
-        <span className="num info__ink">{euros(split.due[to])}</span>
-        {t.transfers.explainEnd(names[from])}
-      </InfoNote>
+      {creditors(split).map((to) => (
+        <CreditorNote key={to} index={to} />
+      ))}
     </>
   )
 }
@@ -193,10 +193,10 @@ function Empty() {
         {t.transfers.emptyAdd}
       </Link>
       <div className="share-legend">
-        {MEMBERS.map((i) => (
+        {names.map((name, i) => (
           <span key={i} className="share-legend__item">
-            <Shape account={memberAccount(i)} />
-            {names[i]} {share(split.shares[i])}
+            <Shape of={i} />
+            {name} {share(at(split.shares, i))}
           </span>
         ))}
       </div>

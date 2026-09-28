@@ -2,9 +2,12 @@ import type { Messages } from './fr'
 
 const billsCount = (n: number) => (n === 0 ? 'No bills' : n === 1 ? '1 bill' : `${n} bills`)
 
+const list = new Intl.ListFormat('en-GB', { style: 'long', type: 'conjunction' })
+
 // Libellés anglais de la maquette MainEN : « bills » pour les charges fixes
 export const en: Messages = {
   brand: 'Tout Compte Fait',
+  list: (items: readonly string[]) => list.format(items),
   memberFallback: (index: number) => `Person ${index + 1}`,
   chargesCount: billsCount,
   saveError: "Couldn't save on this device",
@@ -72,7 +75,8 @@ export const en: Messages = {
     directly: (name: string) => `to ${name}, directly`,
     explainPays: (name: string) => `${name} pays `,
     explainShare: ' from their account. Their share is ',
-    explainEnd: (other: string) => `: ${other} pays them back the difference.`,
+    explainEnd: (others: readonly string[]) =>
+      `: ${list.format(others)} ${others.length > 1 ? 'pay' : 'pays'} them back the difference.`,
     emptyTitle: 'Nothing to transfer yet',
     emptyText:
       "Add your fixed bills: rent, energy, subscriptions. You'll see right away how much each of you transfers to the joint account.",
@@ -95,11 +99,13 @@ export const en: Messages = {
     step: (n: number) => `${n} / 2`,
     title1: 'Who lives in this household?',
     intro1:
-      'Two first names and your net incomes. The income-based shares are worked out right away.',
+      'Everyone’s first name and net income. The income-based shares are worked out right away.',
+    addPerson: 'Add a person',
+    removePerson: (name: string) => `Remove ${name}`,
     person: (n: number) => `Person ${n}`,
     firstName: 'First name',
     income: 'Monthly net income',
-    placeholders: ['E.g. Alex', 'E.g. Sam'],
+    placeholders: ['E.g. Alex', 'E.g. Sam', 'E.g. Camille', 'E.g. Louis', 'E.g. Robin', 'E.g. Lou'],
     local: 'Everything stays on this device. No account to create.',
     next: 'Continue',
     import: 'I already have a file: import it',
@@ -171,6 +177,20 @@ export const en: Messages = {
     firstName: 'First name',
     income: 'Monthly net income',
     total: 'Household total',
+    add: 'Add a person',
+    full: 'Six people at most.',
+    remove: (name: string) => `Remove ${name}`,
+    removed: (name: string) => `${name} is no longer in the household`,
+    removal: {
+      title: (name: string) => `Remove ${name} from the household?`,
+      noCharges: 'No bill is paid from their account.',
+      charges: (n: number) =>
+        n === 1
+          ? 'The bill paid from their account moves to the joint account.'
+          : `The ${n} bills paid from their account move to the joint account.`,
+      confirm: 'Remove',
+      cancel: 'Cancel',
+    },
   },
 
   settings: {
@@ -197,9 +217,8 @@ export const en: Messages = {
 
   importSheet: {
     title: 'Replace your data?',
-    summary: (date: string, charges: string, names: string) =>
-      `Exported on ${date} · ${charges} · ${names}`,
-    names: (a: string, b: string) => `${a} and ${b}`,
+    summary: (date: string, charges: string, names: readonly string[]) =>
+      `Exported on ${date} · ${charges} · ${list.format(names)}`,
     warning:
       'Your current incomes, names and bills will be replaced by those in the file. This cannot be undone.',
     replace: 'Replace',
@@ -224,11 +243,10 @@ export const en: Messages = {
     open: 'Send the summary',
     title: 'Send the summary',
     heading: 'Tout Compte Fait · every month',
-    toJoint: (name: string, amount: string) => `${name}: ${amount} to the joint account`,
-    nothing: (name: string) => `${name}: nothing to transfer`,
-    both: (name: string, joint: string, other: string, amount: string) =>
-      `${name}: ${joint} to the joint account + ${amount} to ${other}`,
-    direct: (name: string, other: string, amount: string) => `${name}: ${amount} to ${other}`,
+    line: (name: string, what: string) => `${name}: ${what}`,
+    nothing: 'nothing to transfer',
+    onJoint: (amount: string) => `${amount} to the joint account`,
+    toPerson: (amount: string, name: string) => `${amount} to ${name}`,
     total: (amount: string) => `Total: ${amount} (joint account bills)`,
     hint: 'Opens with your usual apps: Messages, WhatsApp, email…',
     share: 'Share…',

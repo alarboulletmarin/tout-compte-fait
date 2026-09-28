@@ -1,18 +1,45 @@
 import { sharePercents } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
+import { Shape } from './Shape'
 
-/** Barre de répartition : membre 1 plein, membre 2 hachuré. */
-export function SplitBar(props: { share1: number; names: readonly [string, string] }) {
-  const { decimal } = useI18n()
-  const [p1, p2] = sharePercents(props.share1)
+/**
+ * Répartition au prorata : une part par membre, chacune avec sa hachure
+ * (pleine, puis hachures distinctes). À plus de deux, la légende nomme chaque part.
+ */
+export function SplitBar(props: { shares: readonly number[]; names: readonly string[] }) {
+  const { t, decimal } = useI18n()
+  const percents = sharePercents(props.shares)
+  const many = percents.length > 2
+
   return (
-    <div
-      className="split-bar"
-      role="img"
-      aria-label={`${props.names[0]} ${decimal(p1)} %, ${props.names[1]} ${decimal(p2)} %`}
-    >
-      <div className="split-bar__member1" style={{ width: `${p1}%` }} />
-      <div className="split-bar__member2" />
-    </div>
+    <>
+      <div className="split-head">
+        <span>{t.transfers.split}</span>
+        {!many && <span className="num">{percents.map(decimal).join(' / ')}</span>}
+      </div>
+      <div
+        className="split-bar"
+        role="img"
+        aria-label={percents.map((p, i) => `${props.names[i]} ${decimal(p)} %`).join(', ')}
+      >
+        {percents.map((p, i) => (
+          <div
+            key={i}
+            className={`split-bar__part split-bar__part--${i}`}
+            style={{ flexGrow: p }}
+          />
+        ))}
+      </div>
+      {many && (
+        <ul className="split-legend">
+          {percents.map((p, i) => (
+            <li key={i}>
+              <Shape of={i} />
+              {props.names[i]} <span className="num">{decimal(p)} %</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   )
 }
