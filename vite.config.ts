@@ -48,7 +48,7 @@ export default defineConfig({
       workbox: {
         // Polices : seuls les sous-ensembles latins sont mis en cache pour le hors-ligne
         globPatterns: ['**/*.{js,css,html,svg,png,txt}', '**/*-latin-*.woff2'],
-        globIgnores: ['index.html', 'landing/**', 'boot/landing.js'],
+        globIgnores: ['index.html', 'landing/**', 'boot/landing.js', 'og.png'],
         navigateFallback: '/app/index.html',
         navigateFallbackAllowlist: [/^\/app\//],
       },
