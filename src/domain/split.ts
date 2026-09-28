@@ -24,6 +24,10 @@ export interface Split {
 
 export const MONTHS: Record<Frequency, number> = { monthly: 1, quarterly: 3, yearly: 12 }
 
+/** Équivalent mensuel d'une charge, arrondi au centime : pour l'affichage d'une ligne seulement. */
+export const monthlyAmount = (charge: Charge): number =>
+  Math.round(charge.amount / MONTHS[charge.frequency])
+
 const BUCKET = { joint: 0, member1: 1, member2: 2 } as const satisfies Record<AccountRef, number>
 
 export function computeSplit(household: Household, charges: readonly Charge[]): Split {

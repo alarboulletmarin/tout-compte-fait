@@ -9,6 +9,10 @@ export default defineConfig({
     VitePWA({
       // « prompt » : le toast « Nouvelle version disponible » décide du rechargement (phase 5)
       registerType: 'prompt',
+      workbox: {
+        // Polices : seuls les sous-ensembles latins sont mis en cache pour le hors-ligne
+        globPatterns: ['**/*.{js,css,html,svg,png,txt}', '**/*-latin-*.woff2'],
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
         name: 'Tout compte fait',

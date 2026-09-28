@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest'
+import { formatEuros, formatShare, parseEuros, sharePercents } from './format'
+
+// Intl sépare les milliers par une espace fine insécable
+const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, ' ')
+
+describe('formatEuros', () => {
+  it.each([
+    [143129, '1 431,29 €'],
+    [4500, '45,00 €'],
+    [0, '0,00 €'],
+    [7, '0,07 €'],
+    [100000000, '1 000 000,00 €'],
+  ])('%i centimes → %s', (cents, text) => {
+    expect(plain(formatEuros(cents, 'fr-FR'))).toBe(text)
+  })
+
+  it('en anglais', () => {
+    expect(formatEuros(143129, 'en-GB')).toBe('€1,431.29')
+  })
+})
+
+describe('parts', () => {
+  it('formate une part à une décimale', () => {
+    expect(plain(formatShare(230000 / 424800, 'fr-FR'))).toBe('54,1 %')
+  })
+
+  it('les deux pourcentages font 100 pile', () => {
+    expect(sharePercents(230000 / 424800)).toEqual([54.1, 45.9])
+    expect(sharePercents(1 / 3)).toEqual([33.3, 66.7])
+    expect(sharePercents(0.5)).toEqual([50, 50])
+  })
+})
+
+describe('parseEuros', () => {
+  it.each([
+    ['45', 4500],
+    ['45,5', 4550],
+    ['45,50', 4550],
+    ['45.5', 4550],
+    ['1 431,29 €', 143129],
+    ['1\u202f431,29\u00a0€', 143129],
+    ['0,07', 7],
+    ['0', 0],
+    ['  12 ', 1200],
+  ])('lit « %s » → %i', (text, cents) => {
+    expect(parseEuros(text)).toBe(cents)
+  })
+
+  it.each(['', ' ', 'abc', '-5', '1,234', '1.2.3', '12,', ',5', '1e3', '9'.repeat(20)])(
+    'refuse « %s »',
+    (text) => {
+      expect(parseEuros(text)).toBeNull()
+    },
+  )
+
+  it('relit ce que formatEuros écrit', () => {
+    for (const cents of [0, 1, 99, 4500, 143129, 123456789]) {
+      expect(parseEuros(formatEuros(cents, 'fr-FR'))).toBe(cents)
+    }
+  })
+})

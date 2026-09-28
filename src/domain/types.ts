@@ -6,6 +6,9 @@ export type MemberIndex = 0 | 1
 
 export type AccountRef = 'joint' | 'member1' | 'member2'
 
+export const memberAccount = (index: MemberIndex): AccountRef =>
+  index === 0 ? 'member1' : 'member2'
+
 export interface Member {
   name: string
   /** Revenu net mensuel ; null tant qu'il n'est pas renseigné. */

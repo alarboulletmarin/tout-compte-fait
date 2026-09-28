@@ -166,6 +166,12 @@ importers:
 
   .:
     dependencies:
+      '@fontsource-variable/geist':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource-variable/martian-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
       idb:
         specifier: ^8.0.3
         version: 8.0.3
@@ -175,6 +181,9 @@ importers:
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
+      wouter:
+        specifier: ^3.11.0
+        version: 3.11.0(react@19.3.0)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -781,6 +790,12 @@ packages:
   '@eslint/plugin-kit@0.7.3':
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
+
+  '@fontsource-variable/martian-mono@5.3.0':
+    resolution: {integrity: sha512-0wVODx9ILwNnaYC4XCuSaFRYtj1Prd89MRVaSuv2ng6zLiQkS4SepaWEPefs7vqCZS8sbEOA8jb/4F5KNMnGdg==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2137,6 +2152,10 @@ packages:
     resolution: {integrity: sha512-dYqgNSZbDwkaJ2ceRd9ojCGjBq+mOm9LmtXnAnEGyHhN/5R7iDW2TRw3h+o/jCFxus3P2LfWIIiwowAjANm7IA==}
     engines: {node: '>= 0.4'}
 
+  regexparam@3.0.0:
+    resolution: {integrity: sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q==}
+    engines: {node: '>=8'}
+
   regexpu-core@6.4.0:
     resolution: {integrity: sha512-0ghuzq67LI9bLXpOX/ISfve/Mq33a4aFRzoQYhnnok1JOFpmE/A2TBGkNVenOGEeSBCjIiWcc6MVOG5HEQv0sA==}
     engines: {node: '>=4'}
@@ -2400,6 +2419,11 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
+  use-sync-external-store@1.7.0:
+    resolution: {integrity: sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   vite-plugin-pwa@1.3.0:
     resolution: {integrity: sha512-c5kMgN+ITrOtHXp8PAtk2uOIEea6XjP/unCGxOWWBzQ6qa65qj/awHg0wf+QF9E/2u9vh86LqxPwzEPNbM2r5A==}
     engines: {node: '>=16.0.0'}
@@ -2574,6 +2598,11 @@ packages:
 
   workbox-window@7.4.1:
     resolution: {integrity: sha512-notZDH2u8VXaqyuD7xaqIfEFi6SRM4SUSd7ewe9PDsVqADuepxX2ZMY3uvuZGxzY5ZOsGC/vD3A/3smFtJt4/A==}
+
+  wouter@3.11.0:
+    resolution: {integrity: sha512-xyMLHhytdGhIjXVRcSjeYbXd7TR1lrxVTPLGBWmmyW52ZuWVQ1jXmsgoJ4G5s4tjloJCq7h4i2eREljWUQ4+/A==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -3307,6 +3336,10 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@fontsource-variable/geist@5.3.0': {}
+
+  '@fontsource-variable/martian-mono@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -4591,6 +4624,8 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
+  regexparam@3.0.0: {}
+
   regexpu-core@6.4.0:
     dependencies:
       regenerate: 1.4.2
@@ -4941,6 +4976,10 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  use-sync-external-store@1.7.0(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+
   vite-plugin-pwa@1.3.0(vite@8.3.1(@types/node@26.6.3)(terser@5.51.2))(workbox-build@7.4.1)(workbox-window@7.4.1):
     dependencies:
       debug: 4.4.3
@@ -5146,6 +5185,12 @@ snapshots:
     dependencies:
       '@types/trusted-types': 2.0.7
       workbox-core: 7.4.1
+
+  wouter@3.11.0(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+      regexparam: 3.0.0
+      use-sync-external-store: 1.7.0(react@19.3.0)
 
   yallist@3.1.1: {}
 
