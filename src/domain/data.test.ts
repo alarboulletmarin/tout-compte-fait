@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_CATEGORIES,
   deleteCategory,
+  findCategoryByName,
   initialData,
   removeMember,
   restoreMember,
@@ -135,5 +136,25 @@ describe('removeMember / restoreMember', () => {
       household: { members: 'abcdef'.split('').map(member) },
     }
     expect(restoreMember(full, member('g'), 0, new Set())).toBe(full)
+  })
+})
+
+describe('findCategoryByName', () => {
+  const categories = [
+    { id: 'energy', name: 'Énergie' },
+    { id: 'water', name: 'Eau' },
+  ]
+
+  it('ignore la casse, les accents et les espaces autour', () => {
+    expect(findCategoryByName(categories, '  energie ')?.id).toBe('energy')
+    expect(findCategoryByName(categories, 'EAU')?.id).toBe('water')
+  })
+
+  it('ne trouve rien pour un nom inconnu', () => {
+    expect(findCategoryByName(categories, 'Gaz')).toBeUndefined()
+  })
+
+  it('laisse une catégorie garder son propre nom quand on la renomme', () => {
+    expect(findCategoryByName(categories, 'énergie', 'energy')).toBeUndefined()
   })
 })

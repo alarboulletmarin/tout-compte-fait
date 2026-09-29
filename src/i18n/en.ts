@@ -164,6 +164,10 @@ export const en: Messages = {
     accountOf: (name: string) => `${name}'s account`,
     add: 'Add',
     perMonth: 'per month',
+    filter: 'Category',
+    allCategories: 'All categories',
+    selection: (count: number, total: string) =>
+      `${count === 1 ? '1 bill' : `${count} bills`} · ${total} per month`,
     noCategory: 'No category',
     frequency: { monthly: 'monthly', quarterly: 'quarterly', yearly: 'yearly' },
     per: { monthly: 'month', quarterly: 'quarter', yearly: 'year' },
@@ -321,6 +325,7 @@ export const en: Messages = {
     cancel: 'Cancel',
     save: 'Save',
     note: 'Deleting a category keeps its bills: they move to “No category”.',
+    duplicate: 'A category already has this name.',
     deleted: (name: string) => `Category “${name}” deleted`,
   },
 }

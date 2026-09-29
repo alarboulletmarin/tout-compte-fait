@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { Redirect, useLocation, useSearch } from 'wouter'
+import { findCategoryByName } from '../domain/data'
 import { computeSplit, MONTHS } from '../domain/split'
 import type { AccountRef, Charge, Frequency } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
@@ -16,6 +17,9 @@ import { at } from '../domain/at'
 
 // Valeur de l'option qui ouvre la saisie d'une nouvelle catégorie
 const NEW_CATEGORY = '__new'
+
+// Au-delà, le compte payeur se choisit dans une liste plutôt qu'avec des boutons
+const MAX_SEGMENTS = 4
 
 const FREQUENCIES: Frequency[] = ['monthly', 'quarterly', 'yearly']
 
@@ -90,6 +94,7 @@ function Form({ existing }: { existing?: Charge }) {
               ref={amountRef}
               className="num input-amount"
               inputMode="decimal"
+              enterKeyHint="next"
               autoComplete="off"
               placeholder={t.form.amountPlaceholder}
               value={amountText}
@@ -110,6 +115,8 @@ function Form({ existing }: { existing?: Charge }) {
               ref={labelRef}
               className="input"
               autoComplete="off"
+              autoCapitalize="sentences"
+              enterKeyHint="done"
               placeholder={t.form.labelPlaceholder}
               value={label}
               onChange={(e) => setLabel(e.target.value)}
@@ -136,23 +143,44 @@ function Form({ existing }: { existing?: Charge }) {
             </div>
           </fieldset>
 
-          <fieldset className="fieldset">
-            <legend className="field__label legend">{t.form.paidFrom}</legend>
-            <div className={`segmented${accounts.length > 3 ? ' segmented--wrap' : ''}`}>
-              {accounts.map((a) => (
-                <button
-                  key={a.ref}
-                  type="button"
-                  className="segment"
-                  aria-pressed={paidFrom === a.ref}
-                  onClick={() => setPaidFrom(a.ref)}
-                >
-                  <Shape of={a.who} />
-                  {a.who === 'joint' ? t.form.joint : a.name}
-                </button>
-              ))}
+          {accounts.length > MAX_SEGMENTS ? (
+            // Trop de comptes pour des boutons : liste native
+            <div className="field">
+              <label htmlFor={`${ids}-paid`} className="field__label">
+                {t.form.paidFrom}
+              </label>
+              <select
+                id={`${ids}-paid`}
+                className="input select"
+                value={paidFrom}
+                onChange={(e) => setPaidFrom(e.target.value as AccountRef)}
+              >
+                {accounts.map((a) => (
+                  <option key={a.ref} value={a.ref}>
+                    {a.who === 'joint' ? t.form.joint : a.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </fieldset>
+          ) : (
+            <fieldset className="fieldset">
+              <legend className="field__label legend">{t.form.paidFrom}</legend>
+              <div className={`segmented${accounts.length > 3 ? ' segmented--wrap' : ''}`}>
+                {accounts.map((a) => (
+                  <button
+                    key={a.ref}
+                    type="button"
+                    className="segment"
+                    aria-pressed={paidFrom === a.ref}
+                    onClick={() => setPaidFrom(a.ref)}
+                  >
+                    <Shape of={a.who} />
+                    {a.who === 'joint' ? t.form.joint : a.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           <div className="field">
             <label htmlFor={`${ids}-category`} className="field__label">
@@ -205,6 +233,9 @@ function CategoryField(props: {
     const name = draft?.trim()
     setDraft(null)
     if (!name) return
+    // Un nom déjà pris sélectionne la catégorie existante au lieu d'en créer une seconde
+    const same = findCategoryByName(data.categories, name)
+    if (same) return props.onChange(same.id)
     const id = crypto.randomUUID()
     update((d) => ({ ...d, categories: [...d.categories, { id, name }] }))
     props.onChange(id)
@@ -237,6 +268,8 @@ function CategoryField(props: {
           aria-label={t.form.newCategoryName}
           placeholder={t.form.newCategoryName}
           autoComplete="off"
+          autoCapitalize="sentences"
+          enterKeyHint="done"
           autoFocus
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
