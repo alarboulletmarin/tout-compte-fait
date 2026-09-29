@@ -160,6 +160,18 @@ describe('trames', () => {
     })
   })
 
+  it('n’exigent pas l’itération asynchrone des flux, absente de certains Safari', async () => {
+    const proto = ReadableStream.prototype
+    const original = Object.getOwnPropertyDescriptor(proto, Symbol.asyncIterator)
+    Reflect.deleteProperty(proto, Symbol.asyncIterator)
+    try {
+      const result = await feed(new Receiver(), await encodeFrames(sample()))
+      expect(result.kind).toBe('done')
+    } finally {
+      if (original) Object.defineProperty(proto, Symbol.asyncIterator, original)
+    }
+  })
+
   it('signalent une version plus récente de l’app', async () => {
     const frames = await encodeFrames(sample())
     // Même enveloppe, schemaVersion plus grande : refabriquée à la main
