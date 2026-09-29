@@ -3,8 +3,10 @@ import { Redirect, useLocation, useSearch } from 'wouter'
 import { findCategoryByName } from '../domain/data'
 import { computeSplit, MONTHS } from '../domain/split'
 import type { AccountRef, Charge, Frequency } from '../domain/types'
+import { Amount } from '../ui/Amount'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
+import { tap } from '../ui/haptics'
 import { TrashIcon } from '../ui/icons'
 import { Impact } from '../ui/Impact'
 import { FieldError } from '../ui/Notes'
@@ -76,6 +78,7 @@ function Form({ existing }: { existing?: Charge }) {
         ? d.charges.map((c) => (c.id === charge.id ? charge : c))
         : [...d.charges, charge],
     }))
+    tap()
     navigate('/charges', { replace: true })
   }
 
@@ -193,9 +196,11 @@ function Form({ existing }: { existing?: Charge }) {
         <div className={`charge-form__foot${existing ? ' charge-form__foot--edit' : ''}`}>
           <div className="between caption-13">
             <span>{t.form.monthlyEquivalent}</span>
-            <span className="num">
-              {valid ? euros(Math.round(amount / MONTHS[frequency])) : '–'}
-            </span>
+            {valid ? (
+              <Amount cents={Math.round(amount / MONTHS[frequency])} />
+            ) : (
+              <span className="num">–</span>
+            )}
           </div>
           <button type="submit" className="button button--primary">
             {existing ? t.form.save : t.form.add}
@@ -304,6 +309,7 @@ function DeleteSheet(props: { charge: Charge; open: boolean; onClose: () => void
   function confirm() {
     const index = data.charges.findIndex((c) => c.id === charge.id)
     update((d) => ({ ...d, charges: d.charges.filter((c) => c.id !== charge.id) }))
+    tap()
     navigate('/charges', { replace: true })
     toast({
       message: t.charges.deleted(charge.label),

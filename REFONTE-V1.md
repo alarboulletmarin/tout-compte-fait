@@ -235,6 +235,42 @@ Une phase = une PR. Chaque phase se termine avec :
 - Lighthouse PWA et performance.
 - Déploiement Vercel sur toutcomptefait.xyz.
 
+### Phase 7 — Mouvement
+
+Principe : une animation = une information. Jamais décorative, jamais bloquante, toujours interruptible.
+
+- Cadre :
+  - tokens partagés `--dur-fast` (120 ms), `--dur-base` (200 ms), `--dur-slow` (500 ms max) et `--ease-out` (`cubic-bezier(.2,.8,.2,1)`), sans rebond ;
+  - CSS pur, `transform` et `opacity` de préférence, aucune lib d'animation ;
+  - `prefers-reduced-motion` : fondu simple ou rien, l'information reste identique ;
+  - contrôle manuel « mouvement réduit » à chaque écran.
+- Étape 1 — Montants et répartition :
+  - odomètre en Martian Mono : seuls les chiffres qui changent défilent (chasse fixe) ;
+  - recalcul en direct des dûs et virements quand on saisit un revenu ou un montant ;
+  - la frontière de `SplitBar` glisse quand les parts changent (hachures fixes), et s'aimante au milieu en cas de 50/50.
+- Étape 2 — Récap :
+  - révélation du virement : montants posés l'un après l'autre (~80 ms de décalage), trait reliant la forme du membre au losange du joint, tracé une seule fois ;
+  - cas v_i < 0 : liaison en pointillé, jamais par la couleur seule ;
+  - « Copié » qui remplace le libellé du bouton, flash inversé de 150 ms.
+- Étape 3 — Synchro QR : anneau de progression autour du QR, rempli trame par trame côté récepteur, coche qui se dessine à la fin.
+- Étape 4 — Finitions :
+  - insertion/suppression de charge en hauteur animée, total T en odomètre, « Annuler » discret ~5 s ;
+  - équivalent mensuel recalculé en direct au changement de fréquence ;
+  - soulignement des champs tracé de gauche à droite ;
+  - View Transitions entre écrans et bascule clair/sombre en cercle, avec repli propre si non supportées ;
+  - retour tactile `navigator.vibrate(8)` sur les actions clés, désactivable dans Réglages.
+- Exclus : confettis, sons, parallaxe, effets au scroll, squelettes de chargement, animation systématique à l'ouverture.
+
+Fait (étapes 1 à 4) : tout le CSS est dans `src/ui/motion.css`, la logique dans `src/ui/Amount.tsx` (odomètre, avec mémoire de la dernière valeur vue : un total qui a changé pendant l'absence défile à l'arrivée), `src/ui/odometer.ts` (testé), `reveal.ts`, `motion.ts`, `haptics.ts`. Précisions :
+
+- la révélation des virements ne joue qu'une fois par session, jamais dans un mois de l'historique ;
+- mouvement réduit : tout est déjà dans son état final (aucun fondu résiduel), et les View Transitions ne sont pas lancées ;
+- le montant du virement glisse de l'écran Virements vers le Détail (`view-transition-name`), la barre de navigation reste en place ;
+- l'anneau et la coche existent côté récepteur seulement, seul à connaître la progression ;
+- le retour tactile n'apparaît dans Réglages que sur les appareils qui vibrent.
+
+Reste : essayer sur un vrai téléphone (fluidité sur entrée de gamme, vibration Android, View Transitions sur Safari iOS).
+
 ## 7. Hors périmètre v1
 
 - Historique mois par mois.

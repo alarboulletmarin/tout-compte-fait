@@ -266,6 +266,10 @@ export const fr = {
     newTab: '(nouvel onglet)',
     promise: 'Gratuit, sans compte, sans pistage. Vos données restent sur cet appareil.',
     exported: 'Export enregistré',
+    haptics: 'Retour tactile',
+    hapticsLabel: 'Vibration légère',
+    on: 'Activée',
+    off: 'Désactivée',
   },
 
   importSheet: {
@@ -314,6 +318,7 @@ export const fr = {
     camera: 'Image de la caméra',
     starting: 'Ouverture de la caméra…',
     aim: "Visez le code de l'autre appareil.",
+    received: 'Données reçues',
     progress: (got: number, count: number) => `${got} sur ${count} images reçues`,
     denied:
       "L'accès à la caméra est refusé. Autorisez-le dans les réglages du navigateur, ou passez par un fichier : Exporter, puis Importer.",
@@ -347,7 +352,7 @@ export const fr = {
     hint: "S'ouvre avec vos applis habituelles : Messages, WhatsApp, e-mail…",
     share: 'Partager…',
     copy: 'Copier le texte',
-    copied: 'Texte copié',
+    copiedShort: 'Copié',
     copyFailed: 'Copie impossible : sélectionnez le texte à la main',
   },
 

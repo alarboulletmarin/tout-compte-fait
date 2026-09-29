@@ -1,5 +1,6 @@
 import { sharePercents } from '../i18n/format'
 import { useI18n } from '../i18n/i18n'
+import { Odometer } from './Amount'
 import { Shape } from './Shape'
 
 /**
@@ -10,15 +11,18 @@ export function SplitBar(props: { shares: readonly number[]; names: readonly str
   const { t, decimal } = useI18n()
   const percents = sharePercents(props.shares)
   const many = percents.length > 2
+  // Parts égales : un repère au milieu de la barre le dit, sans avoir à lire les pourcentages
+  const even = percents.length === 2 && percents[0] === percents[1]
 
   return (
     <>
       <div className="split-head">
         <span>{t.transfers.split}</span>
-        {!many && <span className="num">{percents.map(decimal).join(' / ')}</span>}
+        {!many && <Odometer value={percents[0] ?? 0} text={percents.map(decimal).join(' / ')} />}
       </div>
       <div
         className="split-bar"
+        data-even={even || undefined}
         role="img"
         aria-label={percents.map((p, i) => `${props.names[i]} ${decimal(p)} %`).join(', ')}
       >

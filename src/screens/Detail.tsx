@@ -1,10 +1,11 @@
 import { monthlyAmount } from '../domain/split'
 import { memberAccount } from '../domain/types'
+import { Amount, ShareValue } from '../ui/Amount'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { SubScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
-import { useNames } from './common'
+import { useLive, useNames } from './common'
 import { at } from '../domain/at'
 
 export function Detail() {
@@ -18,9 +19,10 @@ export function Detail() {
 
 /** Le détail du calcul du mois affiché : une carte par membre, puis le joint. */
 export function DetailBody() {
-  const { t, euros, share } = useI18n()
+  const { t, euros } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
+  const live = useLive()
 
   return (
     <>
@@ -39,11 +41,11 @@ export function DetailBody() {
                 <Shape of={i} />
                 {names[i]}
               </h2>
-              <span className="num detail__share">{share(at(split.shares, i))}</span>
+              <ShareValue share={at(split.shares, i)} className="detail__share" />
             </div>
             <div className="between detail__line">
               <span>{t.detail.share}</span>
-              <span className="num">{euros(at(split.due, i))}</span>
+              <Amount cents={at(split.due, i)} />
             </div>
             {own.length > 0 && (
               <div className="stack stack--8 detail__paid">
@@ -51,7 +53,7 @@ export function DetailBody() {
                 {own.map((c) => (
                   <div key={c.id} className="between detail__line detail__line--muted">
                     <span>− {c.label}</span>
-                    <span className="num">{euros(monthlyAmount(c))}</span>
+                    <Amount cents={monthlyAmount(c)} />
                   </div>
                 ))}
               </div>
@@ -59,14 +61,19 @@ export function DetailBody() {
             <div className="divider" />
             <div className="between between--baseline">
               <span className="detail__result">{t.detail.toJoint}</span>
-              <span className="num detail__result-amount">{euros(at(split.toJoint, i))}</span>
+              <Amount
+                cents={at(split.toJoint, i)}
+                className="detail__result-amount"
+                id={live(`toJoint:${i}`)}
+                transitionName={live(`amount-${i}`)}
+              />
             </div>
             {split.reimbursements
               .filter((r) => r.from === i)
               .map((r) => (
                 <div key={r.to} className="between between--baseline">
                   <span className="detail__result">{t.detail.directly(at(names, r.to))}</span>
-                  <span className="num detail__result-amount">{euros(r.amount)}</span>
+                  <Amount cents={r.amount} className="detail__result-amount" />
                 </div>
               ))}
           </section>
@@ -76,7 +83,7 @@ export function DetailBody() {
       <p className="detail__together">
         <Shape of="joint" />
         <span>
-          {t.detail.together} <span className="num detail__ink">{euros(split.joint)}</span>
+          {t.detail.together} <Amount cents={split.joint} className="detail__ink" />
           {t.detail.togetherEnd}
         </span>
       </p>

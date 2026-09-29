@@ -5,6 +5,7 @@ import { MAX_MEMBERS, MIN_MEMBERS, memberAccount, type Member } from '../domain/
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { PlusIcon, TrashIcon } from '../ui/icons'
+import { Amount, ShareValue } from '../ui/Amount'
 import { Impact } from '../ui/Impact'
 import { FieldError } from '../ui/Notes'
 import { TabScreen } from '../ui/Screens'
@@ -17,7 +18,7 @@ import { EqualFallbackNote } from './EqualFallbackNote'
 import { at } from '../domain/at'
 
 export function Household() {
-  const { t, euros } = useI18n()
+  const { t } = useI18n()
   const { data, update } = useStore()
   const { members } = data.household
   const total = members.reduce((sum, m) => sum + (m.income ?? 0), 0)
@@ -56,7 +57,7 @@ export function Household() {
       <EqualFallbackNote />
       <div className="between between--baseline household__total">
         <span>{t.household.total}</span>
-        <span className="num">{euros(total)}</span>
+        <Amount cents={total} />
       </div>
       {removing && <RemoveSheet id={removing} onClose={() => setRemoving(null)} />}
     </TabScreen>
@@ -64,7 +65,7 @@ export function Household() {
 }
 
 function MemberCard(props: { index: number; autoFocus: boolean; onRemove?: () => void }) {
-  const { t, share } = useI18n()
+  const { t } = useI18n()
   const { data, split, update } = useStore()
   const member = at(data.household.members, props.index)
   const name = at(useNames(), props.index)
@@ -84,7 +85,7 @@ function MemberCard(props: { index: number; autoFocus: boolean; onRemove?: () =>
     <section className="card member-card" aria-label={name}>
       <div className="between">
         <Shape of={props.index} />
-        <span className="num member-card__share">{share(at(split.shares, props.index))}</span>
+        <ShareValue share={at(split.shares, props.index)} className="member-card__share" />
       </div>
       <div className="field field--tight">
         <label htmlFor={`${ids}-name`} className="field__label field__label--small">

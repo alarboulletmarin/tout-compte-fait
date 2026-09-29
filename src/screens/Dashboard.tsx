@@ -5,9 +5,11 @@ import { memberAccount } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { ShareIcon } from '../ui/icons'
+import { Amount } from '../ui/Amount'
+import { step, useRevealOnce } from '../ui/reveal'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
-import { useAccountTotals, useNames } from './common'
+import { useAccountTotals, useLive, useNames } from './common'
 import { CreditorNote } from './CreditorNote'
 import { EqualFallbackNote } from './EqualFallbackNote'
 import { RecapSheet } from './RecapSheet'
@@ -34,10 +36,15 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
   const { t, euros } = useI18n()
   const { split } = useStore()
   const names = useNames()
+  const live = useLive()
+  const reveal = useRevealOnce()
   const negative = split.reimbursements.length > 0
 
   return (
-    <section className="card card--dash" aria-labelledby="dash-transfers">
+    <section
+      className={`card card--dash${reveal ? ' reveal' : ''}`}
+      aria-labelledby="dash-transfers"
+    >
       <h1 id="dash-transfers" className="card__title">
         {negative ? t.transfers.titleNegative : t.transfers.title}
       </h1>
@@ -52,14 +59,18 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
               <span className="transfer__nothing">{t.transfers.nothing}</span>
             </div>
           ))}
-          {debtors(split).map((from) => (
+          {debtors(split).map((from, k) => (
             <Fragment key={from}>
-              <div className="transfer">
+              <div className="transfer" style={step(k)}>
                 <span className="transfer__who">
                   <Shape of={from} />
                   {names[from]}
                 </span>
-                <span className="num dashboard__amount">{euros(at(split.toJoint, from))}</span>
+                <Amount
+                  cents={at(split.toJoint, from)}
+                  className="dashboard__amount"
+                  id={live(`toJoint:${from}`)}
+                />
               </div>
               {split.reimbursements
                 .filter((r) => r.from === from)
@@ -69,7 +80,7 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
                       <Shape of={r.to} />
                       {t.transfers.directly(at(names, r.to))}
                     </span>
-                    <span className="num transfer__amount--sub">{euros(r.amount)}</span>
+                    <Amount cents={r.amount} className="transfer__amount--sub" />
                   </div>
                 ))}
             </Fragment>
@@ -80,12 +91,16 @@ function TransfersCard({ onRecap }: { onRecap: () => void }) {
         </>
       ) : (
         names.map((name, i) => (
-          <div key={i} className="transfer">
+          <div key={i} className="transfer" style={step(i)}>
             <span className="transfer__who">
               <Shape of={i} />
               {name}
             </span>
-            <span className="num dashboard__amount">{euros(at(split.toJoint, i))}</span>
+            <Amount
+              cents={at(split.toJoint, i)}
+              className="dashboard__amount"
+              id={live(`toJoint:${i}`)}
+            />
           </div>
         ))
       )}
@@ -112,7 +127,7 @@ function SplitCard() {
 }
 
 function DetailCard() {
-  const { t, euros } = useI18n()
+  const { t } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
   return (
@@ -129,26 +144,26 @@ function DetailCard() {
             </h3>
             <div className="between dashboard__line">
               <span>{t.detail.share}</span>
-              <span className="num">{euros(at(split.due, i))}</span>
+              <Amount cents={at(split.due, i)} />
             </div>
             {data.charges
               .filter((c) => c.paidFrom === memberAccount(member.id))
               .map((c) => (
                 <div key={c.id} className="between dashboard__line dashboard__line--muted">
                   <span>− {c.label}</span>
-                  <span className="num">{euros(monthlyAmount(c))}</span>
+                  <Amount cents={monthlyAmount(c)} />
                 </div>
               ))}
             <div className="between dashboard__line dashboard__line--total">
               <span>{t.dashboard.toJoint}</span>
-              <span className="num">{euros(at(split.toJoint, i))}</span>
+              <Amount cents={at(split.toJoint, i)} />
             </div>
             {split.reimbursements
               .filter((r) => r.from === i)
               .map((r) => (
                 <div key={r.to} className="between dashboard__line dashboard__line--total">
                   <span>{t.detail.directly(at(names, r.to))}</span>
-                  <span className="num">{euros(r.amount)}</span>
+                  <Amount cents={r.amount} />
                 </div>
               ))}
           </div>
@@ -159,9 +174,10 @@ function DetailCard() {
 }
 
 function ChargesCard() {
-  const { t, euros } = useI18n()
+  const { t } = useI18n()
   const { data, split } = useStore()
   const accounts = useAccountTotals()
+  const live = useLive()
 
   return (
     <section className="card card--dash" aria-labelledby="dash-charges">
@@ -174,7 +190,7 @@ function ChargesCard() {
           {t.charges.add}
         </Link>
       </div>
-      <div className="num dashboard__total">{euros(split.total)}</div>
+      <Amount cents={split.total} className="dashboard__total" as="div" id={live('total')} />
       {accounts.map(({ ref, who, title, subtotal }) => {
         const charges = data.charges.filter((c) => c.paidFrom === ref)
         if (charges.length === 0) return null
@@ -185,14 +201,14 @@ function ChargesCard() {
                 <Shape of={who} />
                 {title}
               </span>
-              <span className="num dashboard__subtotal">{euros(subtotal)}</span>
+              <Amount cents={subtotal} className="dashboard__subtotal" />
             </div>
             <ul className="dashboard__rows">
               {charges.map((c) => (
                 <li key={c.id}>
                   <Link href={`/charges/${c.id}`} className="dashboard__row">
                     <span>{c.label}</span>
-                    <span className="num">{euros(monthlyAmount(c))}</span>
+                    <Amount cents={monthlyAmount(c)} />
                   </Link>
                 </li>
               ))}

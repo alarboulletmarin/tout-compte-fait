@@ -9,6 +9,15 @@ export function useNames(): string[] {
   return useStore().data.household.members.map((m, i) => m.name.trim() || t.memberFallback(i))
 }
 
+/**
+ * Identifiant sous lequel un montant retient sa dernière valeur vue (voir Odometer) ;
+ * absent dans un mois figé de l'historique, dont les montants ne sont pas ceux d'aujourd'hui.
+ */
+export function useLive(): (id: string) => string | undefined {
+  const { frozen } = useStore()
+  return (id) => (frozen ? undefined : id)
+}
+
 /** Un compte où l'on peut payer une charge : le joint, puis celui de chaque membre. */
 export interface Account {
   ref: AccountRef

@@ -3,12 +3,14 @@ import { Link } from 'wouter'
 import { creditors, debtors, type Split } from '../domain/split'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
-import { ArrowRightIcon, CheckIcon, PlusIcon, ShareIcon } from '../ui/icons'
+import { ArrowRightIcon, PlusIcon, ShareIcon } from '../ui/icons'
+import { Amount } from '../ui/Amount'
 import { TabScreen } from '../ui/Screens'
+import { useRevealOnce, step } from '../ui/reveal'
 import { Shape } from '../ui/Shape'
 import { SplitBar } from '../ui/SplitBar'
 import { useMediaQuery, WIDE } from '../ui/useMediaQuery'
-import { useNames } from './common'
+import { useLive, useNames } from './common'
 import { CreditorNote } from './CreditorNote'
 import { Dashboard } from './Dashboard'
 import { EqualFallbackNote } from './EqualFallbackNote'
@@ -57,43 +59,53 @@ export function Transfers() {
 
 /** Les virements du mois affiché, avec la note de répartition égale ; `level` : le niveau du titre. */
 export function TransferBody({ level = 'h1' }: { level?: 'h1' | 'h2' }) {
-  const { split } = useStore()
+  const { split, frozen } = useStore()
+  // Un mois de l'historique s'ouvre sans cérémonie
+  const reveal = useRevealOnce() && !frozen
   return (
     <>
       {split.reimbursements.length > 0 ? (
-        <Reimbursement split={split} level={level} />
+        <Reimbursement split={split} level={level} reveal={reveal} />
       ) : (
-        <Regular level={level} />
+        <Regular level={level} reveal={reveal} />
       )}
       <EqualFallbackNote />
     </>
   )
 }
 
-function Regular({ level: Heading }: { level: 'h1' | 'h2' }) {
+function Regular({ level: Heading, reveal }: { level: 'h1' | 'h2'; reveal: boolean }) {
   const { t, euros } = useI18n()
   const { data, split } = useStore()
   const names = useNames()
+  const live = useLive()
 
   return (
     <>
-      <section className="stack stack--20">
+      <section className={`stack stack--20${reveal ? ' reveal' : ''}`}>
         <Heading className="lead">{t.transfers.title}</Heading>
-        <div className="stack stack--14">
+        {/* Le trait relie chaque membre au losange du joint : c'est là que tout arrive */}
+        <div className="stack stack--14 flow">
           {names.map((name, i) => (
-            <div className="transfer" key={i}>
+            <div className="transfer" key={i} style={step(i)}>
               <div className="transfer__who">
                 <Shape of={i} />
                 {name}
               </div>
-              <div className="num transfer__amount">{euros(at(split.toJoint, i))}</div>
+              <Amount
+                cents={at(split.toJoint, i)}
+                className="transfer__amount"
+                as="div"
+                id={live(`toJoint:${i}`)}
+                transitionName={live(`amount-${i}`)}
+              />
             </div>
           ))}
+          <p className="note flow__end" style={step(names.length)}>
+            <Shape of="joint" />
+            <span>{t.transfers.total(euros(split.joint))}</span>
+          </p>
         </div>
-        <p className="note">
-          <CheckIcon />
-          <span>{t.transfers.total(euros(split.joint))}</span>
-        </p>
       </section>
 
       <section className="stack stack--10">
@@ -103,12 +115,12 @@ function Regular({ level: Heading }: { level: 'h1' | 'h2' }) {
       <section className="stats">
         <div className="card stat">
           <div className="stat__label">{t.transfers.fixedPerMonth}</div>
-          <div className="num stat__value">{euros(split.total)}</div>
+          <Amount cents={split.total} className="stat__value" as="div" id={live('total')} />
           <div className="stat__label">{t.chargesCount(data.charges.length)}</div>
         </div>
         <div className="card stat">
           <div className="stat__label">{t.transfers.paidDirect}</div>
-          <div className="num stat__value">{euros(split.paid.reduce((a, b) => a + b, 0))}</div>
+          <Amount cents={split.paid.reduce((a, b) => a + b, 0)} className="stat__value" as="div" />
           <div className="stat__label">{t.transfers.fromPersonal}</div>
         </div>
       </section>
@@ -117,8 +129,9 @@ function Regular({ level: Heading }: { level: 'h1' | 'h2' }) {
 }
 
 /** Des membres paient déjà plus que leur part : ils ne virent rien, les autres les remboursent. */
-function Reimbursement({ split, level: Heading }: { split: Split; level: 'h1' | 'h2' }) {
-  const { t, euros } = useI18n()
+function Reimbursement(props: { split: Split; level: 'h1' | 'h2'; reveal: boolean }) {
+  const { split, level: Heading, reveal } = props
+  const { t } = useI18n()
   const names = useNames()
 
   return (
@@ -155,24 +168,29 @@ function Reimbursement({ split, level: Heading }: { split: Split; level: 'h1' | 
           )
         }
         return (
-          <section key={from} className="stack stack--12">
+          <section key={from} className={`stack stack--12${reveal ? ' reveal' : ''}`}>
             {who}
             {onJoint > 0 && (
-              <div className="transfer transfer--sub">
+              <div className="transfer transfer--sub" style={step(1)}>
                 <span className="transfer__to">
                   <Shape of="joint" />
                   {t.transfers.onJoint}
                 </span>
-                <span className="num transfer__amount--sub">{euros(onJoint)}</span>
+                <Amount cents={onJoint} className="transfer__amount--sub" />
               </div>
             )}
-            {payments.map((r) => (
-              <div key={r.to} className="transfer transfer--sub">
+            {payments.map((r, k) => (
+              // Trait plein vers le joint, pointillé pour un virement direct : la forme du trait le dit
+              <div
+                key={r.to}
+                className="transfer transfer--sub transfer--direct"
+                style={step(k + 1 + (onJoint > 0 ? 1 : 0))}
+              >
                 <span className="transfer__to">
                   <Shape of={r.to} />
                   {t.transfers.directly(at(names, r.to))}
                 </span>
-                <span className="num transfer__amount--sub">{euros(r.amount)}</span>
+                <Amount cents={r.amount} className="transfer__amount--sub" />
               </div>
             ))}
           </section>

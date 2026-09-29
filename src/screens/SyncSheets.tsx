@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { encodeFrames, Receiver } from '../storage/sync'
 import type { ExportFile } from '../storage/transfer'
+import { tap } from '../ui/haptics'
 import { WarningIcon } from '../ui/icons'
 import type { QrImage } from '../ui/qr'
 import { Sheet } from '../ui/Sheet'
@@ -11,6 +12,9 @@ import { useWakeLock } from '../ui/useWakeLock'
 
 /** Quatre images par seconde : lisible par une caméra, et sous le seuil des scintillements gênants. */
 const FRAME_MS = 250
+
+/** Le temps de voir la coche se tracer avant de passer à la confirmation. */
+const RECEIVED_MS = 900
 
 /** Appareil « parent » : montre les données en code QR animé, que l'autre appareil filme. */
 export function SendSheet(props: { onClose: () => void }) {
@@ -109,15 +113,25 @@ export function ReceiveSheet(props: {
   const [receiver, setReceiver] = useState(() => new Receiver())
   const [progress, setProgress] = useState<Progress | null>(null)
   const [failure, setFailure] = useState<'invalid' | 'newer' | null>(null)
+  // Données complètes : la caméra s'arrête, l'anneau se ferme, la coche se trace, puis on passe à la suite
+  const [received, setReceived] = useState<ExportFile | null>(null)
   useWakeLock(true)
 
   const { onReceived } = props
-  const status = useQrScanner(video, failure === null, async (text) => {
+  const status = useQrScanner(video, failure === null && received === null, async (text) => {
     const result = await receiver.accept(text)
     if (result.kind === 'progress') setProgress(result)
-    else if (result.kind === 'done') onReceived(result.file)
-    else if (result.kind === 'failed') setFailure(result.reason)
+    else if (result.kind === 'done') {
+      tap()
+      setReceived(result.file)
+    } else if (result.kind === 'failed') setFailure(result.reason)
   })
+
+  useEffect(() => {
+    if (!received) return
+    const timer = setTimeout(() => onReceived(received), RECEIVED_MS)
+    return () => clearTimeout(timer)
+  }, [received, onReceived])
 
   function retry() {
     setReceiver(new Receiver())
@@ -161,15 +175,42 @@ export function ReceiveSheet(props: {
         </>
       ) : (
         <>
-          <video
-            ref={video}
-            className="scanner"
-            aria-label={t.sync.camera}
-            playsInline
-            muted
-            autoPlay
-          />
-          {progress ? (
+          <div className={`scan${received ? ' scan--done' : ''}`}>
+            <video
+              ref={video}
+              className="scanner"
+              aria-label={t.sync.camera}
+              playsInline
+              muted
+              autoPlay
+            />
+            {/* L'anneau se remplit image par image ; le compte et les cases ci-dessous disent la même chose */}
+            <svg className="scan__ring" viewBox="0 0 100 100" aria-hidden="true">
+              <rect className="scan__track" x="1" y="1" width="98" height="98" rx="6" />
+              <rect
+                className="scan__bar"
+                x="1"
+                y="1"
+                width="98"
+                height="98"
+                rx="6"
+                pathLength="1"
+                style={{
+                  strokeDasharray: `${received ? 1.02 : progress ? progress.got / progress.count : 0} 1`,
+                }}
+              />
+            </svg>
+            {received && (
+              <svg className="scan__check" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1" />
+              </svg>
+            )}
+          </div>
+          {received ? (
+            <p className="sheet__text" role="status">
+              {t.sync.received}
+            </p>
+          ) : progress ? (
             <div
               className="sync__meter sync__meter--column"
               role="progressbar"
