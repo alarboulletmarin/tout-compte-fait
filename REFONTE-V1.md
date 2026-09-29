@@ -239,6 +239,6 @@ Une phase = une PR. Chaque phase se termine avec :
 
 - Historique mois par mois.
 - Dépenses variables ou ponctuelles.
-- Synchronisation entre appareils (QR animé, parent/enfant).
+- ~~Synchronisation entre appareils (QR animé, parent/enfant).~~ Ajoutée depuis : l'appareil parent affiche un QR animé, l'enfant le filme et remplace ses données (Réglages › Autre appareil).
 - Épargne et projections.
 - Plus de 2 membres.

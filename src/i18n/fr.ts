@@ -274,6 +274,8 @@ export const fr = {
       `Exporté le ${date} · ${charges} · ${list.format(names)}`,
     warning:
       "Vos revenus, prénoms, charges et historique actuels seront remplacés par ceux du fichier. C'est définitif.",
+    warningDevice:
+      "Vos revenus, prénoms, charges et historique actuels seront remplacés par ceux de l'autre appareil. C'est définitif.",
     replace: 'Remplacer',
     exportFirst: "Exporter d'abord mes données",
     cancel: 'Annuler',
@@ -281,6 +283,46 @@ export const fr = {
     errorTitle: 'Import impossible',
     errorKept: "Vos données actuelles n'ont pas été modifiées.",
     another: 'Choisir un autre fichier',
+    close: 'Fermer',
+  },
+
+  sync: {
+    section: 'Autre appareil',
+    send: 'Envoyer mes données',
+    sendHint: 'code QR animé',
+    receive: 'Recevoir des données',
+    receiveHint: 'avec la caméra',
+    deviceName: 'Autre appareil',
+    onboardingReceive: 'Elles sont sur un autre appareil : les recevoir',
+    sendTitle: 'Envoyer vers un autre appareil',
+    sendSteps: [
+      "Sur l'autre appareil, ouvrez Réglages puis « Recevoir des données » (ou l'accueil, au premier lancement).",
+      "Visez ce code avec sa caméra jusqu'à la fin : il change tout seul.",
+    ],
+    preparing: 'Préparation du code…',
+    sendFailed:
+      'Préparation impossible sur cet appareil. Passez par un fichier : Exporter, puis Importer.',
+    qrLabel: (frame: number, count: number) => `Code QR, image ${frame} sur ${count}`,
+    frame: (frame: number, count: number) => `Image ${frame} / ${count}`,
+    pause: 'Pause',
+    resume: 'Reprendre',
+    local: "Rien ne passe par internet : le code va directement d'un écran à une caméra.",
+    done: 'Terminé',
+    receiveTitle: 'Recevoir depuis un autre appareil',
+    receiveSteps:
+      "Sur l'autre appareil : Réglages, puis « Envoyer mes données ». Visez son écran, sans couper le code.",
+    camera: 'Image de la caméra',
+    starting: 'Ouverture de la caméra…',
+    aim: "Visez le code de l'autre appareil.",
+    progress: (got: number, count: number) => `${got} sur ${count} images reçues`,
+    denied:
+      "L'accès à la caméra est refusé. Autorisez-le dans les réglages du navigateur, ou passez par un fichier : Exporter, puis Importer.",
+    unavailable:
+      "La caméra n'est pas utilisable ici. Passez par un fichier : Exporter, puis Importer.",
+    invalid: 'Ces données ne viennent pas de Tout Compte Fait, ou elles sont endommagées.',
+    newer:
+      "L'autre appareil utilise une version plus récente. Mettez celui-ci à jour, puis réessayez.",
+    retry: 'Réessayer',
     close: 'Fermer',
   },
 

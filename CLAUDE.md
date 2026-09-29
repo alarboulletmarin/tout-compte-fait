@@ -7,8 +7,8 @@ Source de vérité : `REFONTE-V1.md`. Ce fichier n'en est que le résumé ; en c
 Répartir les charges fixes d'un foyer de **deux** personnes au prorata de leurs revenus, et dire à chacun combien virer sur le compte joint.
 
 - Gratuit, sans compte, sans serveur, sans pistage. 100 % front, hors ligne, PWA installable.
-- Données sur l'appareil (IndexedDB). Seules sorties : export/import JSON, partage du récap en texte.
-- AGPL-3.0. Hors périmètre v1 : historique mensuel, dépenses variables, synchro, épargne, plus de 2 membres.
+- Données sur l'appareil (IndexedDB). Seules sorties : export/import JSON, partage du récap en texte, envoi vers un autre appareil par QR animé (caméra, sans réseau).
+- AGPL-3.0. Hors périmètre v1 : historique mensuel, dépenses variables, épargne, plus de 2 membres.
 
 ## Stack
 
@@ -30,7 +30,7 @@ pnpm dev | pnpm build | pnpm lint | pnpm typecheck | pnpm test | pnpm format
 - `vercel.json` : réécriture `/app/*` et en-têtes de sécurité, repris par `vite preview`.
 
 - `src/domain` : calcul pur. Aucun import React, navigateur ni `idb` (règle ESLint).
-- `src/storage` : IndexedDB, export/import.
+- `src/storage` : IndexedDB, export/import, protocole de synchro par QR animé (`sync.ts` : compression, trames, réassemblage).
 - `src/ui` : composants du design system.
 - `src/screens` : écrans.
 - `src/i18n` : traductions.

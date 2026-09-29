@@ -5,10 +5,12 @@ import { useI18n } from '../i18n/i18n'
 import { downloadExport, shareExport } from '../storage/files'
 import { readPref, THEMES, writePref, type Theme } from '../storage/prefs'
 import { useStore } from '../storage/store'
+import { syncSupported } from '../storage/sync'
 import { TabScreen } from '../ui/Screens'
 import { applyTheme } from '../ui/theme'
 import { useToast } from '../ui/Toast'
 import { EraseSheet, useImportFlow } from './DataSheets'
+import { ReceiveSheet, SendSheet } from './SyncSheets'
 
 const REPOSITORY = 'https://github.com/alarboulletmarin/tout-compte-fait'
 const LICENCE = `${REPOSITORY}/blob/main/LICENSE`
@@ -20,6 +22,7 @@ export function Settings() {
   const toast = useToast()
   const [theme, setTheme] = useState(() => readPref('theme', THEMES, 'system'))
   const [erasing, setErasing] = useState(false)
+  const [sync, setSync] = useState<'send' | 'receive' | null>(null)
   const importFlow = useImportFlow({ confirm: true })
 
   function chooseTheme(next: Theme) {
@@ -101,6 +104,19 @@ export function Settings() {
         </button>
       </Section>
 
+      {syncSupported() && (
+        <Section id="device" title={t.sync.section}>
+          <button type="button" className="group__row" onClick={() => setSync('send')}>
+            <span>{t.sync.send}</span>
+            <span className="group__value">{t.sync.sendHint}</span>
+          </button>
+          <button type="button" className="group__row" onClick={() => setSync('receive')}>
+            <span>{t.sync.receive}</span>
+            <span className="group__value">{t.sync.receiveHint}</span>
+          </button>
+        </Section>
+      )}
+
       <Section id="about" title={t.settings.about}>
         <Link href="/settings/news" className="group__row">
           <span>{t.settings.news}</span>
@@ -113,6 +129,16 @@ export function Settings() {
       <p className="settings__promise">{t.settings.promise}</p>
 
       {importFlow.element}
+      {sync === 'send' && <SendSheet onClose={() => setSync(null)} />}
+      {sync === 'receive' && (
+        <ReceiveSheet
+          onClose={() => setSync(null)}
+          onReceived={(file) => {
+            setSync(null)
+            importFlow.propose(file, t.sync.deviceName, true)
+          }}
+        />
+      )}
       <EraseSheet open={erasing} onClose={() => setErasing(false)} />
     </TabScreen>
   )

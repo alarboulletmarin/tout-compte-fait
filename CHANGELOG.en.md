@@ -7,6 +7,7 @@
 - Direct repayment when one of you already pays more than their share
 - Send the summary by message
 - Export and import your data, no account or cloud
+- Pass your data to another device with an animated QR code that the other device films: no network, no account
 - Dashboard on tablet and desktop
 - English version
 - Up to six people in the household, each with their own shape and hatching

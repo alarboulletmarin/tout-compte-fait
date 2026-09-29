@@ -18,6 +18,8 @@ import { FieldError } from '../ui/Notes'
 import { Shape } from '../ui/Shape'
 import { useMoneyInput } from '../ui/useMoneyInput'
 import { useImportFlow } from './DataSheets'
+import { ReceiveSheet } from './SyncSheets'
+import { syncSupported } from '../storage/sync'
 import { at } from '../domain/at'
 
 interface Row {
@@ -76,6 +78,7 @@ function People(props: {
   const { t } = useI18n()
   // Rien à remplacer au premier lancement : pas de confirmation
   const importFlow = useImportFlow({ confirm: false })
+  const [receiving, setReceiving] = useState(false)
   // Revenu illisible, par id de membre ; une personne retirée n'y compte plus
   const [invalid, setInvalid] = useState<Record<string, boolean>>({})
   // Personne ajoutée : son champ prénom prend le focus
@@ -140,7 +143,25 @@ function People(props: {
           >
             {t.onboarding.import}
           </button>
+          {syncSupported() && (
+            <button
+              type="button"
+              className="button-link onboarding__import"
+              onClick={() => setReceiving(true)}
+            >
+              {t.sync.onboardingReceive}
+            </button>
+          )}
           {importFlow.element}
+          {receiving && (
+            <ReceiveSheet
+              onClose={() => setReceiving(false)}
+              onReceived={(file) => {
+                setReceiving(false)
+                importFlow.propose(file, t.sync.deviceName, true)
+              }}
+            />
+          )}
         </div>
       </main>
     </div>

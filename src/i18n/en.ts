@@ -260,6 +260,8 @@ export const en: Messages = {
       `Exported on ${date} · ${charges} · ${list.format(names)}`,
     warning:
       'Your current incomes, names, bills and history will be replaced by those in the file. This cannot be undone.',
+    warningDevice:
+      'Your current incomes, names, bills and history will be replaced by those from the other device. This cannot be undone.',
     replace: 'Replace',
     exportFirst: 'Export my data first',
     cancel: 'Cancel',
@@ -267,6 +269,43 @@ export const en: Messages = {
     errorTitle: "Can't import",
     errorKept: "Your current data hasn't been changed.",
     another: 'Choose another file',
+    close: 'Close',
+  },
+
+  sync: {
+    section: 'Other device',
+    send: 'Send my data',
+    sendHint: 'animated QR code',
+    receive: 'Receive data',
+    receiveHint: 'with the camera',
+    deviceName: 'Other device',
+    onboardingReceive: "It's on another device: receive it",
+    sendTitle: 'Send to another device',
+    sendSteps: [
+      'On the other device, open Settings then “Receive data” (or the welcome screen, on first launch).',
+      'Point its camera at this code until it is done: it changes by itself.',
+    ],
+    preparing: 'Preparing the code…',
+    sendFailed: 'Cannot prepare the code on this device. Use a file instead: Export, then Import.',
+    qrLabel: (frame: number, count: number) => `QR code, frame ${frame} of ${count}`,
+    frame: (frame: number, count: number) => `Frame ${frame} / ${count}`,
+    pause: 'Pause',
+    resume: 'Resume',
+    local: 'Nothing goes through the internet: the code passes straight from a screen to a camera.',
+    done: 'Done',
+    receiveTitle: 'Receive from another device',
+    receiveSteps:
+      'On the other device: Settings, then “Send my data”. Point at its screen and keep the whole code in view.',
+    camera: 'Camera view',
+    starting: 'Opening the camera…',
+    aim: "Point at the other device's code.",
+    progress: (got: number, count: number) => `${got} of ${count} frames received`,
+    denied:
+      'Camera access is denied. Allow it in the browser settings, or use a file instead: Export, then Import.',
+    unavailable: 'The camera cannot be used here. Use a file instead: Export, then Import.',
+    invalid: "This data doesn't come from Tout Compte Fait, or it is damaged.",
+    newer: 'The other device runs a newer version. Update this one, then try again.',
+    retry: 'Try again',
     close: 'Close',
   },
 

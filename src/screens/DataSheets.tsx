@@ -8,7 +8,8 @@ import { FileIcon, WarningIcon } from '../ui/icons'
 import { Sheet } from '../ui/Sheet'
 import { useToast } from '../ui/Toast'
 
-type ImportState = { kind: 'confirm'; file: ExportFile; name: string } | { kind: 'error' } | null
+type ImportState =
+  { kind: 'confirm'; file: ExportFile; name: string; device: boolean } | { kind: 'error' } | null
 
 /**
  * Import d'un export : lecture et validation d'abord, puis confirmation
@@ -36,8 +37,13 @@ export function useImportFlow({ confirm }: { confirm: boolean }) {
     if (!file) return
     const result = parseExport(await file.text())
     if (!result.ok) return setState({ kind: 'error' })
-    if (confirm) setState({ kind: 'confirm', file: result.file, name: file.name })
-    else replace(result.file)
+    propose(result.file, file.name)
+  }
+
+  /** Données reçues (fichier ou autre appareil) : confirmation, ou remplacement direct au premier lancement. */
+  function propose(file: ExportFile, name: string, device = false) {
+    if (confirm) setState({ kind: 'confirm', file, name, device })
+    else replace(file)
   }
 
   function replace(file: ExportFile) {
@@ -60,6 +66,7 @@ export function useImportFlow({ confirm }: { confirm: boolean }) {
         <ConfirmSheet
           file={state.file}
           name={state.name}
+          device={state.device}
           onReplace={() => replace(state.file)}
           onClose={() => setState(null)}
         />
@@ -68,12 +75,14 @@ export function useImportFlow({ confirm }: { confirm: boolean }) {
     </>
   )
 
-  return { pick, element }
+  return { pick, propose, element }
 }
 
 function ConfirmSheet(props: {
   file: ExportFile
   name: string
+  /** Reçues d'un autre appareil plutôt que d'un fichier. */
+  device: boolean
   onReplace: () => void
   onClose: () => void
 }) {
@@ -99,7 +108,9 @@ function ConfirmSheet(props: {
           </span>
         </div>
       </div>
-      <p className="sheet__text">{t.importSheet.warning}</p>
+      <p className="sheet__text">
+        {props.device ? t.importSheet.warningDevice : t.importSheet.warning}
+      </p>
       <div className="stack stack--8">
         <button type="button" className="button button--primary" onClick={props.onReplace}>
           {t.importSheet.replace}
