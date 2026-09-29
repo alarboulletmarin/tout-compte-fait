@@ -14,6 +14,9 @@ import { useToast } from '../ui/Toast'
 import { insertAt, useAccounts, useNames } from './common'
 import { at } from '../domain/at'
 
+// Valeur de l'option qui ouvre la saisie d'une nouvelle catégorie
+const NEW_CATEGORY = '__new'
+
 const FREQUENCIES: Frequency[] = ['monthly', 'quarterly', 'yearly']
 
 export function ChargeForm({ id }: { id?: string }) {
@@ -151,10 +154,12 @@ function Form({ existing }: { existing?: Charge }) {
             </div>
           </fieldset>
 
-          <fieldset className="fieldset">
-            <legend className="field__label legend">{t.form.category}</legend>
-            <CategoryChips value={categoryId} onChange={setCategoryId} />
-          </fieldset>
+          <div className="field">
+            <label htmlFor={`${ids}-category`} className="field__label">
+              {t.form.category}
+            </label>
+            <CategoryField id={`${ids}-category`} value={categoryId} onChange={setCategoryId} />
+          </div>
         </div>
 
         <div className={`charge-form__foot${existing ? ' charge-form__foot--edit' : ''}`}>
@@ -187,7 +192,11 @@ function Form({ existing }: { existing?: Charge }) {
   )
 }
 
-function CategoryChips(props: { value: string | null; onChange: (id: string | null) => void }) {
+function CategoryField(props: {
+  id: string
+  value: string | null
+  onChange: (id: string | null) => void
+}) {
   const { t } = useI18n()
   const { data, update } = useStore()
   const [draft, setDraft] = useState<string | null>(null)
@@ -202,26 +211,32 @@ function CategoryChips(props: { value: string | null; onChange: (id: string | nu
   }
 
   return (
-    <div className="chips">
-      {data.categories.map((c) => (
-        <button
-          key={c.id}
-          type="button"
-          className="chip"
-          aria-pressed={props.value === c.id}
-          onClick={() => props.onChange(props.value === c.id ? null : c.id)}
-        >
-          {c.name}
-        </button>
-      ))}
-      {draft === null ? (
-        <button type="button" className="chip chip--new" onClick={() => setDraft('')}>
-          {t.form.newCategory}
-        </button>
-      ) : (
+    <>
+      {/* Liste native : roue sur iOS, feuille sur Android, menu sur ordinateur */}
+      <select
+        id={props.id}
+        className="input select"
+        value={props.value ?? ''}
+        onChange={(e) => {
+          if (e.target.value === NEW_CATEGORY) return setDraft('')
+          setDraft(null)
+          props.onChange(e.target.value || null)
+        }}
+      >
+        <option value="">{t.charges.noCategory}</option>
+        {data.categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+        <option value={NEW_CATEGORY}>{t.form.newCategory}</option>
+      </select>
+      {draft !== null && (
         <input
-          className="chip chip--input"
+          className="input"
           aria-label={t.form.newCategoryName}
+          placeholder={t.form.newCategoryName}
+          autoComplete="off"
           autoFocus
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -235,7 +250,7 @@ function CategoryChips(props: { value: string | null; onChange: (id: string | nu
           }}
         />
       )}
-    </div>
+    </>
   )
 }
 

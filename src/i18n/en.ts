@@ -13,6 +13,7 @@ export const en: Messages = {
   saveError: "Couldn't save on this device",
   loadError: "This device's data can't be read.",
   undo: 'Undo',
+  dismiss: 'Dismiss',
   equalFallback: {
     zeroAmount: '€0',
     zero: 'One income is',
@@ -185,7 +186,7 @@ export const en: Messages = {
     paidFrom: 'Paid from',
     joint: 'Joint',
     category: 'Category',
-    newCategory: '+ New',
+    newCategory: '+ New category…',
     newCategoryName: 'Name of the new category',
     monthlyEquivalent: 'Monthly equivalent',
     add: 'Add bill',

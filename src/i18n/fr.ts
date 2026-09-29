@@ -14,6 +14,7 @@ export const fr = {
   saveError: 'Enregistrement impossible sur cet appareil',
   loadError: 'Les données de cet appareil sont illisibles.',
   undo: 'Annuler',
+  dismiss: 'Fermer',
   equalFallback: {
     zeroAmount: '0 €',
     zero: 'Un revenu est à',
@@ -199,7 +200,7 @@ export const fr = {
     paidFrom: 'Payé depuis',
     joint: 'Joint',
     category: 'Catégorie',
-    newCategory: '+ Nouvelle',
+    newCategory: '+ Nouvelle catégorie…',
     newCategoryName: 'Nom de la nouvelle catégorie',
     monthlyEquivalent: 'Équivalent mensuel',
     add: 'Ajouter la charge',
