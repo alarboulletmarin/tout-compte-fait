@@ -1,9 +1,10 @@
 import { useId, useState } from 'react'
-import { deleteCategory } from '../domain/data'
+import { deleteCategory, findCategoryByName } from '../domain/data'
 import type { Category } from '../domain/types'
 import { useI18n } from '../i18n/i18n'
 import { useStore } from '../storage/store'
 import { PencilIcon, PlusIcon, TrashIcon } from '../ui/icons'
+import { FieldError } from '../ui/Notes'
 import { SubScreen } from '../ui/Screens'
 import { useToast } from '../ui/Toast'
 import { insertAt } from './common'
@@ -74,6 +75,7 @@ export function Categories() {
               key={c.id}
               label={t.categories.renameLabel(count(c.id))}
               initial={c.name}
+              taken={(name) => !!findCategoryByName(data.categories, name, c.id)}
               onSave={(name) => save(c.id, name)}
               onCancel={() => close(`rename-${c.id}`)}
               onDelete={() => remove(c)}
@@ -100,6 +102,7 @@ export function Categories() {
           <EditRow
             label={t.categories.newLabel}
             initial=""
+            taken={(name) => !!findCategoryByName(data.categories, name)}
             onSave={(name) => save(NEW, name)}
             onCancel={() => close('category-add')}
           />
@@ -125,6 +128,8 @@ export function Categories() {
 function EditRow(props: {
   label: string
   initial: string
+  /** Le nom est déjà celui d'une autre catégorie. */
+  taken: (name: string) => boolean
   onSave: (name: string) => void
   onCancel: () => void
   onDelete?: () => void
@@ -132,7 +137,13 @@ function EditRow(props: {
   const { t } = useI18n()
   const id = useId()
   const [name, setName] = useState(props.initial)
-  const save = () => name.trim() && props.onSave(name.trim())
+  const [duplicate, setDuplicate] = useState(false)
+  const save = () => {
+    const clean = name.trim()
+    if (!clean) return
+    if (props.taken(clean)) return setDuplicate(true)
+    props.onSave(clean)
+  }
 
   return (
     <li className="category-edit">
@@ -143,14 +154,22 @@ function EditRow(props: {
         id={id}
         className="input input--active"
         autoComplete="off"
+        autoCapitalize="sentences"
+        enterKeyHint="done"
         autoFocus
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        aria-invalid={duplicate}
+        aria-describedby={duplicate ? `${id}-error` : undefined}
+        onChange={(e) => {
+          setName(e.target.value)
+          setDuplicate(false)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') save()
           if (e.key === 'Escape') props.onCancel()
         }}
       />
+      {duplicate && <FieldError id={`${id}-error`}>{t.categories.duplicate}</FieldError>}
       <div className="category-edit__actions">
         {props.onDelete && (
           <button

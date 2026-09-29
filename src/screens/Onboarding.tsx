@@ -113,6 +113,7 @@ function People(props: {
               autoFocus={member.id === added}
               onChange={(patch) => setMember(member.id, patch)}
               onValidity={(bad) => setInvalid((v) => ({ ...v, [member.id]: bad }))}
+              onSubmit={i === props.members.length - 1 ? next : undefined}
               onRemove={
                 props.members.length > MIN_MEMBERS
                   ? () => props.onChange(props.members.filter((m) => m.id !== member.id))
@@ -152,6 +153,8 @@ function Person(props: {
   autoFocus: boolean
   onChange: (patch: Partial<Member>) => void
   onValidity: (invalid: boolean) => void
+  /** Sur la dernière personne : Entrée passe à l'étape suivante. */
+  onSubmit?: () => void
   onRemove?: () => void
 }) {
   const { t, parse } = useI18n()
@@ -172,10 +175,15 @@ function Person(props: {
           id={`${ids}-name`}
           className="input"
           autoComplete="off"
+          autoCapitalize="words"
+          enterKeyHint="next"
           autoFocus={props.autoFocus}
           placeholder={t.onboarding.placeholders[index]}
           value={props.member.name}
           onChange={(e) => onChange({ name: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') document.getElementById(`income-${props.member.id}`)?.focus()
+          }}
         />
       </div>
       <div className="field">
@@ -187,6 +195,7 @@ function Person(props: {
           id={`income-${props.member.id}`}
           className="input num"
           inputMode="decimal"
+          enterKeyHint={props.onSubmit ? 'go' : 'next'}
           autoComplete="off"
           placeholder={t.form.amountPlaceholder}
           value={income.text}
@@ -194,6 +203,14 @@ function Person(props: {
             income.onChange(e.target.value)
             const text = e.target.value.trim()
             onValidity(text !== '' && parse(text) === null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return
+            e.preventDefault()
+            if (props.onSubmit) return props.onSubmit()
+            // Sinon : la personne suivante
+            const next = e.currentTarget.closest('fieldset')?.nextElementSibling
+            next?.querySelector<HTMLElement>('input')?.focus()
           }}
           onBlur={income.onBlur}
           aria-invalid={income.invalid}

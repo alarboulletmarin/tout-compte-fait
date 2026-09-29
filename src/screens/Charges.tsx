@@ -1,3 +1,4 @@
+import { useId, useState } from 'react'
 import { Link } from 'wouter'
 import { monthlyAmount } from '../domain/split'
 import type { Charge } from '../domain/types'
@@ -8,10 +9,20 @@ import { TabScreen } from '../ui/Screens'
 import { Shape } from '../ui/Shape'
 import { useAccountTotals } from './common'
 
+// Valeur du filtre « Sans catégorie »
+const NONE = '__none'
+
 export function Charges() {
   const { t, euros } = useI18n()
   const { data, split } = useStore()
   const accounts = useAccountTotals()
+  const filterId = useId()
+  // '' = toutes, NONE = sans catégorie, sinon l'id de la catégorie ; une catégorie supprimée ne filtre plus
+  const [pick, setPick] = useState('')
+  const filter = pick === NONE || data.categories.some((c) => c.id === pick) ? pick : ''
+  const shown = (c: Charge) =>
+    filter === '' || (filter === NONE ? c.categoryId === null : c.categoryId === filter)
+  const selection = data.charges.filter(shown)
 
   return (
     <TabScreen title={t.nav.charges} kicker={t.charges.kicker} className="charges">
@@ -24,9 +35,41 @@ export function Charges() {
 
       {data.charges.length === 0 && <Empty />}
 
+      {data.categories.length > 0 && data.charges.length > 1 && (
+        <div className="field field--tight">
+          <label htmlFor={filterId} className="field__label field__label--small">
+            {t.charges.filter}
+          </label>
+          <select
+            id={filterId}
+            className="input select"
+            value={filter}
+            onChange={(e) => setPick(e.target.value)}
+          >
+            <option value="">{t.charges.allCategories}</option>
+            {data.categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+            <option value={NONE}>{t.charges.noCategory}</option>
+          </select>
+          {filter !== '' && (
+            <p className="caption-13">
+              {t.charges.selection(
+                selection.length,
+                euros(selection.reduce((sum, c) => sum + monthlyAmount(c), 0)),
+              )}
+            </p>
+          )}
+        </div>
+      )}
+
       {accounts.map(({ ref, who, title, subtotal }) => {
-        const charges = data.charges.filter((c) => c.paidFrom === ref)
+        const charges = selection.filter((c) => c.paidFrom === ref)
         if (charges.length === 0) return null
+        // Filtrée, la liste ne montre qu'une partie : son sous-total suit
+        const sum = filter === '' ? subtotal : charges.reduce((n, c) => n + monthlyAmount(c), 0)
         return (
           <section key={ref} className="stack stack--6" aria-labelledby={`account-${ref}`}>
             <div className="account-head">
@@ -34,7 +77,7 @@ export function Charges() {
                 <Shape of={who} />
                 {title}
               </h2>
-              <span className="num">{euros(subtotal)}</span>
+              <span className="num">{euros(sum)}</span>
             </div>
             <ul className="rows">
               {charges.map((c) => (

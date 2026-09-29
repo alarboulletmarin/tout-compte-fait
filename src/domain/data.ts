@@ -44,6 +44,16 @@ export function initialData(names?: Record<string, string>): AppData {
   }
 }
 
+/** Catégorie qui porte déjà ce nom, sans tenir compte de la casse ni des accents. */
+export function findCategoryByName(
+  categories: readonly Category[],
+  name: string,
+  exceptId?: string,
+): Category | undefined {
+  const key = (n: string) => n.trim().normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+  return categories.find((c) => c.id !== exceptId && key(c.name) === key(name))
+}
+
 /** Supprime la catégorie ; ses charges passent en « Sans catégorie ». */
 export function deleteCategory(data: AppData, id: string): AppData {
   return {

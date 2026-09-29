@@ -14,6 +14,7 @@ export const fr = {
   saveError: 'Enregistrement impossible sur cet appareil',
   loadError: 'Les données de cet appareil sont illisibles.',
   undo: 'Annuler',
+  dismiss: 'Fermer',
   equalFallback: {
     zeroAmount: '0 €',
     zero: 'Un revenu est à',
@@ -166,6 +167,10 @@ export const fr = {
     accountOf: (name: string) => `Compte de ${name}`,
     add: 'Ajouter',
     perMonth: 'par mois',
+    filter: 'Catégorie',
+    allCategories: 'Toutes les catégories',
+    selection: (count: number, total: string) =>
+      `${count === 1 ? '1 charge' : `${count} charges`} · ${total} par mois`,
     noCategory: 'Sans catégorie',
     frequency: { monthly: 'mensuel', quarterly: 'trimestriel', yearly: 'annuel' } satisfies Record<
       Frequency,
@@ -199,7 +204,7 @@ export const fr = {
     paidFrom: 'Payé depuis',
     joint: 'Joint',
     category: 'Catégorie',
-    newCategory: '+ Nouvelle',
+    newCategory: '+ Nouvelle catégorie…',
     newCategoryName: 'Nom de la nouvelle catégorie',
     monthlyEquivalent: 'Équivalent mensuel',
     add: 'Ajouter la charge',
@@ -335,6 +340,7 @@ export const fr = {
     cancel: 'Annuler',
     save: 'Enregistrer',
     note: 'Supprimer une catégorie ne supprime pas ses charges : elles passent en « Sans catégorie ».',
+    duplicate: 'Une catégorie porte déjà ce nom.',
     deleted: (name: string) => `Catégorie « ${name} » supprimée`,
   },
 }

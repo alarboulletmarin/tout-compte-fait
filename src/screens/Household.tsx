@@ -94,10 +94,15 @@ function MemberCard(props: { index: number; autoFocus: boolean; onRemove?: () =>
           id={`${ids}-name`}
           className="input"
           autoComplete="off"
+          autoCapitalize="words"
+          enterKeyHint="next"
           autoFocus={props.autoFocus}
           placeholder={t.memberFallback(props.index)}
           value={member.name}
           onChange={(e) => setMember({ name: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') document.getElementById(`${ids}-income`)?.focus()
+          }}
         />
       </div>
       <div className="field field--tight">
@@ -108,10 +113,13 @@ function MemberCard(props: { index: number; autoFocus: boolean; onRemove?: () =>
           id={`${ids}-income`}
           className="input num"
           inputMode="decimal"
+          enterKeyHint="done"
           autoComplete="off"
           value={income.text}
           onChange={(e) => income.onChange(e.target.value)}
           onBlur={income.onBlur}
+          // Tout est déjà enregistré à la frappe : Entrée referme le clavier
+          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           aria-invalid={income.invalid}
           aria-describedby={income.invalid ? `${ids}-income-error` : undefined}
         />
