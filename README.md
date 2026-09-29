@@ -36,7 +36,7 @@ La somme des virements est toujours égale aux charges payées par le joint. Cet
 
 ## Vie privée
 
-Aucun compte, aucun serveur, aucune mesure d'audience. Les données vivent dans IndexedDB, sur l'appareil ; elles n'en sortent que si vous exportez un fichier ou envoyez le récap.
+Aucun compte, aucun serveur, aucune mesure d'audience. Les données vivent dans IndexedDB, sur l'appareil ; elles n'en sortent que si vous exportez un fichier, envoyez le récap ou les passez à un autre appareil par code QR (d'écran à caméra, sans réseau).
 
 ## Développement
 
@@ -48,16 +48,16 @@ pnpm lint && pnpm typecheck
 pnpm build && pnpm preview   # build de production, servi avec les en-têtes de vercel.json
 ```
 
-Vite, React et TypeScript strict ; CSS pur ; IndexedDB via `idb` ; `vite-plugin-pwa`. Polices Geist et Martian Mono, auto-hébergées.
+Vite, React et TypeScript strict ; CSS pur ; IndexedDB via `idb` ; codes QR via `qrcode-generator` et `jsqr` ; `vite-plugin-pwa`. Polices Geist et Martian Mono, auto-hébergées.
 
-| Dossier                         | Rôle                                                 |
-| ------------------------------- | ---------------------------------------------------- |
-| `src/domain`                    | Calcul pur, sans React ni navigateur                 |
-| `src/storage`                   | IndexedDB, export et import validés, préférences     |
-| `src/i18n`                      | Français, anglais, formatage et lecture des montants |
-| `src/ui`                        | Design system : tokens, composants, icônes           |
-| `src/screens`                   | Écrans de l'app                                      |
-| `index.html` · `app/index.html` | Landing (première visite) · app sous `/app`          |
+| Dossier                         | Rôle                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| `src/domain`                    | Calcul pur, sans React ni navigateur                         |
+| `src/storage`                   | IndexedDB, export et import validés, synchro QR, préférences |
+| `src/i18n`                      | Français, anglais, formatage et lecture des montants         |
+| `src/ui`                        | Design system : tokens, composants, icônes                   |
+| `src/screens`                   | Écrans de l'app                                              |
+| `index.html` · `app/index.html` | Landing (première visite) · app sous `/app`                  |
 
 Le cahier des charges de la v1 est dans [`REFONTE-V1.md`](REFONTE-V1.md), les maquettes dans `design/maquettes/`.
 

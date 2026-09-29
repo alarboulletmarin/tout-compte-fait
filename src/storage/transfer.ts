@@ -12,14 +12,12 @@ export interface ExportFile {
 
 export type ParseResult = { ok: true; file: ExportFile } | { ok: false; reason: string }
 
+export function buildExport(data: AppData, now = new Date()): ExportFile {
+  return { app: APP_ID, schemaVersion: SCHEMA_VERSION, exportedAt: now.toISOString(), data }
+}
+
 export function serializeExport(data: AppData, now = new Date()): string {
-  const file: ExportFile = {
-    app: APP_ID,
-    schemaVersion: SCHEMA_VERSION,
-    exportedAt: now.toISOString(),
-    data,
-  }
-  return JSON.stringify(file, null, 2)
+  return JSON.stringify(buildExport(data, now), null, 2)
 }
 
 /** toutcomptefait-2026-09-28.json, à la date locale. */

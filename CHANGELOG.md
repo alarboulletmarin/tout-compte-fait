@@ -7,6 +7,7 @@
 - Remboursement direct quand l'un paie déjà plus que sa part
 - Envoi du récap par message
 - Export et import de vos données, sans compte ni cloud
+- Passer vos données à un autre appareil par un code QR animé, filmé par l'autre appareil : sans réseau, sans compte
 - Tableau de bord sur tablette et ordinateur
 - Version anglaise
 - Jusqu'à six personnes dans le foyer, chacune avec sa forme et sa hachure
