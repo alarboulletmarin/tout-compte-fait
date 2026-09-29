@@ -132,10 +132,19 @@ async function collect(
 ): Promise<Uint8Array<ArrayBuffer>> {
   const parts: Uint8Array[] = []
   let size = 0
-  for await (const part of stream) {
-    size += part.length
-    if (size > max) throw new Error('données décompressées trop volumineuses')
-    parts.push(part)
+  // Lecteur explicite : `for await` sur un ReadableStream manque à des Safari/WebKit encore courants
+  const reader = stream.getReader()
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      size += value.length
+      if (size > max) throw new Error('données décompressées trop volumineuses')
+      parts.push(value)
+    }
+  } finally {
+    // Libère le flux (et l'annule si on sort sur erreur)
+    await reader.cancel().catch(() => undefined)
   }
   const out = new Uint8Array(size)
   let offset = 0
