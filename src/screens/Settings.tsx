@@ -7,7 +7,8 @@ import { readPref, THEMES, writePref, type Theme } from '../storage/prefs'
 import { useStore } from '../storage/store'
 import { syncSupported } from '../storage/sync'
 import { TabScreen } from '../ui/Screens'
-import { applyTheme } from '../ui/theme'
+import { HAPTICS, hapticsSupported, tap } from '../ui/haptics'
+import { switchTheme } from '../ui/theme'
 import { useToast } from '../ui/Toast'
 import { EraseSheet, useImportFlow } from './DataSheets'
 import { ReceiveSheet, SendSheet } from './SyncSheets'
@@ -21,14 +22,24 @@ export function Settings() {
   const { data } = useStore()
   const toast = useToast()
   const [theme, setTheme] = useState(() => readPref('theme', THEMES, 'system'))
+  const [haptics, setHaptics] = useState(() => readPref('haptics', HAPTICS, 'on'))
   const [erasing, setErasing] = useState(false)
   const [sync, setSync] = useState<'send' | 'receive' | null>(null)
   const importFlow = useImportFlow({ confirm: true })
 
-  function chooseTheme(next: Theme) {
+  function chooseTheme(next: Theme, button: HTMLElement) {
     setTheme(next)
     writePref('theme', next)
-    applyTheme(next)
+    // Le cercle part du bouton touché (son centre : même chose au clavier)
+    const box = button.getBoundingClientRect()
+    switchTheme(next, { x: box.left + box.width / 2, y: box.top + box.height / 2 })
+  }
+
+  function toggleHaptics() {
+    const next = haptics === 'on' ? 'off' : 'on'
+    setHaptics(next)
+    writePref('haptics', next)
+    if (next === 'on') tap()
   }
 
   function exportData() {
@@ -52,7 +63,7 @@ export function Settings() {
               type="button"
               className="segment"
               aria-pressed={theme === value}
-              onClick={() => chooseTheme(value)}
+              onClick={(event) => chooseTheme(value, event.currentTarget)}
             >
               {t.settings.themes[value]}
             </button>
@@ -76,6 +87,23 @@ export function Settings() {
           ))}
         </div>
       </Section>
+
+      {hapticsSupported() && (
+        <Section id="haptics" title={t.settings.haptics}>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={haptics === 'on'}
+            className="group__row"
+            onClick={toggleHaptics}
+          >
+            <span>{t.settings.hapticsLabel}</span>
+            <span className="group__value">
+              {haptics === 'on' ? t.settings.on : t.settings.off}
+            </span>
+          </button>
+        </Section>
+      )}
 
       <Section id="organisation" title={t.settings.organisation}>
         <Link href="/settings/categories" className="group__row">

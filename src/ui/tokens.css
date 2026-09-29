@@ -15,6 +15,12 @@
   --font-ui: 'Geist Variable', system-ui, sans-serif;
   --font-num: 'Martian Mono Variable', ui-monospace, monospace;
 
+  /* Mouvement : une animation dit une chose, vite, sans rebond */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 500ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
   --column: 480px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Éléments flottants (bouton Ajouter, toast) : au-dessus de la navigation du bas,

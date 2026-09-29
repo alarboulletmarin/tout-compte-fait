@@ -252,6 +252,10 @@ export const en: Messages = {
     newTab: '(new tab)',
     promise: 'Free, no account, no tracking. Your data stays on this device.',
     exported: 'Export saved',
+    haptics: 'Haptics',
+    hapticsLabel: 'Light vibration',
+    on: 'On',
+    off: 'Off',
   },
 
   importSheet: {
@@ -299,6 +303,7 @@ export const en: Messages = {
     camera: 'Camera view',
     starting: 'Opening the camera…',
     aim: "Point at the other device's code.",
+    received: 'Data received',
     progress: (got: number, count: number) => `${got} of ${count} frames received`,
     denied:
       'Camera access is denied. Allow it in the browser settings, or use a file instead: Export, then Import.',
@@ -329,7 +334,7 @@ export const en: Messages = {
     hint: 'Opens with your usual apps: Messages, WhatsApp, email…',
     share: 'Share…',
     copy: 'Copy the text',
-    copied: 'Text copied',
+    copiedShort: 'Copied',
     copyFailed: "Couldn't copy: select the text by hand",
   },
 

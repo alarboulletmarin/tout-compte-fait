@@ -261,6 +261,16 @@ Principe : une animation = une information. Jamais décorative, jamais bloquante
   - retour tactile `navigator.vibrate(8)` sur les actions clés, désactivable dans Réglages.
 - Exclus : confettis, sons, parallaxe, effets au scroll, squelettes de chargement, animation systématique à l'ouverture.
 
+Fait (étapes 1 à 4) : tout le CSS est dans `src/ui/motion.css`, la logique dans `src/ui/Amount.tsx` (odomètre, avec mémoire de la dernière valeur vue : un total qui a changé pendant l'absence défile à l'arrivée), `src/ui/odometer.ts` (testé), `reveal.ts`, `motion.ts`, `haptics.ts`. Précisions :
+
+- la révélation des virements ne joue qu'une fois par session, jamais dans un mois de l'historique ;
+- mouvement réduit : tout est déjà dans son état final (aucun fondu résiduel), et les View Transitions ne sont pas lancées ;
+- le montant du virement glisse de l'écran Virements vers le Détail (`view-transition-name`), la barre de navigation reste en place ;
+- l'anneau et la coche existent côté récepteur seulement, seul à connaître la progression ;
+- le retour tactile n'apparaît dans Réglages que sur les appareils qui vibrent.
+
+Reste : essayer sur un vrai téléphone (fluidité sur entrée de gamme, vibration Android, View Transitions sur Safari iOS).
+
 ## 7. Hors périmètre v1
 
 - Historique mois par mois.

@@ -14,6 +14,8 @@ interface Store {
   update: (change: (data: AppData) => AppData) => void
   /** Efface tout de l'appareil et revient au premier lancement. */
   reset: () => Promise<void>
+  /** Mois figé de l'historique : les montants n'y sont pas ceux d'aujourd'hui. */
+  frozen: boolean
 }
 
 type State =
@@ -86,7 +88,15 @@ export function StoreProvider(props: {
   }, [])
 
   const store = useMemo(
-    () => data && { data, split: computeSplit(data.household, data.charges), fresh, update, reset },
+    () =>
+      data && {
+        data,
+        split: computeSplit(data.household, data.charges),
+        fresh,
+        update,
+        reset,
+        frozen: false,
+      },
     [data, fresh, update, reset],
   )
 
@@ -108,6 +118,7 @@ export function MonthView(props: { snapshot: Snapshot; children: ReactNode }) {
       data: { household, charges, categories, history: {} },
       split: computeSplit(household, charges),
       fresh: false,
+      frozen: true,
     }
   }, [snapshot, store])
   return <StoreContext.Provider value={view}>{props.children}</StoreContext.Provider>

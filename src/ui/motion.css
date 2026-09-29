@@ -1,0 +1,364 @@
+/*
+ * Mouvement. Une animation dit une chose (ce qui a changé, d'où ça vient), vite, sans rebond,
+ * et ne retarde jamais une action. Durées et courbe : tokens.css.
+ * Mouvement réduit : tout s'affiche directement dans son état final (voir la fin du fichier).
+ */
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes draw-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes draw-stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Odomètre : seuls les chiffres qui changent défilent ---------- */
+
+/* Le chiffre en place fixe la ligne de base ; l'ancien, posé par-dessus, sort de l'autre côté */
+.odo__slot {
+  position: relative;
+  display: inline-block;
+  clip-path: inset(-0.06em -0.04em);
+}
+.odo__slot[data-dir='up'] {
+  --odo-shift: 70%;
+}
+.odo__slot[data-dir='down'] {
+  --odo-shift: -70%;
+}
+.odo__in {
+  display: inline-block;
+  animation: odo-in var(--dur-base) var(--ease-out) both;
+}
+.odo__out {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  user-select: none;
+  animation: odo-out var(--dur-base) var(--ease-out) both;
+}
+@keyframes odo-in {
+  from {
+    transform: translateY(var(--odo-shift));
+    opacity: 0;
+  }
+}
+@keyframes odo-out {
+  to {
+    transform: translateY(calc(var(--odo-shift) * -1));
+    opacity: 0;
+  }
+}
+
+/* ---------- Répartition : la frontière glisse, les hachures restent ---------- */
+
+.split-bar {
+  position: relative;
+}
+.split-bar__part {
+  transition: flex-grow var(--dur-slow) var(--ease-out);
+}
+/* Parts égales : un petit repère au milieu */
+.split-bar::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 1px;
+  height: 5px;
+  background: var(--muted);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.split-bar[data-even]::after {
+  opacity: 1;
+}
+
+/* ---------- Virements : les montants se posent l'un après l'autre ---------- */
+
+.reveal .transfer,
+.reveal .flow__end {
+  animation: settle var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 120ms);
+}
+
+/* Le trait relie chaque membre au losange du joint, là où tout arrive */
+.flow {
+  position: relative;
+}
+.flow::before {
+  content: '';
+  position: absolute;
+  top: 26px;
+  bottom: 12px;
+  left: 5px;
+  width: 1px;
+  background: var(--muted);
+  transform-origin: top;
+}
+.flow > * {
+  position: relative; /* au-dessus du trait */
+}
+.flow__end {
+  margin-top: 6px;
+}
+.reveal .flow::before {
+  animation: draw-y var(--dur-slow) var(--ease-out) 240ms both;
+}
+
+/* Virement négatif : un tronc depuis le membre, une branche par destination.
+   Trait plein vers le joint, pointillé pour un virement direct */
+.transfer--sub {
+  position: relative;
+}
+.transfer--sub::before,
+.transfer--sub::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  pointer-events: none;
+}
+.transfer--sub::before {
+  top: -16px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--muted);
+  transform-origin: top;
+}
+.transfer--sub:not(:has(+ .transfer--sub))::before {
+  bottom: 50%; /* dernière branche : le tronc s'arrête à sa hauteur */
+}
+.transfer--sub::after {
+  top: 50%;
+  width: 12px;
+  border-top: 1.5px solid var(--muted);
+  transform-origin: left;
+}
+.transfer--direct::after {
+  border-top-style: dashed;
+}
+.reveal .transfer--sub::before {
+  animation: draw-y var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 120ms);
+}
+.reveal .transfer--sub::after {
+  animation: draw-x var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 80ms + 220ms);
+}
+
+/* ---------- Copie du récap : le texte copié clignote en inversé ---------- */
+
+@keyframes flash {
+  from {
+    filter: invert(1);
+  }
+}
+.recap--flash {
+  animation: flash var(--dur-fast) linear both;
+}
+
+/* ---------- Synchro : l'anneau se remplit image par image, une coche conclut ---------- */
+
+.scan {
+  position: relative;
+  align-self: center;
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+}
+.scan .scanner {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.scan__ring {
+  position: absolute;
+  inset: -7px;
+  width: calc(100% + 14px);
+  height: calc(100% + 14px);
+  overflow: visible;
+  fill: none;
+  pointer-events: none;
+}
+.scan__track {
+  stroke: var(--line);
+  stroke-width: 0.4;
+}
+.scan__bar {
+  stroke: var(--ink);
+  stroke-width: 1;
+  transition: stroke-dasharray var(--dur-base) var(--ease-out);
+}
+.scan--done .scanner {
+  opacity: 0.25;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.scan__check {
+  position: absolute;
+  inset: 0;
+  width: 96px;
+  height: 96px;
+  margin: auto;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.scan__check path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-stroke var(--dur-slow) var(--ease-out) 150ms forwards;
+}
+
+/* ---------- Liste des charges : la nouvelle s'ouvre, la supprimée se referme ---------- */
+
+.row-item {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.row-item__inner {
+  min-height: 0;
+}
+.row-item--enter,
+.row-item--leave {
+  overflow: hidden;
+}
+.row-item--enter {
+  animation: row-grow var(--dur-base) var(--ease-out) both;
+}
+.row-item--leave {
+  pointer-events: none;
+  animation: row-shrink var(--dur-base) var(--ease-out) both;
+}
+@keyframes row-grow {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+@keyframes row-shrink {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    border-top-color: transparent;
+  }
+}
+
+/* ---------- Champs : le soulignement se trace de gauche à droite ---------- */
+
+.input {
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.input-amount {
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-origin: border-box;
+  background-size: 0 2px;
+  transition: background-size var(--dur-base) var(--ease-out);
+}
+.input-amount:focus-visible {
+  border-bottom-width: 1px; /* le trait de 2 px se trace par-dessus, sans décaler la page */
+  background-size: 100% 2px;
+}
+
+/* ---------- Petits retours ---------- */
+
+.button,
+.fab {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.button:active,
+.fab:active {
+  transform: scale(0.98);
+}
+
+/* Toast et feuille arrivent en douceur ; `backwards` : le balayage qui les ferme garde la main */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.toast {
+  animation: toast-in var(--dur-base) var(--ease-out) backwards;
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.sheet[open] {
+  animation: sheet-in var(--dur-base) var(--ease-out) backwards;
+}
+.sheet[open]::backdrop {
+  animation: fade-in var(--dur-base) var(--ease-out) both;
+}
+
+/* ---------- Transitions d'écran (View Transitions) ---------- */
+
+/* La barre de navigation reste en place pendant que le contenu se fond */
+.nav {
+  view-transition-name: nav;
+}
+::view-transition-group(*) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-out);
+}
+/* Bascule clair/sombre : le nouveau thème s'étend en cercle depuis le bouton touché */
+.theme-transition::view-transition-old(root),
+.theme-transition::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+.theme-transition::view-transition-new(root) {
+  animation: theme-reveal var(--dur-slow) var(--ease-out) both;
+}
+.theme-transition::view-transition-group(root) {
+  animation-duration: var(--dur-slow);
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x) var(--theme-y));
+  }
+  to {
+    clip-path: circle(var(--theme-r) at var(--theme-x) var(--theme-y));
+  }
+}
+
+/* ---------- Mouvement réduit : rien ne bouge, tout est déjà à sa place ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .odo__out {
+    display: none;
+  }
+}
